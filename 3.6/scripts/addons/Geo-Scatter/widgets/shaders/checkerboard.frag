@@ -1,8 +1,8 @@
-uniform vec4 color_a;
-uniform vec4 color_b;
-uniform int size;
-
-out vec4 fragColor;
+// uniform vec4 color_a;
+// uniform vec4 color_b;
+// uniform int size;
+//
+// out vec4 fragColor;
 
 void main()
 {

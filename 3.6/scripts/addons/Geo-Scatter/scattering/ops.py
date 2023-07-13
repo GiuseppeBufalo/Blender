@@ -11,6 +11,8 @@ from .. utils.str_utils import word_wrap
 from .. utils.extra_utils import dprint
 from .. utils.event_utils import get_event
 from .. utils.draw_utils import add_font, clear_all_fonts
+from .. utils.coll_utils import create_scatter5_collections, create_new_collection
+from .. utils.create_utils import lock_transform
 
 from .. widgets.infobox import SC5InfoBox, generic_infobox_setup
 
@@ -173,56 +175,37 @@ class SCATTER5_OT_reset_settings(bpy.types.Operator):
 
         return None
 
-    def invoke(self, context, event):
-
+    def execute(self, context):
+        
         scat_scene = context.scene.scatter5
         emitter = scat_scene.emitter
+        psy_active = emitter.scatter5.get_psy_active()
 
-        #alt for batch support
-
-        psy_active = emitter.scatter5.get_psy_active()   
-        psys_sel = emitter.scatter5.get_psys_selected(all_emitters=scat_scene.factory_alt_selection_method=="all_emitters")
-        self.psys = psys_sel if event.alt else [psy_active]
-
-        if (len(self.psys)==0):
-            print("S5: SCATTER5_OT_reset_settings -> Couldn't find any scatter-system")
+        if (psy_active is None):
             return {'FINISHED'}
-
-        self.settings = [k for k in self.psys[0].bl_rna.properties.keys() if k.startswith(self.single_category) ]
-
-        return self.execute(context)
-
-    def execute(self, context):
-
-        scat_scene = context.scene.scatter5
+        if (psy_active.is_locked(self.single_category)):
+            return {'FINISHED'}
 
         #ignore any properties update behavior, such as update delay or hotkeys
         with scat_scene.factory_update_pause(event=True,delay=True,sync=False):
 
-            for p in self.psys:
+            #hide for optimization 
+            did_hide = None 
+            if (not psy_active.hide_viewport):
+                psy_active.hide_viewport = did_hide = True
 
-                if (p.is_locked(self.single_category)):
-                    continue
+            for s in [k for k in psy_active.bl_rna.properties.keys() if k.startswith(self.single_category) ]:
+                try:
+                    default_value = self.find_default(psy_active,s)
+                    setattr(psy_active, s, default_value)
+                except Exception as e:
+                    print(f"S5, couldn't reset this value: {s}")
+                    print(e)
 
-                #hide for optimization 
-                did_hide = None 
-                if (not p.hide_viewport):
-                    p.hide_viewport = did_hide = True
-
-                for s in self.settings:
-                    try:
-                        default_value = self.find_default(p,s)
-                        setattr(p, s, default_value)
-                    except Exception as e:
-                        print(f"S5, couldn't reset this value: {s}")
-                        print(e)
-
-                #restore optimization
-                if (did_hide is not None):
-                    p.hide_viewport = False
-
-                continue
-                    
+            #restore optimization
+            if (did_hide is not None):
+                psy_active.hide_viewport = False
+                
         return {'FINISHED'}
 
 
@@ -269,6 +252,44 @@ class SCATTER5_OT_disable_main_settings(bpy.types.Operator):
             
         return {'FINISHED'}
 
+#   .oooooo.   oooo                                       ooooo                                                     .
+#  d8P'  `Y8b  `888                                       `888'                                                   .o8
+# 888           888   .ooooo.   .oooo.   ooo. .oo.         888  ooo. .oo.  .oo.   oo.ooooo.   .ooooo.  oooo d8b .o888oo
+# 888           888  d88' `88b `P  )88b  `888P"Y88b        888  `888P"Y88bP"Y88b   888' `88b d88' `88b `888""8P   888
+# 888           888  888ooo888  .oP"888   888   888        888   888   888   888   888   888 888   888  888       888
+# `88b    ooo   888  888    .o d8(  888   888   888        888   888   888   888   888   888 888   888  888       888 .
+#  `Y8bood8P'  o888o `Y8bod8P' `Y888""8o o888o o888o      o888o o888o o888o o888o  888bod8P' `Y8bod8P' d888b      "888"
+#                                                                                  888
+#                                                                                 o888o
+
+class SCATTER5_OT_clean_unused_import_data(bpy.types.Operator):
+
+    bl_idname      = "scatter5.clean_unused_import_data"
+    bl_label       = translate("Removed any unused object(s) located in the 'Geo-Scatter Import' Collection")
+    bl_description = translate("Removed any unused object(s) located in the 'Geo-Scatter Import' Collection")
+    bl_options     = {'INTERNAL', 'UNDO'}
+
+    def execute(self, context):
+
+        import_coll = bpy.data.collections.get("Geo-Scatter Import")
+        if (import_coll is None):
+            raise Exception("It seems that you didn't import anything yet?")
+
+        used_objs = []
+        for sc in bpy.data.scenes:
+            for coll in sc.collection.children_recursive:
+                if (coll.name!=import_coll.name):
+                    for o in coll.objects:
+                        if (o not in used_objs):
+                            used_objs.append(o)
+
+        for o in import_coll.objects:
+            if (o not in used_objs):
+                bpy.data.meshes.remove(o.data)
+
+        return {'FINISHED'}
+
+
 
 # ooooo     ooo                  .o8       ooooo      ooo                 .o8                .
 # `888'     `8'                 "888       `888b.     `8'                "888              .o8
@@ -281,11 +302,12 @@ class SCATTER5_OT_disable_main_settings(bpy.types.Operator):
 #               o888o
 
 
-class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
+class SCATTER5_OT_fix_nodetrees(bpy.types.Operator):
+    """fix missing/broken/older geonode engine nodegroups and their modifiers"""
 
-    bl_idname = "scatter5.update_nodetrees"
-    bl_label = translate("Update Nodetrees to latest Versions")
-    bl_description = translate("Update Nodetrees to latest Versions")
+    bl_idname = "scatter5.fix_nodetrees"
+    bl_label = translate("Fix Plugin Nodetrees ")
+    bl_description = translate("Remove the plugin engine nodetrees, and re-apply them to fix any versioning or broken nodes error")
     bl_options = {'INTERNAL', 'UNDO'}
 
     force_update : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
@@ -299,15 +321,18 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
         from .. import utils
         from .. __init__ import bl_info
         from .. resources import directories
+        
+        engine_version = bl_info['engine_version']
+        engine_nbr = bl_info['engine_nbr']
 
         print("")
-        print("SCATTER5: Updating to the latest nodetree version : ",f"{bl_info['engine_version']}")
+        print("SCATTER5: Updating to the latest nodetree version : ",f"{engine_version}")
 
         all_psys = bpy.context.scene.scatter5.get_all_psys()
 
         #search for all psy we need to update, either we force update all, or we try to get latest scatter mod engine, 
         #if not engine found, means that psy is using old version & need an update
-        psys_needing_upd = all_psys if (self.force_update) else [p for p in all_psys if (p.get_scatter_mod() is None) ]
+        psys_needing_upd = all_psys if (self.force_update) else [ p for p in all_psys if (p.get_scatter_mod() is None) ]
 
         #hide all psys
         did_hide = []
@@ -316,26 +341,34 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
                 p.hide_viewport = True 
                 did_hide.append(p.name)
 
-        #force update all geonode engines ? then we remove the original engine node 
+        #force update all geonode engines ? then we remove the original engine node and their nodegroups
         if (self.force_update):
-            
-            old_nodetree = bpy.data.node_groups.get(f".{bl_info['engine_version']}")
+
+            #remove engine node
+            old_nodetree = bpy.data.node_groups.get(f".{engine_version}")
             if (old_nodetree):
                 bpy.data.node_groups.remove(old_nodetree)
+                
+            #remove dependent ng as well
+            for nng in bpy.data.node_groups: 
+                if ((nng.name.startswith(".S ")) and (engine_nbr in nng.name)):
+                    bpy.data.node_groups.remove(nng)
+                continue
 
+            #we force the update 
             psys_needing_upd = all_psys
 
         #importing latest Scatter Engine Nodetree, normally this is done automatically in import_and_add_geonode() however we need to have the engine first to get the default texture
         print(f"   -Importing the latest the Scatter Engine Nodetree")
         
-        utils.import_utils.import_geonodes( directories.addon_engine_blend, [f".{bl_info['engine_version']}"], link=False, )
-        engine = bpy.data.node_groups[f".{bl_info['engine_version']}"]
+        utils.import_utils.import_geonodes( directories.addon_engine_blend, [f".{engine_version}"], link=False, )
+        engine = bpy.data.node_groups[f".{engine_version}"]
         engine.use_fake_user = True
 
         #about the scatter_texture_nodetrees, the also need an update! replace all .texture nodes by new one
         print(f"   -Updating the Scatter Textures data(s) to latest version")
         
-        all_textures_ng = [ng for ng in bpy.data.node_groups if ng.name.startswith(".TEXTURE") and not ng.name.startswith(".TEXTURE *DEFAULT")]
+        all_textures_ng = [ ng for ng in bpy.data.node_groups if ng.name.startswith(".TEXTURE") and not ng.name.startswith(".TEXTURE *DEFAULT") ]
         
         for ng in all_textures_ng.copy():
 
@@ -345,7 +378,7 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
 
             print(f"         -Updating : ",name)
             
-            ng = bpy.data.node_groups.get(".TEXTURE *DEFAULT* MKIII").copy() #availale because we imported the engine above
+            ng = bpy.data.node_groups.get(".TEXTURE *DEFAULT* MKIV").copy() #availale because we imported the engine above
             ng.scatter5.texture.apply_texture_dict(d)
             ng.scatter5.texture.user_name = name 
 
@@ -369,10 +402,9 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
 
             #create new geonode mod and import latest nodetree 
             print(f"             -Set up new scatter-engine modifier")
-            m = utils.import_utils.import_and_add_geonode(
-                o,
+            m = utils.import_utils.import_and_add_geonode(o,
                 mod_name=bl_info["engine_version"],
-                node_name=f".{bl_info['engine_version']}",
+                node_name=f".{engine_version}",
                 blend_path=directories.addon_engine_blend,
                 copy=True,
                 show_viewport=False,
@@ -395,6 +427,7 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
                     "s_pattern1",
                     "s_pattern2",
                     "s_pattern3",
+                    "s_gr_pattern1",
                     "s_ecosystem_affinity",
                     "s_ecosystem_repulsion",
                     "s_proximity_repel1",
@@ -407,10 +440,10 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
                     "s_wind_noise",
                     "s_instances_pick_color_textures",
                     "s_visibility_cam",
-                    ], #NOTE: also need to update params in bpy.ops.scatter5.update_nodetrees()
+                    ], #NOTE: also need to update params in bpy.ops.scatter5.fix_nodetrees()
                 )
 
-            #update nodetree versionning information
+            #update nodetree versioning information
             print(f"             -Updating Versionning information")
 
             version_tuple = bl_info['version'][:2] #'5.1' for ex
@@ -427,13 +460,11 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
         dg.update()
 
         #update nodetrees values
-        print(f"   -Refreshing All Geo-Scatter 5 Properties")
+        print(f"   -Refreshing All Plugin Properties")
 
         for p in all_psys:
-            
             print(f"         -Refreshing : ",p.name)
             p.refresh_nodetree()
-
             continue
 
         #Scatter5.3 introduced uuid per psy 
@@ -441,139 +472,99 @@ class SCATTER5_OT_update_nodetrees(bpy.types.Operator):
         for p in all_psys: 
             if (p.uuid==0):
                 p.uuid = random.randint(-2_147_483_647,2_147_483_647)
-
+            continue
+        
         #restore all psys initial hide 
-        if did_hide:
+        if (did_hide):
             for p in all_psys: 
                 if (p.name in did_hide):
                     p.hide_viewport = False
-
-        print("   -Conversion Done!\n\n")
+                continue
 
         #remove warning message 
         from .. ui.ui_notification import notifs_check_1
         notifs_check_1()
+        
+        #update all emitter interfaces data
+        print("   -Reload all interfaces")
+
+        for o in bpy.data.objects:
+            if (o.scatter5.particle_systems):
+                o.scatter5.particle_interface_refresh()
+            continue
 
         #bugfix, potentially the camera clipping function can be left undefinitely waiting because of this operator
         from . import update_factory 
         if (hasattr(update_factory.update_active_camera_nodegroup,"is_updating")):
             update_factory.update_active_camera_nodegroup.is_updating = False
 
+        print("   -Conversion Done!\n\n")
         return {'FINISHED'}
 
 
-#   .oooooo.      ooooo         o8o               .
-#  d8P'  `Y8b     `888'         `"'             .o8
-# 888      888     888         oooo   .oooo.o .o888oo  .ooooo.  oooo d8b
-# 888      888     888         `888  d88(  "8   888   d88' `88b `888""8P
-# 888      888     888          888  `"Y88b.    888   888ooo888  888
-# `88b    d88b     888       o  888  o.  )88b   888 . 888    .o  888
-#  `Y8bood8P'Ybd' o888ooooood8 o888o 8""888P'   "888" `Y8bod8P' d888b
+class SCATTER5_OT_fix_scatter_obj(bpy.types.Operator):
+    """re attach potentially broken scatter-obj to the scatter system settings"""
 
-
-class SCATTER5_OT_quick_lister(bpy.types.Operator):
-
-    bl_idname = "scatter5.quick_lister"
-    bl_label = translate("Quick Lister")
-    bl_description = translate("Quick Lister")
-    bl_options = {'INTERNAL'}
-
-    emitter_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
-
-    @classmethod
-    def poll(cls, context):
-        return True #(context.area.type=="VIEW_3D")
-
-    def execute(self, context):
-        return {'FINISHED'}
-
-    def invoke(self, context, event, ):
-
-        self.emitter = bpy.data.objects.get(self.emitter_name)
-        if (self.emitter is None):
-            self.emitter = bpy.context.scene.scatter5.emitter
-
-        return context.window_manager.invoke_popup(self)
-
-    def draw(self, context):
-
-        layout = self.layout
-
-        layout.separator(factor=1.5)
-
-        addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
-        scat_scene  = bpy.context.scene.scatter5
-        emitter     = self.emitter
-        if (emitter is not None):
-            psy_active  = emitter.scatter5.get_psy_active()
-
-        row = layout.row()
-            
-        rwoo = row.row()
-        rwoo.separator(factor=0.45)
-        rwoo.alignment = "LEFT"
-        rwoo.scale_x = 1.5
-        rwoo.menu("SCATTER5_MT_emitter_dropdown_menu", text=f" {emitter.name}  " if (emitter is not None) else translate("Emitter"), icon="DOWNARROW_HLT",)
-        
-        rwoo = row.row()
-        rwoo.alignment = "RIGHT"
-        rwoo.scale_x = 1.2
-        rwoo.prop(scat_scene, "emitter", text="")
-        rwoo.separator(factor=0.3)
-
-        if (emitter is not None):
-            from .. ui.ui_tweaking import draw_particle_selection_inner
-            draw_particle_selection_inner(layout, addon_prefs, scat_scene, emitter, psy_active)
-            
-        else: 
-            col = layout.column()
-            col.active = False
-            col.separator()
-            row = col.row()
-            row.separator(factor=1.2)
-            row.label(text=translate("Please Select an Emitter"), icon_value=cust_icon("W_EMITTER"),)
-            col.separator()
-
-        layout.separator(factor=1.5)
-
-        return None 
-
-
-quicklister_keymaps = []
-
-def register_quicklister_shortcuts():
-    if(bpy.app.background):
-        # NOTE: if blender is run headless, i.e. with -b, --background option, there is no window, so adding keymap will fail with error:
-        #     km  = kc.keymaps.new(name="Window", space_type="EMPTY", region_type="WINDOW")
-        # AttributeError: 'NoneType' object has no attribute 'keymaps'
-        # so, lets skip that completely.. and unregistering step as well
-        return
+    bl_idname = "scatter5.fix_scatter_obj"
+    bl_label = translate("Fix scatter_obj issues")
+    bl_description = translate("Fix scatter_obj issues")
+    bl_options = {'INTERNAL', 'UNDO'}
     
-    #add hotkey
-    wm  = bpy.context.window_manager
-    kc  = wm.keyconfigs.addon
-    km  = kc.keymaps.new(name="Window", space_type="EMPTY", region_type="WINDOW")
-    kmi = km.keymap_items.new("scatter5.quick_lister", 'Q', 'PRESS', shift=True,ctrl=True,alt=False,)
+    def execute(self, context):
 
-    quicklister_keymaps.append(kmi)
+        #ensure Geo-Scatter collection exists
+        create_scatter5_collections()
 
-    return None
+        for p in bpy.context.scene.scatter5.get_all_psys():
+            emitter = p.id_data
+            
+            #create scatter obj if not exists yet
+            
+            scatter_obj_name = "scatter_obj : "+p.name
+            scatter_obj = bpy.data.objects.get(scatter_obj_name)
+            
+            if scatter_obj is None: 
+                
+                #create new scatter obj
+                scatter_obj = bpy.data.objects.new(scatter_obj_name, bpy.data.meshes.new(scatter_obj_name), )
+                
+                #scatter_obj should never be selectable by user, not needed & outline is bad for performance
+                scatter_obj.hide_select = True
 
-def unregister_quicklister_shortcuts():
-    if(bpy.app.background):
-        # see `register_quicklister_shortcuts()` above
-        return
+                #scatter_obj should always be locked with null transforms
+                lock_transform(scatter_obj)
 
-    #remove hotkey
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    km = kc.keymaps["Window"]
-    for kmi in quicklister_keymaps:
-        km.keymap_items.remove(kmi)
-    quicklister_keymaps.clear()
-
-    return None
-
+                #we need to leave traces of the original emitter, in case of dupplication we need to identify the double
+                scatter_obj.scatter5.original_emitter = emitter 
+        
+            #ensure in psy coll exists
+            
+            geonode_coll_name = "psy : "+p.name
+            geonode_coll = bpy.data.collections.get(geonode_coll_name)
+            
+            if (geonode_coll is None):
+                geonode_coll = create_new_collection(geonode_coll_name, parent_name="Geo-Scatter Geonode",)
+                
+            if (geonode_coll.name not in bpy.data.collections["Geo-Scatter Geonode"].children):
+                bpy.data.collections["Geo-Scatter Geonode"].children.link(geonode_coll)
+                
+            #ensure scatter obj in psy collection 
+            
+            if (scatter_obj.name not in geonode_coll.objects):
+                geonode_coll.objects.link(scatter_obj)
+                
+            #re-attach scatter_obj to psy 
+            
+            if (p.scatter_obj is None):
+                p.scatter_obj = scatter_obj
+                            
+            continue 
+        
+        #then set up nodetrees according to settings
+        bpy.ops.scatter5.fix_nodetrees()
+            
+        return {'FINISHED'}
+    
 
 #  .oooooo..o                                           o8o      .
 # d8P'    `Y8                                           `"'    .o8
@@ -665,9 +656,9 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
         layout = self.layout
 
         box, is_open = ui_templates.box_panel(self, layout,         
-            prop_str= "ui_dialog_popup", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_popup";UI_BOOL_VAL:"1"
+            prop_str= "ui_dialog_popup", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_popup");BOOL_VALUE(1)
             icon= "FAKE_USER_ON",
-            name= translate("Security Actions"),
+            name= translate("Security Warnings"),
             )
         if is_open:
 
@@ -677,7 +668,7 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
                 txtblock.scale_y = 0.9
                 txt = txtblock.row()
                 txt.label(text=translate("Heavy Scatter Detected!"), icon="INFO",)
-                word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("This scatter generated")+f" {self.total_scatter:,} "+translate("instances, more than the security treshold! Define the security measures:"),)
+                word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("This scatter generated")+f" {self.total_scatter:,} "+translate("instances, more than the security threshold! Define the security measures:"),)
 
                 opts = box.column()
                 opts.scale_y = 0.9
@@ -697,7 +688,7 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
                 #camera optimization?
                 prop = opts.row()
                 prop.enabled = (context.scene.camera is not None)
-                prop.prop(self, "s_visibility_cam_allow", text=translate("Hide scatter invisible to camera"),)
+                prop.prop(self, "s_visibility_cam_allow", text=translate("Hide instances invisible to camera"),)
 
                 opts.separator(factor=0.4)
 
@@ -709,17 +700,17 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
                 txtblock.scale_y = 0.9
                 txt = txtblock.row()
                 txt.label(text=translate("Heavy Object Detected!"), icon="INFO",)
-                word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("Object(s) in your scatter had more polygons than the security treshold! Define the security measures:"),)
+                word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("Object(s) in your scatter had more polygons than the security threshold! Define the security measures:"),)
 
                 opts = box.column()
                 opts.scale_y = 0.9
                 opts.separator(factor=0.4)
 
                 #object bounding box?
-                opts.prop(self, "s_set_bounding_box", text=translate("Enable object(s) 'Bounding-Box'"),)
+                opts.prop(self, "s_set_bounding_box", text=translate("Set object(s) “Bounds”"),)
 
                 #display as?
-                opts.prop(self, "s_display_allow", text=translate("Enable 'Display As' option"),)
+                opts.prop(self, "s_display_allow", text=translate("Set scatter(s) “Display As”"),)
 
                 opts.separator(factor=0.4)
 
@@ -729,7 +720,7 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
             txtblock.scale_y = 0.9
             txt = txtblock.row()
             txt.label(text=translate("Did you know?"), icon="INFO",)
-            word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("Displaying a lot of polygons in the viewport can freeze blender! Security tresholds are located in the creation operators settings menus.\n"),)
+            word_wrap(layout=txtblock, alignment="LEFT", max_char=53, active=True, string=translate("Displaying a lot of polygons in the viewport can freeze blender! If you do not wish to see this menu, feel free to disable or change the security thresholds located in the “Create” panel.\n"),)
 
         return None
 
@@ -739,7 +730,7 @@ class SCATTER5_OT_popup_security(bpy.types.Operator):
 
             if (not self.s_set_bounding_box):
                 for p in self.psys:
-                    for ins in p.get_instances_obj():
+                    for ins in p.get_instance_objs():
                         ins.display_type = 'TEXTURED'
 
             if (self.s_display_allow):
@@ -783,9 +774,10 @@ classes = (
     
     SCATTER5_OT_reset_settings,
     SCATTER5_OT_disable_main_settings,
-    SCATTER5_OT_update_nodetrees,
+    SCATTER5_OT_clean_unused_import_data,
+    SCATTER5_OT_fix_nodetrees,
+    SCATTER5_OT_fix_scatter_obj,
     SCATTER5_OT_property_coef,
-    SCATTER5_OT_quick_lister,
     SCATTER5_OT_popup_security,
     
     )

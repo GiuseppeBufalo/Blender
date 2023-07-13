@@ -69,6 +69,7 @@ def box_panel( self,
                popover_argument="", #scat_ui.prop argument
                tweaking_panel=False, #special actions if tweaking panel
                force_open=False,
+               return_extra_layout=False, #return an extra box layout (double column)
                ):
     """draw sub panel opening template, use fct to add own settings""" 
 
@@ -76,27 +77,34 @@ def box_panel( self,
     scat_ui     = bpy.context.window_manager.scatter5.ui
     scat_scene  = bpy.context.scene.scatter5
     emitter     = scat_scene.emitter
-    psy_active  = emitter.scatter5.get_psy_active() if emitter else None
-    is_open     = getattr(scat_ui,prop_str) if (not force_open) else True
+    
+    psy_active   = emitter.scatter5.get_psy_active() if emitter else None
+    group_active = emitter.scatter5.get_group_active() if emitter else None
+    active       = psy_active if (psy_active is not None) else group_active
+    
+    is_open = getattr(scat_ui,prop_str) if (not force_open) else True
 
     #determine layout style
 
     if (addon_prefs.ui_use_dark_box):
         
-        box = layout.box()
+        col = layout.column(align=True)
+        box = col.box()
         header = box.box().row(align=True)
-    
-    else:
+        
+    elif (not addon_prefs.ui_use_dark_box):
         
         col = layout.column(align=True)
         header = col.box().row(align=True)
         header.scale_y = 1.1
         
         if (is_open):
-              box = col.box()
-              box.separator(factor=-1)
-        else: box = None 
-
+            box = col.box()
+            box.separator(factor=-1)
+                
+        elif (not is_open):
+            box = None 
+        
     #ui custom panel height
     header.scale_y = addon_prefs.ui_boxpanel_height
 
@@ -104,23 +112,28 @@ def box_panel( self,
     if (not addon_prefs.ui_show_boxpanel_icon):
         icon = "W_PANEL_OPEN" if is_open else "W_PANEL_CLOSED"
 
-        #special active option for tweaking panels 
-        if tweaking_panel and psy_active:
+        #special active icon behavior for tweaking panels in both particle systems and group systems 
+        if ((tweaking_panel==True) and (active is not None)):
 
-                #assuming popover panel is str
-                s_category = popover_argument
-                if psy_active.is_category_used(s_category):
-                    icon+="_ACTIVE"
+                #popover panel arg should be str
+                if (type(popover_argument) is str):
+                
+                    s_category = popover_argument
+                    if (active.is_category_used(s_category)): #Both group and particle collection property should have this method!
+                        icon += "_ACTIVE"
 
     #generic title open/close + icon on the left
 
     args={"text":name, "emboss":False,}
     
     if (icon):
+
         if (type(icon) is int):
               args["icon_value"]=icon
+
         elif (icon.startswith("W_")):
               args["icon_value"]=cust_icon(icon)
+              
         else: args["icon"]=icon
 
     title = header.row(align=True)
@@ -134,17 +147,17 @@ def box_panel( self,
     toolbar = header.row(align=True)
     toolbar.alignment = "RIGHT"
 
-    #category toggle for tweaking active psy 
+    #category master toggle for tweaking active psy 
 
-    if (master_category_toggle):
+    if (master_category_toggle!=""):
         
-        if (psy_active):
+        if (active is not None):
             
             m = toolbar.row(align=True)
             m.scale_y = 0.9
             m.emboss = "NONE"
             m.active = True
-            m.prop(psy_active, master_category_toggle, text="", icon_value=cust_icon(f"W_CHECKBOX_{str(getattr(psy_active,master_category_toggle)).upper()}"),)
+            m.prop(active, master_category_toggle, text="", icon_value=cust_icon(f"W_CHECKBOX_{str(getattr(active,master_category_toggle)).upper()}"),)
 
         else: 
             m = toolbar.row(align=True)
@@ -154,7 +167,7 @@ def box_panel( self,
 
     #panel popovers ? 
 
-    if (pref_panel):
+    if (pref_panel!=""):
 
         m = toolbar.row(align=True)
         m.scale_x = 0.95
@@ -162,20 +175,21 @@ def box_panel( self,
         m.emboss = "NONE"
         icon_value = cust_icon("W_PREFERENCES")
 
-        #transfer arg, for the panel
+        #for psys, transfer arg, for the panel
         if (psy_active):
 
             #just pass string ? 
             if (type(popover_argument) is str):
 
-                m.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,popover_argument))
+                m.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,popover_argument))
 
-                if tweaking_panel:
+                if (tweaking_panel):
                     #icon of the panel is used to transfer information to the user!
                     s_category = popover_argument
+
                     #if settings category is locked, display lock icon
                     is_locked = getattr(psy_active, f"{s_category}_locked")
-                    if is_locked: 
+                    if (is_locked): 
                         icon_value = cust_icon("W_LOCKED_GREY")
                     else:
                         #is synch, display synch icon 
@@ -185,14 +199,13 @@ def box_panel( self,
                         #later on, will need to also consider frozen state
             else: 
 
-                m.context_pointer_set("s5_ctxt_ptr_popover",popover_argument)
-
+                m.context_pointer_set("pass_ui_arg_popover",popover_argument)
 
         m.popover(panel=pref_panel, text="", icon_value=icon_value,)
 
-    #documentation ?
+    #documentation popover?
 
-    if (doc_panel):
+    if (doc_panel!=""):
 
         m = toolbar.row(align=True)
         m.scale_x = 0.95
@@ -203,13 +216,14 @@ def box_panel( self,
         if (popover_argument):
 
             #all docs str popovers args need to match docs dict in ui.ui_menu
-            m.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,popover_argument))
+            m.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,popover_argument))
 
         m.popover(panel=doc_panel, text="", icon_value=cust_icon("W_INFO"),)
 
-    #big warning icon? could potentially develop this part to show warning message to user like we did in S4, maybe replacing doc ? 
+    #big warning icon a panel right side? 
+    #NOTE: could potentially develop this part to show warning message to user like we did in S4, maybe replacing doc ? 
 
-    if (warning_panel):
+    if (warning_panel==True):
 
         m = toolbar.row(align=True)
         m.scale_x = 0.95
@@ -217,6 +231,12 @@ def box_panel( self,
         m.active = False
         m.label(text="", icon="INFO")
 
+    #return layout and opening values
+    
+    #original column layout information, useful for more complex layout style, boxes aligned together ect..
+    if (return_extra_layout):
+        return col, box, is_open
+    
     return box, is_open  
 
 
@@ -245,7 +265,8 @@ def bool_toggle( layout,
                  feature_availability=True,
                  ): 
         
-    #feature not available ? 
+    #check for condition of feature availability, maybe shouldn't draw anything 
+    
     if (not feature_availability):
         if (return_layout):
             if (return_title_layout):
@@ -255,9 +276,6 @@ def bool_toggle( layout,
 
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
     scat_ui     = bpy.context.window_manager.scatter5.ui
-    scat_scene  = bpy.context.scene.scatter5
-    emitter     = scat_scene.emitter
-    psy_active  = emitter.scatter5.get_psy_active() if emitter else None
 
     is_toggled  = getattr(prop_api,prop_str)==True
     is_open     = None
@@ -273,11 +291,10 @@ def bool_toggle( layout,
 
     Boolrow = MainCol.row(align=True)
 
-    #draw arrow open/close button? 
+    #draw arrow open/close button on the left
     if (open_close_api and addon_prefs.ui_bool_use_openclose):
 
         if (open_close_api=="use_spacer"):
-            
             Boolrow.separator(factor=3.25)
 
         else:
@@ -287,7 +304,6 @@ def bool_toggle( layout,
                 is_open = getattr(scat_ui,open_close_api)
             
             #TODO need to replace the label of the feature by the open/close instead, but layout will never be close enough...
-
             # openlbl = label
             # label = ""
 
@@ -315,10 +331,11 @@ def bool_toggle( layout,
         if (addon_prefs.ui_bool_use_iconcross and not is_toggled):
             args = {"text":"", "icon":"PANEL_CLOSE"}
         else:
-            if not icon.startswith("W_"): 
+            if (not icon.startswith("W_")): 
                   args = {"text":"", "icon":icon}
             else: args = {"text":"", "icon_value":cust_icon(icon)}
-        if invert_checkbox==True: 
+            
+        if (invert_checkbox==True): 
             args["invert_checkbox"] = True  
 
         prop=Boolrow.row(align=True)
@@ -327,7 +344,7 @@ def bool_toggle( layout,
 
         prop.separator()
 
-        if label:
+        if (label!=""):
             prop.label(text=label)
 
     #just return toggle value?

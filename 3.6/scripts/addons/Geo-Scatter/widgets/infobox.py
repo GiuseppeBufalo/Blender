@@ -136,9 +136,15 @@ class SC5InfoBox():
     
     # NOTE: will fail when running headless: SystemError: GPU functions for drawing are not available in background mode
     if(not bpy.app.background):
-        LOGO_FILL_SHADER = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            LOGO_FILL_SHADER = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            LOGO_FILL_SHADER = gpu.shader.from_builtin('UNIFORM_COLOR')
         LOGO_FILL_BATCH = batch_for_shader(LOGO_FILL_SHADER, 'TRIS', {"pos": LOGO_VS[:, :2], }, indices=LOGO_FS, )
-        LOGO_OUTLINE_SHADER = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            LOGO_OUTLINE_SHADER = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            LOGO_OUTLINE_SHADER = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         LOGO_OUTLINE_BATCH = batch_for_shader(LOGO_OUTLINE_SHADER, 'LINES', {'pos': LOGO_VS, }, indices=LOGO_ES, )
     
     @classmethod
@@ -214,7 +220,11 @@ class SC5InfoBox():
         total_height = 0
         for i, item in enumerate(reversed(cls.INFO)):
             s = int(round(item['style']['size'] * cls.UI_SCALE))
-            blf.size(cls.FONT_ID, s, 72)
+            if(bpy.app.version < (4, 0, 0)):
+                blf.size(cls.FONT_ID, s, 72)
+            else:
+                # 4.0, `dpi` argument is removed
+                blf.size(cls.FONT_ID, s)
             for j, t in enumerate(item['text']):
                 if(t is None):
                     l = int(np.ceil(item['style']['separator'] * cls.UI_SCALE))
@@ -271,10 +281,15 @@ class SC5InfoBox():
         h = tex.height
         f = tex.format
         b = tex.read()
+        # NOTE: flatten first
+        b.dimensions = w * h * 4
         # NOTE: should i be explicit about data type? i think i should..
         a = np.array(b, dtype=np.float32, )
-        a = a.copy()
-        b = gpu.types.Buffer('FLOAT', (w, h, 4), a.flatten())
+        # a = a.copy()
+        # NOTE: C-contiguous
+        a = a.copy(order='C')
+        # b = gpu.types.Buffer('FLOAT', (w, h, 4), a.flatten())
+        b = gpu.types.Buffer('FLOAT', a.shape, a)
         t = gpu.types.GPUTexture((w, h), format=f, data=b, )
         return t
     
@@ -309,7 +324,10 @@ class SC5InfoBox():
                     vertices *= 2.0
                     vertices -= 1.0
                     
-                    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+                    if(bpy.app.version < (3, 4, 0)):
+                        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+                    else:
+                        shader = gpu.shader.from_builtin('UNIFORM_COLOR')
                     batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
                     gpu.state.blend_set('ALPHA')
                     shader.bind()
@@ -319,9 +337,9 @@ class SC5InfoBox():
         
         # blur rectangle
         vert = '''
-        uniform mat4 ModelViewProjectionMatrix;
-        in vec2 pos;
-        out vec2 uv;
+        // uniform mat4 ModelViewProjectionMatrix;
+        // in vec2 pos;
+        // out vec2 uv;
         void main()
         {
             gl_Position = ModelViewProjectionMatrix * vec4(pos.xy, 1.0f, 1.0f);
@@ -330,10 +348,10 @@ class SC5InfoBox():
         '''
         # https://github.com/mrdoob/three.js/blob/c93db539b230417f6b8a5261fbc52bba1cd39d7d/examples/jsm/shaders/HorizontalBlurShader.js
         frag_h = '''
-        in vec2 uv;
-        uniform sampler2D color;
-        uniform float h;
-        out vec4 fragColor;
+        // in vec2 uv;
+        // uniform sampler2D color;
+        // uniform float h;
+        // out vec4 fragColor;
         void main() {
             vec4 sum = vec4(0.0);
             sum += texture(color, vec2(uv.x - 4.0 * h, uv.y)) * 0.051;
@@ -350,10 +368,10 @@ class SC5InfoBox():
         }
         '''
         frag_v = '''
-        in vec2 uv;
-        uniform sampler2D color;
-        uniform float v;
-        out vec4 fragColor;
+        // in vec2 uv;
+        // uniform sampler2D color;
+        // uniform float v;
+        // out vec4 fragColor;
         void main() {
             vec4 sum = vec4(0.0);
             sum += texture(color, vec2(uv.x, uv.y - 4.0 * v)) * 0.051;
@@ -369,6 +387,18 @@ class SC5InfoBox():
         }
         '''
         
+        # # # # # debug
+        # buffer = cls._tex_color.read()
+        # buffer.dimensions = cls._box_width * cls._box_height * 4
+        # image_name = "pcv_debug"
+        # if(image_name not in bpy.data.images):
+        #     bpy.data.images.new(image_name, cls._box_width, cls._box_height, float_buffer=True, )
+        # image = bpy.data.images[image_name]
+        # image.scale(cls._box_width, cls._box_height, )
+        # a = np.array(buffer)
+        # image.pixels = a.flatten()
+        # # # # # debug
+        
         # blur horizontally
         texture = cls._tex_color
         cls._h_color = gpu.types.GPUTexture((cls._box_width, cls._box_height), format='RGBA32F', )
@@ -377,7 +407,23 @@ class SC5InfoBox():
             cls._h_color.clear(format='FLOAT', value=(0.0, ), )
             
             coords = ((0, 0), (1, 0), (1, 1), (0, 1))
-            shader = gpu.types.GPUShader(vert, frag_h, )
+            # shader = gpu.types.GPUShader(vert, frag_h, )
+            
+            # NOTE: "new style" shader ------------------------------------------- >>>
+            shader_info = gpu.types.GPUShaderCreateInfo()
+            shader_info.vertex_in(0, 'VEC2', "pos")
+            vert_out = gpu.types.GPUStageInterfaceInfo("vertex_interface")
+            vert_out.smooth('VEC2', "uv")
+            shader_info.vertex_out(vert_out)
+            shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+            shader_info.push_constant('FLOAT', "h")
+            shader_info.sampler(0, 'FLOAT_2D', "color")
+            shader_info.fragment_out(0, 'VEC4', "fragColor")
+            shader_info.vertex_source(vert)
+            shader_info.fragment_source(frag_h)
+            shader = gpu.shader.create_from_info(shader_info)
+            # NOTE: "new style" shader ------------------------------------------- <<<
+            
             indices = mathutils.geometry.tessellate_polygon((coords, ))
             batch = batch_for_shader(shader, 'TRIS', {"pos": coords, }, indices=indices, )
             
@@ -395,6 +441,18 @@ class SC5InfoBox():
                     batch.draw(shader)
                     gpu.state.blend_set('NONE')
         
+        # # # # # debug
+        # buffer = cls._h_color.read()
+        # buffer.dimensions = cls._box_width * cls._box_height * 4
+        # image_name = "pcv_debug"
+        # if(image_name not in bpy.data.images):
+        #     bpy.data.images.new(image_name, cls._box_width, cls._box_height, float_buffer=True, )
+        # image = bpy.data.images[image_name]
+        # image.scale(cls._box_width, cls._box_height, )
+        # a = np.array(buffer)
+        # image.pixels = a.flatten()
+        # # # # # debug
+        
         texture = cls._h_color
         
         # and blur vertically
@@ -404,7 +462,23 @@ class SC5InfoBox():
             cls._v_color.clear(format='FLOAT', value=(0.0, ), )
             
             coords = ((0, 0), (1, 0), (1, 1), (0, 1))
-            shader = gpu.types.GPUShader(vert, frag_v, )
+            # shader = gpu.types.GPUShader(vert, frag_v, )
+            
+            # NOTE: "new style" shader ------------------------------------------- >>>
+            shader_info = gpu.types.GPUShaderCreateInfo()
+            shader_info.vertex_in(0, 'VEC2', "pos")
+            vert_out = gpu.types.GPUStageInterfaceInfo("vertex_interface")
+            vert_out.smooth('VEC2', "uv")
+            shader_info.vertex_out(vert_out)
+            shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+            shader_info.push_constant('FLOAT', "v")
+            shader_info.sampler(0, 'FLOAT_2D', "color")
+            shader_info.fragment_out(0, 'VEC4', "fragColor")
+            shader_info.vertex_source(vert)
+            shader_info.fragment_source(frag_v)
+            shader = gpu.shader.create_from_info(shader_info)
+            # NOTE: "new style" shader ------------------------------------------- <<<
+            
             indices = mathutils.geometry.tessellate_polygon((coords, ))
             batch = batch_for_shader(shader, 'TRIS', {"pos": coords, }, indices=indices, )
             
@@ -422,6 +496,18 @@ class SC5InfoBox():
                     batch.draw(shader)
                     gpu.state.blend_set('NONE')
         
+        # # # # # debug
+        # buffer = cls._v_color.read()
+        # buffer.dimensions = cls._box_width * cls._box_height * 4
+        # image_name = "pcv_debug"
+        # if(image_name not in bpy.data.images):
+        #     bpy.data.images.new(image_name, cls._box_width, cls._box_height, float_buffer=True, )
+        # image = bpy.data.images[image_name]
+        # image.scale(cls._box_width, cls._box_height, )
+        # a = np.array(buffer)
+        # image.pixels = a.flatten()
+        # # # # # debug
+        
         texture = cls._v_color
         
         # now draw it again with some shadow offset
@@ -433,7 +519,10 @@ class SC5InfoBox():
             shadow_offset = 5
             position = 0, -((1 / cls._box_height) * shadow_offset)
             coords = ((0, 0), (1, 0), (1, 1), (0, 1))
-            shader = shader = gpu.shader.from_builtin('2D_IMAGE')
+            if(bpy.app.version < (3, 4, 0)):
+                shader = shader = gpu.shader.from_builtin('2D_IMAGE')
+            else:
+                shader = shader = gpu.shader.from_builtin('IMAGE')
             indices = mathutils.geometry.tessellate_polygon((coords, ))
             batch = batch_for_shader(shader, 'TRIS', {"pos": coords, "texCoord": coords, }, indices=indices, )
             
@@ -465,16 +554,56 @@ class SC5InfoBox():
                     vertices[:, 1] *= (1 / cls._box_height)
                     vertices *= 2.0
                     vertices -= 1.0
-                    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+                    if(bpy.app.version < (3, 4, 0)):
+                        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+                    else:
+                        shader = gpu.shader.from_builtin('UNIFORM_COLOR')
                     batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
                     shader.bind()
                     shader.uniform_float('color', color, )
                     batch.draw(shader)
         
+        # # # # # debug
+        # buffer = cls._fin_color.read()
+        # buffer.dimensions = cls._box_width * cls._box_height * 4
+        # image_name = "pcv_debug"
+        # if(image_name not in bpy.data.images):
+        #     bpy.data.images.new(image_name, cls._box_width, cls._box_height, float_buffer=True, )
+        # image = bpy.data.images[image_name]
+        # image.scale(cls._box_width, cls._box_height, )
+        # a = np.array(buffer)
+        # image.pixels = a.flatten()
+        # # # # # debug
+        
         # that's mine finished box texture, lets hope it stays in memory
         # TODO: when this is cleared from memory? there is `bpy.types.Image.gl_touch` for images, do i need something similar? i don't see anything in docs..
         # cls._texture = cls._fin_color
         cls._texture = cls._clone_texture(cls._fin_color)
+        
+        # # # # # debug
+        # # buffer = cls._fin_color.read()
+        # # buffer = cls._texture.read()
+        # w = cls._fin_color.width
+        # h = cls._fin_color.height
+        # f = cls._fin_color.format
+        # b = cls._fin_color.read()
+        # # a = np.array(b.to_list(), dtype=np.float32, )
+        # b.dimensions = w * h * 4
+        # a = np.array(b, dtype=np.float32, )
+        # a = a.copy(order='C')
+        # b = gpu.types.Buffer('FLOAT', a.shape, a)
+        # # print(b)
+        # t = gpu.types.GPUTexture((w, h), format=f, data=b, )
+        # buffer = t.read()
+        # buffer.dimensions = cls._box_width * cls._box_height * 4
+        # image_name = "pcv_debug"
+        # if(image_name not in bpy.data.images):
+        #     bpy.data.images.new(image_name, cls._box_width, cls._box_height, float_buffer=True, )
+        # image = bpy.data.images[image_name]
+        # image.scale(cls._box_width, cls._box_height, )
+        # a = np.array(buffer)
+        # image.pixels = a.flatten()
+        # # # # # debug
         
         cls._tex_color = None
         cls._fbo = None
@@ -532,7 +661,10 @@ class SC5InfoBox():
     def _thick_line_2d(cls, a, b, color=(1.0, 0.0, 0.0, 0.5, ), thickness=2.0, ):
         vertices = np.array(((a[0], a[1], 0.0, ), (b[0], b[1], 0.0, ), ), dtype=np.float32, )
         indices = np.array(((0, 1), ), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -642,7 +774,10 @@ class SC5InfoBox():
         width = texture.width
         height = texture.height
         coords = ((0, 0), (1, 0), (1, 1), (0, 1))
-        shader = gpu.shader.from_builtin('2D_IMAGE')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_IMAGE')
+        else:
+            shader = gpu.shader.from_builtin('IMAGE')
         indices = mathutils.geometry.tessellate_polygon((coords, ))
         batch = batch_for_shader(shader, 'TRIS', {"pos": coords, "texCoord": coords, }, indices=indices, )
         
@@ -664,7 +799,10 @@ class SC5InfoBox():
         # color = (0.3, 0.3, 0.3, 0.5)
         color = cls.BOX_FILL_COLOR
         vertices, indices = cls._rounded_rectangle(a, b, cls.BOX_CORNER_RADIUS, steps=32, )
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -684,7 +822,10 @@ class SC5InfoBox():
         vs = np.c_[vertices[:, 0], vertices[:, 1], z]
         i = np.arange(len(vs), dtype=np.int32, )
         indices = np.c_[i, np.roll(i, -1), ]
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vs, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -733,7 +874,11 @@ class SC5InfoBox():
         for i, item in enumerate(reversed(cls.INFO)):
             s = int(round(item['style']['size'] * cls.UI_SCALE))
             
-            blf.size(cls.FONT_ID, s, 72)
+            if(bpy.app.version < (4, 0, 0)):
+                blf.size(cls.FONT_ID, s, 72)
+            else:
+                # 4.0, `dpi` argument is removed
+                blf.size(cls.FONT_ID, s)
             blf.color(cls.FONT_ID, *item['style']['color'])
             blf.enable(cls.FONT_ID, blf.SHADOW)
             blf.shadow(cls.FONT_ID, 3, 0.0, 0.0, 0.0, 0.5)

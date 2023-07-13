@@ -44,7 +44,7 @@ def add_displace_modifier(o, name="", texture_data=None):
     if (m is None):
         m = o.modifiers.new(name=name,type="DISPLACE")
 
-    if texture_data:
+    if (texture_data):
         m.texture = texture_data
 
     return m  
@@ -128,7 +128,7 @@ class SCATTER5_OT_add_displace_uv(bpy.types.Operator):
         return bpy.context.window_manager.invoke_props_dialog(self)
 
     def draw(self, context):
-
+        
         layout = self.layout
         layout.prop_search(self, "img_search", bpy.data, "images", text='')
 
@@ -169,7 +169,7 @@ class SCATTER5_OT_grid_bisect(bpy.types.Operator):
             with utils.override_utils.attributes_override([o,"location",(0,0,0)],[o,"rotation_euler",(0,0,0)],[o,"scale",(1,1,1)], enable=use_local,):
 
                 #get bounding box coord 
-                if use_local: 
+                if (use_local): 
                       bbs = o.bound_box
                 else: bbs = [o.matrix_world @ Vector((bb)) for bb in o.bound_box]
 
@@ -207,8 +207,10 @@ class SCATTER5_OT_grid_bisect(bpy.types.Operator):
     
         #for every mesh obj in passed list of obj names            
         for o in [ bpy.data.objects[objname] for objname in self.obj_list.split("_!#!_") if (objname in bpy.context.scene.objects) ]:
+            
             #individually exec operation
             self.grid_bisect(o=o, subdiv_x=self.subdiv_x, subdiv_y=self.subdiv_y, subdiv_z=self.subdiv_z, use_local=self.use_local,)
+            
             continue
 
         #set ui for user?

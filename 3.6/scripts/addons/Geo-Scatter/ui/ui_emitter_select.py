@@ -40,20 +40,7 @@ def emitter_header(self):
     layout      = self.layout
     mode        = bpy.context.mode
 
-    # #all is hidden?
-    #
-    # if (emitter.hide_get() and scat_scene.update_auto_hidden_emitter):
-    #     row = layout.row()
-    #     row.alignment = "RIGHT"
-    #     row.active = False
-    #     ope = row.row(align=True)
-    #     op = ope.operator("scatter5.exec_line", text=emitter.name, icon="NONE",     emboss=False, depress=False,) ; op.api = "emitter.hide_set(False)" ; op.description = translate("Emitter is currently hidden click to unhide")
-    #     op = ope.operator("scatter5.exec_line", text="",           icon="HIDE_OFF", emboss=False, depress=False,) ; op.api = "emitter.hide_set(False)" ; op.description = translate("Emitter is currently hidden click to unhide")
-    #
-    #     return None
-
-    #quit if in non object mode 
-
+    
     if (mode in ("PAINT_WEIGHT","PAINT_VERTEX","PAINT_TEXTURE","EDIT_MESH")):
         row = layout.row()
         row.alignment = "RIGHT"
@@ -62,8 +49,6 @@ def emitter_header(self):
         op = ope.operator("scatter5.exec_line", text="",           icon="LOOP_BACK", emboss=False, depress=False,) ; op.api = "bpy.ops.object.mode_set(mode='OBJECT')" ; op.description = translate("Go back to object mode")
         
         return None 
-
-    #emitter switching method 
 
     if (addon_prefs.emitter_method=="remove"):
         row = layout.row(align=False)
@@ -94,11 +79,26 @@ def emitter_header(self):
     elif (addon_prefs.emitter_method=="menu"):
         row = layout.row(align=False)
         row.alignment = "RIGHT"
+        row.scale_x = 1.25
         row.menu("SCATTER5_MT_emitter_dropdown_menu", text=f" {emitter.name}  ", icon="DOWNARROW_HLT",)
-
+        
         return None 
-
-    return 
+    
+    """
+    #all is hidden?
+    
+    if (emitter.hide_get() and scat_scene.update_auto_hidden_emitter):
+        row = layout.row()
+        row.alignment = "RIGHT"
+        row.active = False
+        ope = row.row(align=True)
+        op = ope.operator("scatter5.exec_line", text=emitter.name, icon="NONE",     emboss=False, depress=False,) ; op.api = "emitter.hide_set(False)" ; op.description = translate("Emitter is currently hidden click to unhide")
+        op = ope.operator("scatter5.exec_line", text="",           icon="HIDE_OFF", emboss=False, depress=False,) ; op.api = "emitter.hide_set(False)" ; op.description = translate("Emitter is currently hidden click to unhide")
+    
+        return None
+    """
+    
+    return None
 
 
 class SCATTER5_MT_emitter_dropdown_menu(bpy.types.Menu):
@@ -114,11 +114,11 @@ class SCATTER5_MT_emitter_dropdown_menu(bpy.types.Menu):
         emitters = bpy.context.scene.scatter5.get_all_emitters()
 
         for e in emitters:
-
             icon = cust_icon("W_EMITTER" if e is emitter else "W_EMITTER_EMPTY")
             row = layout.row()
             row.enabled = (e is not emitter)
             row.operator("scatter5.set_new_emitter",text=f"Use '{e.name}'", icon_value=icon,).obj_name = e.name
+            continue
 
         layout.separator()
 
@@ -146,17 +146,18 @@ class SCATTER5_MT_emitter_dropdown_menu(bpy.types.Menu):
 def draw_emit_panel(self,layout):
 
     scat_scene = bpy.context.scene.scatter5
+    emitters = scat_scene.get_all_emitters()
+    has_emitters = bool(len(emitters)!=0)
         
     main = layout.column()
     main.enabled = scat_scene.ui_enabled
 
-    emitters = scat_scene.get_all_emitters()
-    has_emitters = len(emitters)!=0
-
+    ui_templates.separator_box_out(main)
     ui_templates.separator_box_out(main)
 
-    draw_info(self,main)
-    ui_templates.separator_box_out(main)
+    if (not has_emitters):
+        draw_info(self,main)
+        ui_templates.separator_box_out(main)
 
     if (has_emitters):
         draw_swap(self,main)
@@ -186,7 +187,7 @@ def draw_emit_panel(self,layout):
 def draw_info(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_emit_info", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_emit_info";UI_BOOL_VAL:"1"
+        prop_str = "ui_emit_info", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_emit_info");BOOL_VALUE(1)
         icon = "HELP", 
         name = translate("Information"),
         )
@@ -194,7 +195,7 @@ def draw_info(self,layout):
             
             col = box.column()
 
-            word_wrap( string=translate("Choose an emitter-object where scatter-system(s) settings will be stored.\nYou can swap emitters at any moment on the header above."), layout=col, max_char=33, alignment="CENTER", active=True, icon="INFO")
+            word_wrap( string=translate("Choose an emitter-object!\nEmitters is where scatter-system(s) settings will be stored.\nYou can swap emitters at any moment on our plugin headers."), layout=col, max_char=33, alignment="CENTER", active=True, icon="INFO")
 
             ui_templates.separator_box_in(box)
 
@@ -214,9 +215,9 @@ def draw_info(self,layout):
 def draw_nonlinear_new(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_emit_nonlinear_new", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_emit_nonlinear_new";UI_BOOL_VAL:"0"
+        prop_str = "ui_emit_nonlinear_new", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_emit_nonlinear_new");BOOL_VALUE(0)
         icon = "RNA_ADD", 
-        name = translate("Non-Linear Emitter"),
+        name = translate("Dummy Emitter"),
         )
     if is_open:
 
@@ -229,7 +230,7 @@ def draw_nonlinear_new(self,layout):
 
             button = col.row(align=True)
             button.scale_y=1.2
-            button.operator("scatter5.new_nonlinear_emitter",text=translate("New Empty Emitter"), icon="RNA_ADD",)
+            button.operator("scatter5.new_nonlinear_emitter",text=translate("Create Dummy Emitter"), icon="RNA_ADD",)
 
             ui_templates.separator_box_in(box)
 
@@ -248,7 +249,7 @@ def draw_nonlinear_new(self,layout):
 def draw_swap(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_emit_swap", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_emit_swap";UI_BOOL_VAL:"1"
+        prop_str = "ui_emit_swap", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_emit_swap");BOOL_VALUE(1)
         icon = "W_EMITTER", 
         name = translate("Emitter In Use"),
         )
@@ -256,16 +257,26 @@ def draw_swap(self,layout):
 
             row = box.row()
             row.separator(factor=0.3)
-            col = row.column()
+            element_box = row.box()
             row.separator(factor=0.3)
 
             #emitter select box 
 
             for e in bpy.context.scene.scatter5.get_all_emitters():
+            
+                element = element_box.row(align=True)
+                element.scale_y = 0.8
 
-                button = col.row(align=True)
-                button.scale_y=1.2
-                button.operator("scatter5.set_new_emitter",text=e.name, emboss=True, icon_value=cust_icon("W_EMITTER"),).obj_name = e.name
+                sub = element.row(align=True)
+                sub.alignment = "LEFT"
+                op = sub.operator("scatter5.set_new_emitter",text=e.name, emboss=False, icon_value=cust_icon("W_EMITTER"),)
+                op.obj_name = e.name
+                op.select = True
+
+                #thanks blender aligmnet system
+                sub = element.row(align=True)
+                
+                continue
 
             ui_templates.separator_box_in(box)
 
@@ -283,7 +294,7 @@ def draw_swap(self,layout):
 def draw_remesh(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_emit_remesh", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_emit_remesh";UI_BOOL_VAL:"0"
+        prop_str = "ui_emit_remesh", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_emit_remesh");BOOL_VALUE(0)
         icon = "MOD_REMESH", 
         name = translate("Utility Remesh"),
         )

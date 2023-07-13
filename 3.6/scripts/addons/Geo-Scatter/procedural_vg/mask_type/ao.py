@@ -204,13 +204,13 @@ def prepare_and_bake_ao(o, obstacles, samples=32,):
     scene.cycles.device = 'CPU'
     scene.cycles.bake_type = 'AO'
     scene.cycles.samples = samples
-    scene.render.bake.target = 'VERTEX_COLORS'
+    scene.render.bake.target = 'VERTEX_COLORS' #now color attributes
 
     # bake operator
     bpy.ops.object.bake(type='AO')
     
     # get baked values
-    ao = np.zeros(len(o.data.vertices), dtype=np.float, )
+    ao = np.zeros(len(o.data.vertices), dtype=np.float64, )
     for i, l in enumerate(o.data.loops):
         ao[l.vertex_index] = np.sum( np.array(vcol.data[i].color[:3]) ) / 3
     
@@ -225,7 +225,6 @@ def prepare_and_bake_ao(o, obstacles, samples=32,):
             else: exec(f"obj.{k}={v}")
 
     return ao
-
 
 
 def get_ao(o, samples=1000, obstacles_method="scene", hide_particles=True, collection=None,):
@@ -249,7 +248,6 @@ def get_ao(o, samples=1000, obstacles_method="scene", hide_particles=True, colle
         ao = prepare_and_bake_ao(o=o, obstacles=obstacles, samples=samples,)
 
     return ao 
-
 
 
 def add():

@@ -27,10 +27,6 @@ from .. resources import directories
 
 #some related class functions:
 
-def poll_closed_curve_type(self, object):
-    return ( (object.type=="CURVE") and (object.data.splines[0].use_cyclic_u==True) )
-
-
 def upd_thumbcrea_use_current_blend_path(self,context):
   if (not self.thumbcrea_use_current_blend_path):
       return None
@@ -66,12 +62,12 @@ class SCATTER5_PR_save_operator_preset(bpy.types.PropertyGroup):
         )
     precrea_texture_is_unique : bpy.props.BoolProperty(
         name=translate("Create Unique Textures"),
-        description=translate("When creating a texture data, Geo-Scatter will by default always create a new texture data. If this option is set to False, Geo-Scatter will use the same texture data, if found in the user .blend"),
+        description=translate("When creating a texture data, our plugin will, by default, always create a new texture data. If this option is set to False, our plugin will use the same texture data, if found in the user .blend"),
         default=True, 
         )
     precrea_texture_random_loc : bpy.props.BoolProperty(
         name=translate("Random Textures Translation"),
-        description=translate("When creating a texture data, Geo-Scatter will randomize the location vector, useful to guarantee patch uniqueness location. Disable this option if you are using a texture that have an influence on multiple particle systems."),
+        description=translate("When creating a texture data, our plugin will randomize the location vector, useful to guarantee patch uniqueness location. Disable this option if you are using a texture that have an influence on multiple particle systems."),
         default=True, 
         )
     precrea_auto_render : bpy.props.BoolProperty(
@@ -101,19 +97,19 @@ class SCATTER5_PR_save_biome_to_disk_dialog(bpy.types.PropertyGroup):
         )
     biocrea_texture_is_unique : bpy.props.BoolProperty(
         name=translate("Create unique textures"),
-        description=translate("When creating a texture data, Geo-Scatter will by default always create a new texture data. If this option is set to False, Geo-Scatter will use the same texture data, if found in the user .blend"),
+        description=translate("When creating a texture data, our plugin will, by default, always create a new texture data. If this option is set to False, our plugin will use the same texture data, if found in the user .blend"),
         default=True,
         )
     biocrea_texture_random_loc : bpy.props.BoolProperty(
         name=translate("Random textures translation"),
-        description=translate("When creating a texture data, Geo-Scatter will randomize the location vector, useful to guarantee patch uniqueness location. Disable this option if you are using a texture that have an influence on multiple particle systems."),
+        description=translate("When creating a texture data, our plugin will randomize the location vector, useful to guarantee patch uniqueness location. Disable this option if you are using a texture that have an influence on multiple particle systems."),
         default=True,
         )
 
     #use biome display
     biocrea_use_biome_display : bpy.props.BoolProperty(
         name=translate("Encode display settings"),
-        description=translate("In Geo-Scatter 5 You can replace your instances with placeholders, by toggling this option, Geo-Scatter will also encode the placeholder settings. (If using custom placeholder, scatter5 will automatically export the object for you, note that if you decide to use your own .blend file you will need to make sure tha tthe placeholder object is present in your .blend)."),
+        description=translate("In our plugin, you can replace your instances in the viewport and display them as placeholder object, by toggling this option, our plugin will also encode the placeholder settings. (If using custom placeholder, scatter5 will automatically export the object for you, note that if you decide to use your own .blend file you will need to make sure tha tthe placeholder object is present in your .blend)."),
         default=True,
         )
 
@@ -145,17 +141,20 @@ class SCATTER5_PR_save_biome_to_disk_dialog(bpy.types.PropertyGroup):
         )
     
     #biome instance export 
-    biocrea_external_blend_allow : bpy.props.BoolProperty(
-        name=translate("Use existing .blend files"),
-        description=translate("By default the biome saving operator will export your instances in a new .blend file, perhaps you are creating biomes for a library that needs to stored it's assets elsewhere? If this is the case, enable this option then enter the name of the blend file from where these instances are stored."),
-        default=False,
+    biocrea_storage_method : bpy.props.EnumProperty(
+        name=translate("Storage Type"),
+        description=translate("Would you like us to generate a new .blend file containing all the assets for you? Or perhaps all the assets are already stored somewhere, such as in a library that the biome-system could re-use?"),
+        default="create", 
+        items=( ("create" ,translate("Export the models (create .blend)") ,translate("Objects used by this biome will be exported in a new .blend file, typically called 'my_biome.instances.blend'"),),
+                ("exists" ,translate("Models exists in a library!") ,translate("Objects used by this biome already exists in your library somewhere, and you'd prefer the biome system to look for these assets."),),
+              ),
         )
-    biocrea_storage_type : bpy.props.EnumProperty(
+    biocrea_storage_library_type : bpy.props.EnumProperty(
         name=translate("Storage Method"),
         description=translate("Please tell us how your blend files are stored"),
         default="centralized", 
-        items=( ("centralized" ,translate("One Centralized .blend") ,translate("Objects used by this biome are centralized in one and only .blend file, you will need to tell us thename of this file."),),
-                ("individual" ,translate("Individual .blends") ,translate("Objects used by this biome are all made of individual blend file. In order to use this option all of your instances objects needs to be LINKED, that way we will automatically find the .blend source. Note that importing from many various blend sources is slower than the centralized method."),),
+        items=( ("centralized" ,translate("One central .blend") ,translate("Objects used by this biome are centralized in one and only .blend file, you will need to tell us thename of this file."),),
+                ("individual" ,translate("Many individual .blends") ,translate("Objects used by this biome are all made of individual blend file. In order to use this option all of your instances objects needs to be LINKED, that way we will automatically find the .blend source. Note that importing from many various blend sources is slower than the centralized method."),),
               ),
         )
     biocrea_centralized_blend : bpy.props.StringProperty(
@@ -167,14 +166,6 @@ class SCATTER5_PR_save_biome_to_disk_dialog(bpy.types.PropertyGroup):
         default=True,
         name=translate("Reload library afterwards"),
         )
-
-    """
-    biocrea_centralized_blend_search_from_addon_directory : bpy.props.BoolProperty(
-       name=translate(".Blend located in addon Directory?"),
-       description=translate("Perhaps your centralized .blend is located within an addon? if it is the case, toggle this option, scatter will search for a .blend with such name in the addon folder."),
-       default=False,
-       )
-    """
 
     #biome export gui steps
     biocrea_creation_steps : bpy.props.IntProperty(
@@ -262,7 +253,7 @@ class SCATTER5_PR_generate_thumbnail(bpy.types.PropertyGroup):
         )
     thumbcrea_custom_blend_path  : bpy.props.StringProperty(
         name=translate("Blend Path"),
-        description=translate("Geo-Scatter will open this .blend add the biome on the emitter named below then launch a render."),
+        description=translate("The plugin will open this .blend add the biome on the emitter named below then launch a render."),
         default=os.path.join(directories.addon_thumbnail,"custom_biome_icons.blend"),
         )
     thumbcrea_custom_blend_emitter : bpy.props.StringProperty(
@@ -282,7 +273,7 @@ class SCATTER5_PR_generate_thumbnail(bpy.types.PropertyGroup):
 class SCATTER5_PR_objects(bpy.types.PropertyGroup):
 
     name : bpy.props.StringProperty(
-        get=lambda self: self.object.name if (self.object is not None) else ""
+        get=lambda self: self.object.name if (self.object is not None) else "",
         )
     object : bpy.props.PointerProperty(
         type=bpy.types.Object,
@@ -317,7 +308,7 @@ class Inherit_f_surfaces:
         ) #internal use by SCATTER5_OT_define_objects + creation panel popovers
     
     f_surface_method : bpy.props.EnumProperty(
-        name=translate("Method"),
+        name=translate("Surface Method"),
         default="emitter", 
         items=( ("emitter",translate("Emitter"),translate("Distribute instances only on the surface of your emitter object."),"INIT_ICON:W_EMITTER",1),
                 ("object",translate("Single Object"),translate("Distribute instances on the surface of any chosen object. This leads to a non-linear workflow."),"INIT_ICON:W_SURFACE_SINGLE",2),
@@ -327,7 +318,8 @@ class Inherit_f_surfaces:
         )
     f_surface_object : bpy.props.PointerProperty(
         type=bpy.types.Object,
-        description=translate("Non-Linear Surface"),
+        description=translate("Chosen Surface"),
+        poll=lambda s,o: o.name in bpy.context.scene.objects,
         )
 
     def get_f_surfaces(self):
@@ -381,14 +373,14 @@ class Inherit_f_mask_settings:
               ),
         )
     f_mask_assign_vg : bpy.props.StringProperty(
-        default="",
+        default="", #WARNING: should normally use s.get_surfaces_match_attr("vg")(s,c,e) but surely too complex to implement
         )
     f_mask_assign_bitmap : bpy.props.StringProperty(
         default="",
         )
     f_mask_assign_curve_area : bpy.props.PointerProperty(
         type=bpy.types.Object, 
-        poll=poll_closed_curve_type,
+        poll=lambda s,o: o.type=="CURVE",
         )
     f_mask_assign_reverse : bpy.props.BoolProperty(
         default=False,
@@ -401,7 +393,7 @@ class Inherit_f_mask_settings:
         )
     f_mask_paint_curve_area : bpy.props.PointerProperty(
         type=bpy.types.Object, 
-        poll=poll_closed_curve_type,
+        poll=lambda s,o: o.type=="CURVE",
         )
 
 class Inherit_f_visibility_settings:
@@ -458,18 +450,18 @@ class Inherit_f_visibility_settings:
         soft_max=200, 
         )
     f_visibility_maxload_allow : bpy.props.BoolProperty( 
-        description=translate("Define the maximal amount of instances you are able to see in the viewport"),
+        description=translate("Define the maximum amount of instances you are able to see in the viewport"),
         default=False,
         )
     f_visibility_maxload_cull_method : bpy.props.EnumProperty(
-        name=translate("What to do once reaching chosen instance count threshold?"),
+        name=translate("What to do once the chosen instance count threshold is reached?"),
         default="maxload_limit",
         items=( ("maxload_limit", translate("Limit"),translate("Limit how many instances are visible on screen. The total amount of instances produced by this scatter-system will never exceed the given threshold."),),
                 ("maxload_shutdown", translate("Shutdown"),translate("If total amount of instances produced by this scatter-system goes beyond given threshold, we will shutdown the visibility of this system entirely"),),
               ),
         )
     f_visibility_maxload_treshold : bpy.props.IntProperty(
-        description=translate("The system will either limit or shutdown what's visible, approximately above the chosen threshold"),
+        description=translate("The system will either limit or shut down what's visible, approximately above the chosen threshold"),
         name=translate("Max Instances"),
         min=1,
         soft_min=1_000,
@@ -504,19 +496,23 @@ class Inherit_f_security_settings:
 
     f_sec_count_allow : bpy.props.BoolProperty(
         default=True,
+        description=translate("Enable/Disable the heavy scatter count security detector")
         )
     f_sec_count : bpy.props.IntProperty(
         default=199_000,
-        min=1_000,
-        description=translate("This threshold value represents the maximal visible particle count. If threshold reached on scattering operation, Geo-Scatter will automatically hide your particle system.")
+        min=1,
+        soft_max=1_000_000,
+        description=translate("This threshold value represents the maximal visible particle count. If threshold reached on scattering operation, our plugin will automatically hide your particle system and display the security warning menu")
         )
     f_sec_verts_allow : bpy.props.BoolProperty(
         default=True,
+        description=translate("Enable/Disable the heavy object vertices count security detector")
         )
     f_sec_verts : bpy.props.IntProperty(
         default=199_000,
-        min=1_000,
-        description=translate("This threshold value represents the maximal allowed vertex count of your future instance(s). If the threshold has been reached during the scattering operation, Geo-Scatter will automatically set your instance(s) display as wired bounding box.")
+        min=1,
+        soft_max=1_000_000,
+        description=translate("This threshold value represents the maximal allowed vertex count of your future instance(s). If the threshold has been reached during the scattering operation, our plugin will automatically set your instance(s) display as wired bounding box and display the security warning menu.")
         )
 
 class SCATTER5_PR_creation_operators(bpy.types.PropertyGroup, Inherit_f_visibility_settings, Inherit_f_display_settings, Inherit_f_security_settings, Inherit_f_surfaces,):

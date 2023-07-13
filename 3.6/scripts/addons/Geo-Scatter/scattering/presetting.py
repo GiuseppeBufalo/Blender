@@ -307,17 +307,17 @@ def dict_to_settings( d, psy,
                     settpsy_check("s_mask_boolvol_coll_ptr")
                     settpsy_check("s_mask_boolvol_revert")
 
-                #Upward Obstruction
-
-                if settpsy_check("s_mask_upward_allow", return_value=True):
-                    settpsy_check("s_mask_upward_coll_ptr")
-                    settpsy_check("s_mask_upward_revert")
-
                 #Material
 
                 if settpsy_check("s_mask_material_allow", return_value=True):
                     settpsy_check("s_mask_material_ptr")
                     settpsy_check("s_mask_material_revert")
+
+                #Upward Obstruction
+
+                if settpsy_check("s_mask_upward_allow", return_value=True):
+                    settpsy_check("s_mask_upward_coll_ptr")
+                    settpsy_check("s_mask_upward_revert")
 
             #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SCALE
 
@@ -1082,7 +1082,7 @@ def settings_to_dict( psy,
     use_random_seed=True,
     texture_is_unique=True,
     texture_random_loc=True,
-    get_estimated_density=True,
+    get_scatter_density=False,
     #filter the settings by category, by default we never save some settings in preset file, however this function is used universally in this plugin
     s_filter={
         "s_color":True,
@@ -1165,8 +1165,8 @@ def settings_to_dict( psy,
     d["name"] = psy.name
 
     if s_filter.get("s_distribution"):
-        if (get_estimated_density):
-            d["estimated_density"] = psy.get_estimated_density()
+        if (get_scatter_density):
+            d["estimated_density"] = psy.get_scatter_density()
 
     if s_filter.get("s_color"):
         d[">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> COLOR"] = ""
@@ -1331,19 +1331,19 @@ def settings_to_dict( psy,
             d["s_mask_boolvol_coll_ptr"] = psy.s_mask_boolvol_coll_ptr
             d["s_mask_boolvol_revert"] = psy.s_mask_boolvol_revert
 
-        #Upward Obstruction
-
-        d["s_mask_upward_allow"] = psy.s_mask_upward_allow
-        if psy.s_mask_upward_allow:
-            d["s_mask_upward_coll_ptr"] = psy.s_mask_upward_coll_ptr
-            d["s_mask_upward_revert"] = psy.s_mask_upward_revert
-
         #Material
 
         d["s_mask_material_allow"] = psy.s_mask_material_allow
         if psy.s_mask_material_allow:
             d["s_mask_material_ptr"] = psy.s_mask_material_ptr
             d["s_mask_material_revert"] = psy.s_mask_material_revert
+
+        #Upward Obstruction
+
+        d["s_mask_upward_allow"] = psy.s_mask_upward_allow
+        if psy.s_mask_upward_allow:
+            d["s_mask_upward_coll_ptr"] = psy.s_mask_upward_coll_ptr
+            d["s_mask_upward_revert"] = psy.s_mask_upward_revert
 
     if s_filter.get("s_scale"):
         d[">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> SCALE"] = ""
@@ -2268,7 +2268,7 @@ class DualPresetMenu(bpy.types.Menu):
             col.separator()
 
             #paste category do not make sense for the following settings categories
-            s_category = context.s5_ctxt_ptr_popover.path_from_id().split(".")[-1] #context argument only available per headers
+            s_category = context.pass_ui_arg_popover.path_from_id().split(".")[-1] #context argument only available per headers
             if (s_category in ("s_surface","s_display","s_visibility","s_mask")):
                 col.enabled = False
 
@@ -2391,6 +2391,7 @@ class SCATTER5_OT_save_category_preset(bpy.types.Operator):
             use_random_seed=False,
             texture_is_unique=True,
             texture_random_loc=False,
+            get_scatter_density=True,
             s_filter={self.single_category:True},
             ) 
 
@@ -2444,7 +2445,7 @@ class SCATTER5_OT_save_operator_preset(bpy.types.Operator):
         scat_op    = scat_scene.operators.save_operator_preset
 
         box, is_open = ui_templates.box_panel(self, layout, 
-            prop_str = "ui_dialog_presetsave", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_presetsave";UI_BOOL_VAL:"1"
+            prop_str = "ui_dialog_presetsave", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_presetsave");BOOL_VALUE(1)
             icon = "PRESET_NEW", 
             name = translate("Export Selected as Preset(s)") if (not self.biome_overwrite_mode) else translate("Overwrite Biome Preset"),
             )
@@ -2459,7 +2460,7 @@ class SCATTER5_OT_save_operator_preset(bpy.types.Operator):
             if (not self.biome_overwrite_mode):
 
                 txt = s2.column(align=True)
-                txt.label(text=translate("Geo-Scatter 5 will create the Following Presets :"))
+                txt.label(text=translate("We will create the Following Presets :"))
                 txt.scale_y = 0.8
                 future_names = [ legal(p.name).lower().replace(" ","_") for p in self.export_psys]
                 one_exists = False
@@ -2550,6 +2551,7 @@ class SCATTER5_OT_save_operator_preset(bpy.types.Operator):
                 use_random_seed=scat_op.precrea_use_random_seed,
                 texture_is_unique=scat_op.precrea_texture_is_unique,
                 texture_random_loc=scat_op.precrea_texture_random_loc,
+                get_scatter_density=True,
                 ) 
 
             #by default classic preset export path!
@@ -2602,12 +2604,13 @@ PresetGallery = {}
 def gallery_register():
     """Dynamically create EnumProperty from custom loaded previews"""
 
-    items = [ ( "nothing", translate("Nothing Found"), "", cust_icon("W_DEFAULT_NO_PRESET_FOUND"), 0,), ]
+    items = [ ( "nothing_found", translate("Nothing Found"), "", cust_icon("W_DEFAULT_NO_PRESET_FOUND"), 0,), ]
 
     global PresetGallery 
     PresetGallery = get_previews_from_directory(directories.lib_presets, format=".jpg")
 
     listpreset = [ file.replace(".preset","") for file in os.listdir(directories.lib_presets) if file.endswith(".preset") ]
+    listpreset = sorted(listpreset) #MacOs directories might not be ordered
     if (len(listpreset)!=0): 
         items = [ ( e, e.title().replace("_"," "), "", PresetGallery[e].icon_id if (e in PresetGallery) else cust_icon("W_DEFAULT_PREVIEW"), i, ) for i,e in enumerate(listpreset) ]
 

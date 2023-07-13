@@ -135,7 +135,7 @@ def get_curvature_data(o, crop=0, eval_modifiers=False ):
     bm.edges.ensure_lookup_table()
     bm.verts.ensure_lookup_table()
 
-    values = np.zeros(len(bm.verts), np.float)
+    values = np.zeros(len(bm.verts), np.float64,)
     
     #get vert values from linked eges angles
     for i, v in enumerate(bm.verts):
@@ -151,7 +151,7 @@ def get_curvature_data(o, crop=0, eval_modifiers=False ):
     
     #prenvent zero division if plane is totally flat
     if(maxi - mini == 0.0):
-        values = np.ones(len(values), np.float)
+        values = np.ones(len(values), np.float64,)
 
     values = (values - mini) / (maxi - mini)
 

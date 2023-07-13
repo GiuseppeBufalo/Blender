@@ -122,7 +122,7 @@ def get_altitude_data(o,eval_modifiers=False):
 
     # get vertex locations
     l = len(ob.vertices)
-    vs = np.zeros((l * 3), dtype=np.float, )
+    vs = np.zeros((l * 3), dtype=np.float64, )
     ob.vertices.foreach_get("co", vs, )
     vs.shape = (l, 3, )
     

@@ -161,10 +161,10 @@ def get_position_data(o ,absolute=False, normalize=False, space="LOCAL", mode="D
     # get vertex locations
 
     l = len(ob.vertices)
-    co = np.zeros((l * 3), dtype=np.float, )
+    co = np.zeros((l * 3), dtype=np.float64, )
     ob.vertices.foreach_get("co", co, ) #going from -1 to 1
     co.shape = (l, 3, )
-    result = np.zeros((l), dtype=np.float, )
+    result = np.zeros((l), dtype=np.float64, )
 
     #convert coordinates to space
     

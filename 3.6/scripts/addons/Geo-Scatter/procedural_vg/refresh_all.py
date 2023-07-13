@@ -40,8 +40,8 @@ class SCATTER5_OT_refresh_every_masks(bpy.types.Operator):
 class SCATTER5_OT_refresh_mask(bpy.types.Operator):
 
     bl_idname      = "scatter5.refresh_mask"
-    bl_label       = translate("Refresh a Mask")
-    bl_description = translate("Refresh a Mask")
+    bl_label       = translate("Refresh a mask")
+    bl_description = translate("Refresh a mask")
     bl_options     = {'INTERNAL','UNDO'}
 
     mask_type : bpy.props.StringProperty()

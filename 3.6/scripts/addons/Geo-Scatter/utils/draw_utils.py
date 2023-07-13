@@ -57,8 +57,12 @@ def add_font(text="Hello World", size=[50,72], position=[2,180], color=[1,1,1,0.
         blf.position(font_id, pos_x, pos_y, 0)
 
         blf.color(font_id, color[0], color[1], color[2], color[3])
-
-        blf.size(font_id, size[0], size[1])
+        
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size[0], size[1])
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size[0])
 
         if (shadow is not None):
             blf.enable(font_id, blf.SHADOW)
@@ -110,7 +114,7 @@ def clear_all_fonts():
 #             )
 #         indices = ((0, 1, 2), (2, 1, 3))
 
-#         shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+#         shader = gpu.shader.from_builtin('UNIFORM_COLOR')
 #         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)
 #         return shader, batch
 
@@ -164,7 +168,7 @@ def clear_all_fonts():
 #     img_y = height_px
 #     img_x = height_px * (image.size[0]/image.size[1])
 
-#     shader = gpu.shader.from_builtin('2D_IMAGE')
+#     shader = gpu.shader.from_builtin('IMAGE')
 #     batch = batch_for_shader(
 #         shader, 'TRI_FAN',
 #         {
@@ -290,7 +294,7 @@ class SCATTER5_OT_popup_dialog(bpy.types.Operator):
         layout = self.layout
 
         box, is_open = ui_templates.box_panel(self, layout,         
-            prop_str= "ui_dialog_popup", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_popup";UI_BOOL_VAL:"1"
+            prop_str= "ui_dialog_popup", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_popup");BOOL_VALUE(1)
             icon= self.header_icon,
             name= self.header_title,
             )

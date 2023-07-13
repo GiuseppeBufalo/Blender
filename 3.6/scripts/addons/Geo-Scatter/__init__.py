@@ -4,7 +4,6 @@
 # 88  .o 88 Yb      88""   88 Y88 o.`Y8b 88""
 # 88ood8 88  YboodP 888888 88  Y8 8bodP' 888888
 
-
 # Geo-Scatter is a multi program product, please consult our legal page www.geoscatter.com/legal
 
 
@@ -94,53 +93,58 @@
 #       Note that scatter_obj can switch mesh-data to store multiple manual point distribution method.
 #
 
+# oooooooooo.  oooo       o8o               .o88o.           
+# `888'   `Y8b `888       `"'               888 `"           
+#  888     888  888      oooo  ooo. .oo.   o888oo   .ooooo.  
+#  888oooo888'  888      `888  `888P"Y88b   888    d88' `88b 
+#  888    `88b  888       888   888   888   888    888   888 
+#  888    .88P  888       888   888   888   888    888   888 
+# o888bood8P'  o888o     o888o o888o o888o o888o   `Y8bod8P' 
+
 
 bl_info = {
-    "name"            : "Geo-Scatter",
-    "author"          : "bd3d, Carbon2",
-    "description"     : "Geo-Scatter 5.3.2 for Blender 3.3+",
-    "blender"         : (3, 3, 0),
-    "version"         : (5, 3, 2),
-    "engine_version"  : "Scatter5 Geonode Engine MKIII", #& .TEXTURE *DEFAULT* MKIII
-    "wiki_url"        : "https://sites.google.com/view/scatter5docs/manual",
-    "tracker_url"     : "https://discord.gg/vMwNUJxB",
-    "category"        : "",
-}
+    "name"           : "Geo-Scatter",
+    "description"    : "Geo-Scatter 5.4.0 for Blender 3.3+ (Individual License)",
+    "author"         : "bd3d, Carbon2",
+    "blender"        : (3, 3, 0),
+    "version"        : (5, 4, 0),
+    "engine_nbr"     : "MKIV",
+    "engine_version" : "Geo-Scatter Engine MKIV", #& .TEXTURE *DEFAULT* MKIV
+    "doc_url"        : "https://www.geoscatter.com/documentation",
+    "tracker_url"    : "https://discord.gg/vMwNUJxB",
+    "category"       : "",
+    }
+
+# ooo        ooooo            o8o                   ooo        ooooo                 .o8              oooo                     
+# `88.       .888'            `"'                   `88.       .888'                "888              `888                     
+#  888b     d'888   .oooo.   oooo  ooo. .oo.         888b     d'888   .ooooo.   .oooo888  oooo  oooo   888   .ooooo.   .oooo.o 
+#  8 Y88. .P  888  `P  )88b  `888  `888P"Y88b        8 Y88. .P  888  d88' `88b d88' `888  `888  `888   888  d88' `88b d88(  "8 
+#  8  `888'   888   .oP"888   888   888   888        8  `888'   888  888   888 888   888   888   888   888  888ooo888 `"Y88b.  
+#  8    Y     888  d8(  888   888   888   888        8    Y     888  888   888 888   888   888   888   888  888    .o o.  )88b 
+# o8o        o888o `Y888""8o o888o o888o o888o      o8o        o888o `Y8bod8P' `Y8bod88P"  `V88V"V8P' o888o `Y8bod8P' 8""888P' 
 
 
-import bpy
+MODULE_NAMES = (
+    "resources",
+    "widgets",
+    "manual",        
+    "properties",
+    "scattering",
+    "curve",
+    "procedural_vg", 
+    "utils",
+    "terrain",       
+    "handlers",
+    "ui",
+    )
 
-#from . import cpp #cpp functions only for baking for now 
-from . import resources
-from . import widgets
-from . import manual
-from . import properties
-from . import scattering
-from . import curve
-from . import procedural_vg
-from . import utils
-from . import terrain
-from . import handlers
-#from . import baking #not used for now prolly for 5.1
-from . import ui
-from . import external
-
-main_modules = [ 
-    #cpp,
-    resources,
-    widgets,
-    manual,
-    properties,
-    scattering,
-    curve,
-    procedural_vg, 
-    utils,
-    terrain,
-    handlers,
-    #baking,
-    ui, 
-    external,
-    ]
+# Import the modules dynamically
+import importlib
+MAIN_MODULES = []
+for module_name in MODULE_NAMES:
+    module = importlib.import_module("." + module_name, __package__)
+    MAIN_MODULES.append(module)
+    continue 
 
 
 #   .oooooo.   oooo
@@ -181,17 +185,27 @@ def cleanse_modules():
 
 def register():
 
-    for m in main_modules:
-        m.register()
+    try:
+        for m in MAIN_MODULES:
+            m.register()
+            
+    # very common user report, previously failed register, then user try to register again, and stumble into the first already registered class
+    # we don't want them to report this specific error, it' useless and don't indicate the original error, most of the time we gently ask them to restart their session
+    # Note that we could skip a class register if the class is already registered, however the initial activation process shouldn't be faulty at the first place
+    
+    except Exception as e:        
+        if ("register_class(...): already registered as a subclass 'SCATTER5_OT_print_icon_id'" in str(e)):
+            raise Exception("\n\nDear User,\nAre you using the correct version of blender with our plugin?\nAn error occured during this activation, it seems that a previous activation failed\nPlease restart blender\n\n")
+        raise e
     
     return None
 
 def unregister():
 
-    for m in reversed(main_modules):
+    for m in reversed(MAIN_MODULES):
         m.unregister()
 
-    #final step, remove modules from sys.modules 
+    # final step, remove modules from sys.modules 
     cleanse_modules()
 
     return None

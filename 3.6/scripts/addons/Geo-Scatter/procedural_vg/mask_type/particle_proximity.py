@@ -14,12 +14,10 @@
 
 import bpy 
 import numpy as np
-from mathutils.kdtree import KDTree
+import mathutils
 
 from ... import utils
 from ... utils.str_utils import no_names_in_double
-
-from ... scattering.export_particles import get_instances_loc
 
 from ... resources.icons import cust_icon
 from ... resources.translate import translate
@@ -132,8 +130,9 @@ def get_particle_prox_data(o, psy_name, radius, eval_modifiers=False,):
     if psy is None:
         return 0
 
-    mat = o.matrix_world
-
+    # Get the inverse of the object's world matrix
+    inv_matrix_world = o.matrix_world.inverted()
+    
     if eval_modifiers == False:
            depsgraph = bpy.context.evaluated_depsgraph_get()
            eo = o.evaluated_get(depsgraph)
@@ -141,23 +140,23 @@ def get_particle_prox_data(o, psy_name, radius, eval_modifiers=False,):
     else:  ob = o.data
 
     l = len(ob.vertices)
-    tree = KDTree(l)
+    tree = mathutils.kdtree.KDTree(l)
     for v in ob.vertices:
         tree.insert(v.co, v.index)
     tree.balance()
 
     weights = [0.0] * len(ob.vertices)
 
-    for p in get_instances_loc(psy.scatter_obj):
-
+    for p in psy.get_instancing_info(loc_data=True):
+        p = inv_matrix_world @ p
         r = tree.find_range(p, radius)
 
         for v, i, d in r:
             w = 1.0 - (d / radius)
             if(weights[i] < w):
                 weights[i] = w
+                
             continue
-
         continue 
 
     return weights

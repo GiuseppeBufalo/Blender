@@ -93,7 +93,7 @@ def draw_settings(layout,i):
                 prprow.operator("scatter5.exec_line",text="",icon="ARROW_LEFTRIGHT", depress=mod[rever]).api = f"emitter = bpy.data.objects['{emitter.name}'] ; mod =  emitter.modifiers['{mod.name}']  ; mod['{rever}'] = not mod['{rever}'] ; mod.show_viewport = not mod.show_viewport ; mod.show_viewport = not mod.show_viewport"
             
             #quickpaint or quick add
-            op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['{vgs}']"
+            op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['{vgs}']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
             
             if exists:
 
@@ -119,7 +119,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,f'["Output_5_attribute_name"]', emitter,"vertex_groups",text="",)
         eval_ptr = mod["Output_5_attribute_name"]
         exists = (eval_ptr in emitter.vertex_groups)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_5_attribute_name']"
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_5_attribute_name']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
     layout.separator()
 
@@ -152,7 +152,7 @@ def add():
     modname = f"Scatter5 {m.name}"
     if (modname not in emitter.modifiers):
 
-        mod = utils.import_utils.import_and_add_geonode( emitter, mod_name=modname, node_name=".Scatter5 VgroupMerge", blend_path=directories.addon_vgmasks_blend, copy=False,)
+        mod = utils.import_utils.import_and_add_geonode(emitter, mod_name=modname, node_name=".Scatter5 VgroupMerge", blend_path=directories.addon_vgmasks_blend, copy=False,)
         mod.show_expanded = False
         mod["Input_2_use_attribute"] = True
         mod["Input_6_use_attribute"] = True
@@ -200,7 +200,7 @@ def refresh(i,obj=None):
     modname = f"Scatter5 {m.name}"
     mod = emitter.modifiers.get(modname)
     if mod is None:
-        mod = utils.import_utils.import_and_add_geonode( emitter, mod_name=modname, node_name=".Scatter5 VgroupMerge", blend_path=directories.addon_vgmasks_blend, copy=False,)
+        mod = utils.import_utils.import_and_add_geonode(emitter, mod_name=modname, node_name=".Scatter5 VgroupMerge", blend_path=directories.addon_vgmasks_blend, copy=False,)
         mod.show_expanded = False
         m.mod_list = modname
 

@@ -127,7 +127,7 @@ def get_slope_data(o,normalize=True,eval_modifiers=False,):
 
     # get vertex normal
     l = len(ob.vertices)
-    vs = np.zeros((l * 3), dtype=np.float, )
+    vs = np.zeros((l * 3), dtype=np.float64, )
     ob.vertices.foreach_get("normal", vs, ) #going from -1 to 1
     vs.shape = (l, 3, )
     

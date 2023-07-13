@@ -191,13 +191,13 @@ def get_normal_data(o, v=[0,0,0], axis=None, absolute=False, normalize=True, obj
 
     # get vertex normal
     l = len(ob.vertices)
-    n = np.zeros((l * 3), dtype=np.float, )
+    n = np.zeros((l * 3), dtype=np.float64, )
     ob.vertices.foreach_get("normal", n, ) #going from -1 to 1
     n.shape = (l, 3, )
 
     # dot product 
     v = np.array( [v] * l )
-    result = np.zeros(l,dtype=np.float,) 
+    result = np.zeros(l,dtype=np.float64, )
     result = np.einsum("ij,ij->i", v,n)
     
     if absolute:

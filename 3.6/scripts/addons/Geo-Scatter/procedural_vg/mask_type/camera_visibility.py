@@ -283,7 +283,7 @@ def camera_visibility(
     if culling:
 
         #get vertices coord 
-        co = np.zeros((l * 3), dtype=np.float, )
+        co = np.zeros((l * 3), dtype=np.float64, )
         ob.vertices.foreach_get("co", co, ) #going from -1 to 1
         co.shape = (l, 3, )
         co = utils.np_utils.np_apply_transforms(o,co)

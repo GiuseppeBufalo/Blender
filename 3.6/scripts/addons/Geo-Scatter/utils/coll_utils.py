@@ -89,7 +89,7 @@ def close_collection_areas():
     return None 
     
 
-def create_new_collection(name, parent_name=None, prefix=False, exclude_scenes=None, assert_scene_link=False,):
+def create_new_collection(name, parent_name=None, prefix=False, exclude_scenes=None,):
     """Create new collection and link in given parent (if not None)."""
         
     #if prefix, == will guarantee to create a new colleciton each time, 
@@ -108,48 +108,56 @@ def create_new_collection(name, parent_name=None, prefix=False, exclude_scenes=N
         parent = bpy.context.scene.collection
         if (parent_name!=None) and (parent_name in bpy.data.collections):
             parent = bpy.data.collections.get(parent_name)
-        
+            
         #if new then need to link it in parent 
         if (new_col.name not in parent.children):
             parent.children.link(new_col)
-
+            
         #and also excluded? 
         if (exclude_scenes):
             exclude_view_layers(new_col, scenes=exclude_scenes, hide=True,)
 
-    if (assert_scene_link): 
-        if (new_col.name not in bpy.context.scene.collection.children): 
-            bpy.context.scene.collection.children.link(new_col)
-    
     return new_col 
 
 
 def create_scatter5_collections():
     """Create scatter collection set-up for this scene"""
         
-    is_first_run = ("Geo-Scatter" not in bpy.data.collections)
-            
-    #Legacy Collection Name
+    #versioning: legacy collection rename
     for col in bpy.data.collections:
-        if col.name.startswith("Scatter5"):
+        if (col.name.startswith("Scatter5")):
             col.name = col.name.replace("Scatter5","Geo-Scatter")
+            
+    initial_creation = ("Geo-Scatter" not in bpy.data.collections)
+    is_relink = not initial_creation and ("Geo-Scatter" not in bpy.context.scene.collection.children)
+            
+    maincoll = create_new_collection("Geo-Scatter",)
+    gscoll = create_new_collection("Geo-Scatter Geonode", parent_name=maincoll.name,)
+    create_new_collection("Geo-Scatter Ins Col", parent_name=maincoll.name, exclude_scenes="all",)
+    create_new_collection("Geo-Scatter Import", parent_name=maincoll.name, exclude_scenes="all",)
+    create_new_collection("Geo-Scatter Extra", parent_name=maincoll.name, exclude_scenes="all",)
+    create_new_collection("Geo-Scatter User Col", parent_name=maincoll.name, prefix=False,)
+    create_new_collection("Geo-Scatter Surfaces", parent_name=maincoll.name, prefix=False,)
 
-    parent = create_new_collection("Geo-Scatter", assert_scene_link=True,)
-    create_new_collection("Geo-Scatter Geonode", parent_name=parent.name,)
-    create_new_collection("Geo-Scatter Ins Col", parent_name=parent.name, exclude_scenes="all",)
-    create_new_collection("Geo-Scatter Import", parent_name=parent.name, exclude_scenes="all",)
-    create_new_collection("Geo-Scatter Extra", parent_name=parent.name, exclude_scenes="all",)
-    create_new_collection("Geo-Scatter User Col", parent_name=parent.name, prefix=False,)
-    create_new_collection("Geo-Scatter Surfaces", parent_name=parent.name, prefix=False,)
+    #we need to close the collection by default if this is the first time we create everything 
+    if (initial_creation):
 
-    #if run this function for the first time
-    if (is_first_run):
-
-        #then we'll need these collections to be closed by default    
         def will_close():
             close_collection_areas()
         bpy.app.timers.register(will_close, first_interval=0.555)
+        
+    #if this is the first time we link this scatter, supposedly to a new scene, we hide some collection from viewlayer to avoid confusion
+    if (is_relink):
+        
+        bpy.context.scene.collection.children.link(maincoll)
 
+        for col in bpy.context.scene.collection.children_recursive:
+            if (col.name.startswith("psy : ") or col.name.startswith("ins_col : ")):
+                exclude_view_layers(col, scenes=[bpy.context.scene], hide=True,)
+            elif (col.name in ("Geo-Scatter Ins Col","Geo-Scatter Surfaces","Geo-Scatter Import","Geo-Scatter Extra")):
+                exclude_view_layers(col, scenes=[bpy.context.scene], hide=True,)
+            continue
+                
     return None 
 
 
@@ -209,8 +217,10 @@ class SCATTER5_OT_create_coll(bpy.types.Operator):
 
         #execute code
         scat_scene = bpy.context.scene.scatter5
-        emitter    = scat_scene.emitter
-        psy_active = emitter.scatter5.get_psy_active() 
+        emitter = scat_scene.emitter
+        
+        psy_active = emitter.scatter5.get_psy_active()
+        group_active = emitter.scatter5.get_group_active()
 
         if (self.pointer_type=='str'):
               exec(f"{self.api}='{new_coll.name}'")
@@ -256,18 +266,17 @@ class SCATTER5_OT_add_to_coll(bpy.types.Operator):
         if (self.alt):
 
             colls = []
-            ctxt_api = context.s5_ctxt_ptr_prop_name.path_from_id().split(".")[-1].replace("passctxt_","")
+            ctxt_api = context.pass_ui_arg_prop_name.path_from_id().split(".")[-1].replace("passctxt_","")
             for p in context.scene.scatter5.emitter.scatter5.get_psys_selected():
                 collname = getattr(p,ctxt_api)
                 coll = bpy.data.collections.get(collname)
                 if (coll is not None):
                     colls.append(coll)
-
         else:
 
             coll = bpy.data.collections.get(self.coll_name)
             if (coll is None):
-                print(f"S5 ERROR : {self.coll_name} not found")
+                print(f"ERROR : {self.coll_name} not found")
                 return {'FINISHED'}
             colls = [coll]
 
@@ -304,7 +313,7 @@ class SCATTER5_OT_remove_from_coll(bpy.types.Operator):
 
         o = bpy.data.objects.get(self.obj_name)
         if (o is None):
-            print(f"S5 ERROR :  {self.obj_name} not found")
+            print(f"ERROR :  {self.obj_name} not found")
             return {'FINISHED'}
 
         #collect all our collections
@@ -312,7 +321,7 @@ class SCATTER5_OT_remove_from_coll(bpy.types.Operator):
         if (self.alt):
 
             colls = []
-            ctxt_api = context.s5_ctxt_ptr_prop_name.path_from_id().split(".")[-1].replace("passctxt_","")
+            ctxt_api = context.pass_ui_arg_prop_name.path_from_id().split(".")[-1].replace("passctxt_","")
             for p in context.scene.scatter5.emitter.scatter5.get_psys_selected():
                 collname = getattr(p,ctxt_api)
                 coll = bpy.data.collections.get(collname)
@@ -323,7 +332,7 @@ class SCATTER5_OT_remove_from_coll(bpy.types.Operator):
 
             coll = bpy.data.collections.get(self.coll_name)
             if (coll is None):
-                print(f"S5 ERROR : {self.coll_name} not found")
+                print(f"ERROR : {self.coll_name} not found")
                 return {'FINISHED'}
             colls = [coll]
 

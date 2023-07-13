@@ -94,13 +94,37 @@ def handler_scene_emitter_cleanup():
         if (not bool(emitter.users_scene)):
             for p in emitter.scatter5.particle_systems:
                 p.remove_psy()
+            emitter.scatter5.particle_interface_refresh()
             continue 
 
         #Dupplicate Emitter == Clean Particle System That do not belongs to correct emitter
         if (emitter.scatter5.particle_systems[0].scatter_obj.scatter5.original_emitter is not emitter) :
             dprint("HANDLER: 'handler_scene_emitter_cleanup'",depsgraph=True)
             emitter.scatter5.particle_systems.clear()
+            emitter.scatter5.particle_interface_refresh()
             break
+
+    return None
+
+def handler_f_surfaces_cleanup():
+    """despgraph: check if no deleted surfaces in f_surfaces"""
+
+    scene = bpy.context.scene
+    op = scene.scatter5.operators.create_operators
+        
+    if (op.f_surface_method=="emitter"):
+        return None 
+
+    elif (op.f_surface_method=="collection"):
+        for i in reversed(range(len(op.f_surfaces))):
+            if (op.f_surfaces[i].name not in scene.objects):
+                op.f_surfaces.remove(i)
+        return None 
+
+    elif (op.f_surface_method=="object"):
+        if (op.f_surface_object is not None) and (op.f_surface_object.name not in scene.objects):
+            op.f_surface_object = None
+        return None 
 
     return None
 
@@ -243,58 +267,9 @@ class SCATTER5_OT_new_nonlinear_emitter(bpy.types.Operator):
         return {'FINISHED'}
         
 
-class SCATTER5_OT_emitter_local_view(bpy.types.Operator):
-
-    bl_idname      = "scatter5.emitter_local_view"
-    bl_label       = ""
-    bl_description = translate("Enter local view with the current emitter and their scatter-system(s)")
-
-    emitter_name : bpy.props.StringProperty()
-
-    def invoke(self, context, event):
-
-        #quit if user is already in local view
-        if (context.space_data.local_view is not None):
-            bpy.ops.view3d.localview()
-
-        scat_scene = bpy.context.scene.scatter5
-        emitter = bpy.data.objects.get(self.emitter_name)
-        psys = emitter.scatter5.particle_systems
-        surfaces = set(s for p in psys for s in p.get_surfaces())
-
-        #if no surfaces found then nothing to do here
-        if (len(surfaces)==0):
-            return {'FINISHED'}
-
-        #deselect all
-        bpy.ops.object.select_all(action='DESELECT')
-
-        #select all surfaces
-        for s in surfaces:
-            bpy.context.view_layer.objects.active = s
-            s.select_set(True)
-
-        #set scatter_obj, need to change viewstate
-        old_hide_select = [(p,p.scatter_obj.hide_select) for p in psys]
-        for p in psys:
-            p.scatter_obj.hide_select = False
-            p.scatter_obj.select_set(True)
-
-        #enter local view state
-        bpy.ops.view3d.localview()
-
-        #change scatter_obj views tate
-        for p,state in old_hide_select:
-            p.scatter_obj.hide_select = state
-            p.scatter_obj.select_set(False)
-
-        return {'FINISHED'}
-
-
 classes = (
 
     SCATTER5_OT_set_new_emitter,
     SCATTER5_OT_new_nonlinear_emitter,
-    SCATTER5_OT_emitter_local_view,
     
     )

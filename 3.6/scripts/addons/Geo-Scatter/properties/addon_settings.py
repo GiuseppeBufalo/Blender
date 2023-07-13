@@ -23,8 +23,6 @@ from .. resources import directories
 
 from .. utils import path_utils 
 
-from .. manual import config
-
 
 def upd_tab_name(self,context):
     """dynamically change category & reload some panel upon update""" 
@@ -47,14 +45,14 @@ def upd_blend_folder(self,context):
     self.high_nest = False    
 
     if (not os.path.exists(self.blend_folder)):
-        print("S5 ERROR: the selected folder do not exists")
+        print("ERROR: the selected folder do not exists")
         print(self.blend_folder)
         return None
 
     folds = path_utils.get_direct_folder_paths(self.blend_folder)
 
     if (folds is None): 
-        print("S5 ERROR: upd_blend_folder() did not find any get_direct_folder_paths()")
+        print("ERROR: upd_blend_folder() did not find any get_direct_folder_paths()")
         return None
 
     for f in folds:
@@ -70,16 +68,18 @@ class SCATTER5_PR_blend_environment_paths(bpy.types.PropertyGroup):
 
     blend_folder : bpy.props.StringProperty(
         subtype="DIR_PATH",
-        description=translate("When creating a biome, Geo-Scatter will search for blends in your _asset_library_ or in the given path"),
+        description=translate("When creating a biome, our plugin will search for blends in your _asset_library_ or in the given path"),
         update=upd_blend_folder
         )
     
     high_nest : bpy.props.IntProperty()
 
+
 class SCATTER5_AddonPref(bpy.types.AddonPreferences):
     """addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences"""
     
-    bl_idname = "Geo-Scatter"
+    from .. __init__ import bl_info
+    bl_idname = bl_info["name"]
 
     # 88b 88      88""Yb    db    88b 88 888888 88        88b 88    db    8b    d8 888888
     # 88Yb88 ___  88__dP   dPYb   88Yb88 88__   88        88Yb88   dPYb   88b  d88 88__
@@ -87,7 +87,7 @@ class SCATTER5_AddonPref(bpy.types.AddonPreferences):
     # 88  Y8      88     dP""""Yb 88  Y8 888888 88ood8    88  Y8 dP""""Yb 88 YY 88 888888
 
     tab_name : bpy.props.StringProperty(
-        default="Geo-Scatter",
+        default=bl_info["name"],
         update=upd_tab_name,
         )
 
@@ -147,6 +147,35 @@ class SCATTER5_AddonPref(bpy.types.AddonPreferences):
     # 88 88 Y88   88   88""   88"Yb  88""    dP__Yb  Yb      88""
     # 88 88  Y8   88   888888 88  Yb 88     dP""""Yb  YboodP 888888
 
+    ui_library_item_size : bpy.props.FloatProperty(
+        default=7.0,
+        min=5,
+        max=15,
+        name=translate("Item Size")
+        )
+    ui_library_typo_limit : bpy.props.IntProperty(
+        default=40,
+        min=4,
+        max=100,
+        name=translate("Typo Limit"),
+        )
+    ui_library_adaptive_columns : bpy.props.BoolProperty(
+        name=translate("Adaptive Columns"),
+        default=True,
+        )
+    ui_library_columns : bpy.props.IntProperty(
+        default=4,
+        min=1,
+        max=40,
+        soft_max=10,
+        name=translate("Number of Columns"),
+        )
+    ui_lister_scale_y : bpy.props.FloatProperty(
+        default=1.2,
+        min=0.1,
+        max=5,
+        name=translate("Row Height")
+        )
     ui_use_dark_box : bpy.props.BoolProperty(
         default=False,
         )
@@ -154,7 +183,7 @@ class SCATTER5_AddonPref(bpy.types.AddonPreferences):
         default=False,
         )
     ui_selection_y : bpy.props.FloatProperty(
-        default=0.85,
+        default=0.86,
         soft_min=0.7,
         max=1.25,
         )
@@ -189,28 +218,34 @@ class SCATTER5_AddonPref(bpy.types.AddonPreferences):
         min=0.1,
         max=3,
         )
+    ui_apply_scale_warn : bpy.props.BoolProperty(
+        default=True,
+        )
     
-    # # NOTE: no longer active, multiplier moved to theme. will be part of manual mode theme ui.
-    # ui_scale_viewport : bpy.props.FloatProperty( # NOTE: used in `widgets.infobox.SC5InfoBox` as a multiplier of system `bpy.context.preferences.system.ui_scale`
-    #     default=1.0,
-    #     min=0.25,
-    #     max=4.0,
-    #     )
+    # 8b    d8    db    88b 88 88   88    db    88         888888 88  88 888888 8b    d8 888888 
+    # 88b  d88   dPYb   88Yb88 88   88   dPYb   88           88   88  88 88__   88b  d88 88__   
+    # 88YbdP88  dP__Yb  88 Y88 Y8   8P  dP__Yb  88  .o       88   888888 88""   88YbdP88 88""   
+    # 88 YY 88 dP""""Yb 88  Y8 `YbodP' dP""""Yb 88ood8       88   88  88 888888 88 YY 88 888888 
     
-    # manual mode theme
-    manual_theme: bpy.props.PointerProperty(type=config.SCATTER5_PR_preferences_theme, )
-    manual_use_overlay: bpy.props.BoolProperty(name="Use Overlay", default=True, )
+    from .. manual import config
+    manual_theme : bpy.props.PointerProperty(type=config.SCATTER5_PR_preferences_theme, )
+    manual_use_overlay : bpy.props.BoolProperty(name="Use Overlay", default=True, )
     
     # 8888b.  888888 88""Yb 88   88  dP""b8
     #  8I  Yb 88__   88__dP 88   88 dP   `"
     #  8I  dY 88""   88""Yb Y8   8P Yb  "88
     # 8888Y"  888888 88oodP `YbodP'  YboodP
 
-    debug             : bpy.props.BoolProperty(default=False)
-    debug_depsgraph   : bpy.props.BoolProperty(default=False)
+    debug_interface : bpy.props.BoolProperty(default=False)
+    debug : bpy.props.BoolProperty(default=False)
+    debug_depsgraph : bpy.props.BoolProperty(default=False)
 
-
+    # 8888b.  88""Yb    db    Yb        dP 
+    #  8I  Yb 88__dP   dPYb    Yb  db  dP  
+    #  8I  dY 88"Yb   dP__Yb    YbdPYbdP   
+    # 8888Y"  88  Yb dP""""Yb    YP  YP     
     #drawing part in ui module
+    
     def draw(self,context):
         layout = self.layout
         ui_addon.draw_addon(self,layout) #need to draw addon prefs from here..

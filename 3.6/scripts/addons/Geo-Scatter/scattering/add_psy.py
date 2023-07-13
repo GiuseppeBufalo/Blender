@@ -23,8 +23,6 @@ from .. utils.import_utils import import_selected_assets
 from .. utils.path_utils import json_to_dict
 from .. utils.event_utils import get_mouse_context
 
-from .. manual import brushes
-
 from . import presetting
 
 from . instances import find_compatible_instances
@@ -78,7 +76,6 @@ Important info:
                                   
 
 """
-
 
 # oooooooooooo               .
 # `888'     `8             .o8
@@ -208,11 +205,12 @@ def utils_find_args(context, pop_msg=True, emitter_name="", surfaces_names="", i
 
     l = [ bpy.data.objects[n] for n in surfaces_names.split("_!#!_") if n in context.scene.objects ]
     surfaces = list(find_compatible_surfaces(l))
+    
     #no surfaces found? 
     if (len(surfaces)==0):
         
         if (pop_msg):
-            msg = translate("\nNo valid surface(s) found.\nPlease Define your Surfaces.\n")
+            msg = translate("\nNo valid surface(s) found.\nPlease Define your Surfaces\nIn the Operator Menu.\n")
             bpy.ops.scatter5.popup_menu(msgs=msg, title=translate("Action Failed"),icon="ERROR",)
         
         print("utils_find_args: Error, no surfaces found")
@@ -227,25 +225,35 @@ def utils_find_args(context, pop_msg=True, emitter_name="", surfaces_names="", i
               l = [ o for o in bpy.context.selected_objects if (o.type=="MESH") ]
         else: l = [ bpy.data.objects[n] for n in instances_names.split("_!#!_") if n in bpy.data.objects ] #pass object or not?
     instances = list(find_compatible_instances(l, emitter=emitter,))
+    
     #no instances found?
     if (len(instances)==0):
         
         if (pop_msg):
-
+            
+            #no instances selected in the viewport?
             if (selection_mode=="viewport"):
                 msg = translate("\nNo valid object(s) found in selection.\n\nPlease select the object(s) you want to Scatter in the viewport.\n")
             
+            #no instances selected in the asset browser?
             elif (selection_mode=="browser"):
-                if (bpy.context.window):
+
+                #headless state not supported for such
+                if (not bpy.context.window):
+                    print("utils_find_args: Warning, no support for this operator in blender headless, it relies on window selection")
+                    
+                #determine why the user couldn't find selected assets. No assets opened? More than one asset open? or nothing selected? Maybe, is set to 'ALL' category?
+                else:
                     browsers_found = [a for w in bpy.context.window_manager.windows for a in w.screen.areas if (a.ui_type=="ASSETS")]
                     msg = translate("\nWe haven't found an asset-browser editor open.\n\nThis selection-method works with the blender asset-browser.\n")
                     if (len(browsers_found)==1):
                         msg = translate("\nNo Asset(s) selected in the asset-browser.\n")
+                        if (bpy.context.blend_data.version[0]>=3 and bpy.context.blend_data.version[1]>=5): #Maybe, is set to 'ALL' category? annoying mode since blender 3.5
+                            msg += translate("\nPlease avoid using the “All” Library.\n")
                     elif (len(browsers_found)>1):
-                        msg = translate("\nNo Asset(s) selected in the asset-browser.\n\nIt looks like many browser(s) are opened? We picked the first one.\n")
-                else:
-                    print("utils_find_args: Warning, no support for this operator in blender headless, it relies on window selection")
+                        msg = translate("\nNo Asset(s) selected in the asset-browser.\n\nIt looks like many browser(s) are open? We picked the first one.\n")
             
+            #popup error message
             bpy.ops.scatter5.popup_menu(msgs=msg, title=translate("Action Failed"),icon="ERROR",)
 
         print("utils_find_args: Error, no instances found")
@@ -256,15 +264,16 @@ def utils_find_args(context, pop_msg=True, emitter_name="", surfaces_names="", i
     #Give default name is name is empty
     if (psy_name in [""," ","  ","   ","    "]):
         psy_name = "No Name"
+        
     #support for automatic name finding
     if (psy_name=="*AUTO*"):
         psy_name = find_preset_name(instances) #auto color is done at ui level
+        
     #random color
     if (psy_color_random):
         psy_color = [random.uniform(0, 1),random.uniform(0, 1),random.uniform(0, 1),]
 
     return psy_name, psy_color, emitter, surfaces, instances
-
 
 
 def ctxt_f_settings(scope_ref={}, ctxt_operator=""):
@@ -343,16 +352,16 @@ def ctxt_f_settings(scope_ref={}, ctxt_operator=""):
     d["f_mask_paint_bitmap"] = getattr( scat_op_ctxt, "f_mask_paint_bitmap", None,)
     d["f_mask_paint_curve_area"] = getattr( scat_op_ctxt, "f_mask_paint_curve_area", None,)
 
-    #security settings, quick scatter & manual do not need them
+    #security settings (quick scatter & manual scatter do not need them)
 
     if (ctxt_operator not in ("add_psy_modal","add_psy_manual")):
         d["f_sec_count_allow"] = scat_op_crea.f_sec_count_allow
+        d["f_sec_count"] = scat_op_crea.f_sec_count
+        d["f_sec_verts_allow"] = scat_op_crea.f_sec_verts_allow
+        d["f_sec_verts"] = scat_op_crea.f_sec_verts
     else:
         d["f_sec_count_allow"] = False
-
-    d["f_sec_count"] = scat_op_crea.f_sec_count
-    d["f_sec_verts_allow"] = scat_op_crea.f_sec_verts_allow
-    d["f_sec_verts"] = scat_op_crea.f_sec_verts
+        d["f_sec_verts_allow"] = False
 
     #load new variable in scope 
     scope_ref.update(d)
@@ -395,106 +404,152 @@ def ctxt_f_action(context, p=None, d={}, surfaces=None, instances=None, pop_msg=
 
     if (f_["f_display_allow"]):
         p.s_display_allow = True
+        
         if (f_["f_display_method"]!="none"):
             p.s_display_method = f_["f_display_method"]
+            
             if (f_["f_display_method"]=="placeholder_custom"):
                 p.s_display_custom_placeholder_ptr = f_["f_display_custom_placeholder_ptr"]
 
     if (f_["f_display_bounding_box"]): #BoundingBox Display of instances
+        
         for o in instances:
-            o.display_type="BOUNDS"
+            o.display_type = "BOUNDS"
 
-    #Special Actions
+    #Special Direct Actions
 
     if (f_["f_mask_action_method"]!="none"):
 
-        #biome have a their own implementation for direct-paint, we just assign them
-        
-        if ( (ctxt_operator=="load_biome") and (f_["f_mask_action_method"]=="paint") ):
-            f_["f_mask_action_method"] = "assign"
-            f_["f_mask_assign_vg"] = f_["f_mask_paint_vg"]
-            f_["f_mask_assign_bitmap"] = f_["f_mask_paint_bitmap"]
-            f_["f_mask_assign_curve_area"] = f_["f_mask_paint_curve_area"]
-            f_["f_mask_assign_reverse"] = f_["f_mask_assign_reverse"] = f_["f_mask_assign_reverse"] = True
+        #biome masks are implemented on a group level! 
+        # biomes by default are assigned to a group, except if scattering a single layer
 
-        #direct paint a mask?
+        if (ctxt_operator=="load_biome"):
+            
+            #also, more specifically, biomes direct paint actions are implemnted on the load_biome operator directly,
+            #not from here, so we simple assign groups 
+            
+            if (f_["f_mask_action_method"]=="paint"):
+            
+                f_["f_mask_assign_vg"] = f_["f_mask_paint_vg"]
+                f_["f_mask_assign_bitmap"] = f_["f_mask_paint_bitmap"]
+                f_["f_mask_assign_curve_area"] = f_["f_mask_paint_curve_area"]        
+                f_["f_mask_assign_reverse"] = True #Biome painting is always reversed
+            
+            g = p.get_group()
 
-        if (f_["f_mask_action_method"]=="paint"):
+            if (g is None): #can happen if scattering a single layer of this biome
+            
+                if (f_["f_mask_action_type"]=="vg"):
+                    p.s_mask_vg_allow = True
+                    p.s_mask_vg_ptr = f_["f_mask_assign_vg"]
+                    p.s_mask_vg_revert = f_["f_mask_assign_reverse"]
 
-            if (f_["f_mask_action_type"]=="vg"):
+                elif (f_["f_mask_action_type"]=="bitmap"):
+                    p.s_mask_bitmap_allow = True
+                    p.s_mask_bitmap_ptr = f_["f_mask_assign_bitmap"]
+                    p.s_mask_bitmap_revert = f_["f_mask_assign_reverse"]
+
+                elif (f_["f_mask_action_type"]=="curve"):
+                    p.s_mask_curve_allow = True
+                    p.s_mask_curve_ptr = f_["f_mask_assign_curve_area"]
+                    p.s_mask_curve_revert = f_["f_mask_assign_reverse"]
+                    
+            else: #biome is loaded from a group, we use the new groupmask feature from Geo-Scatter 5.4
                 
-                #find name not taken, across all surfaces
-                i = 1
-                vg_name =  "DirectPaint"
-                while vg_name in [v.name for o in surfaces for v in o.vertex_groups]:
-                    vg_name = f"DirectPaint.{i:03}"
-                    i += 1
-                for s in surfaces:
-                    s.vertex_groups.new(name=vg_name)
-                p.s_mask_vg_allow = True
-                p.s_mask_vg_ptr = vg_name
-                p.s_mask_vg_revert = True
-                bpy.ops.scatter5.vg_quick_paint(mode="vg", group_name=vg_name, use_surfaces=True,)
+                if (f_["f_mask_action_type"]=="vg"):
+                    if (g.s_gr_mask_vg_allow!=True):                             g.s_gr_mask_vg_allow = True
+                    if (g.s_gr_mask_vg_ptr!=f_["f_mask_assign_vg"]):             g.s_gr_mask_vg_ptr = f_["f_mask_assign_vg"]
+                    if (g.s_gr_mask_vg_revert!=f_["f_mask_assign_reverse"]):     g.s_gr_mask_vg_revert = f_["f_mask_assign_reverse"]
 
-            elif (f_["f_mask_action_type"]=="bitmap"):
+                elif (f_["f_mask_action_type"]=="bitmap"):
+                    if (g.s_gr_mask_bitmap_allow!=True):                         g.s_gr_mask_bitmap_allow = True
+                    if (g.s_gr_mask_bitmap_ptr!=f_["f_mask_assign_bitmap"]):     g.s_gr_mask_bitmap_ptr = f_["f_mask_assign_bitmap"]
+                    if (g.s_gr_mask_bitmap_revert!=f_["f_mask_assign_reverse"]): g.s_gr_mask_bitmap_revert = f_["f_mask_assign_reverse"]
 
-                img = bpy.data.images.new("ImageMask", 1000, 1000,)
-                p.s_mask_bitmap_allow = True
-                p.s_mask_bitmap_ptr = img.name
-                p.s_mask_bitmap_revert = True
-                bpy.ops.scatter5.image_utils(option="paint", paint_color=(1,1,1), img_name=img.name,)
+                elif (f_["f_mask_action_type"]=="curve"):
+                    if (g.s_gr_mask_curve_allow!=True):                          g.s_gr_mask_curve_allow = True
+                    if (g.s_gr_mask_curve_ptr!=f_["f_mask_assign_curve_area"]):  g.s_gr_mask_curve_ptr = f_["f_mask_assign_curve_area"]
+                    if (g.s_gr_mask_curve_revert!=f_["f_mask_assign_reverse"]):  g.s_gr_mask_curve_revert = f_["f_mask_assign_reverse"]
 
-            elif (f_["f_mask_action_type"]=="curve"):
+        else: 
+            
+            #direct action of painting a mask?
 
-                bez = bpy.data.curves.new("BezierArea","CURVE")
-                bez.dimensions = '3D'
-                cur = bpy.data.objects.new(bez.name,bez)
-                cur.location = context.scene.cursor.location
-                context.scene.collection.objects.link(cur)
-                p.s_mask_curve_allow = True
-                p.s_mask_curve_ptr = cur
-                p.s_mask_curve_revert = True
-                
-                #bezier area drawing has special context requisite
+            if (f_["f_mask_action_method"]=="paint"):
 
-                for window in context.window_manager.windows:
-                    screen = window.screen
-                    for area in screen.areas:
-                        if (area.type == 'VIEW_3D'):
-                            # NOTE: use first found.. but because this is non modal operator call i have no event and therefore i have no access to mouse location so i can't compare with region coordinates and dimensions.. so i need to use what i got.
-                            region = None
-                            for r in area.regions:
-                                if (r.type == 'WINDOW'):
-                                    region = r
+                if (f_["f_mask_action_type"]=="vg"):
+                    
+                    #find name not taken, across all surfaces
+                    i = 1
+                    vg_name =  "DirectPaint"
+                    while vg_name in [v.name for o in surfaces for v in o.vertex_groups]:
+                        vg_name = f"DirectPaint.{i:03}"
+                        i += 1
+                    for s in surfaces:
+                        s.vertex_groups.new(name=vg_name)
+                    p.s_mask_vg_allow = True
+                    p.s_mask_vg_ptr = vg_name
+                    p.s_mask_vg_revert = True
+                    bpy.ops.scatter5.vg_quick_paint(mode="vg", group_name=vg_name,)
+
+                elif (f_["f_mask_action_type"]=="bitmap"):
+
+                    img = bpy.data.images.new("ImageMask", 1000, 1000,)
+                    p.s_mask_bitmap_allow = True
+                    p.s_mask_bitmap_ptr = img.name
+                    p.s_mask_bitmap_revert = True
+                    bpy.ops.scatter5.image_utils(option="paint", paint_color=(1,1,1), img_name=img.name,)
+
+                elif (f_["f_mask_action_type"]=="curve"):
+
+                    bez = bpy.data.curves.new("BezierArea","CURVE")
+                    bez.dimensions = '3D'
+                    cur = bpy.data.objects.new(bez.name,bez)
+                    cur.location = context.scene.cursor.location
+                    context.scene.collection.objects.link(cur)
+                    p.s_mask_curve_allow = True
+                    p.s_mask_curve_ptr = cur
+                    p.s_mask_curve_revert = True
+                    
+                    #bezier area drawing has special context requisite
+
+                    for window in context.window_manager.windows:
+                        screen = window.screen
+                        for area in screen.areas:
+                            if (area.type=='VIEW_3D'):
+                                # NOTE: use first found.. but because this is non modal operator call i have no event and therefore i have no access to mouse location so i can't compare with region coordinates and dimensions.. so i need to use what i got.
+                                region = None
+                                for r in area.regions:
+                                    if (r.type=='WINDOW'):
+                                        region = r
+                                        break
+                                if (region is not None):
+                                    override = {'window':window, 'screen':screen, 'area':area, 'region':region, }
+                                    # NOTE: override context AND use invoke at the same time! third param is use undo, operator adds its own undo state, so this is not needed (i hope?)
+                                    bpy.ops.scatter5.draw_bezier_area(override, 'INVOKE_DEFAULT', False, edit_existing=cur.name, )
                                     break
-                            if (region is not None):
-                                override = {'window':window, 'screen':screen, 'area':area, 'region':region, }
-                                # NOTE: override context AND use invoke at the same time! third param is use undo, operator adds its own undo state, so this is not needed (i hope?)
-                                bpy.ops.scatter5.draw_bezier_area(override, 'INVOKE_DEFAULT', False, edit_existing=cur.name, )
-                                break
 
-         #or just assign mask?
+            #or direct action of simply assigning a mask?
 
-        elif (f_["f_mask_action_method"]=="assign"):
+            elif (f_["f_mask_action_method"]=="assign"):
 
-            if (f_["f_mask_action_type"]=="vg"):
-                p.s_mask_vg_allow = True
-                p.s_mask_vg_ptr = f_["f_mask_assign_vg"]
-                p.s_mask_vg_revert = f_["f_mask_assign_reverse"]
+                if (f_["f_mask_action_type"]=="vg"):
+                    p.s_mask_vg_allow = True
+                    p.s_mask_vg_ptr = f_["f_mask_assign_vg"]
+                    p.s_mask_vg_revert = f_["f_mask_assign_reverse"]
 
-            elif (f_["f_mask_action_type"]=="bitmap"):
-                p.s_mask_bitmap_allow = True
-                p.s_mask_bitmap_ptr = f_["f_mask_assign_bitmap"]
-                p.s_mask_bitmap_revert = f_["f_mask_assign_reverse"]
+                elif (f_["f_mask_action_type"]=="bitmap"):
+                    p.s_mask_bitmap_allow = True
+                    p.s_mask_bitmap_ptr = f_["f_mask_assign_bitmap"]
+                    p.s_mask_bitmap_revert = f_["f_mask_assign_reverse"]
 
-            elif (f_["f_mask_action_type"]=="curve"):
-                p.s_mask_curve_allow = True
-                p.s_mask_curve_ptr = f_["f_mask_assign_curve_area"]
-                p.s_mask_curve_revert = f_["f_mask_assign_reverse"]
+                elif (f_["f_mask_action_type"]=="curve"):
+                    p.s_mask_curve_allow = True
+                    p.s_mask_curve_ptr = f_["f_mask_assign_curve_area"]
+                    p.s_mask_curve_revert = f_["f_mask_assign_reverse"]
 
-
-    #Unhiding the system is always done at the end 
-    #for optimization purpose & security 
+    #Now time to Unhide the system
+    #always done at the end for optimization purpose & security 
 
     #by default, always visible
     is_visible = True
@@ -518,6 +573,7 @@ def ctxt_f_action(context, p=None, d={}, surfaces=None, instances=None, pop_msg=
                 refresh_square_area=True,
                 ctxt_operator=ctxt_operator,
                 )
+            
         else:
             count = estimate_future_instance_count(
                 surfaces=surfaces,
@@ -536,8 +592,10 @@ def ctxt_f_action(context, p=None, d={}, surfaces=None, instances=None, pop_msg=
     if (f_["f_sec_verts_allow"]):
 
         too_high_poly = [o for o in instances if ( (o.type=="MESH") and (o.display_type!="BOUNDS") and (len(o.data.vertices)>=f_["f_sec_verts"]) ) ]
+        
         if (len(too_high_poly)!=0):
             pop_msg_poly = True
+            
             for o in too_high_poly:
                 o.display_type = "BOUNDS"
                 continue
@@ -551,6 +609,7 @@ def ctxt_f_action(context, p=None, d={}, surfaces=None, instances=None, pop_msg=
         bpy.ops.scatter5.popup_security('INVOKE_DEFAULT', scatter=pop_msg_scatter, poly=pop_msg_poly, emitter=p.id_data.name, psy_name_00=p.name,)
 
     return None
+
 
 #################################################################################################################################
 #
@@ -580,8 +639,8 @@ def ctxt_f_action(context, p=None, d={}, surfaces=None, instances=None, pop_msg=
 class SCATTER5_OT_add_psy_simple(bpy.types.Operator):
 
     bl_idname      = "scatter5.add_psy_simple"
-    bl_label       = translate("Add a default Scatter-System")
-    bl_description = translate("This operator will add a simple Scatter-system with default settings on the selected surface(s). By default there will be no instances in your instancing collection, so we'll display the scatter as single points.")
+    bl_label       = translate("Add a default scatter-System")
+    bl_description = translate("•If ALT is not pressed: The operator will add a simple scatter-system with the selected object(s) on the target emitter chosen.\n•if ALT is pressed: The operator will add a default scatter-system on the selected surface(s) with no instances defined, therefore we'll enable the “Display As” option.")
     bl_options     = {'INTERNAL','UNDO'}
 
     emitter_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
@@ -691,6 +750,7 @@ class SCATTER5_OT_add_psy_preset(bpy.types.Operator):
     emitter_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
     surfaces_names : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
     instances_names : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
+    default_group : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
     selection_mode : bpy.props.StringProperty(default="viewport", options={"SKIP_SAVE",},) #"browser"/"viewport"
     
     psy_name : bpy.props.StringProperty(default="NewPsy", options={"SKIP_SAVE",},) #use "*AUTO*" to automatically find name and color
@@ -736,6 +796,7 @@ class SCATTER5_OT_add_psy_preset(bpy.types.Operator):
                 deselect_all=True,
                 instances=instances,
                 surfaces=surfaces,
+                default_group=self.default_group,
                 )
 
             #load json preset to settings
@@ -985,6 +1046,10 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
 
         def draw(self, context):
 
+            scat_scene = bpy.context.scene.scatter5
+            scat_ops = scat_scene.operators
+            scat_op_crea = scat_ops.create_operators
+
             layout = self.layout
             pie = layout.menu_pie()
 
@@ -1000,25 +1065,34 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
                 
             #low
             
-            col = pie.box().column()
-            col.scale_x = 1.2
+            col = pie.column()
+            col.scale_x = 1.1
             
-            scat_scene = bpy.context.scene.scatter5
-            scat_ops = scat_scene.operators
-            scat_op_crea = scat_ops.create_operators
+            #similar code on ui_menus.creation_operators_draw_surfaces()
 
-            if (len(scat_op_crea.f_surfaces)!=0):
-                lis = col.box().column(align=True)
-                lis.scale_y = 0.85
-                
-                for i,o in enumerate(scat_op_crea.get_f_surfaces()): 
-                    if (o.name!=""):
-                        lisr = lis.row()
-                        lisr.label(text=o.name)
+            surfcol = col.column(align=True)
+            surfcol.label(text=translate("Future Surface(s):"))
 
-            op = col.operator("scatter5.define_add_psy", text = translate("Redefine Surfaces"), icon="RESTRICT_SELECT_OFF",)
+            lis = surfcol.box().column(align=True)
+            lis.scale_y = 0.85
+
+            for i,o in enumerate(scat_op_crea.get_f_surfaces()): 
+                if (o.name!=""):
+                    lisr = lis.row()
+                    lisr.label(text=o.name)
+
+                    #remove given object #Too slow, will quit automatically
+                    # op = lisr.operator("scatter5.exec_line", text="", icon="TRASH", emboss=False,)
+                    # op.api = f"scat_ops.create_operators.f_surfaces[{i}].object = None ; scat_ops.create_operators.f_surfaces.remove({i})"
+                    # op.undo = translate("Remove Predefined Surface(s)")
+
+            if ("lisr" not in locals()):
+                lisr = lis.row()
+                lisr.label(text=translate("No Surface(s) Assigned"))
+
+            op = surfcol.operator("scatter5.define_add_psy", text = translate("Use Selection"), icon="ADD",)
             op.operator_context = "surfdefine"
-            op.description = translate("Redefine your future Surfaces")
+            op.description = translate("Redefine the selected objects as your future Scattering Surfaces")
 
             #top
             op = pie.operator("scatter5.define_add_psy", text = "..."+translate("Image Mask"), icon="TEMP",)
@@ -1072,10 +1146,8 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
             #no surfaces found? 
             if (len(surfaces)==0):
                 
-                msg = translate("\nNo valid surface(s) found.\nPlease Define your Surfaces.\n")
+                msg = translate("\nNo valid surface(s) found.\nPlease Define your Surfaces\nIn the Operator Menu.\n")
                 bpy.ops.scatter5.popup_menu(msgs=msg, title=translate("Action Failed"),icon="ERROR",)
-                
-                print("utils_find_args: Error, no surfaces found")
                 return {'FINISHED'}
 
             #Get Instances (either find selection in asset browser or selection)
@@ -1088,24 +1160,33 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
             
             #no instances found?
             if (len(instances)==0):
-            
+                
+                #no instances selected in the viewport?
                 if (self.areamode=="viewport"):
                     msg = translate("\nNo valid object(s) found in selection.\n\nPlease select the object(s) you want to Scatter in the viewport.\n")
-                
+                    
+                #no instances selected in the asset browser?
                 elif (self.areamode=="browser"):
-                    if (bpy.context.window):
+                    
+                    #headless state not supported for such
+                    if (not bpy.context.window):
+                        print("utils_find_args: Warning, no support for this operator in blender headless, it relies on window selection")
+                        
+                    #determine why the user couldn't find selected assets. No assets opened? More than one asset open? or nothing selected? Maybe, is set to 'ALL' category?
+                    else:
                         browsers_found = [a for w in bpy.context.window_manager.windows for a in w.screen.areas if (a.ui_type=="ASSETS")]
                         msg = translate("\nWe haven't found an asset-browser editor open.\n\nThis selection-method works with the blender asset-browser.\n")
                         if (len(browsers_found)==1):
                             msg = translate("\nNo Asset(s) selected in the asset-browser.\n")
+                            if (bpy.context.blend_data.version[0]>=3 and bpy.context.blend_data.version[1]>=5): #Maybe, is set to 'ALL' category? annoying mode since blender 3.5
+                                msg += translate("\nPlease avoid using the “All” Category.\n")
                         elif (len(browsers_found)>1):
-                            msg = translate("\nNo Asset(s) selected in the asset-browser.\n\nIt looks like many browser(s) are opened? We picked the first one.\n")
-                    else:
-                        print("utils_find_args: Warning, no support for this operator in blender headless, it relies on window selection")
+                            msg = translate("\nNo Asset(s) selected in the asset-browser.\n\nIt looks like many browser(s) are open? We picked the first one.\n")
                 
+                #popup error message
                 bpy.ops.scatter5.popup_menu(msgs=msg, title=translate("Action Failed"),icon="ERROR",)
                 return {'FINISHED'}
-                
+
             #Launch operators
 
             if (self.operator_context in ["vg","bitmap","standard","curve",]):
@@ -1137,13 +1218,13 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
                     for window in bpy.context.window_manager.windows:
                         screen = window.screen
                         for area in screen.areas:
-                            if(area.type == 'VIEW_3D'):
+                            if (area.type=='VIEW_3D'):
                                 region = None
                                 for r in area.regions:
-                                    if(r.type == 'WINDOW'):
+                                    if (r.type=='WINDOW'):
                                         region = r
                                         break
-                                if region is not None:
+                                if (region is not None):
                                     override = {'window': window, 'screen': screen, 'area': area, 'region': region, }
                                     global add_psy_manual_context_override 
                                     add_psy_manual_context_override = override
@@ -1154,7 +1235,6 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
                     bpy.ops.scatter5.add_psy_manual(('EXEC_DEFAULT'),**kwargs)
 
         return {'FINISHED'}
-
 
 
 
@@ -1402,41 +1482,6 @@ class SCATTER5_OT_define_add_psy(bpy.types.Operator):
 #         return None 
 
 
-
-quickscatter_keymaps = []
-
-def register_quickscatter_shortcuts():
-    
-    if (bpy.app.background):
-        return None
-    
-    #add hotkey
-    wm  = bpy.context.window_manager
-    kc  = wm.keyconfigs.addon
-    km  = kc.keymaps.new(name="Window", space_type="EMPTY", region_type="WINDOW")
-    kmi = km.keymap_items.new("scatter5.define_add_psy", 'W', 'PRESS', shift=True, alt=True, ctrl=True,)
-
-    quickscatter_keymaps.append(kmi)
-
-    return None
-
-def unregister_quickscatter_shortcuts():
-
-    if (bpy.app.background):
-        return None
-
-    #remove hotkey
-    wm = bpy.context.window_manager
-    kc = wm.keyconfigs.addon
-    km = kc.keymaps["Window"]
-    for kmi in quickscatter_keymaps:
-        km.keymap_items.remove(kmi)
-    quickscatter_keymaps.clear()
-
-    return None
-
-
-
 class SCATTER5_OT_add_psy_modal(bpy.types.Operator):
 
     bl_idname      = "scatter5.add_psy_modal"
@@ -1658,7 +1703,9 @@ class SCATTER5_OT_add_psy_modal(bpy.types.Operator):
 
     def cancel(self, context):
 
+        #remove psys, & refresh the interface
         self.p.remove_psy()
+        context.scene.scatter5.emitter.scatter5.particle_interface_refresh()
 
         #what if created a curve area ?
 
@@ -1691,6 +1738,46 @@ class SCATTER5_OT_add_psy_modal(bpy.types.Operator):
         return None
 
 
+#  .oooooo..o oooo                               .                             .   
+# d8P'    `Y8 `888                             .o8                           .o8   
+# Y88bo.       888 .oo.    .ooooo.  oooo d8b .o888oo  .ooooo.  oooo  oooo  .o888oo 
+#  `"Y8888o.   888P"Y88b  d88' `88b `888""8P   888   d88' `"Y8 `888  `888    888   
+#      `"Y88b  888   888  888   888  888       888   888        888   888    888   
+# oo     .d8P  888   888  888   888  888       888 . 888   .o8  888   888    888 . 
+# 8""88888P'  o888o o888o `Y8bod8P' d888b      "888" `Y8bod8P'  `V88V"V8P'   "888" 
+                                                                                 
+
+quickscatter_keymaps = []
+
+def register_quickscatter_shortcuts():
+    
+    if (bpy.app.background):
+        return None
+    
+    wm  = bpy.context.window_manager
+    kc  = wm.keyconfigs.addon
+    km  = kc.keymaps.new(name="Window", space_type="EMPTY", region_type="WINDOW")
+    kmi = km.keymap_items.new("scatter5.define_add_psy", 'W', 'PRESS', shift=True, alt=True, ctrl=True,)
+
+    quickscatter_keymaps.append(kmi)
+
+    return None
+
+def unregister_quickscatter_shortcuts():
+
+    if (bpy.app.background):
+        return None
+
+    wm = bpy.context.window_manager
+    kc = wm.keyconfigs.addon
+    km = kc.keymaps["Window"]
+    for kmi in quickscatter_keymaps:
+        km.keymap_items.remove(kmi)
+    quickscatter_keymaps.clear()
+
+    return None
+                                                                                 
+                                                                                 
 #   .oooooo.   oooo
 #  d8P'  `Y8b  `888
 # 888           888   .oooo.    .oooo.o  .oooo.o  .ooooo.   .oooo.o

@@ -19,9 +19,7 @@ from .. resources.icons import cust_icon
 from .. resources.translate import translate
 
 from .. utils.str_utils import word_wrap
-from .. utils.str_utils import version_to_float #should've stored .blender_verison and .addon_version directly as float, well it's too late to fix it now  
-
-from .. __init__ import bl_info
+from .. utils.str_utils import version_to_float
 
 from . import ui_templates
 
@@ -48,18 +46,14 @@ def notifs_check_1():
     - PLUGIN_OVERLOAD
     """
 
-    #reset these notifs
+    #reset any notifs not in the following categories
     global NOTIF_ARGS
-    for i,n in enumerate(NOTIF_ARGS.copy()):
-        notif_type = n[0]
-        if (notif_type in ("OLD_BL_VERSION","EXPERIMENTAL_BUILD","NODE_UNDEFINED","NODETREE_UPDATE_NEEDED","PLUGIN_OVERLOAD",)):
-            del NOTIF_ARGS[i]
+    NOTIF_ARGS = [ n for n in NOTIF_ARGS if n[0] not in ("OLD_BL_VERSION","EXPERIMENTAL_BUILD","NODE_UNDEFINED","NODETREE_UPDATE_NEEDED","PLUGIN_OVERLOAD",) ]
 
     #current version
-
-    user_addon_version = version_to_float(".".join(map(str,bl_info['version'])))
-    user_addon_bl_version = version_to_float(".".join(map(str,bl_info['blender'])))
-    user_blender_version = version_to_float(bpy.app.version_string)
+    from .. __init__ import bl_info
+    user_addon_bl_version = version_to_float(".".join(map(str,bl_info['blender'])), truncated=True,)
+    user_blender_version = version_to_float(bpy.app.version_string, truncated=True,)
 
     #check if user is using a too old blender version?
 
@@ -70,7 +64,7 @@ def notifs_check_1():
 
     #check for users living dangerously 
 
-    if ( ("Beta" in bpy.app.version_string) or ("Alpha" in bpy.app.version_string) ):
+    if ( ("Beta" in bpy.app.version_string) or ("Alpha" in bpy.app.version_string) or ("Candidate" in bpy.app.version_string) ):
 
         print(f"\nWARNING : DON'T EXPECT PLUGIN TO WORK WITH EXPERIMENTAL BUILDS")
         NOTIF_ARGS.append(["EXPERIMENTAL_BUILD",])
@@ -89,24 +83,25 @@ def notifs_check_1():
     if (len(all_psys)==0): 
         return None
 
-    #Useful information
+    #Useful versioning information
 
-    all_psys_blender_version = [version_to_float(p.blender_version) for p in all_psys]
-    all_psys_blender_version_truncated = [float(f'{f:.1f}') for f in all_psys_blender_version]
-    all_psys_addon_version = [version_to_float(p.addon_version) for p in all_psys]
-
-    psy_min_blender_version = min(all_psys_blender_version_truncated) 
+    all_psys_blender_version = [ version_to_float(p.blender_version, truncated=True,) for p in all_psys ]
+    psy_min_blender_version = min(all_psys_blender_version) 
+    psy_max_blender_version = max(all_psys_blender_version) 
+    
+    all_psys_addon_version = [ version_to_float(p.addon_version, truncated=True,) for p in all_psys ]
     psy_min_addon_version = min(all_psys_addon_version)
     psy_max_addon_version = max(all_psys_addon_version)
 
     #check for forward compatibility errors, if a psy version is above current version
 
     def recursive_seek_undefined(ng,gather):
-        for n in ng.nodes:
-            if (n.bl_idname=="NodeUndefined"):
-                gather.append([ng.name,n.name])
-            elif (n.type=="GROUP"):
-                recursive_seek_undefined(n.node_tree,gather)
+        if (ng is not None):
+            for n in ng.nodes:
+                if (n.bl_idname=="NodeUndefined"):
+                    gather.append([ng.name,n.name])
+                elif (n.type=="GROUP"):
+                    recursive_seek_undefined(n.node_tree,gather)
         return None
 
     undef = {}
@@ -124,13 +119,12 @@ def notifs_check_1():
             print(f"     SCATTER-SYSTEM: {k}")
             for e in v:
                 print(f"       -undefined node: {e[0]}->{e[1]}")
-        psy_max_blender_version = max(all_psys_blender_version_truncated) 
         NOTIF_ARGS.append(["NODE_UNDEFINED",psy_max_blender_version,user_blender_version])
 
-    #old systems in there?
+    #old systems in there? by default we get the scatter engine by their engine names, which are constantly up to date
+    #if the scatter engine is not found with the struct mode activated, but found with the 
 
-    old_psys = [p for p in all_psys if (p.get_scatter_mod(strict=False).name!=bl_info["engine_version"]) ]
-    
+    old_psys = [ p for p in all_psys if ( p.get_scatter_mod(strict=False) is not None and p.get_scatter_mod() is None ) ]
     if (len(old_psys)!=0): 
 
         print(f"\nWARNING : OLD SYSTEMS FOUND :")
@@ -146,12 +140,9 @@ def notifs_check_2():
     - ADAPTIVE_SUBDIVISION
     """
 
+    #reset any notifs not in the following categories
     global NOTIF_ARGS
-    #remove old notifs
-    for i,n in enumerate(NOTIF_ARGS.copy()):
-        notif_type = n[0]
-        if (notif_type in ("SUBDIVISION_LEVEL","ADAPTIVE_SUBDIVISION")):
-            del NOTIF_ARGS[i]
+    NOTIF_ARGS = [ n for n in NOTIF_ARGS if n[0] not in ("SUBDIVISION_LEVEL","ADAPTIVE_SUBDIVISION",) ]
 
     all_psys = bpy.context.scene.scatter5.get_all_psys()
     if (len(all_psys)==0):
@@ -167,7 +158,7 @@ def notifs_check_2():
         for m in s.modifiers:
             if (m.type=="SUBSURF"):
 
-                if (bpy.context.scene.cycles.feature_set=='EXPERIMENTAL') and (s.cycles.use_adaptive_subdivision==True):
+                if ((bpy.context.scene.cycles.feature_set=='EXPERIMENTAL') and (s.cycles.use_adaptive_subdivision==True)):
                     notif = ["ADAPTIVE_SUBDIVISION"]
                     if (notif not in NOTIF_ARGS):
                         NOTIF_ARGS.append(notif)
@@ -203,7 +194,7 @@ def draw_notification_panel(self, layout,):
         if (notif_type=="NODE_UNDEFINED"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_1", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_1";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_1", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_1");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Node(s) Undefined"),
                 warning_panel = True,
@@ -222,9 +213,9 @@ def draw_notification_panel(self, layout,):
 
                 buttons = exp.column()
                 buttons.scale_y = 1.2
-                buttons.operator("wm.url_open", text=translate("About Forward Compatibility"), icon="URL",).url = "https://sites.google.com/view/scatter5docs/manual/prerequisite#h.xuaen6oo9kr9"
+                buttons.operator("wm.url_open", text=translate("About Forward Compatibility"), icon="URL",).url = "https://www.geoscatter.com/documentation.html#FeaturePrerequisite&article_compatibility_issues"
                 buttons.separator()
-                buttons.operator("scatter5.update_nodetrees", text=translate("Attempt Reparation"), icon="RECOVER_LAST",).force_update = True
+                buttons.operator("scatter5.fix_nodetrees", text=translate("Attempt Reparation"), icon="RECOVER_LAST",).force_update = True
 
                 col.separator()
                 word_wrap(layout=col, alignment="CENTER", active=True, alert=False, max_char=30, string=translate("Undefined nodegroup(s) are displayed in your console window."),)
@@ -238,7 +229,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="OLD_BL_VERSION"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_2", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_2";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_2", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_2");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Incompatible Version"),
                 warning_panel = True,
@@ -256,7 +247,7 @@ def draw_notification_panel(self, layout,):
                 rwo2 = rwoo.row()
 
                 exp.scale_y = 1.2
-                exp.operator("wm.url_open", text=translate("About Compatibility"), icon="URL",).url = "https://sites.google.com/view/scatter5docs/changelogs"
+                exp.operator("wm.url_open", text=translate("About Compatibility"), icon="URL",).url = "https://www.geoscatter.com/documentation.html#Changelogs&article_compatibility_advices"
 
                 ui_templates.separator_box_in(box)
 
@@ -267,7 +258,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="EXPERIMENTAL_BUILD"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_3", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_3";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_3", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_3");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Unofficial Build"),
                 warning_panel = True,
@@ -286,7 +277,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="PLUGIN_OVERLOAD"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_4", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_4";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_4", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_4");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Plugin Overload"),
                 warning_panel = True,
@@ -305,7 +296,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="NODETREE_UPDATE_NEEDED"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_5", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_5";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_5", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_5");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Update Required"),
                 warning_panel = True,
@@ -323,7 +314,7 @@ def draw_notification_panel(self, layout,):
                 rwo2 = rwoo.row()
 
                 exp.scale_y = 1.2
-                exp.operator("scatter5.update_nodetrees", text=translate("Update Nodetree(s)"), icon="FILE_REFRESH",)
+                exp.operator("scatter5.fix_nodetrees", text=translate("Update Nodetree(s)"), icon="FILE_REFRESH",)
 
                 col.separator()
                 word_wrap(layout=col, alignment="CENTER", active=True, alert=False, max_char=31, string=translate("This update process might take a minute. Changing versions of your sofware(s)/plugin(s) mid-project is not advised, save copies of your project first!",),)
@@ -337,7 +328,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="SUBDIVISION_LEVEL"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_6", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_6";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_6", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_6");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Subdivision Discrepancies"),
                 warning_panel = True,
@@ -356,7 +347,7 @@ def draw_notification_panel(self, layout,):
         elif (notif_type=="ADAPTIVE_SUBDIVISION"):
 
             box, is_open = ui_templates.box_panel(self, main, 
-                prop_str = "ui_notification_7", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_notification_7";UI_BOOL_VAL:"1"
+                prop_str = "ui_notification_7", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_notification_7");BOOL_VALUE(1)
                 icon = "ERROR", 
                 name = translate("Adaptive Subdivision"),
                 warning_panel = True,

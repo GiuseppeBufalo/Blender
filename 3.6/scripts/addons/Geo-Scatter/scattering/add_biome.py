@@ -41,6 +41,7 @@ def add_biome_layer( #add a new biome_layer, WARNING, will assume all instances 
     emitter_name="", #if left none, will find active
     instances_names=[], #list of future instances, object names that we'll import from given blend path
     surfaces_names=[], #surfaces upon which we will scatter
+    default_group="",
     json_path="", #.preset file path we'll use to define the settings of this scatter-layer
     psy_name="",
     psy_color=(1,1,1),
@@ -79,7 +80,7 @@ def add_biome_layer( #add a new biome_layer, WARNING, will assume all instances 
         should_be_imported.append(display_settings["s_display_custom_placeholder_ptr"])
     for name in should_be_imported:
         if (name not in bpy.data.objects):
-            raise Exception(f"add_biome_layer: '{name}' object couldn't be found")
+            raise Exception(f"add_biome_layer: following object couldn't be found: '{name}' ")
 
     #pause get_event() operator, is constantly called otherwise
     with scat_scene.factory_update_pause(event=True):
@@ -89,6 +90,7 @@ def add_biome_layer( #add a new biome_layer, WARNING, will assume all instances 
             emitter_name=emitter.name,
             surfaces_names="_!#!_".join(surfaces_names),
             instances_names="_!#!_".join(instances_names),
+            default_group=default_group,
             psy_name=psy_name,
             psy_color=psy_color,
             json_path=json_path,
@@ -209,7 +211,7 @@ def search_biome_file(
     #couldn't find the file?
     if (not os.path.exists(full_path)):
             
-        txtmsg = f"{translate('We did not find')}\n'{file_name}'\n{translate('in your scatter library')}.\n{translate('did you installed the library correctly?')}\n\n{translate('Perhaps you need to define new environment paths leading to this .blend file in the plugin preferences.')}\n"
+        txtmsg = f"{translate('We did not find')}\n'{file_name}'\n{translate('on your computer, where is this file located?')}\n\n{translate('The biome system will searched for this .blend in your biome library, in your asset-browser libraries, and in the environment paths you can define in the plugin preferences.')}\n"
         if (raise_exception):
             raise Exception(txtmsg)
         
@@ -329,14 +331,23 @@ def import_biome_objs(
 
         continue
 
-    #warning if everything was imported correctly
+    #warning if something couldn't be imported
 
+    warned = None
     for obj_names in to_import.values():
         for name in obj_names:
             if (name not in bpy.data.objects):
+                warned = name
                 print(f"S5 WARNING: couldn't import '{name}'")
-
             continue
+
+    if (pop_msg and (warned is not None)):
+        bpy.ops.scatter5.popup_dialog(
+            'INVOKE_DEFAULT',
+            msg=f"We did not find the needed object\n'{name}'\nin the following .blend file\n'{path_found}'\n",
+            header_title=translate("Missing Object"),
+            header_icon="LIBRARY_DATA_BROKEN",
+            )
 
     return obj_names
 
@@ -376,27 +387,28 @@ class SCATTER5_OT_add_biome(bpy.types.Operator):
         addon_prefs  = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
         #Get Emitter (will find context emitter if nothing passed)
+        
         emitter = bpy.data.objects.get(self.emitter_name)
         if (emitter is None):
             emitter = scat_scene.emitter
         if (emitter is None):
             raise Exception("No Emitter found")
-            return {'FINISHED'}
 
         #Get Surfaces (will find f_surfaces if nothing passed)
+        
         if (self.surfaces_names==""):
               surfaces_names = [s.name for s in scat_op_crea.get_f_surfaces()]
         else: surfaces_names = self.surfaces_names.split("_!#!_")
         surfaces = [bpy.data.objects.get(s) for s in surfaces_names if (s in bpy.data.objects)]
         if (len(surfaces)==0):
             raise Exception("No Surfaces found")
-            return {'FINISHED'}
 
         #Read json info 
         json_path, json_filename = os.path.split(self.json_path)
         d = json_to_dict( path=json_path, file_name=json_filename)
 
         #import all objects this biome file might need
+        
         import_biome_objs(
             biome_dict=d,
             biome_path=self.json_path,
@@ -404,6 +416,7 @@ class SCATTER5_OT_add_biome(bpy.types.Operator):
             )
 
         #add biomes layers one by one
+        
         for i, (key, value) in enumerate(d.items()):
 
             #ignore info dict
@@ -427,6 +440,7 @@ class SCATTER5_OT_add_biome(bpy.types.Operator):
                     psy_name=value["name"],
                     psy_color=value["color"],
                     display_settings=value.get("display"),
+                    default_group=d["info"]["name"],
                     )
                 continue
 
@@ -473,8 +487,9 @@ class SCATTER5_OT_add_biome(bpy.types.Operator):
 # o888ooooood8 `Y8bod8P' `Y888""8o `Y8bod88P"     o888bood8P'  o888o `Y8bod8P' o888o o888o o888o `Y8bod8P'
 #                                                
 
+
 class SCATTER5_OT_load_biome(bpy.types.Operator): 
-    """same as 'add_biome()', with added layer of complexity of progress bar system""" 
+    """same as 'add_biome()', with added layer of complexity of progress bar system, and custom behavior settings""" 
 
     bl_idname      = "scatter5.load_biome"
     bl_label       = translate("Load Biome")
@@ -498,7 +513,7 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             continue
 
         e = bpy.context.window_manager.scatter5.library[properties.json_path]
-        description = '\n \u2022 '.join([ 
+        description = '\n • '.join([ 
             translate("Information about this .biome file:"),
             f'{translate("Layers")} : {e.layercount}',
             f'{translate("Estimated Density")} : {round(e.estimated_density,2):,} Ins/m²',
@@ -551,28 +566,42 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
 
         return None 
 
-    def add_addlayer_instructions(self, d, emitter, surfaces, surfaces_names,):
-        """add all addlayer to instructions stack, can also be material"""
+    def add_generic_instruction(self, d, emitter, surfaces, surfaces_names,):
+        """Add a new biome layer, (or optionally, assing a material, or execute a script, currently unused)"""
 
         addon_prefs  = bpy.context.preferences.addons["Geo-Scatter"].preferences
+        scat_scene   = bpy.context.scene.scatter5
 
         max_count   = -1
         total_count = 0
         layer_count = 1
-
+        
+        #find group name
+        from .. utils.str_utils import find_suffix
+        group_name = d["info"]["name"]
+        group_name = find_suffix(group_name,[g.name for g in emitter.scatter5.particle_groups],)
+        
+        #ovrerview all instructions of this biome file, 99.9% of the time, we will simply add a new scatter layer
         for i, (key, dval) in enumerate(d.items()):
 
-            #ignore info dict
+            #ignore info dict, not an instruction
             if (key=="info"):
                 continue 
 
-            #single layer option?
-            if ( (self.single_layer!=-1) and (i!=self.single_layer) ):
-                continue
-
-            #biome layer dict
+            #ignore instructions if single layer options are activated 
+            if (self.single_layer!=-1):
+                #only got scatter layer instruction
+                if (not key.isdigit()):
+                    continue
+                #only for scatter layer of same index
+                if (int(key)+1!=self.single_layer):
+                    continue
+                #no group if single layer
+                group_name = ""
+            
+            #is an instructions to add a scatter layer 
             if (key.isdigit()):
-
+                
                 #get layer preset path
                 json_preset_path = search_biome_file(
                     file_name=dval["preset"],
@@ -585,7 +614,8 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                 #store particle count information for message
                 count = estimate_future_instance_count(
                     surfaces=surfaces,
-                    d=json_to_dict(path=os.path.dirname(json_preset_path),file_name=os.path.basename(json_preset_path),),
+                    d=json_to_dict(path=os.path.dirname(json_preset_path),
+                    file_name=os.path.basename(json_preset_path),),
                     refresh_square_area=(i==1), #always refresh at least once
                     ctxt_operator="load_biome",
                     )
@@ -597,9 +627,11 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                 #store function in dict 
 
                 def generate_instruction(dval, json_preset_path,):
+                    
                     def instruction():
                         """addlayer_instructions"""
                         
+                        #add a new scatter layer
                         p = add_biome_layer(
                             emitter_name=emitter.name,
                             surfaces_names=surfaces_names,
@@ -608,21 +640,26 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                             psy_name=dval["name"],
                             psy_color=dval["color"],
                             display_settings=dval.get("display"),
+                            default_group=group_name,
                             )
+                        
+                        #add_virgin_psy() will always set the last added psy active, but when loading a biome, we want the group to stay active!
+                        if (group_name!=""):
+                            emitter.scatter5.set_interface_active_item(item_type="GROUP", item_name=group_name,)
 
-                        #save layer
+                        #save loaded layer history
                         self.loaded_psys.append(p.name)
+                        
                         return None
+                    
                     return instruction
 
                 self.Operations[f"Layer {int(layer_count)}"] = generate_instruction(dval, json_preset_path,)
                 
                 layer_count += 1
-
                 continue 
 
-            #apply material option? 
-
+            #is an instruction of material application option? 
             if (key.startswith("material")):
 
                 #get blend path
@@ -632,6 +669,7 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                     biome_path=self.json_path,
                     pop_msg=True,
                     )
+                
                 if (not material_blend_path):
                     return {'FINISHED'}
 
@@ -653,7 +691,7 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                 
                 continue
 
-            #if script, execute script
+            #is an instructionj to execute a script during the biome execution?
             if (key.startswith("script")):
                 continue #later maybe
 
@@ -661,14 +699,14 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
 
         return max_count, total_count 
 
-    def add_quickpaint_instruction(self, action_type, mask_name,):
+    def add_quickaction_instruction(self, action_type, mask_name,):
         """special instruction for direct mask painting option"""
 
         def instruction():
             """quickpaint_instruction"""
 
             if (action_type=="vg"):
-                bpy.ops.scatter5.vg_quick_paint(mode="vg", group_name=mask_name, use_surfaces=True,)
+                bpy.ops.scatter5.vg_quick_paint(mode="vg", group_name=mask_name,)
 
             elif (action_type=="bitmap"):
                 bpy.ops.scatter5.image_utils(option="paint", paint_color=(1,1,1), img_name=mask_name,)
@@ -677,10 +715,10 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
                 for window in bpy.context.window_manager.windows:
                     screen = window.screen
                     for area in screen.areas:
-                        if (area.type == 'VIEW_3D'):
+                        if (area.type=='VIEW_3D'):
                             region = None
                             for r in area.regions:
-                                if (r.type == 'WINDOW'):
+                                if (r.type=='WINDOW'):
                                     region = r
                                     break
                             if (region is not None):
@@ -709,7 +747,7 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             if (bpy.context.scene.scatter5.operators.create_operators.f_sec_verts_allow==True):
                 for p in emitter.scatter5.particle_systems:
                     if (p.name in self.loaded_psys):
-                        for o in p.get_instances_obj():
+                        for o in p.get_instance_objs():
                             if (o.display_type=="BOUNDS"):
                                 poly = True
                                 break
@@ -733,9 +771,10 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
         scat_op_crea = scat_scene.operators.create_operators
         addon_prefs  = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
-        ######### Prepare Step Separation 
+        ######### Prepare Step Separation
 
         #Get Emitter (will find context emitter if nothing passed)
+        
         emitter = bpy.data.objects.get(self.emitter_name) #POTENTIAL BUG, load seem to only support context emitter
         if (emitter is None):
             emitter = scat_scene.emitter
@@ -744,9 +783,11 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             return {'FINISHED'}
 
         #Get Surfaces (will find f_surfaces if nothing passed)
+        
         if (self.surfaces_names==""):
               surfaces_names = [s.name for s in scat_op_crea.get_f_surfaces()]
         else: surfaces_names = self.surfaces_names.split("_!#!_")
+        
         surfaces = [bpy.data.objects.get(s) for s in surfaces_names if (s in bpy.data.objects)]
         if (len(surfaces)==0):
             raise Exception("No Surfaces found")
@@ -796,14 +837,14 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             return {'FINISHED'}
 
         #scatter layers & assign materials instructions
-        r = self.add_addlayer_instructions(d, emitter, surfaces, surfaces_names,)
+        r = self.add_generic_instruction(d, emitter, surfaces, surfaces_names,)
         if (r=={'FINISHED'}):
             return {'FINISHED'}
         max_count, total_count = r
 
         #direct paint instructions 
         if (action_type is not None):
-            self.add_quickpaint_instruction(action_type, mask_name,)
+            self.add_quickaction_instruction(action_type, mask_name,)
 
         #Security check confirm?
         if ((scat_op_crea.f_sec_count_allow) and (total_count>scat_op_crea.f_sec_count)):
@@ -879,8 +920,16 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             return {'RUNNING_MODAL'}
 
         except Exception as e:
+
             self.restore(context)
-            raise Exception(e)
+
+            #catch exception
+
+            if str(e).startswith("add_biome_layer: following object couldn't be found:"):
+                print("Exception, We couldn't scatter the biome")
+
+            else:
+                raise Exception(e)
 
         return {'FINISHED'}
  
@@ -912,13 +961,13 @@ class SCATTER5_OT_load_biome(bpy.types.Operator):
             if (bpy.context.scene.scatter5.operators.create_operators.f_sec_verts_allow==True):
                 for p in emitter.scatter5.particle_systems:
                     if (p.name in self.loaded_psys):
-                        for o in p.get_instances_obj():
+                        for o in p.get_instance_objs():
                             if (o.display_type=="BOUNDS"):
                                 poly = True
                                 break
 
             #call the dialog box popup
-            if poly:
+            if (poly):
                 bpy.ops.scatter5.popup_security('INVOKE_DEFAULT', scatter=False, poly=True, emitter=emitter.name, **kwargs,)
 
         return None 
@@ -1045,7 +1094,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
 
         bcol = layout.column(align=True)
         box, is_open = ui_templates.box_panel(self, bcol, 
-            prop_str = "ui_dialog_presetsave", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_presetsave";UI_BOOL_VAL:"1"
+            prop_str = "ui_dialog_presetsave", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_presetsave");BOOL_VALUE(1)
             icon = "FILE_NEW", 
             name = translate("Export Selected as Biome"),
             )
@@ -1087,6 +1136,11 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                 txt.label(text="the scatter Biome Library is by default located in:")
                 txt.operator("scatter5.open_directory", text=f"'{directories.lib_biomes}", emboss=False,).folder = directories.lib_biomes
                 txt.label(text="You are free to create subfolders within this location.")
+                
+                if any(p.group!="" for p in psys):
+                    s2.separator(factor=0.5)
+                    s2.label(text=translate("Group Warning")+":")
+                    word_wrap(layout=s2, alignment="LEFT", alert=True, max_char=53, string=translate("Warning, some of the scatter-system in your selection are part of a Group! Please be aware that group-settings will not be saved in your biome!"),)
 
                 s2.separator(factor=2.5)
                 self.draw_steps(s2, steps=steps,)
@@ -1095,48 +1149,44 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
 
             elif (steps==1):
 
-                s2.prop(scat_op,"biocrea_use_biome_display",)
+                txt = s2.column(align=True)
+                txt.active = False
+                txt.label(text=translate("Models Storage")+":")
+                s2.prop(scat_op,"biocrea_storage_method", text="",)
+                s2.separator(factor=1)
+                
+                if (scat_op.biocrea_storage_method=="exists"):
 
-                s2.prop(scat_op,"biocrea_external_blend_allow",)
-                if (scat_op.biocrea_external_blend_allow):
-
-                    nr = s2.row()
-                    nr1 = nr.row()
-                    nr1.separator(factor=2)
-                    nr2 = nr.row()
-                    prp = nr2.column(align=True)
-
-                    txt = prp.column(align=True)
+                    txt = s2.column(align=True)
                     txt.active = False
-                    txt.label(text=translate("Storage Method")+":")
-                    prp.prop(scat_op, "biocrea_storage_type", text="")
-                    prp.separator(factor=1)
+                    txt.label(text=translate("Library Type")+":")
+                    s2.prop(scat_op, "biocrea_storage_library_type", text="",)
+                    s2.separator(factor=1)
 
-                    if (scat_op.biocrea_storage_type=="individual"):
-                        txt = prp.column(align=True)
+                    if (scat_op.biocrea_storage_library_type=="individual"):
+                        txt = s2.column(align=True)
                         txt.active = False
                         txt.scale_y = 0.9
-                        word_wrap(layout=txt, alignment="LEFT", max_char=45, string=translate("Please only scatter linked objects, that way we'll find back the original .blend used!"),)
+                        word_wrap(layout=txt, alignment="LEFT", max_char=45, string=translate("This method only works if all the scatter's instances are linked objects, the biome exporter will find back the original .blend used that way!"),)
 
-                    elif (scat_op.biocrea_storage_type=="centralized"):
-                        txt = prp.column(align=True)
+                    elif (scat_op.biocrea_storage_library_type=="centralized"):
+                        txt = s2.column(align=True)
                         txt.active = False
                         txt.scale_y = 0.8
                         txt.label(text=translate("What's the name of the centralized .blend?"))
-                        prp.prop(scat_op,"biocrea_centralized_blend",text="")
+                        s2.prop(scat_op,"biocrea_centralized_blend", text="",)
 
-                else:
+                elif (scat_op.biocrea_storage_method=="create"):
                     txt = s2.column(align=True)
                     txt.active = False
                     txt.scale_y = 0.9
-                    txt.separator(factor=1)
-                    word_wrap(layout=txt, alignment="LEFT", max_char=50, string=translate("With this option we cannot export objects containing linked meshes/ materials/ images or textures!"),)
+                    word_wrap(layout=txt, alignment="LEFT", max_char=50, string=translate("We will automatically export your objects in a new .blend file! Note that we cannot export objects containing linked meshes/ materials/ images or textures!"),)
 
                 s2.separator()
 
                 txt = s2.column(align=True)
                 txt.scale_y = 0.8
-                txt.label(text=translate("Geo-Scatter will create the Following Files :"))
+                txt.label(text=translate("We will create the Following Files :"))
                 one_exists = False
                 
                 #biome file
@@ -1150,7 +1200,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                 
                 #blend file
 
-                if (not scat_op.biocrea_external_blend_allow):
+                if (scat_op.biocrea_storage_method=="create"):
                     rtxt = txt.row()
                     rtxt.active = False
                     if ( os.path.exists(os.path.join(scat_op.biocrea_creation_directory,f"{BLENDNAME}.blend")) ):
@@ -1169,23 +1219,21 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
 
                 s2.separator()
 
-                overw = s2.row()
-                overw.alert = one_exists
-                overw.prop(scat_op,"biocrea_overwrite",)
-
-                s2.separator()
-
                 txt = s2.column(align=True)
                 txt.scale_y = 0.8
-                if (scat_op.biocrea_external_blend_allow):
-                    if (scat_op.biocrea_storage_type=="individual"):
+                
+                if (scat_op.biocrea_storage_method=="exists"):
+                    
+                    if (scat_op.biocrea_storage_library_type=="individual"):
                         txt.label(text=translate("These assets need to be linked:"),)
-                    elif (scat_op.biocrea_storage_type=="centralized"):
+                        
+                    elif (scat_op.biocrea_storage_library_type=="centralized"):
                         txt.label(text=translate("These Assets needs to be in")+f" '{scat_op.biocrea_centralized_blend}' :",)
-                else: 
+                        
+                elif (scat_op.biocrea_storage_method=="create"):
                     txt.label(text=translate("These Assets will be exported in new .blend :"),)
 
-                to_export = set( o for p in psys for o in p.get_instances_obj() )                
+                to_export = set( o for p in psys for o in p.get_instance_objs() )                
                 if (len(to_export)):
                     for o in to_export:
                         rtxt = txt.row()
@@ -1196,6 +1244,14 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                     rtxt.alert = True
                     rtxt.active = False
                     rtxt.label(text="  "+translate("No Instances Found!"),)
+
+                s2.separator()
+                
+                s2.prop(scat_op,"biocrea_use_biome_display",)
+                
+                overw = s2.row()
+                overw.alert = one_exists
+                overw.prop(scat_op,"biocrea_overwrite",)
 
                 s2.separator(factor=2.5)
                 self.draw_steps(s2, steps=steps,)
@@ -1281,7 +1337,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
             PRESETNAME = f"{BASENAME}.layer{i:02}" #noted as "BASENAME.layer00.preset" within the text file
 
             #gather instances
-            psy_instance = p.get_instances_obj()
+            psy_instance = p.get_instance_objs()
             if (len(psy_instance)==0):
                 bpy.ops.scatter5.popup_menu(
                     msgs=translate("This scatter-system do not have any instances : ")+f"'{p.name}'",
@@ -1291,7 +1347,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                 return {'FINISHED'}
 
             #& add them to general list if need export
-            if (not scat_op.biocrea_external_blend_allow):
+            if (scat_op.biocrea_storage_method=="create"):
                 to_export += psy_instance
 
             #fill .biome file information
@@ -1302,10 +1358,10 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
             biome_dict[ii]["preset"] = f"BASENAME.layer{i:02}.preset"
 
             #fill blend file name information
-            if (scat_op.biocrea_external_blend_allow):
+            if (scat_op.biocrea_storage_method=="exists"):
 
                 #find back the blend names from linked objects?
-                if (scat_op.biocrea_storage_type=="individual"):
+                if (scat_op.biocrea_storage_library_type=="individual"):
 
                     #user might do bs here, need to be foolproof
                     for o in psy_instance:
@@ -1328,12 +1384,13 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                         biome_dict[ii]["instances"] = [(o.name,o.data.library.name.replace(".blend","")) for o in psy_instance]
                 
                 #objects from a single centralized blend?
-                elif (scat_op.biocrea_storage_type=="centralized"):
+                elif (scat_op.biocrea_storage_library_type=="centralized"):
                     biome_dict[ii]["asset_file"] = scat_op.biocrea_centralized_blend.replace(".blend","")
                     biome_dict[ii]["instances"] = [o.name for o in psy_instance]
             
-            #will export below
-            else: 
+            #if user need to export, will export below & we store info
+            elif (scat_op.biocrea_storage_method=="create"):
+                
                 biome_dict[ii]["asset_file"] = f"BASENAME.instances"
                 biome_dict[ii]["instances"] = [o.name for o in psy_instance]
 
@@ -1357,11 +1414,13 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
 
                 #need to also export model for special custom
                 if (p.s_display_method=="placeholder_custom"):
+                    
                     #only exports if custom assigned
                     if (p.s_display_custom_placeholder_ptr is not None):
                         biome_dict[ii]["display"]["s_display_custom_placeholder_ptr"] = p.s_display_custom_placeholder_ptr.name
+                        
                         #if need to export, also export custom placeholder objects
-                        if (not scat_op.biocrea_external_blend_allow):
+                        if (scat_op.biocrea_storage_method=="create"):
                             to_export.append(p.s_display_custom_placeholder_ptr)
 
             ######## WRITE PRESETS
@@ -1371,6 +1430,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
                 use_random_seed=scat_op.biocrea_use_random_seed,
                 texture_is_unique=scat_op.biocrea_texture_is_unique,
                 texture_random_loc=scat_op.biocrea_texture_random_loc,
+                get_scatter_density=True,
                 ) 
 
             d["name"] = f""
@@ -1414,7 +1474,7 @@ class SCATTER5_OT_save_biome_to_disk_dialog(bpy.types.Operator):
 
         ######## WRITE BLEND
 
-        if (not scat_op.biocrea_external_blend_allow):
+        if (scat_op.biocrea_storage_method=="create"):
 
             #get .blend file path
             biome_blend_path = os.path.join( scat_op.biocrea_creation_directory, f"{BLENDNAME}.blend",)
@@ -1505,7 +1565,7 @@ class SCATTER5_OT_rename_biome(bpy.types.Operator):
         layout  = self.layout
 
         box, is_open = ui_templates.box_panel(self, layout, 
-            prop_str = "ui_dialog_presetsave", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_presetsave";UI_BOOL_VAL:"1"
+            prop_str = "ui_dialog_presetsave", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_presetsave");BOOL_VALUE(1)
             icon = "FONT_DATA", 
             name = translate("Rename Biome"),
             )
@@ -1526,13 +1586,13 @@ class SCATTER5_OT_rename_biome(bpy.types.Operator):
             lbl = box.column(align=True)
             lbl.scale_y = 0.8
             lbl.active = False
-            lbl.label(text=" "+translate("Geo-Scatter will do the following operations:"))
-            lbl.label(text="     \u2022 "+translate("Change the name information from:"))
+            lbl.label(text=" "+translate("We will do the following operations:"))
+            lbl.label(text="     • "+translate("Change the name information from:"))
             lbl.label(text=f"           '{os.path.basename(self.path)}'")
 
             if (self.replace_files_names):
                 for p in self.get_linked_files()[0]:
-                    lbl.label(text=f"     \u2022 "+translate("Replace a file name."))
+                    lbl.label(text=f"     • "+translate("Replace a file name."))
                     lbl.label(text=f"           '{os.path.basename(p)}'")
 
             lbl.separator()

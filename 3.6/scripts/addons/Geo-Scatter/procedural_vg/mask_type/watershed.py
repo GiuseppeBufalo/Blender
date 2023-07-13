@@ -145,7 +145,7 @@ def get_watershed_data(o,crop=0, eval_modifiers=False,):
     bm.edges.ensure_lookup_table()
     bm.verts.ensure_lookup_table()
 
-    values = np.zeros(len(bm.verts), np.float)
+    values = np.zeros(len(bm.verts), np.float64, )
 
     for i,v in enumerate(bm.verts):
 

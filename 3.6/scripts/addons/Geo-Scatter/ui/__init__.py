@@ -16,6 +16,7 @@ import bpy
 
 from . import ui_templates 
 from . import ui_menus
+from . import ui_system_list
 from . import ui_creation
 from . import ui_notification
 from . import ui_tweaking
@@ -23,7 +24,7 @@ from . import ui_extra
 from . import ui_emitter_select
 from . import ui_addon
 from . import ui_manual
-from . import biome_library
+from . import ui_biome_library
 from . import open_manager
 
 
@@ -39,6 +40,7 @@ from . import open_manager
 
 classes  =  []
 classes +=  ui_menus.classes
+classes +=  ui_system_list.classes
 classes +=  ui_creation.classes
 classes +=  ui_notification.classes
 classes +=  ui_tweaking.classes
@@ -46,7 +48,7 @@ classes +=  ui_extra.classes
 classes +=  ui_emitter_select.classes
 classes +=  ui_addon.classes
 classes +=  ui_manual.classes
-classes +=  biome_library.classes
+classes +=  ui_biome_library.classes
 classes +=  open_manager.classes
 
 #classes possessing "USER_DEFINED bl_category", will be dynamically reloaded
@@ -62,8 +64,12 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    biome_library.register()
-    
+    #register biome library previews, build strucure, online fetch..
+    ui_biome_library.register()
+
+    #register shortcuts
+    ui_system_list.register_quicklister_shortcuts()
+
     return 
 
 
@@ -72,8 +78,12 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
 
-    biome_library.unregister()
-    
+    #register biome library previews, build strucure, online fetch..
+    ui_biome_library.unregister()
+
+    #unregister shortcuts
+    ui_system_list.unregister_quicklister_shortcuts()
+
     return
 
 

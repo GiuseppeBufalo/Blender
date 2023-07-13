@@ -13,6 +13,7 @@
 #####################################################################################################
 
 import bpy
+import random
 
 from .. __init__ import bl_info
 
@@ -21,6 +22,104 @@ from .. import scattering
 from .. resources.translate import translate
 
 from . gui_settings import SCATTER5_PR_popovers_dummy_class
+
+
+# 88   88 88""Yb 8888b.     db    888888 888888     888888  dP""b8 888888 .dP"Y8
+# 88   88 88__dP  8I  Yb   dPYb     88   88__       88__   dP   `"   88   `Ybo."
+# Y8   8P 88"""   8I  dY  dP__Yb    88   88""       88""   Yb        88   o.`Y8b
+# `YbodP' 88     8888Y"  dP""""Yb   88   888888     88      YboodP   88   8bodP'
+
+
+#some related class functions: (most update functions are in the update_factory module)
+
+def upd_group(self, context):
+    """update function of p.group, will refresh all group properties accordingly"""
+    
+    p = self
+
+    if (p.group==""):
+        p.property_run_update("s_disable_all_group_features", True,)
+        
+    else:    
+        #Add new group properties!
+        g = p.id_data.scatter5.particle_groups.get(p.group)
+        if (g is None):
+            g = p.id_data.scatter5.particle_groups.add()
+            g.name = p.group
+
+        #Optimize this operation 
+        with bpy.context.scene.scatter5.factory_update_pause(event=True,delay=True,sync=True):
+            #Ensure group properties values or disable the group settings of these psys
+            g.refresh_nodetree()
+
+    return None
+
+def upd_lock(self, context):
+
+    if (self.lock==True):
+        self.lock = False
+        v = (not self.is_all_locked())
+        
+        for k in self.bl_rna.properties.keys():
+            if (k.endswith("_locked")):
+                setattr(self,k,v)
+            continue
+
+    return None 
+
+def upd_euler_to_direction_prop(self_name, prop_name,):
+        
+    def _self_euler_to_dir(self,context):
+
+        from mathutils import Vector
+        
+        e = getattr(self, self_name)
+        v = Vector((0.0, 0.0, 1.0))
+        v.rotate(e)
+    
+        setattr(self, prop_name, v)
+        return None
+
+    return _self_euler_to_dir
+
+def get_surfaces_match_attr(self, attr_type,):
+    """return a function that once executed will return a list of common vertex-groups across all surfaces of this psy/groups
+    implementation:
+        - note that this function has been implemented as following `lambda s,c,e: s.get_surfaces_match_attr("uv")(s, c, e)` for properties, in order to access self, a bit convulated eraps
+        - note that this function is heavily used in interface, to provide feedback on user field not being shared across all surface
+        - note that this surface is able to also work with all surfaces of a psy AND all surfaces of a group (==many psys)
+    """
+    assert attr_type in ["vg","vcol","uv","mat"]
+
+    #first find surfaces! surfaces of group or psy!
+    surfaces = self.get_surfaces()
+
+    #return function that will return empty list if no surfaces
+    if (not surfaces):
+        return lambda s,c,e: []
+    
+    #else return filter function for our surfaces
+    def filter_fct(s, c, edit_text):
+
+        nonlocal attr_type, surfaces
+
+        #return list of common vertex-group across all surfaces
+        if (attr_type=="vg"): 
+            return set.intersection(*map(set, [ [d.name for d in o.vertex_groups if (edit_text in d.name)] for o in surfaces ] ))
+
+        #return list of common color-attributes across all surfaces
+        elif (attr_type=="vcol"): 
+            return set.intersection(*map(set, [ [d.name for d in o.data.color_attributes if (edit_text in d.name)] for o in surfaces ] ))
+
+        #return list of common uv-maps across all surfaces
+        elif (attr_type=="uv"): 
+            return set.intersection(*map(set, [ [d.name for d in o.data.uv_layers if (edit_text in d.name)] for o in surfaces ] ))
+
+        #return list of common materials across all surfaces
+        elif (attr_type=="mat"): 
+            return set.intersection(*map(set, [ [d.name for d in o.data.materials if (d is not None and edit_text in d.name)] for o in surfaces ] ))
+
+    return filter_fct
 
 
 #  dP""b8  dP"Yb  8888b.  888888      dP""b8 888888 88b 88
@@ -36,25 +135,11 @@ def codegen_featuremask_properties(scope_ref={}, name="name"):
 
     d = {}
 
-    def get_surfaces_match_umask(self, context, edit_text):
-        """ flex search between get_surfaces_match_vg & get_surfaces_match_vcol""" #might need to extend to other search later
-
-        surfaces = self.get_surfaces()
-        if (not surfaces):
-            return []
-
-        def context_attributes(o):
-            return o.data.color_attributes if (getattr(self,f"{name}_mask_method")=="mask_vcol") else o.vertex_groups
-
-        surfaces_attr = [ [d.name for d in context_attributes(o) if (edit_text in d.name)] for o in surfaces ]
-        
-        return set.intersection(*map(set, surfaces_attr))
-
     prop_name = f"{name}_mask_ptr"
     d[prop_name] = bpy.props.StringProperty(
         name=translate("Attribute Pointer"),
-        description=translate("Searh across all surface(s) for shared attributes"),
-        search=get_surfaces_match_umask,
+        description=translate("Search across all surface(s) for shared attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol" if (getattr(s,f"{name}_mask_method")=="mask_vcol") else "vg")(s, c, e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory(prop_name,),
         )
@@ -128,7 +213,7 @@ def codegen_featuremask_properties(scope_ref={}, name="name"):
 
     prop_name = f"{name}_mask_noise_is_random_seed"
     d[prop_name] = bpy.props.BoolProperty(
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory(prop_name, alt_support=False, sync_support=False,),
         )
@@ -196,69 +281,14 @@ def codegen_properties_by_idx(scope_ref={}, name="my_propXX", nbr=20, items={}, 
     return d
 
 
-# 88   88 88""Yb 8888b.     db    888888 888888     888888  dP""b8 888888 .dP"Y8
-# 88   88 88__dP  8I  Yb   dPYb     88   88__       88__   dP   `"   88   `Ybo."
-# Y8   8P 88"""   8I  dY  dP__Yb    88   88""       88""   Yb        88   o.`Y8b
-# `YbodP' 88     8888Y"  dP""""Yb   88   888888     88      YboodP   88   8bodP'
+# ooooooooo.                          .    o8o            oooo
+# `888   `Y88.                      .o8    `"'            `888
+#  888   .d88'  .oooo.   oooo d8b .o888oo oooo   .ooooo.   888   .ooooo.   .oooo.o
+#  888ooo88P'  `P  )88b  `888""8P   888   `888  d88' `"Y8  888  d88' `88b d88(  "8
+#  888          .oP"888   888       888    888  888        888  888ooo888 `"Y88b.
+#  888         d8(  888   888       888 .  888  888   .o8  888  888    .o o.  )88b
+# o888o        `Y888""8o d888b      "888" o888o `Y8bod8P' o888o `Y8bod8P' 8""888P'
 
-
-#some related class functions: (most update functions are in the update_factory module)
-
-def upd_hide_viewport(self,context):
-
-    self.scatter_obj.hide_viewport = self.hide_viewport
-
-    #also update geonode mod! it gave us optimization problems 
-    #because blender do still calculate the mods when hidding on some strange case
-    mod = self.get_scatter_mod()
-    if (mod is not None):
-        mod.show_viewport = not self.hide_viewport
-
-    return None
-
-def upd_hide_render(self,context):
-
-    self.scatter_obj.hide_render = self.hide_render
-
-    #also update geonode mod! it gave us optimization problems 
-    #because blender do still calculate the mods when hidding on some strange case
-    mod = self.get_scatter_mod()
-    if (mod is not None):
-        mod.show_render = not self.hide_render
-    
-    return None
-
-def upd_lock(self, context):
-
-    if (self.lock==True):
-        self.lock = False
-        v = (not self.is_all_locked())
-        
-        for k in self.bl_rna.properties.keys():
-            if (k.endswith("_locked")):
-                setattr(self,k,v)
-            continue
-
-    return None 
-
-def upd_euler_to_direction_prop(self_name, prop_name,):
-        
-    def _self_euler_to_dir(self,context):
-
-        from mathutils import Vector
-        
-        e = getattr(self, self_name)
-        v = Vector((0.0, 0.0, 1.0))
-        v.rotate(e)
-    
-        setattr(self, prop_name, v)
-        return None
-
-    return _self_euler_to_dir
-
-def poll_curve_type(self, object):
-
-    return (object.type=="CURVE")
 
 
 class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup): 
@@ -274,11 +304,15 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.rename.rename_particle,
         )
     
-    name_bis : bpy.props.StringProperty( #important for renaming function
+    name_bis : bpy.props.StringProperty(
+        description="important for renaming function, avoid name collision",
         default="",
         )
 
-    uuid : bpy.props.IntProperty(default=0) #uuid generated in add_psy_virgin, should never be 0
+    uuid : bpy.props.IntProperty(
+        description="uuid generated in add_psy_virgin, should never be 0, internal purpose",
+        default=0,
+        ) 
 
     # 88   88 888888 88 88     88 888888 Yb  dP
     # 88   88   88   88 88     88   88    YbdP
@@ -290,30 +324,36 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         description="Instance generator object. An object locked on scene origin where we'll generate points & instances, this is where our geometry node engine is located. This object might contain custom generated points such as vertices created by manual mode or cache information. This property is ready-only",
         )
 
-    def get_scatter_mod(self, strict=True):
-        """get 'Scatter5 Geonode Engine MK..' modifiers latest version from scatter_obj"""
+    def get_scatter_mod(self, strict=True, raise_exception=True,):
+        """get 'Geo-Scatter Engine MK..' modifiers latest version from scatter_obj"""
 
         #only latest version only?
         if (strict): 
             return self.scatter_obj.modifiers.get(bl_info["engine_version"])
 
         for m in self.scatter_obj.modifiers: 
-            if (m.name.startswith("Scatter5 Geonode Engine")):
+            if (m.name.startswith("Geo-Scatter Engine")):
                 return m 
+            if (m.name.startswith("Scatter5 Geonode Engine")):
+                return m
 
-        raise Exception("Couldn't find any of Geoscatter modifiers")
+        if (raise_exception):
+            raise Exception("Couldn't find any of Geoscatter modifiers")
+        
+        return None
 
     # .dP"Y8 888888 88     888888  dP""b8 888888 88  dP"Yb  88b 88
     # `Ybo." 88__   88     88__   dP   `"   88   88 dP   Yb 88Yb88
     # o.`Y8b 88""   88  .o 88""   Yb        88   88 Yb   dP 88 Y88
     # 8bodP' 888888 88ood8 888888  YboodP   88   88  YbodP  88  Y8
     
-    active : bpy.props.BoolProperty( #autimatically updated when user change the ui list intproperty index `particle_systems_idx`
-        default=False,               #is a ready-only property, please don't change this prop
+    active : bpy.props.BoolProperty( 
+        default=False,
+        description="ready only! auto-updated by `psy.particle_interface_idx` update function `on_particle_interface_interaction()`",
         )
-
     sel : bpy.props.BoolProperty(
         default=False,
+        description=translate("Select/Deselect a scatter-system\nThe act of selection in Geo-Scatter is very important, as operators might act on the selected-system(s), and also because you can press the ALT key while changing a property value to apply the value of the settings to all the selected system(s) simultaneously!"),
         )
 
     # Yb    dP 888888 88""Yb .dP"Y8 88  dP"Yb  88b 88 88 88b 88  dP""b8
@@ -321,32 +361,48 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     #   YbdP   88""   88"Yb  o.`Y8b 88 Yb   dP 88 Y88 88 88 Y88 Yb  "88
     #    YP    888888 88  Yb 8bodP' 88  YbodP  88  Y8 88 88  Y8  YboodP
 
-    addon_version : bpy.props.StringProperty(
-        description="with which version of the scatter plugin this scatter system was created?",
-        default="5.0", #lower possible by default, as we added this prop on Geo-Scatter 5.1, shall be fine for all users psys data
-        )
-
     addon_type : bpy.props.StringProperty(
-        description="Scatter system created with Geo-Scatter or Biome-Reader ?",
         default=bl_info["name"],
+        description="Scatter system created with Geo-Scatter or Biome-Reader ?",
         )
-
+    addon_version : bpy.props.StringProperty(
+        default="5.0", #lower possible by default, as we added this prop on Geo-Scatter 5.1, shall be fine for all users psys data
+        description="Scatter version upon with this scatter-system was created",
+        )
     blender_version : bpy.props.StringProperty(
-        description="with which version of blender this scatter system was created?",
         default="3.0", #lower possible by default, as we added this prop on Geo-Scatter 5.2, could also be 3.1 
+        description="Blender version upon with this scatter-system was created",
         )
-
+    
+    def addon_version_is_valid(self):
+        """verify if this psy version is adequate to the current addon version"""
+        
+        from .. utils.str_utils import version_to_float
+        #scatter system need always to be up to date with the major releases, 
+        #if the scatter was created with a lower version of the plugin, we changed the nodetree in newer version, and this system needs and update
+        #if the scatter was created with a higher version of the plugin, the current interface will simply not be possible, illegal action by user
+        return version_to_float(self.addon_version,truncated=True,) == version_to_float(bl_info['version'],truncated=True,)
+    
+    def blender_version_is_valid(self):
+        """verify if this psy blender version is adequate to the current version of blender the user is using"""
+        
+        from .. utils.str_utils import version_to_float
+        #blender version upon which the geometry-node nodetree was created from always need to be lower or equal of current blender version
+        #if user brings nodetrees saved in a future version of blender, the data will be corrupted forever
+        return version_to_float(self.blender_version,truncated=True,) <= version_to_float(bpy.app.version_string,truncated=True,)
+    
     # 88""Yb 888888 8b    d8  dP"Yb  Yb    dP 888888
     # 88__dP 88__   88b  d88 dP   Yb  Yb  dP  88__
     # 88"Yb  88""   88YbdP88 Yb   dP   YbdP   88""
     # 88  Yb 888888 88 YY 88  YbodP     YP    888888
 
     def remove_psy(self): #best to use bpy.ops.scatter5.remove_system()
-
+                          #NOTE: will need to use particle_interface_refresh() after this operator
+    
         emitter = self.id_data
 
         #save selection 
-        save_sel = [p.name for p in emitter.scatter5.particle_systems if p.sel]
+        save_sel = [p.name for p in emitter.scatter5.get_psys_selected() ]
 
         #remove scatter object 
         if (self.scatter_obj is not None): 
@@ -367,24 +423,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
                 if (len(collection_users(instance_coll))==1):
                     bpy.data.collections.remove(instance_coll)
 
-        #if we deleted an active system, then we will need to reset particle system ui list index
-        was_active = None
-
-        #find id from name in order to remove
+        #find idx from name in order to remove
         for i,p in enumerate(emitter.scatter5.particle_systems):
             if (p.name==self.name):
-                was_active = i
                 emitter.scatter5.particle_systems.remove(i)
                 break
-        
-        if (was_active is not None):
-
-            if (len(emitter.scatter5.particle_systems)==0):
-                emitter.scatter5.particle_systems_idx = -1
-            if (was_active==0):
-                emitter.scatter5.particle_systems_idx = 0
-            else:
-                emitter.scatter5.particle_systems_idx = was_active -1
 
         #restore selection needed, when we change active index, default behavior == reset selection and select active
         for p in save_sel:
@@ -400,15 +443,36 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     hide_viewport : bpy.props.BoolProperty(
         default=False, 
-        description=translate("Hide this scatter-system in viewport, this setting will affect the view-states of both the scatter-object and its modifier"),
-        update=upd_hide_viewport,
+        description=translate("Hide/Unhide a scatter-system from viewport"),
+        update=scattering.update_factory.factory("hide_viewport", sync_support=False,),
         )
         
     hide_render : bpy.props.BoolProperty(
         default=False, 
-        description=translate("Hide this scatter-system on final render, this setting will affect the view-states of both the scatter-object and its modifier"),
-        update=upd_hide_render,
+        description=translate("Hide/Unhide a scatter-system from render"),
+        update=scattering.update_factory.factory("hide_render", sync_support=False,),
         )
+
+    #  dP""b8 88""Yb  dP"Yb  88   88 88""Yb     .dP"Y8 Yb  dP .dP"Y8 888888 888888 8b    d8
+    # dP   `" 88__dP dP   Yb 88   88 88__dP     `Ybo."  YbdP  `Ybo."   88   88__   88b  d88
+    # Yb  "88 88"Yb  Yb   dP Y8   8P 88"""      o.`Y8b   8P   o.`Y8b   88   88""   88YbdP88
+    #  YboodP 88  Yb  YbodP  `YbodP' 88         8bodP'  dP    8bodP'   88   888888 88 YY 88
+
+    group : bpy.props.StringProperty(
+        default="",
+        description="we'll automatically create and assign the group items by updating this prop. EmptyField==NoGroup. Note that you might want to run emitter.particle_interface_refresh() after use. ",
+        update=upd_group,
+        )
+    
+    def get_group(self):
+        """get group of which this system (self) is a member of, will return None if not part of any groups"""
+        
+        emitter = self.id_data
+        for g in emitter.scatter5.particle_groups:
+            if (g.name==self.group):
+                return g
+            
+        return None
 
     # 88      dP"Yb   dP""b8 88  dP     .dP"Y8 Yb  dP .dP"Y8 888888 888888 8b    d8
     # 88     dP   Yb dP   `" 88odP      `Ybo."  YbdP  `Ybo."   88   88__   88b  d88
@@ -426,7 +490,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     #each categories also have their own lock properties
 
     def is_locked(self,propname):
-        """check if given keys, can be full propname or category name, is supposedly in  locked category"""
+        """check if given keys, can be full propname or just category name, is locked"""
 
         _locked_api = ""
         for cat in ("s_surface","s_distribution","s_mask","s_rot","s_scale","s_pattern","s_abiotic","s_proximity","s_ecosystem","s_push","s_wind","s_visibility","s_instances","s_display",):
@@ -437,9 +501,32 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         return False if (_locked_api is None) else _locked_api
 
     def is_all_locked(self,):
-        """check if all categories are locked, mainly used to display lock icon in GUI"""
+        """check if all categories are locked (mainly used to display lock icon in GUI)"""
 
         return all( self.get(k) for k,v in self.bl_rna.properties.items() if k.endswith("_locked") )
+
+    def lock_all(self,):
+        """lock all property categories"""
+
+        for k in self.bl_rna.properties.keys():
+            if (k.endswith("_locked")):
+                setattr(self,k,True)
+
+        return None
+
+    def unlock_all(self,):
+        """unlock all property categories"""
+
+        for k in self.bl_rna.properties.keys():
+            if (k.endswith("_locked")):
+                setattr(self,k,False)
+
+        return None 
+
+    # 888888 88""Yb 888888 888888 8888P 888888     .dP"Y8 Yb  dP .dP"Y8 888888 888888 8b    d8
+    # 88__   88__dP 88__   88__     dP  88__       `Ybo."  YbdP  `Ybo."   88   88__   88b  d88
+    # 88""   88"Yb  88""   88""    dP   88""       o.`Y8b   8P   o.`Y8b   88   88""   88YbdP88
+    # 88     88  Yb 888888 888888 d8888 888888     8bodP'  dP    8bodP'   88   888888 88 YY 88
 
     freeze : bpy.props.BoolProperty( #TODO LATER
         default=False,
@@ -483,7 +570,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     #  YboodP dP""""Yb   88   888888  YboodP  YbodP  88  Yb  dP        `YbodP' 8bodP' 888888 8888Y"
 
     def is_category_used(self, s_category):
-        """check if the given category is active"""
+        """check if the given property category is active"""
 
         #nothing can possible be used if there are no surfaces
         if (len(self.get_surfaces())==0):
@@ -495,12 +582,20 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
         #this category has special requirement in order to be used         
         elif (s_category=="s_instances"): 
-            return (self.s_instances_coll_ptr and len(self.s_instances_coll_ptr.objects)!=0)
+            if (self.s_instances_method=="ins_collection"):
+                if ( (self.s_instances_coll_ptr is not None) and len(self.s_instances_coll_ptr.objects)!=0 ):
+                    return True
+            return False
 
         if (not getattr(self, f"{s_category}_master_allow")):
             return False
 
-        main_features = eval(f"self.get_{s_category}_main_features()")
+        try:
+            method_name = f"get_{s_category}_main_features"
+            method = getattr(self, method_name)
+            main_features = method()
+        except:
+            raise Exception("BUG: categories not set up correctly")
 
         return any( getattr(self,sett) for sett in main_features )
 
@@ -528,10 +623,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
         return None
 
-    # 88""Yb    db    88""Yb 888888 88  dP""b8 88     888888      dP""b8  dP"Yb  88   88 88b 88 888888
-    # 88__dP   dPYb   88__dP   88   88 dP   `" 88     88__       dP   `" dP   Yb 88   88 88Yb88   88
-    # 88"""   dP__Yb  88"Yb    88   88 Yb      88  .o 88""       Yb      Yb   dP Y8   8P 88 Y88   88
-    # 88     dP""""Yb 88  Yb   88   88  YboodP 88ood8 888888      YboodP  YbodP  `YbodP' 88  Y8   88
+    #  dP""b8 888888 888888      dP""b8  dP"Yb  88   88 88b 88 888888 
+    # dP   `" 88__     88       dP   `" dP   Yb 88   88 88Yb88   88   
+    # Yb  "88 88""     88       Yb      Yb   dP Y8   8P 88 Y88   88   
+    #  YboodP 888888   88        YboodP  YbodP  `YbodP' 88  Y8   88   
 
     scatter_count_viewport : bpy.props.IntProperty(
         default=-1,
@@ -545,6 +640,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     scatter_count_render : bpy.props.IntProperty(
         default=-1,
         )
+
+    # def get_naive_count_realtime(self):
+    #     """get count in real time, only for viewport, might be too slow if millions of points, also, will not work for point cloud display"""
+    #     return len([_ for ins in bpy.context.evaluated_depsgraph_get().object_instances if (ins.is_instance and ins.parent and ins.parent.original==self.scatter_obj)])
 
     def get_depsgraph_count(self, attrs=[], ):
         """get an attribute of this scatter-system scatter-obj in evaluated depsgraph, 
@@ -634,10 +733,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
                 
         return count
 
-    def get_estimated_density(self, refresh_square_area=True,):
-        """evaluate psy density /m² of this scatter system, will remove masks and optimizations temporarily -- CARREFUL MIGHT BE SLOW -- DO NOT RUN IN REAL TIME"""
+    def get_scatter_density(self, refresh_square_area=True,):
+        """evaluate psy density /m² of this scatter system independently of , will remove masks and optimizations temporarily -- CARREFUL MIGHT BE SLOW -- DO NOT RUN IN REAL TIME"""
 
-        emitter = self.id_data
+        p = self
+        g = self.get_group()
 
         #Will need to disable all this, as they have an non-rerpresentative impact ond density
         to_disable = [
@@ -658,34 +758,43 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
             "s_visibility_maxload_allow",
             "s_display_allow",
             ]
+        if (g is not None): 
+            to_disable += [
+                "s_gr_mask_vg_allow",
+                "s_gr_mask_vcol_allow",
+                "s_gr_mask_bitmap_allow",
+                "s_gr_mask_curve_allow",
+                "s_gr_mask_boolvol_allow",
+                "s_gr_mask_material_allow",
+                "s_gr_mask_upward_allow",
+                ]
 
-        #override start
-        storage={}
+        #temprorarily disable mask features for psys or groups
+        to_re_enable = []
         for prp in to_disable:
-            value=getattr(self,prp)
-            storage[prp]=value
-            if (value==True):
-                setattr(self,prp,False)
+            e = g if prp.startswith("s_gr_") else p
+            if (getattr(e,prp)==True):
+                setattr(e,prp,False)
+                to_re_enable = prp
             continue
 
         #get square area 
         if (refresh_square_area):
-              square_area = self.get_surfaces_square_area(evaluate="recalculate", eval_modifiers=True, get_selection=False,)
-        else: square_area = self.get_surfaces_square_area(evaluate="gather",)
+              square_area = p.get_surfaces_square_area(evaluate="recalculate", eval_modifiers=True, get_selection=False,)
+        else: square_area = p.get_surfaces_square_area(evaluate="gather",)
 
         #get density 
-        count = self.get_scatter_count(state='viewport',)
+        count = p.get_scatter_count(state='viewport',)
         density = round(count/square_area,4)
 
-        #override restore
-        for prp in to_disable:
-            value=getattr(self,prp)
-            if (value!=storage[prp]):
-                setattr(self,prp,storage[prp])
+        #re-enabled the temporarily disabled
+        for prp in to_re_enable:
+            e = g if prp.startswith("s_gr_") else p
+            setattr(e,prp,True)
             continue
 
         return density
-
+    
     #  dP""b8  dP"Yb  88      dP"Yb  88""Yb
     # dP   `" dP   Yb 88     dP   Yb 88__dP
     # Yb      Yb   dP 88  .o Yb   dP 88"Yb
@@ -704,7 +813,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     # o.`Y8b Y8   8P 88"Yb  88""    dP__Yb  Yb      88""
     # 8bodP' `YbodP' 88  Yb 88     dP""""Yb  YboodP 888888
 
-    ###################### This category of settings keyword is : "s_distribution"
+    ###################### This category of settings keyword is : "s_surface"
 
     s_surface_locked : bpy.props.BoolProperty(
         description=translate("Lock/Unlock Settings"),
@@ -723,8 +832,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ##########
 
     s_surface_method : bpy.props.EnumProperty(
-        name=translate("Method"),
-        description=translate("Choose which surface(s) will be sampled in order to generate the distribution"),
+        name=translate("Surface Method"),
+        description=translate("Choose the surface(s) upon which the points will be distributed by your chosen distribution algorithm"),
         default= "emitter", 
         items= ( ("emitter",   translate("Emitter Object"), translate("Distribute points only on the surface of your emitter object mesh."), "INIT_ICON:W_EMITTER", 0, ),
                  ("object",   translate("Single Object"), translate("Distribute points on the surface of any chosen object. This leads to a non-linear workflow where the emitter is only used to store your scattering settings."), "INIT_ICON:W_SURFACE_SINGLE", 1, ),
@@ -734,15 +843,15 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_surface_object : bpy.props.PointerProperty(
         type=bpy.types.Object,
-        description=translate("Non-Linear Surface"),
+        description=translate("Chosen Surface"),
         update=scattering.update_factory.factory("s_surface_object"),
         )
     s_surface_collection : bpy.props.StringProperty( #so triggered here, whi is it not coll_ptr????? grrrr
         default="",
-        description=translate("Non-Linear Surface(s)"),
+        description=translate("Chosen Surface(s)"),
         update=scattering.update_factory.factory("s_surface_collection"),
         )
-    passctxt_s_surface_collection : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_surface_collection : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
 
 
     def get_surfaces(self):
@@ -760,41 +869,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
         return []
 
-    def get_surfaces_match_vg(self, context, edit_text):
-        """return list of shared vertex-group across all surfaces"""
-
-        surfaces = self.get_surfaces()
-        if (not surfaces):
-            return []
-        surfaces_attr = [ [d.name for d in o.vertex_groups if (edit_text in d.name)] for o in surfaces ]
-        return set.intersection(*map(set, surfaces_attr))
-
-    def get_surfaces_match_vcol(self, context, edit_text):
-        """return list of shared color-attributes across all surfaces"""
-
-        surfaces = self.get_surfaces()
-        if (not surfaces):
-            return []
-        surfaces_attr = [ [d.name for d in o.data.color_attributes if (edit_text in d.name)] for o in surfaces ]
-        return set.intersection(*map(set, surfaces_attr))
-
-    def get_surfaces_match_uv(self, context, edit_text):
-        """return list of shared uv-maps across all surfaces"""
-
-        surfaces = self.get_surfaces()
-        if (not surfaces):
-            return []
-        surfaces_attr = [ [d.name for d in o.data.uv_layers if (edit_text in d.name)] for o in surfaces ]
-        return set.intersection(*map(set, surfaces_attr))
-
-    def get_surfaces_match_mat(self, context, edit_text):
-        """return list of shared materials across all surfaces"""
-
-        surfaces = self.get_surfaces()
-        if (not surfaces):
-            return []
-        surfaces_attr = [ [d.name for d in o.data.materials if (d is not None and edit_text in d.name)] for o in surfaces ]
-        return set.intersection(*map(set, surfaces_attr))
+    def get_surfaces_match_attr(self, attr_type,):
+        """gather matching attributes accross all surfaces used"""
+        global get_surfaces_match_attr 
+        return get_surfaces_match_attr(self, attr_type,) #defined outside, so it's also accessible by codegen function
 
     def get_surfaces_square_area(self, evaluate="gather", eval_modifiers=True, get_selection=False,):
         """will gather or optionally refresh each obj of the surfaces: object.scatter5.estimated_square_area"""
@@ -844,7 +922,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ##########
 
     s_distribution_method : bpy.props.EnumProperty(
-        name=translate("Method"),
+        name=translate("Distribution Method"),
         description=translate("Choose your distribution algorithm"),
         default="random", 
         items=( ("random",        translate("Random"),        translate("Random distribution algorithm, with optional poisson disk sampling feature to limit distances in-between the generated points"), "INIT_ICON:W_DISTRANDOM", 1),
@@ -912,19 +990,19 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_seed", delay_support=True, sync_support=False,),
         )
     s_distribution_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_distribution_is_random_seed", alt_support=False, sync_support=False,),
         )
     s_distribution_limit_distance_allow : bpy.props.BoolProperty(
-        name=translate("Limit Collision"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Limit Self-Collision"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=False, 
         update=scattering.update_factory.factory("s_distribution_limit_distance_allow",),
         )
     s_distribution_limit_distance : bpy.props.FloatProperty(
-        name=translate("Distance"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Radial Distance"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         subtype="DISTANCE",
         default=0.2,
         min=0,
@@ -996,19 +1074,19 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_volume_seed", delay_support=True, sync_support=False,),
         )
     s_distribution_volume_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_distribution_volume_is_random_seed", alt_support=False, sync_support=False,),
         )
     s_distribution_volume_limit_distance_allow : bpy.props.BoolProperty(
-        name=translate("Limit Collision"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Limit Self-Collision"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=False, 
         update=scattering.update_factory.factory("s_distribution_volume_limit_distance_allow",),
         )
     s_distribution_volume_limit_distance : bpy.props.FloatProperty(
-        name=translate("Distance"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Radial Distance"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         subtype="DISTANCE",
         default=0.5,
         min=0,
@@ -1028,8 +1106,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_distribution_stable_uv_ptr : bpy.props.StringProperty(
         default="UVMap",
         name=translate("UV-Map Pointer"),
-        description=translate("Stable Uv-space from which the distribution will be computed. Searh across all surface(s) for shared Uvmap"),
-        search=get_surfaces_match_uv,
+        description=translate("Stable Uv-space from which the distribution will be computed. Search across all surface(s) for shared Uvmap\nWill highlight red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("uv")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_distribution_stable_uv_ptr",),
         )
@@ -1062,19 +1140,19 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_stable_seed", delay_support=True, sync_support=False,),
         )
     s_distribution_stable_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_distribution_stable_is_random_seed", alt_support=False, sync_support=False,),
         )
     s_distribution_stable_limit_distance_allow : bpy.props.BoolProperty(
-        name=translate("Limit Collision"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Limit Self-Collision"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=False, 
         update=scattering.update_factory.factory("s_distribution_stable_limit_distance_allow",),
         )
     s_distribution_stable_limit_distance : bpy.props.FloatProperty(
-        name=translate("Distance"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Radial Distance"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=0.02,
         min=0, 
         precision=3,
@@ -1106,14 +1184,14 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_clump_density", delay_support=True,),
         )
     s_distribution_clump_limit_distance_allow : bpy.props.BoolProperty(
-        name=translate("Limit Collision"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Limit Self-Collision"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=False, 
         update=scattering.update_factory.factory("s_distribution_clump_limit_distance_allow",),
         )
     s_distribution_clump_limit_distance : bpy.props.FloatProperty(
-        name=translate("Distance"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Radial Distance"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         subtype="DISTANCE",
         default=0,
         min=0,
@@ -1127,7 +1205,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_clump_seed", delay_support=True, sync_support=False,),
         )
     s_distribution_clump_is_random_seed : bpy.props.BoolProperty(
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_distribution_clump_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1165,14 +1243,14 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_clump_children_density", delay_support=True,),
         )
     s_distribution_clump_children_limit_distance_allow : bpy.props.BoolProperty(
-        name=translate("Limit Collision"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Limit Self-Collision"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         default=False, 
         update=scattering.update_factory.factory("s_distribution_clump_children_limit_distance_allow",),
         )
     s_distribution_clump_children_limit_distance : bpy.props.FloatProperty(
-        name=translate("Distance"),
-        description=translate("Use the poisson-disk sampling algorithm to remove points too close to each other. Be warned this feature slows-down performance"),
+        name=translate("Radial Distance"),
+        description=translate("With this option enabled, you'll limit the probability of having points distributed near each other. This technique use the the poisson-disk sampling algorithm under the hood to adjust points that spawned too close to each other. Be warned this feature slows-down performance and is only approximative to a given radius distance from the origin of the points"),
         subtype="DISTANCE",
         default=0.2, 
         min=0, 
@@ -1186,7 +1264,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_distribution_clump_children_seed", delay_support=True, sync_support=False,),
         )
     s_distribution_clump_children_is_random_seed : bpy.props.BoolProperty(
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_distribution_clump_children_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1232,6 +1310,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     ###################### This category of settings keyword is : "s_mask"
     ###################### this category is Not supported by Preset
+    ###################### Same set of properties for groups
 
     s_mask_locked : bpy.props.BoolProperty(description=translate("Lock/Unlock Settings"),)
 
@@ -1260,8 +1339,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_mask_vg_ptr : bpy.props.StringProperty(
         name=translate("Vertex-Group Pointer"),
-        description=translate("Searh across all surface(s) for shared vertex-group"),
-        search=get_surfaces_match_vg,
+        description=translate("Search across all surface(s) for shared vertex-group\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vg")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_mask_vg_ptr"),
         )
@@ -1280,8 +1359,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_mask_vcol_ptr : bpy.props.StringProperty(
         name=translate("Color-Attribute Pointer"),
-        description=translate("Searh across all surface(s) for shared color attributes"),
-        search=get_surfaces_match_vcol,
+        description=translate("Search across all surface(s) for shared color attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_mask_vcol_ptr"),
         )
@@ -1327,8 +1406,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_mask_bitmap_uv_ptr : bpy.props.StringProperty(
         default="UVMap",
         name=translate("UV-Map Pointer"),
-        description=translate("Searh across all surface(s) for shared Uvmap"),
-        search=get_surfaces_match_uv,
+        description=translate("Search across all surface(s) for shared Uvmap\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("uv")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_mask_bitmap_uv_ptr"),
         )
@@ -1366,6 +1445,26 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_mask_bitmap_id_color_ptr", delay_support=True,),
         ) 
 
+    ########## ########## Material
+
+    s_mask_material_allow : bpy.props.BoolProperty( 
+        name=translate("Material ID Mask"), 
+        description=translate("Mask-out instances that are not distributed upon the selected material slot"),
+        default=False, 
+        update=scattering.update_factory.factory("s_mask_material_allow"),
+        )
+    s_mask_material_ptr : bpy.props.StringProperty(
+        name=translate("Material Pointer: The faces assigned to chosen material slot will be used as a culling mask"),
+        description=translate("Search across all surface(s) for shared Materials\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("mat")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_mask_material_ptr"),
+        )
+    s_mask_material_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_mask_material_revert"),
+        )
+    
     ########## ########## Curves
 
     s_mask_curve_allow : bpy.props.BoolProperty( 
@@ -1377,7 +1476,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_mask_curve_ptr : bpy.props.PointerProperty(
         name=translate("Bezier-Curve Pointer"),
         type=bpy.types.Object, 
-        poll=poll_curve_type,
+        poll=lambda s,o: o.type=="CURVE",
         update=scattering.update_factory.factory("s_mask_curve_ptr"),
         )
     s_mask_curve_revert : bpy.props.BoolProperty(
@@ -1397,7 +1496,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Collection Pointer"),
         update=scattering.update_factory.factory("s_mask_boolvol_coll_ptr"),
         )
-    passctxt_s_mask_boolvol_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_mask_boolvol_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
     s_mask_boolvol_revert : bpy.props.BoolProperty(
         name=translate("Reverse"),
         update=scattering.update_factory.factory("s_mask_boolvol_revert"),
@@ -1415,30 +1514,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Collection Pointer"),
         update=scattering.update_factory.factory("s_mask_upward_coll_ptr"),
         )
-    passctxt_s_mask_upward_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_mask_upward_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
     s_mask_upward_revert : bpy.props.BoolProperty(
         name=translate("Reverse"),
         update=scattering.update_factory.factory("s_mask_upward_revert"),
-        )
-
-    ########## ########## Material
-
-    s_mask_material_allow : bpy.props.BoolProperty( 
-        name=translate("Material ID Mask"), 
-        description=translate("Mask-out instances that are not distributed upon the selected material slot"),
-        default=False, 
-        update=scattering.update_factory.factory("s_mask_material_allow"),
-        )
-    s_mask_material_ptr : bpy.props.StringProperty(
-        name=translate("Material Pointer: The faces assigned to chosen material slot will be used as a culling mask"),
-        description=translate("Searh across all surface(s) for shared Materials"),
-        search=get_surfaces_match_mat,
-        search_options={'SUGGESTION','SORT'},
-        update=scattering.update_factory.factory("s_mask_material_ptr"),
-        )
-    s_mask_material_revert : bpy.props.BoolProperty(
-        name=translate("Reverse"),
-        update=scattering.update_factory.factory("s_mask_material_revert"),
         )
 
     # .dP"Y8  dP""b8    db    88     888888
@@ -1460,6 +1539,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
             r.append("s_scale_faces_allow")
         elif (self.s_distribution_method=="edges"):
             r.append("s_scale_edges_allow")
+        if (self.s_instances_method=="ins_points"):
+            r.remove("s_scale_mirror_allow")
         return r
 
     s_scale_master_allow : bpy.props.BoolProperty( 
@@ -1473,7 +1554,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     s_scale_default_allow : bpy.props.BoolProperty(
         name=translate("Default Scale"), 
-        description=translate("Define the default Scale of your distributed points, by default the default scale is defined by your distribution."),
+        description=translate("Define the default Scale of your distributed points."),
         default=False, 
         update=scattering.update_factory.factory("s_scale_default_allow"),
         )
@@ -1494,7 +1575,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_scale_default_multiplier : bpy.props.FloatProperty(
         name=translate("Factor"),
-        soft_max=5, soft_min=0, default=1,
+        default=1,
+        soft_max=5,
+        soft_min=0,
         update=scattering.update_factory.factory("s_scale_default_multiplier", delay_support=True,),
         )
     s_scale_default_coef : bpy.props.FloatProperty( #Not supported by Preset
@@ -1525,7 +1608,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Probability"),
         description=translate("Define the probability rate, a rate ranging toward 0% means that less instances will be influenced by the scaling factor, a probability rate ranging toward 100% means that most instances will get affected by the scaling factor"),
         subtype="PERCENTAGE",
-        default=50, min=0, max=99, 
+        default=50,
+        min=0,
+        max=99, 
         update=scattering.update_factory.factory("s_scale_random_probability", delay_support=True,),
         )
     s_scale_random_method : bpy.props.EnumProperty(
@@ -1543,7 +1628,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_scale_random_seed", delay_support=True, sync_support=False,),
         )
     s_scale_random_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_scale_random_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1581,7 +1666,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Factor"),
         subtype="XYZ",
         default=(3,3,3),
-        soft_min=1,soft_max=5,
+        soft_min=1,
+        soft_max=5,
         update=scattering.update_factory.factory("s_scale_grow_factor", delay_support=True,),
         )
     #Feature Mask
@@ -1614,7 +1700,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_scale_mirror_seed", delay_support=True, sync_support=False,),
         )
     s_scale_mirror_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_scale_mirror_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1638,9 +1724,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_scale_min_method"),
         )
     s_scale_min_value : bpy.props.FloatProperty(
-        name=translate("Min Value"),
+        name=translate("Threshold"),
         default=0.05,
-        soft_min=0, soft_max=10, 
+        soft_min=0,
+        soft_max=10, 
         update=scattering.update_factory.factory("s_scale_min_value", delay_support=True,),
         )
 
@@ -1665,7 +1752,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_scale_fading_per_cam_data"),
         )
     s_scale_fading_distance_min : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"),
         default=30,
         subtype="DISTANCE",
         min=0,
@@ -1673,7 +1760,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_scale_fading_distance_min", delay_support=True,),
         )
     s_scale_fading_distance_max : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         default=40,
         subtype="DISTANCE",
         min=0,
@@ -1792,7 +1879,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_rot_align_z_random_seed", delay_support=True, sync_support=False,),
         )
     s_rot_align_z_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_rot_align_z_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1865,7 +1952,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_rot_align_y_random_seed", delay_support=True, sync_support=False,),
         )
     s_rot_align_y_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_rot_align_y_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1904,8 +1991,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_rot_align_y_vcol_ptr : bpy.props.StringProperty(
         name=translate("Color-Attribute Pointer"),
-        description=translate("Searh across all surface(s) for shared color attributes"),
-        search=get_surfaces_match_vcol,
+        description=translate("Search across all surface(s) for shared color attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_rot_align_y_vcol_ptr",),
         )
@@ -1937,7 +2024,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_rot_random_seed", delay_support=True, sync_support=False,),
         )
     s_rot_random_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_rot_random_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -1971,7 +2058,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_rot_add_seed", delay_support=True, sync_support=False,),
         )
     s_rot_add_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=scattering.update_factory.factory("s_rot_add_is_random_seed", alt_support=False, sync_support=False,),
         )
@@ -2047,8 +2134,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_rot_tilt_vcol_ptr : bpy.props.StringProperty(
         name=translate("Color-Attribute Pointer"),
-        description=translate("Searh across all surface(s) for shared color attributes"),
-        search=get_surfaces_match_vcol,
+        description=translate("Search across all surface(s) for shared color attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol")(s,c,e),
         search_options={'SUGGESTION','SORT'},
         update=scattering.update_factory.factory("s_rot_tilt_vcol_ptr",),
         )
@@ -2075,7 +2162,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_pattern_master_allow", sync_support=False,),
         )
 
-    ########## ########## Pattern Slot 1
+    ########## ########## Pattern Slots
 
     codegen_properties_by_idx(scope_ref=__annotations__,
         name="s_patternX_allow", property_type=bpy.props.BoolProperty, nbr=3, items={
@@ -2123,12 +2210,13 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     #Feature Influence
     codegen_properties_by_idx(scope_ref=__annotations__,
         name="s_patternX_dist_infl_allow", property_type=bpy.props.BoolProperty, nbr=3, items={
-        "name":translate("Allow Influence"), 
+        "name":translate("Enable Influence"), 
         "default":True, 
         },)
     codegen_properties_by_idx(scope_ref=__annotations__,
         name="s_patternX_dist_influence", property_type=bpy.props.FloatProperty, nbr=3, delay_support=True, items={
         "name":translate("Density"),
+        "description":translate("Influence the density of your distributed points, you'll be able to adjust the intensity of the influence by changing this slider"),
         "default":100,
         "subtype":"PERCENTAGE", 
         "min":0, 
@@ -2141,12 +2229,13 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         },)
     codegen_properties_by_idx(scope_ref=__annotations__,
         name="s_patternX_scale_infl_allow", property_type=bpy.props.BoolProperty, nbr=3, items={
-        "name":translate("Allow Influence"), 
+        "name":translate("Enable Influence"), 
         "default":True, 
         },)
     codegen_properties_by_idx(scope_ref=__annotations__,
         name="s_patternX_scale_influence", property_type=bpy.props.FloatProperty, nbr=3, delay_support=True, items={
         "name":translate("Scale"),
+        "description":translate("Influence the scale of your distributed points, you'll be able to adjust the intensity of the influence by changing this slider"),
         "default":70, 
         "subtype":"PERCENTAGE", 
         "min":0, 
@@ -2162,7 +2251,6 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_pattern1",)
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_pattern2",)
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_pattern3",)
-
 
     #    db    88""Yb 88  dP"Yb  888888 88  dP""b8
     #   dPYb   88__dP 88 dP   Yb   88   88 dP   `"
@@ -2205,7 +2293,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_elev_space",),
         )
     s_abiotic_elev_method : bpy.props.EnumProperty(   
-        name=translate("Method"),
+        name=translate("Elevation Method"),
         default="percentage", 
         items= ( ("percentage", translate("Percentage"),translate("The altitude will be normalized from min/max altitude range found"), "INIT_ICON:W_PERCENTAGE",0 ),
                  ("altitude", translate("Altitude"), translate("Use Raw altitude unit"), "INIT_ICON:W_MEASURE_HEIGHT",1 ),
@@ -2214,7 +2302,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     #percentage parameters (need a refactor, but would break users presets)
     s_abiotic_elev_min_value_local : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"),
         subtype="PERCENTAGE",
         default=0,
         min=0, 
@@ -2233,7 +2321,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_elev_min_falloff_local", delay_support=True,),
         ) 
     s_abiotic_elev_max_value_local : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         subtype="PERCENTAGE",
         default=75,
         min=0, 
@@ -2253,7 +2341,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     #altitude parameters (need a refactor, but would break users presets)
     s_abiotic_elev_min_value_global : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"),
         subtype="DISTANCE",
         default=0,
         precision=1,
@@ -2268,7 +2356,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_elev_min_falloff_global", delay_support=True,),
         ) 
     s_abiotic_elev_max_value_global : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         subtype="DISTANCE",
         default=10,
         precision=1,
@@ -2317,11 +2405,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_abiotic_elev.fallremap"),
         )
     #Feature Influence
-    s_abiotic_elev_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_elev_dist_infl_allow",),)
-    s_abiotic_elev_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_elev_dist_influence", delay_support=True,),)
+    s_abiotic_elev_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_elev_dist_infl_allow",),)
+    s_abiotic_elev_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_elev_dist_influence", delay_support=True,),)
     s_abiotic_elev_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_elev_dist_revert",),)
-    s_abiotic_elev_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_elev_scale_infl_allow",),)
-    s_abiotic_elev_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_elev_scale_influence", delay_support=True,),)
+    s_abiotic_elev_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_elev_scale_infl_allow",),)
+    s_abiotic_elev_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_elev_scale_influence", delay_support=True,),)
     s_abiotic_elev_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_elev_scale_revert",),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_abiotic_elev",)
@@ -2349,7 +2437,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     #parameters
     s_abiotic_slope_min_value : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"),
         subtype="ANGLE",
         default=0,
         min=0, 
@@ -2368,7 +2456,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_slope_min_falloff", delay_support=True,),
         ) 
     s_abiotic_slope_max_value : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         subtype="ANGLE",
         default=0.2617994, #15 degrees
         min=0, 
@@ -2421,11 +2509,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_abiotic_slope.fallremap"),
         )
     #Feature Influence
-    s_abiotic_slope_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_slope_dist_infl_allow",),)
-    s_abiotic_slope_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_slope_dist_influence", delay_support=True,),)
+    s_abiotic_slope_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_slope_dist_infl_allow",),)
+    s_abiotic_slope_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_slope_dist_influence", delay_support=True,),)
     s_abiotic_slope_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_slope_dist_revert",),)
-    s_abiotic_slope_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_slope_scale_infl_allow",),)
-    s_abiotic_slope_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_slope_scale_influence", delay_support=True,),)
+    s_abiotic_slope_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_slope_scale_infl_allow",),)
+    s_abiotic_slope_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_slope_scale_influence", delay_support=True,),)
     s_abiotic_slope_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_slope_scale_revert",),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_abiotic_slope",)
@@ -2457,7 +2545,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
 
     s_abiotic_dir_max : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         subtype="ANGLE",
         default=0.261799,
         soft_min=0, 
@@ -2509,11 +2597,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_abiotic_dir.fallremap"),
         )
     #Feature Influence
-    s_abiotic_dir_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_dir_dist_infl_allow",),)
-    s_abiotic_dir_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_dir_dist_influence", delay_support=True,),)
+    s_abiotic_dir_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_dir_dist_infl_allow",),)
+    s_abiotic_dir_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_dir_dist_influence", delay_support=True,),)
     s_abiotic_dir_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_dir_dist_revert",),)
-    s_abiotic_dir_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_dir_scale_infl_allow",),)
-    s_abiotic_dir_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_dir_scale_influence", delay_support=True,),)
+    s_abiotic_dir_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_dir_scale_infl_allow",),)
+    s_abiotic_dir_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_dir_scale_influence", delay_support=True,),)
     s_abiotic_dir_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_dir_scale_revert",),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_abiotic_dir",)
@@ -2535,7 +2623,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_cur_type",),
         )
     s_abiotic_cur_max: bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         default=55,
         subtype="PERCENTAGE",
         min=0,
@@ -2587,11 +2675,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_abiotic_cur.fallremap"),
         )
     #Feature Influence
-    s_abiotic_cur_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_cur_dist_infl_allow",),)
-    s_abiotic_cur_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_cur_dist_influence", delay_support=True,),)
+    s_abiotic_cur_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_cur_dist_infl_allow",),)
+    s_abiotic_cur_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_cur_dist_influence", delay_support=True,),)
     s_abiotic_cur_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_cur_dist_revert",),)
-    s_abiotic_cur_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_cur_scale_infl_allow",),)
-    s_abiotic_cur_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_cur_scale_influence", delay_support=True,),)
+    s_abiotic_cur_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_cur_scale_infl_allow",),)
+    s_abiotic_cur_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_cur_scale_influence", delay_support=True,),)
     s_abiotic_cur_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_cur_scale_revert",),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_abiotic_cur",)
@@ -2612,7 +2700,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_abiotic_border_space",),
         )
     s_abiotic_border_max : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Minimal"), #too late to change property name
+        description=translate("Minimal distance defining the border range."),
         default=1,
         min=0,
         subtype="DISTANCE",
@@ -2620,6 +2709,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_abiotic_border_treshold : bpy.props.FloatProperty(
         name=translate("Transition"),
+        description=translate("Add a transition distance after the maximal distance defined."),
         default=0.5,
         min=0,
         subtype="DISTANCE",
@@ -2660,11 +2750,11 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_abiotic_border.fallremap"),
         )
     #Feature Influence
-    s_abiotic_border_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_border_dist_infl_allow",),)
-    s_abiotic_border_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_border_dist_influence", delay_support=True,),)
+    s_abiotic_border_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_border_dist_infl_allow",),)
+    s_abiotic_border_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_border_dist_influence", delay_support=True,),)
     s_abiotic_border_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_border_dist_revert",),)
-    s_abiotic_border_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_border_scale_infl_allow",),)
-    s_abiotic_border_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_border_scale_influence", delay_support=True,),)
+    s_abiotic_border_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_abiotic_border_scale_infl_allow",),)
+    s_abiotic_border_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=30, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_abiotic_border_scale_influence", delay_support=True,),)
     s_abiotic_border_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_abiotic_border_scale_revert",),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_abiotic_border",)
@@ -2704,7 +2794,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Collection Pointer"),
         update=scattering.update_factory.factory("s_proximity_repel1_coll_ptr"),
         )
-    passctxt_s_proximity_repel1_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_proximity_repel1_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
     s_proximity_repel1_type : bpy.props.EnumProperty(   
         name=translate("Proximity Contact"),
         default="mesh", 
@@ -2729,12 +2819,14 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_proximity_repel1_volume_method",),
         )
     s_proximity_repel1_max : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"), #too late to change property name
+        description=translate("Minimal distance reached until the transition starts"),
         default=0.5, min=0, subtype="DISTANCE",
         update=scattering.update_factory.factory("s_proximity_repel1_max", delay_support=True,),
         )
     s_proximity_repel1_treshold : bpy.props.FloatProperty(
         name=translate("Transition"),
+        description=translate("The transition distance will attenuate the influence of this effect over the scatter"),
         default=0.5, min=0, subtype="DISTANCE",
         update=scattering.update_factory.factory("s_proximity_repel1_treshold", delay_support=True,),
         )
@@ -2773,17 +2865,17 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_proximity_repel1.fallremap"),
         )
     #Feature Influence
-    s_proximity_repel1_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_proximity_repel1_dist_infl_allow",),)
-    s_proximity_repel1_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_dist_influence", delay_support=True,),)
+    s_proximity_repel1_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_proximity_repel1_dist_infl_allow",),)
+    s_proximity_repel1_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_dist_influence", delay_support=True,),)
     s_proximity_repel1_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel1_dist_revert",),)
-    s_proximity_repel1_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_scale_infl_allow",),)
-    s_proximity_repel1_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=0, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_scale_influence", delay_support=True,),)
+    s_proximity_repel1_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_scale_infl_allow",),)
+    s_proximity_repel1_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=0, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_scale_influence", delay_support=True,),)
     s_proximity_repel1_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel1_scale_revert",),)
-    s_proximity_repel1_nor_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_nor_infl_allow",),)
-    s_proximity_repel1_nor_influence: bpy.props.FloatProperty(name=translate("Normal"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_nor_influence", delay_support=True,),)
+    s_proximity_repel1_nor_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_nor_infl_allow",),)
+    s_proximity_repel1_nor_influence: bpy.props.FloatProperty(name=translate("Normal"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_nor_influence", delay_support=True,),)
     s_proximity_repel1_nor_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel1_nor_revert",),)
-    s_proximity_repel1_tan_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_tan_infl_allow",),)
-    s_proximity_repel1_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_tan_influence", delay_support=True,),)
+    s_proximity_repel1_tan_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel1_tan_infl_allow",),)
+    s_proximity_repel1_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel1_tan_influence", delay_support=True,),)
     s_proximity_repel1_tan_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel1_tan_revert",),)
 
     #Feature Mask
@@ -2801,7 +2893,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Collection Pointer"),
         update=scattering.update_factory.factory("s_proximity_repel2_coll_ptr"),
         )
-    passctxt_s_proximity_repel2_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_proximity_repel2_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
     s_proximity_repel2_type : bpy.props.EnumProperty(   
         name=translate("Proximity Contact"),
         default="mesh", 
@@ -2826,12 +2918,14 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_proximity_repel2_volume_method",),
         )
     s_proximity_repel2_max : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"), #too late to change property name
+        description=translate("Minimal distance reached until the transition starts"),
         default=0.5, min=0, subtype="DISTANCE",
         update=scattering.update_factory.factory("s_proximity_repel2_max", delay_support=True,),
         )
     s_proximity_repel2_treshold : bpy.props.FloatProperty(
         name=translate("Transition"),
+        description=translate("The transition distance will attenuate the influence of this effect over the scatter"),
         default=0.5, min=0, subtype="DISTANCE",
         update=scattering.update_factory.factory("s_proximity_repel2_treshold", delay_support=True,),
         )
@@ -2870,17 +2964,17 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_proximity_repel2.fallremap"),
         )
     #Feature Influence
-    s_proximity_repel2_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_proximity_repel2_dist_infl_allow",),)
-    s_proximity_repel2_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_dist_influence", delay_support=True,),)
+    s_proximity_repel2_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_proximity_repel2_dist_infl_allow",),)
+    s_proximity_repel2_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_dist_influence", delay_support=True,),)
     s_proximity_repel2_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel2_dist_revert",),)
-    s_proximity_repel2_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_scale_infl_allow",),)
-    s_proximity_repel2_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=0, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_scale_influence", delay_support=True,),)
+    s_proximity_repel2_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_scale_infl_allow",),)
+    s_proximity_repel2_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=0, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_scale_influence", delay_support=True,),)
     s_proximity_repel2_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel2_scale_revert",),)
-    s_proximity_repel2_nor_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_nor_infl_allow",),)
-    s_proximity_repel2_nor_influence: bpy.props.FloatProperty(name=translate("Normal"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_nor_influence", delay_support=True,),)
+    s_proximity_repel2_nor_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_nor_infl_allow",),)
+    s_proximity_repel2_nor_influence: bpy.props.FloatProperty(name=translate("Normal"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_nor_influence", delay_support=True,),)
     s_proximity_repel2_nor_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel2_nor_revert",),)
-    s_proximity_repel2_tan_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_tan_infl_allow",),)
-    s_proximity_repel2_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_tan_influence", delay_support=True,),)
+    s_proximity_repel2_tan_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_repel2_tan_infl_allow",),)
+    s_proximity_repel2_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_repel2_tan_influence", delay_support=True,),)
     s_proximity_repel2_tan_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_repel2_tan_revert",),)
 
     #Feature Mask
@@ -2895,7 +2989,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_proximity_outskirt_allow",),
         )
     s_proximity_outskirt_detection : bpy.props.FloatProperty(
-        name=translate("Threshold"),
+        name=translate("Distance"),
         description=translate("Minimal distance between points in order to recognize grouped points areas"),
         default=0.7,
         min=0,
@@ -2911,7 +3005,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_proximity_outskirt_precision", delay_support=True,),
         )
     s_proximity_outskirt_max : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Minimal"), #too late to change property name
+        description=translate("Minimal distance reached until the transition starts"),
         default=0,
         min=0,
         subtype="DISTANCE",
@@ -2959,17 +3054,17 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_proximity_outskirt.fallremap"),
         )
     #Feature Influence
-    s_proximity_outskirt_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_dist_infl_allow",),)
-    s_proximity_outskirt_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_dist_influence", delay_support=True,),)
+    s_proximity_outskirt_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_dist_infl_allow",),)
+    s_proximity_outskirt_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_dist_influence", delay_support=True,),)
     s_proximity_outskirt_dist_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_outskirt_dist_revert",),)
-    s_proximity_outskirt_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_proximity_outskirt_scale_infl_allow",),)
-    s_proximity_outskirt_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=70, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_scale_influence", delay_support=True,),)
+    s_proximity_outskirt_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_proximity_outskirt_scale_infl_allow",),)
+    s_proximity_outskirt_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=70, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_scale_influence", delay_support=True,),)
     s_proximity_outskirt_scale_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_outskirt_scale_revert",),)
-    # s_proximity_outskirt_nor_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_nor_infl_allow",),)
-    # s_proximity_outskirt_nor_influence: bpy.props.FloatProperty(name=translate("Normal"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_nor_influence", delay_support=True,),)
+    # s_proximity_outskirt_nor_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_nor_infl_allow",),)
+    # s_proximity_outskirt_nor_influence: bpy.props.FloatProperty(name=translate("Normal"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_nor_influence", delay_support=True,),)
     # s_proximity_outskirt_nor_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_outskirt_nor_revert",),)
-    # s_proximity_outskirt_tan_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_tan_infl_allow",),)
-    # s_proximity_outskirt_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"),default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_tan_influence", delay_support=True,),)
+    # s_proximity_outskirt_tan_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=False, update=scattering.update_factory.factory("s_proximity_outskirt_tan_infl_allow",),)
+    # s_proximity_outskirt_tan_influence: bpy.props.FloatProperty(name=translate("Tangent"), default=0, subtype="PERCENTAGE", soft_min=-100, soft_max=100, precision=1, update=scattering.update_factory.factory("s_proximity_outskirt_tan_influence", delay_support=True,),)
     # s_proximity_outskirt_tan_revert : bpy.props.BoolProperty(name=translate("Reverse Influence"), update=scattering.update_factory.factory("s_proximity_outskirt_tan_revert",),)
 
     #Feature Mask
@@ -3028,8 +3123,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_ecosystem_affinity_ui_max_slot : bpy.props.IntProperty(default=1,max=3,min=1)
     codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_ptr", nbr=3, items={"name":translate("Scatter System"),"search":get_s_ecosystem_psy_match,"search_options":{'SUGGESTION','SORT'}}, property_type=bpy.props.StringProperty,)
     codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_type", nbr=3, items={"name":translate("Proximity Contact"),"default":"origin","items":( ("origin", translate("Origin Point"),translate("Evaluate the proximity only with the location of given objects origin points, this is by far, the fastest contact method to compute"),  "ORIENTATION_VIEW",0 ),("mesh", translate("Meshes Faces"), translate("Evaluate the proximity with the faces of the chosen objects. Note that this process can be extremely diffult to compute"), "MESH_DATA",1 ),("bb", translate("Bounding-Box"), translate("Evaluate the proximity with the applied bounding box of the given objects"), "CUBE",2 ),("convexhull", translate("Convex-Hull"), translate("Evaluate the proximity with a generated convex-hull mesh from the given objects"), "MESH_ICOSPHERE",3 ),("pointcloud", translate("Point-Cloud"), translate("Evaluate the proximity with a generated point cloud of the given objects "), "OUTLINER_OB_POINTCLOUD",4 )),}, property_type=bpy.props.EnumProperty,)
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_max_value", nbr=3, items={"name":translate("Min"),"description":translate("Minimal distance before transition start"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_max_falloff", nbr=3, items={"name":translate("Transition"),"description":translate("Transition distance"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_max_value", nbr=3, items={"name":translate("Minimal"),"description":translate("Minimal distance reached until the transition starts"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_max_falloff", nbr=3, items={"name":translate("Transition"),"description":translate("The transition distance will attenuate the influence of this effect over the scatter"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
     codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_affinity_XX_limit_distance", nbr=3, items={"name":translate("Limit Collision"),"description":translate("Avoid instances nearby the chosen scatter-system instances"),"default":0,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
     #remap
     s_ecosystem_affinity_fallremap_allow : bpy.props.BoolProperty(
@@ -3066,10 +3161,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_ecosystem_affinity.fallremap"),
         )
     #Feature Influence
-    s_ecosystem_affinity_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_affinity_dist_infl_allow",),)
-    s_ecosystem_affinity_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_affinity_dist_influence", delay_support=True,),)
-    s_ecosystem_affinity_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_affinity_scale_infl_allow",),)
-    s_ecosystem_affinity_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=50, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_affinity_scale_influence", delay_support=True,),)
+    s_ecosystem_affinity_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_affinity_dist_infl_allow",),)
+    s_ecosystem_affinity_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_affinity_dist_influence", delay_support=True,),)
+    s_ecosystem_affinity_scale_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_affinity_scale_infl_allow",),)
+    s_ecosystem_affinity_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=50, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_affinity_scale_influence", delay_support=True,),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_ecosystem_affinity",)
 
@@ -3077,7 +3172,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     s_ecosystem_repulsion_allow : bpy.props.BoolProperty(
         name=translate("Ecosystem Repulsion"), 
-        description=translate("Generate dynamic ecosystems with the help of repulsion rules. Define if this scatter-system need to avoid being near other scatter-system(s)"),
+        description=translate("Generate dynamic ecosystems with the help of repulsion rules. Define if this scatter-system needs to avoid being near other scatter-system(s)"),
         default=False, 
         update=scattering.update_factory.factory("s_ecosystem_repulsion_allow",),
         )
@@ -3094,8 +3189,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_ecosystem_repulsion_ui_max_slot : bpy.props.IntProperty(default=1,max=3,min=1)
     codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_ptr", nbr=3, items={"name":translate("Scatter System"),"search":get_s_ecosystem_psy_match,"search_options":{'SUGGESTION','SORT'}}, property_type=bpy.props.StringProperty,)
     codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_type", nbr=3, items={"name":translate("Proximity Contact"),"default":"origin","items":( ("origin", translate("Origin Point"),translate("Evaluate the proximity only with the location of given objects origin points, this is by far, the fastest contact method to compute"),  "ORIENTATION_VIEW",0 ),("mesh", translate("Meshes Faces"), translate("Evaluate the proximity with the faces of the chosen objects. Note that this process can be extremely diffult to compute"), "MESH_DATA",1 ),("bb", translate("Bounding-Box"), translate("Evaluate the proximity with the applied bounding box of the given objects"), "CUBE",2 ),("convexhull", translate("Convex-Hull"), translate("Evaluate the proximity with a generated convex-hull mesh from the given objects"), "MESH_ICOSPHERE",3 ),("pointcloud", translate("Point-Cloud"), translate("Evaluate the proximity with a generated point cloud of the given objects "), "OUTLINER_OB_POINTCLOUD",4 ),),}, property_type=bpy.props.EnumProperty,)
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_max_value", nbr=3, items={"name":translate("Min"),"description":translate("Minimal distance before transition start"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_max_falloff", nbr=3, items={"name":translate("Transition"),"description":translate("Transition distance"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_max_value", nbr=3, items={"name":translate("Minimal"),"description":translate("Minimal distance reached until the transition starts"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_ecosystem_repulsion_XX_max_falloff", nbr=3, items={"name":translate("Transition"),"description":translate("The transition distance will attenuate the influence of this effect over the scatter"),"default":0.5,"min":0,"precision":3,"subtype":"DISTANCE",}, property_type=bpy.props.FloatProperty, delay_support=True,)
     #remap
     s_ecosystem_repulsion_fallremap_allow : bpy.props.BoolProperty(
         description=translate("Control the transition falloff by remapping the values"),
@@ -3131,10 +3226,10 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         get=scattering.update_factory.fallremap_getter("s_ecosystem_repulsion.fallremap"),
         )
     #Feature Influence
-    s_ecosystem_repulsion_dist_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_repulsion_dist_infl_allow",),)
-    s_ecosystem_repulsion_dist_influence : bpy.props.FloatProperty(name=translate("Density"),default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_repulsion_dist_influence", delay_support=True,),)
+    s_ecosystem_repulsion_dist_infl_allow : bpy.props.BoolProperty(name=translate("Enable Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_repulsion_dist_infl_allow",),)
+    s_ecosystem_repulsion_dist_influence : bpy.props.FloatProperty(name=translate("Density"), description=translate("Influence your distributed points density, you'll be able to adjust the intensity of the influence by changing this slider"), default=100, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_repulsion_dist_influence", delay_support=True,),)
     s_ecosystem_repulsion_scale_infl_allow : bpy.props.BoolProperty(name=translate("Allow Influence"), default=True, update=scattering.update_factory.factory("s_ecosystem_repulsion_scale_infl_allow",),)
-    s_ecosystem_repulsion_scale_influence: bpy.props.FloatProperty(name=translate("Scale"),default=50, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_repulsion_scale_influence", delay_support=True,),)
+    s_ecosystem_repulsion_scale_influence: bpy.props.FloatProperty(name=translate("Scale"), description=translate("Influence your distributed points scale, you'll be able to adjust the intensity of the influence by changing this slider"), default=50, subtype="PERCENTAGE", min=0, max=100, precision=1, update=scattering.update_factory.factory("s_ecosystem_repulsion_scale_influence", delay_support=True,),)
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_ecosystem_repulsion",)
 
@@ -3160,13 +3255,13 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Push Offset
 
     s_push_offset_allow : bpy.props.BoolProperty(
-        description=translate("Transform your instances position in space"),
+        description=translate("Transform the positions of your instances in space"),
         default=False,
         update=scattering.update_factory.factory("s_push_offset_allow",),
         )
     s_push_offset_space : bpy.props.EnumProperty(
         name=translate("Space"),
-        description=translate("Transformations based on local or global space? If you'd like this effect to be stable when the object is being animated, please choose the local option."),
+        description=translate("Are transformations based on local or global space? If you'd like this effect to be stable when the object is being animated, please choose the local option."),
         default= "local", 
         items= ( ("local", translate("Local"), translate(""), "ORIENTATION_LOCAL",1 ),
                  ("global", translate("Global"), translate(""), "WORLD",2 ),
@@ -3235,7 +3330,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
          update=scattering.update_factory.factory("s_push_dir_method"),
          )
     s_push_dir_add_value : bpy.props.FloatProperty(
-        name=translate("Distance"),
+        name=translate("Reach"),
         default=1,
         precision=3,
         subtype="DISTANCE",
@@ -3272,7 +3367,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Push Noise 
 
     s_push_noise_allow : bpy.props.BoolProperty(
-        description=translate("Add a random animated noise to the instances location in space"),
+        description=translate("Add a random animated noise to the locations of instances in space"),
         default=False,
         update=scattering.update_factory.factory("s_push_noise_allow"),
         )
@@ -3295,7 +3390,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Fall Effect
 
     s_push_fall_allow : bpy.props.BoolProperty(
-        description=translate("Add an animated leave falling effect on your instances location"),
+        description=translate("Add an animated leaf falling effect on your instances locations"),
         default=False,
         update=scattering.update_factory.factory("s_push_fall_allow"),
         )
@@ -3386,7 +3481,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Wind Wave
 
     s_wind_wave_allow : bpy.props.BoolProperty(
-        description=translate("Add a wind-wave effects by tilting your instances normal. An animated noise texture will be used to control the wind wave aspect and speed"),
+        description=translate("Add a wind-wave effects by tilting the normals of your instances. An animated noise texture will be used to control the wind wave aspect and speed"),
         default=False,
         update=scattering.update_factory.factory("s_wind_wave_allow",),
         )
@@ -3567,154 +3662,6 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     #Feature Mask
     codegen_featuremask_properties(scope_ref=__annotations__, name="s_wind_noise",)
 
-    # 88 88b 88 .dP"Y8 888888    db    88b 88  dP""b8 88 88b 88  dP""b8
-    # 88 88Yb88 `Ybo."   88     dPYb   88Yb88 dP   `" 88 88Yb88 dP   `"
-    # 88 88 Y88 o.`Y8b   88    dP__Yb  88 Y88 Yb      88 88 Y88 Yb  "88
-    # 88 88  Y8 8bodP'   88   dP""""Yb 88  Y8  YboodP 88 88  Y8  YboodP
-
-    ###################### This category of settings keyword is : "s_instances"
-
-    s_instances_locked : bpy.props.BoolProperty(description=translate("Lock/Unlock Settings"),)
-
-    # def get_s_instances_main_features(self, availability_conditions=True,):
-    #     return []
-
-    # s_instances_master_allow : bpy.props.BoolProperty( 
-    #     name=translate("Enable this category"),
-    #     description=translate("Mute all features of this category"),
-    #     default=True, 
-    #     update=scattering.update_factory.factory("s_instances_master_allow", sync_support=False,),
-    #     )
-
-    ########## ##########
-
-    def get_instances_obj(self):
-        """get all objects used by this particle instancing method"""
-            
-        instances = [] 
-
-        if (self.s_instances_method=="ins_collection"):
-            if (self.s_instances_coll_ptr):
-                for o in self.s_instances_coll_ptr.objects:
-                    if (o not in instances):
-                        instances.append(o)
-
-        return instances 
-
-    ########## ##########
-
-    s_instances_method : bpy.props.EnumProperty( #maybe for later?
-        name=translate("Instance Method"),
-        default= "ins_collection", 
-        items= ( ("ins_collection", translate("Collection"), translate("Use the scattered points to instances items contained in a collection"), "OUTLINER_COLLECTION", 0,),
-                 ("other", translate(""), translate(""), "BLANK1", 1,),
-               ),
-        update=scattering.update_factory.factory("s_instances_method"),
-        ) 
-    s_instances_coll_ptr : bpy.props.PointerProperty( #TODO, no longer rely on collection... need more flexible system
-        name=translate("Collection Pointer"),
-        type=bpy.types.Collection,
-        update=scattering.update_factory.factory("s_instances_coll_ptr"),
-        )
-    s_instances_list_idx : bpy.props.IntProperty() #for list template
-    
-    s_instances_pick_method : bpy.props.EnumProperty( #only for ins_collection
-        name=translate("Pick Method"),
-        default= "pick_random", 
-        items= ( ("pick_random", translate("Random"), translate("Randomly assign the instances from the object-list below to the scattered points"), "OBJECT_DATA", 0,),
-                 ("pick_rate", translate("Probability"), translate("Assign instances to the generated points based on a defined probability rate per instances"), "MOD_HUE_SATURATION", 1,),
-                 ("pick_scale", translate("Scale"), translate("Assign instances based on the generated points scale"), "OBJECT_ORIGIN", 2,),
-                 ("pick_color", translate("Color Sampling"), translate("Assign instances to the generated points based on a given color attribute (vertex-color or texture)"), "COLOR", 3,),
-                 ("pick_idx", translate("Manual Index"), translate("Assign instances based on manual mode index attribute brush"), "LINENUMBERS_ON", 4,),
-                 ("pick_cluster", translate("Clusters"), translate("Assing instance to the generated points by packing them in clusters"), "CON_OBJECTSOLVER", 5,),
-               ),
-        update=scattering.update_factory.factory("s_instances_pick_method"),
-        )
-    #for pick_random & pick_rate
-    s_instances_seed : bpy.props.IntProperty(
-        name=translate("Seed"),
-        default=0,
-        min=0, 
-        update=scattering.update_factory.factory("s_instances_seed", delay_support=True, sync_support=False,),
-        )
-    s_instances_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
-        default=False,
-        update=scattering.update_factory.factory("s_instances_is_random_seed", alt_support=False, sync_support=False,),
-        )
-    #for pick_rate
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_rate", nbr=20, items={"default":0,"min":0,"max":100,"subtype":"PERCENTAGE","name":translate("Probability"),"description":translate("Set this object spawn rate, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.IntProperty, delay_support=True,)
-    #for pick_scale
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_scale_min", nbr=20, items={"default":0,"soft_min":0,"soft_max":3,"name":translate("Scale Range Min"),"description":translate("Assign instance to scattered points fitting the given range, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.FloatProperty, delay_support=True,)
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_scale_max", nbr=20, items={"default":0,"soft_min":0,"soft_max":3,"name":translate("Scale Range Max"),"description":translate("Assign instance to scattered points fitting the given range, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.FloatProperty, delay_support=True,)
-    s_instances_id_scale_method : bpy.props.EnumProperty(
-        name=translate("Scale Method"),
-        default= "fixed_scale",
-        items= ( ("fixed_scale", translate("Frozen Scale"), translate("Reset all instances scale to 1"),"FREEZE",0),
-                 ("dynamic_scale", translate("Dynamic Scale"), translate("Rescale Items dynamically depending on given range"),"LIGHT_DATA",1),
-                 ("default_scale", translate("Default Scale"), translate("Leave Scale as it is"),"OBJECT_ORIGIN",2),
-               ),
-        update=scattering.update_factory.factory("s_instances_id_scale_method"),
-        )
-    #for pick color
-    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_color", nbr=20, items={"default":(1,0,0),"subtype":"COLOR","min":0,"max":1,"name":translate("Color"),"description":translate("Assign this instance to the corresponding color sampled")}, property_type=bpy.props.FloatVectorProperty, delay_support=True,)
-    #for pick_cluster
-    s_instances_pick_cluster_projection_method : bpy.props.EnumProperty(
-        name=translate("Projection Method"),
-        default= "local", 
-        items= ( ("local", translate("Local"), translate(""), "ORIENTATION_LOCAL",0 ),
-                 ("global", translate("Global"), translate(""), "WORLD",1 ),
-               ),
-        update=scattering.update_factory.factory("s_instances_pick_cluster_projection_method"),
-        )
-    s_instances_pick_cluster_scale : bpy.props.FloatProperty(
-        name=translate("Scale"),
-        default=0.3,
-        min=0,
-        update=scattering.update_factory.factory("s_instances_pick_cluster_scale", delay_support=True,),
-        )
-    s_instances_pick_cluster_blur : bpy.props.FloatProperty(
-        name=translate("Jitter"),
-        default=0.5,
-        min=0,
-        max=3,
-        update=scattering.update_factory.factory("s_instances_pick_cluster_blur", delay_support=True,),
-        )
-    s_instances_pick_clump : bpy.props.BoolProperty(
-        default=False, 
-        name=translate("Use Clumps as Clusters"),
-        description=translate("This option appear if you are using clump distribution method, it will allow you to assing each instance to individual clumps"),
-        update=scattering.update_factory.factory("s_instances_pick_clump"),
-        )
-
-    s_instances_id_color_tolerence : bpy.props.FloatProperty(
-        name=translate("Tolerence"),
-        default=0.3,
-        min=0,
-        soft_max=3,
-        update=scattering.update_factory.factory("s_instances_id_color_tolerence", delay_support=True,), 
-        )
-
-    s_instances_id_color_sample_method : bpy.props.EnumProperty(
-        name=translate("Color Source"),
-        default= "vcol", 
-        items= ( ("vcol", translate("Vertex Colors"), "", "VPAINT_HLT", 1,),
-                 ("text", translate("Texture Data"), "", "NODE_TEXTURE", 2,),
-               ),
-        update=scattering.update_factory.factory("s_instances_id_color_sample_method"),
-        ) 
-    s_instances_texture_ptr : bpy.props.StringProperty(
-        description="Internal property that will update a TEXTURE_NODE node tree from given nodetree name, used for presets and most importantly copy/paste or synchronization",
-        update=scattering.update_factory.factory("s_instances_texture_ptr",),
-        )
-    s_instances_vcol_ptr : bpy.props.StringProperty(
-        name=translate("Color-Attribute Pointer"),
-        description=translate("Searh across all surface(s) for shared color attributes"),
-        search=get_surfaces_match_vcol,
-        search_options={'SUGGESTION','SORT'},
-        update=scattering.update_factory.factory("s_instances_vcol_ptr"),
-        )
-
     # Yb    dP 88 .dP"Y8 88 88""Yb 88 88     88 888888 Yb  dP
     #  Yb  dP  88 `Ybo." 88 88__dP 88 88     88   88    YbdP
     #   YbdP   88 o.`Y8b 88 88""Yb 88 88  .o 88   88     8P
@@ -3750,8 +3697,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Only show on selected faces
 
     s_visibility_facepreview_allow : bpy.props.BoolProperty( 
-        description=translate("Preview the distribution only on the selected surface(s) faces"),
         default=False,
+        name=translate("Distribution Preview"),
+        description=translate("Preview your distribution only on the given surface(s) faces (this optimization method is great when dealing with large terrains)"),
         update=scattering.update_factory.factory("s_visibility_facepreview_allow"),
         )
 
@@ -3767,8 +3715,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Remove % of particles
 
     s_visibility_view_allow : bpy.props.BoolProperty( 
-        description=translate("Lower the distribution density from a chosen removal-rate"),
         default=False,
+        name=translate("Percentage Reduction"),
+        description=translate("Lower the distribution density from a chosen removal-rate"),
         update=scattering.update_factory.factory("s_visibility_view_allow"),
         )
     s_visibility_view_percentage : bpy.props.FloatProperty(
@@ -3793,9 +3742,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Camera Optimization
 
     s_visibility_cam_allow : bpy.props.BoolProperty( 
-        name=translate("Camera Optimizations"),
-        description=translate("Optimize your viewport thanks to camera optimization rules applying to the active camera"),
         default=False,
+        name=translate("Camera Optimizations"),
+        description=translate("Remove points not visible by the camera"),
         update=scattering.update_factory.factory("s_visibility_cam_allow"),
         )
 
@@ -3809,6 +3758,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     s_visibility_camclip_cam_autofill : bpy.props.BoolProperty(
         default=True,
+        name=translate("Automatically define the frustrum cone"),
         description=translate("Compute the frustrum volume automatically on the active camera, if not checked, please define the frustrum properties"),
         update=scattering.update_factory.factory("s_visibility_camclip_cam_autofill"),
         )
@@ -3859,12 +3809,12 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     s_visibility_camclip_proximity_allow : bpy.props.BoolProperty(
         default=False,
         name=translate("Near Camera Radius"),
-        description=translate("Allow some instances near the camera"),
+        description=translate("Reveal some instances originalgeometry near the camera"),
         update=scattering.update_factory.factory("s_visibility_camclip_proximity_allow"),
         )
     s_visibility_camclip_proximity_distance : bpy.props.FloatProperty(
         name=translate("Distance"),
-        description=translate("Allow instances near the camera"),
+        description=translate("Distance radius that will reveal the original geometry of your instances display"),
         default=4,
         subtype="DISTANCE",
         min=0,
@@ -3876,17 +3826,18 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     s_visibility_camdist_allow: bpy.props.BoolProperty(
         default=False,
-        name=translate("Distance Culling"),
+        name=translate("Camera Distance Culling"),
         description=translate("Only show instances close to the active-camera"),
         update=scattering.update_factory.factory("s_visibility_camdist_allow"),
         )
     s_visibility_camdist_per_cam_data: bpy.props.BoolProperty(
         default=False,
+        name=translate("Per camera settings"),
         description=translate("Use variable distance depending on your active cameras"),
         update=scattering.update_factory.factory("s_visibility_camdist_per_cam_data"),
         )
     s_visibility_camdist_min : bpy.props.FloatProperty(
-        name=translate("Min"),
+        name=translate("Minimal"),
         default=10,
         subtype="DISTANCE",
         min=0,
@@ -3894,7 +3845,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_visibility_camdist_min", delay_support=True,),
         )
     s_visibility_camdist_max : bpy.props.FloatProperty(
-        name=translate("Max"),
+        name=translate("Maximal"),
         default=40,
         subtype="DISTANCE",
         min=0,
@@ -3903,8 +3854,9 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         )
     #remap
     s_visibility_camdist_fallremap_allow : bpy.props.BoolProperty(
-        description=translate("Control the transition falloff by remapping the values"),
         default=False, 
+        name=translate("Camera Distance Culling Remap"),
+        description=translate("Control the transition falloff by remapping the values"),
         update=scattering.update_factory.factory("s_visibility_camdist_fallremap_allow",),
         )
     s_visibility_camdist_fallremap_revert : bpy.props.BoolProperty(
@@ -3920,6 +3872,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
 
     s_visibility_camoccl_allow : bpy.props.BoolProperty(
         default=False,
+        name=translate("Camera Occlusion"),
         description=translate("Remove instances unseen by the camera, because they are located on hidden areas of the surface(s) or behind given objects"),
         update=scattering.update_factory.factory("s_visibility_camoccl_allow"),
         )
@@ -3932,7 +3885,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_visibility_camoccl_threshold", delay_support=True,),
         )
     s_visibility_camoccl_method : bpy.props.EnumProperty(
-        name=translate("Method"),
+        name=translate("Occlusion Method"),
         default="surface_only",
         items= [ ("surface_only", translate("Surface Only"), translate("Mask instances whose origins are located on occluded surfaces"),"",0),
                  ("obj_only", translate("Colliders Only"), translate("Mask instances whose origins are occluded by a given collection of objects"),"",1),
@@ -3944,7 +3897,7 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         name=translate("Collection Pointer"),
         update=scattering.update_factory.factory("s_visibility_camoccl_coll_ptr"),
         )
-    passctxt_s_visibility_camoccl_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="argument to pass for gui",)
+    passctxt_s_visibility_camoccl_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
 
     s_visibility_cam_allow_screen : bpy.props.BoolProperty(default=True, description=translate("This optimization feature will be enabled only when working on the viewport, not during rendered view nor the final render."), update=scattering.update_factory.factory_viewport_method_proxy("s_visibility_cam","screen"),) #ui purpose
     s_visibility_cam_allow_shaded : bpy.props.BoolProperty(default=True, description=translate("This optimization feature will be enabled when working in the viewport & also during rendered-view. The final render will not be impacted"), update=scattering.update_factory.factory_viewport_method_proxy("s_visibility_cam","shaded"),) #ui purpose
@@ -3958,12 +3911,13 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
     ########## ########## Maximum load
 
     s_visibility_maxload_allow : bpy.props.BoolProperty( 
-        description=translate("Define the maximal amount of instances visible on screen"),
         default=False,
+        name=translate("Maximum Load"),
+        description=translate("Define the maximum amount of instances visible on screen"),
         update=scattering.update_factory.factory("s_visibility_maxload_allow"),
         )
     s_visibility_maxload_cull_method : bpy.props.EnumProperty(
-        name=translate("What to do once reaching chosen instance count threshold?"),
+        name=translate("What to do once the chosen instance count threshold is reached?"),
         default="maxload_limit",
         items= [ ("maxload_limit", translate("Limit"),translate("Limit how many instances are visible on screen. The total amount of instances produced by this scatter-system will never exceed the given threshold."),),
                  ("maxload_shutdown", translate("Shutdown"),translate("If total amount of instances produced by this scatter-system goes beyond given threshold, we will shutdown the visibility of this system entirely"),),
@@ -3971,8 +3925,8 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         update=scattering.update_factory.factory("s_visibility_maxload_cull_method"),
         )
     s_visibility_maxload_treshold : bpy.props.IntProperty(
-        description=translate("The system will either limit or shutdown what's visible, approximately above the chosen threshold"),
         name=translate("Max Instances"),
+        description=translate("The system will either limit or shut down what's visible, approximately above the chosen threshold"),
         min=1,
         soft_min=1_000,
         soft_max=9_999_999,
@@ -3987,6 +3941,204 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         default="viewport_only",
         items= ( ("viewport_only","sc+sh","","",1),("except_rendered","sc","","",0),("viewport_and_render","sc+sh+rd","","",2),),
         update=scattering.update_factory.factory("s_visibility_maxload_viewport_method"),
+        )
+
+    # 88 88b 88 .dP"Y8 888888    db    88b 88  dP""b8 88 88b 88  dP""b8
+    # 88 88Yb88 `Ybo."   88     dPYb   88Yb88 dP   `" 88 88Yb88 dP   `"
+    # 88 88 Y88 o.`Y8b   88    dP__Yb  88 Y88 Yb      88 88 Y88 Yb  "88
+    # 88 88  Y8 8bodP'   88   dP""""Yb 88  Y8  YboodP 88 88  Y8  YboodP
+
+    ###################### This category of settings keyword is : "s_instances"
+
+    s_instances_locked : bpy.props.BoolProperty(description=translate("Lock/Unlock Settings"),)
+
+    # def get_s_instances_main_features(self, availability_conditions=True,):
+    #     return []
+
+    # s_instances_master_allow : bpy.props.BoolProperty( 
+    #     name=translate("Enable this category"),
+    #     description=translate("Mute all features of this category"),
+    #     default=True, 
+    #     update=scattering.update_factory.factory("s_instances_master_allow", sync_support=False,),
+    #     )
+
+    ########## ##########
+
+    def get_instance_objs(self):
+        """get all objects used by this particle instancing method"""
+            
+        instances = [] 
+
+        if (self.s_instances_method=="ins_collection"):
+            if (self.s_instances_coll_ptr):
+                for o in self.s_instances_coll_ptr.objects:
+                    if (o not in instances):
+                        instances.append(o)
+
+        return instances 
+    
+    def get_instancing_info(self, raw_data=False, loc_data=False, processed_data=False,): 
+        """get information about the depsgraph instances for this system
+        3 info type available:
+        - raw_data: get the raw depsgraph information ( instance.object.original and instance.matrix_world )
+        - loc_data: get only the locations of the instances
+        - processed_data: get a comprehensive dict with "instance_ name", "location", "rotation_euler (radians)", "scale" as keys
+        """
+        
+        #Note, fastest way to access all these data is via as_pointer(), however, speed does not matter here 
+        
+        scatter_obj = self.scatter_obj
+        if (scatter_obj is None):
+            raise Exception("No Scatter Obj Found")
+
+        deps_data = [ ( i.object.original, i.matrix_world.copy() ) for i in bpy.context.evaluated_depsgraph_get().object_instances 
+                if ( (i.is_instance) and (i.parent.original==scatter_obj) ) ]
+
+        #return raw depsgraph option
+        if (raw_data):
+            return deps_data
+
+        #return array of loc option
+        elif (loc_data):
+            data = []
+            
+            for i, v in enumerate(deps_data):
+                _, m = v
+                l, _, _ = m.decompose()
+                
+                data.append(l)
+                continue
+            
+            return data
+        
+        #return processed dict option
+        elif (processed_data):
+            data = {}
+            
+            for i, v in enumerate(deps_data):
+                b, m = v
+                l, r, s = m.decompose()
+                e = r.to_euler('XYZ', )
+
+                data[str(i)]= {"name":b.name, "location":tuple(l), "rotation_euler":tuple(e[:]), "scale":tuple(s),}
+                continue 
+            
+            return data
+        
+        raise Exception("Please Choose a named argument") 
+
+    ########## ##########
+
+    s_instances_method : bpy.props.EnumProperty( #maybe for later?
+        name=translate("Instance Method"),
+        default= "ins_collection", 
+        items= ( ("ins_collection", translate("Collection"), translate("Spawn objects contained in a given collection into the distributed points with a chosen spawn method algorithm"), "OUTLINER_COLLECTION", 0,),
+                 ("ins_points", translate("None"), translate("Skip the instancing part, and output the raw points generated by our plugin scatter-engine. Useful if you would like to add your own instancing rules with geometry nodes without interfering with our workflow, to do so, add a new geonode modifier right after our Geo-Scatter Engine modifier on your scatter object). Please note that our display system and random mirror features won't be available."), "PANEL_CLOSE", 1,),
+               ),
+        update=scattering.update_factory.factory("s_instances_method"),
+        ) 
+    s_instances_coll_ptr : bpy.props.PointerProperty( #TODO, no longer rely on collection... need more flexible system
+        name=translate("Collection Pointer"),
+        type=bpy.types.Collection,
+        update=scattering.update_factory.factory("s_instances_coll_ptr"),
+        )
+    s_instances_list_idx : bpy.props.IntProperty() #for list template
+    
+    s_instances_pick_method : bpy.props.EnumProperty( #only for ins_collection
+        name=translate("Spawn Method"),
+        default= "pick_random", 
+        items= ( ("pick_random", translate("Random"), translate("Randomly assign the instances from the object-list below to the scattered points"), "OBJECT_DATA", 0,),
+                 ("pick_rate", translate("Probability"), translate("Assign instances to the generated points based on a defined probability rate per instances"), "MOD_HUE_SATURATION", 1,),
+                 ("pick_scale", translate("Scale"), translate("Assign instances based on the generated points scale"), "OBJECT_ORIGIN", 2,),
+                 ("pick_color", translate("Color Sampling"), translate("Assign instances to the generated points based on a given color attribute (vertex-color or texture)"), "COLOR", 3,),
+                 ("pick_idx", translate("Manual Index"), translate("Assign instances based on manual mode index attribute brush"), "LINENUMBERS_ON", 4,),
+                 ("pick_cluster", translate("Clusters"), translate("Assign instance to the generated points by packing them in clusters"), "CON_OBJECTSOLVER", 5,),
+               ),
+        update=scattering.update_factory.factory("s_instances_pick_method"),
+        )
+    #for pick_random & pick_rate
+    s_instances_seed : bpy.props.IntProperty(
+        name=translate("Seed"),
+        default=0,
+        min=0, 
+        update=scattering.update_factory.factory("s_instances_seed", delay_support=True, sync_support=False,),
+        )
+    s_instances_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
+        name=translate("Randomize Seed"),
+        default=False,
+        update=scattering.update_factory.factory("s_instances_is_random_seed", alt_support=False, sync_support=False,),
+        )
+    #for pick_rate
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_rate", nbr=20, items={"default":0,"min":0,"max":100,"subtype":"PERCENTAGE","name":translate("Probability"),"description":translate("Set this object spawn rate, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.IntProperty, delay_support=True,)
+    #for pick_scale
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_scale_min", nbr=20, items={"default":0,"soft_min":0,"soft_max":3,"name":translate("Scale Range Min"),"description":translate("Assign instance to scattered points fitting the given range, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_scale_max", nbr=20, items={"default":0,"soft_min":0,"soft_max":3,"name":translate("Scale Range Max"),"description":translate("Assign instance to scattered points fitting the given range, objects above will over-shadow those located below in an alphabetically sorted list")}, property_type=bpy.props.FloatProperty, delay_support=True,)
+    s_instances_id_scale_method : bpy.props.EnumProperty(
+        name=translate("Scale Method"),
+        default= "fixed_scale",
+        items= ( ("fixed_scale", translate("Frozen Scale"), translate("Reset all instances scale to 1"),"FREEZE",0),
+                 ("dynamic_scale", translate("Dynamic Scale"), translate("Rescale Items dynamically depending on given range"),"LIGHT_DATA",1),
+                 ("default_scale", translate("Default Scale"), translate("Leave Scale as it is"),"OBJECT_ORIGIN",2),
+               ),
+        update=scattering.update_factory.factory("s_instances_id_scale_method"),
+        )
+    #for pick color
+    codegen_properties_by_idx(scope_ref=__annotations__, name="s_instances_id_XX_color", nbr=20, items={"default":(1,0,0),"subtype":"COLOR","min":0,"max":1,"name":translate("Color"),"description":translate("Assign this instance to the corresponding color sampled")}, property_type=bpy.props.FloatVectorProperty, delay_support=True,)
+    #for pick_cluster
+    s_instances_pick_cluster_projection_method : bpy.props.EnumProperty(
+        name=translate("Projection Method"),
+        default= "local", 
+        items= ( ("local", translate("Local"), translate(""), "ORIENTATION_LOCAL",0 ),
+                 ("global", translate("Global"), translate(""), "WORLD",1 ),
+               ),
+        update=scattering.update_factory.factory("s_instances_pick_cluster_projection_method"),
+        )
+    s_instances_pick_cluster_scale : bpy.props.FloatProperty(
+        name=translate("Scale"),
+        default=0.3,
+        min=0,
+        update=scattering.update_factory.factory("s_instances_pick_cluster_scale", delay_support=True,),
+        )
+    s_instances_pick_cluster_blur : bpy.props.FloatProperty(
+        name=translate("Jitter"),
+        default=0.5,
+        min=0,
+        max=3,
+        update=scattering.update_factory.factory("s_instances_pick_cluster_blur", delay_support=True,),
+        )
+    s_instances_pick_clump : bpy.props.BoolProperty(
+        default=False, 
+        name=translate("Use Clumps as Clusters"),
+        description=translate("This option appears if you are using clump distribution method, it will allow you to assign each instance to individual clumps"),
+        update=scattering.update_factory.factory("s_instances_pick_clump"),
+        )
+
+    s_instances_id_color_tolerence : bpy.props.FloatProperty(
+        name=translate("Tolerence"),
+        default=0.3,
+        min=0,
+        soft_max=3,
+        update=scattering.update_factory.factory("s_instances_id_color_tolerence", delay_support=True,), 
+        )
+
+    s_instances_id_color_sample_method : bpy.props.EnumProperty(
+        name=translate("Color Source"),
+        default= "vcol", 
+        items= ( ("vcol", translate("Vertex Colors"), "", "VPAINT_HLT", 1,),
+                 ("text", translate("Texture Data"), "", "NODE_TEXTURE", 2,),
+               ),
+        update=scattering.update_factory.factory("s_instances_id_color_sample_method"),
+        ) 
+    s_instances_texture_ptr : bpy.props.StringProperty(
+        description="Internal property that will update a TEXTURE_NODE node tree from given nodetree name, used for presets and most importantly copy/paste or synchronization",
+        update=scattering.update_factory.factory("s_instances_texture_ptr",),
+        )
+    s_instances_vcol_ptr : bpy.props.StringProperty(
+        name=translate("Color-Attribute Pointer"),
+        description=translate("Search across all surface(s) for shared color attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_instances_vcol_ptr"),
         )
 
     # 8888b.  88 .dP"Y8 88""Yb 88        db    Yb  dP
@@ -4169,4 +4321,555 @@ class SCATTER5_PR_particle_systems(bpy.types.PropertyGroup):
         max=1,
         description=translate("Randomize the XYZ rotation of your instances"),
         update=scattering.update_factory.factory("s_beginner_random_rot",),
+        )
+
+
+
+#   .oooooo.
+#  d8P'  `Y8b
+# 888           oooo d8b  .ooooo.  oooo  oooo  oo.ooooo.   .oooo.o
+# 888           `888""8P d88' `88b `888  `888   888' `88b d88(  "8
+# 888     ooooo  888     888   888  888   888   888   888 `"Y88b.
+# `88.    .88'   888     888   888  888   888   888   888 o.  )88b
+#  `Y8bood8P'   d888b    `Y8bod8P'  `V88V"V8P'  888bod8P' 8""888P'
+#                                               888
+#                                              o888o
+
+#About group implementation:
+#Groups are implemented via python properties update behavior
+#on a scatter engine level, the group settings are just regular settings!
+#group behavior is just added on an interface and property level
+
+
+class SCATTER5_PR_particle_groups(bpy.types.PropertyGroup): 
+    """bpy.context.object.scatter5.particle_groups, will be stored on emitter"""
+
+    # 88""Yb .dP"Y8 Yb  dP .dP"Y8 
+    # 88__dP `Ybo."  YbdP  `Ybo." 
+    # 88"""  o.`Y8b   8P   o.`Y8b 
+    # 88     8bodP'  dP    8bodP' 
+    
+    def get_psy_members(self):
+        """list all psys being members given group"""
+        
+        emitter = self.id_data
+        psys = emitter.scatter5.particle_systems
+        
+        return [ p for p in psys if (p.group==self.name) ]
+    
+    def property_run_update(self, prop_name, value,):
+        """directly run the property update task function (== changing nodetree) w/o changing any property value, and w/o going in the update fct wrapper/dispatcher"""
+
+        return scattering.update_factory.UpdatesRegistry.run_update(self, prop_name, value, bypass=True,)
+
+    def property_nodetree_refresh(self, prop_name,):
+        """refresh this property value"""
+
+        return self.property_run_update(prop_name, getattr(self,prop_name),)
+
+    def refresh_nodetree(self,):
+        """for every settings, make sure nodetrees of psys members are updated"""
+
+        settings = [k for k in self.bl_rna.properties.keys() if k.startswith("s_")]
+        for s in settings:
+            self.property_nodetree_refresh(s,)
+            continue
+        
+        return None
+    
+    # 88b 88    db    8b    d8 888888 
+    # 88Yb88   dPYb   88b  d88 88__   
+    # 88 Y88  dP__Yb  88YbdP88 88""   
+    # 88  Y8 dP""""Yb 88 YY 88 888888  
+    
+    def upd_name(self,context):
+        """special update name function for renaming a group"""
+
+        emitter = self.id_data
+
+        #should only happend on creation
+        if (self.name_bis==""):
+            self.name_bis=self.name
+            return None
+
+        #deny update if no changes detected 
+        if (self.name==self.name_bis):
+            return None 
+        
+        #deny update if empty name 
+        elif ( (self.name=="") or self.name.startswith(" ") ):
+            self.name = self.name_bis
+            bpy.ops.scatter5.popup_menu(msgs=translate("Name cannot be None, Please choose another name"),title=translate("Renaming Impossible"),icon="ERROR")
+            return None
+        
+        #deny update if name already taken by another scatter_obj 
+        elif (self.name in [g.name_bis for g in emitter.scatter5.particle_groups]):
+            self.name = self.name_bis
+            bpy.ops.scatter5.popup_menu(msgs=translate("This name is taken, Please choose another name"),title=translate("Renaming Impossible"),icon="ERROR")
+            return None
+
+        #rename group psys
+        for p in emitter.scatter5.particle_systems:
+            if (p.group!=""):
+                if (p.group==self.name_bis):
+                    p.group = self.name
+            continue
+
+        #rename interface names
+        for itm in emitter.scatter5.particle_interface_items:
+            if (itm.interface_group_name!=""):
+                if (itm.interface_group_name==self.name_bis):
+                    itm.interface_group_name = self.name
+            continue
+
+        #change name_bis name
+        self.name_bis = self.name 
+
+        return None
+
+    name : bpy.props.StringProperty(
+        default="",
+        update=upd_name,
+        )
+
+    name_bis : bpy.props.StringProperty(
+        description="important for renaming function, avoid name collision",
+        default="",
+        )
+
+    # 88   88 88      dP"Yb  88""Yb 888888 88b 88 
+    # 88   88 88     dP   Yb 88__dP 88__   88Yb88 
+    # Y8   8P 88     Yb   dP 88"""  88""   88 Y88 
+    # `YbodP' 88      YbodP  88     888888 88  Y8 
+    
+    def upd_open(self,context):
+        """open/close the group system"""
+
+        emitter = self.id_data
+
+        #save selection, as this operation might f up sel
+        save_sel = emitter.scatter5.get_psys_selected()[:]
+
+        if (self.open):
+            
+            #if we are opening a collection, we need to add back the psys item before refresh,
+            #otherwise interface will consider them as new items and will set them active, we don't what that behavior
+
+            all_uuids = [ itm.interface_item_psy_uuid for itm in emitter.scatter5.particle_interface_items if (itm.interface_item_type=="SCATTER") ]
+            
+            for p in emitter.scatter5.particle_systems:
+                if ((p.group!="") and (p.group==self.name)):
+                    if (p.uuid not in all_uuids):
+                        itm = emitter.scatter5.particle_interface_items.add()
+                        itm.interface_item_type = "SCATTER"
+                        itm.interface_item_psy_uuid = p.uuid
+                continue 
+
+        #refresh interface
+        emitter.scatter5.particle_interface_refresh()
+
+        #restore selection
+        [ setattr(p,"sel",p in save_sel) for p in emitter.scatter5.particle_systems ]
+
+        return None
+
+    open : bpy.props.BoolProperty(
+        default=True,
+        update=upd_open,
+        )
+
+    #  dP""b8    db    888888 888888  dP""b8  dP"Yb  88""Yb Yb  dP     88   88 .dP"Y8 888888 8888b.
+    # dP   `"   dPYb     88   88__   dP   `" dP   Yb 88__dP  YbdP      88   88 `Ybo." 88__    8I  Yb
+    # Yb       dP__Yb    88   88""   Yb  "88 Yb   dP 88"Yb    8P       Y8   8P o.`Y8b 88""    8I  dY
+    #  YboodP dP""""Yb   88   888888  YboodP  YbodP  88  Yb  dP        `YbodP' 8bodP' 888888 8888Y"
+    
+    def is_category_used(self, s_category): #version for group systems == simplified
+        """check if the given property category is active"""
+
+        if (not getattr(self, f"{s_category}_master_allow")):
+            return False
+
+        try:
+            method_name = f"get_{s_category}_main_features"
+            method = getattr(self, method_name)
+            main_features = method()
+        except:
+            raise Exception("BUG: categories not set up correctly")
+
+        return any( getattr(self,sett) for sett in main_features )
+
+    # .dP"Y8 88   88 88""Yb 888888    db     dP""b8 888888
+    # `Ybo." 88   88 88__dP 88__     dPYb   dP   `" 88__
+    # o.`Y8b Y8   8P 88"Yb  88""    dP__Yb  Yb      88""
+    # 8bodP' `YbodP' 88  Yb 88     dP""""Yb  YboodP 888888
+    
+    def get_surfaces(self):
+        """return a list of surface object(s)"""
+        return set( s for p in self.get_psy_members() for s in p.get_surfaces() )
+
+    def get_surfaces_match_attr(self, attr_type,):
+        """gather matching attributes accross all surfaces used"""
+        global get_surfaces_match_attr 
+        return get_surfaces_match_attr(self, attr_type,) #defined outside, so it's also accessible by codegen function
+    
+    # 8888b.  88 .dP"Y8 888888 88""Yb 88 88""Yb 88   88 888888 88  dP"Yb  88b 88
+    #  8I  Yb 88 `Ybo."   88   88__dP 88 88__dP 88   88   88   88 dP   Yb 88Yb88
+    #  8I  dY 88 o.`Y8b   88   88"Yb  88 88""Yb Y8   8P   88   88 Yb   dP 88 Y88
+    # 8888Y"  88 8bodP'   88   88  Yb 88 88oodP `YbodP'   88   88  YbodP  88  Y8
+
+    # def get_s_gr_distribution_main_features(self, availability_conditions=True,):
+    #     return ["s_gr_distribution_density_boost_allow"]
+
+    # s_gr_distribution_master_allow : bpy.props.BoolProperty( 
+    #     name=translate("Enable this category"),
+    #     description=translate("Mute all features of this category"),
+    #     default=True, 
+    #     update=scattering.update_factory.factory("s_gr_distribution_master_allow",),
+    #     )
+    # s_gr_distribution_density_boost_allow : bpy.props.BoolProperty(
+    #     description=translate("Boost the density of all scatters contained in this group by a given percentage (if the distribution methods allows it)"),
+    #     default=False,
+    #     update=scattering.update_factory.factory("s_gr_distribution_density_boost_allow"),
+    #     )
+    # s_gr_distribution_density_boost_factor : bpy.props.FloatProperty(
+    #     name=translate("Factor"),
+    #     soft_max=2, soft_min=0, default=1,
+    #     update=scattering.update_factory.factory("s_gr_distribution_density_boost_factor", delay_support=True,),
+    #     )
+
+    # 8888b.  888888 88b 88 .dP"Y8 88 888888 Yb  dP     8b    d8    db    .dP"Y8 88  dP .dP"Y8
+    #  8I  Yb 88__   88Yb88 `Ybo." 88   88    YbdP      88b  d88   dPYb   `Ybo." 88odP  `Ybo."
+    #  8I  dY 88""   88 Y88 o.`Y8b 88   88     8P       88YbdP88  dP__Yb  o.`Y8b 88"Yb  o.`Y8b
+    # 8888Y"  888888 88  Y8 8bodP' 88   88    dP        88 YY 88 dP""""Yb 8bodP' 88  Yb 8bodP'
+
+    def get_s_gr_mask_main_features(self, availability_conditions=True,):
+        return ["s_gr_mask_vg_allow", "s_gr_mask_vcol_allow", "s_gr_mask_bitmap_allow", "s_gr_mask_curve_allow", "s_gr_mask_boolvol_allow", "s_gr_mask_material_allow", "s_gr_mask_upward_allow",]
+
+    s_gr_mask_master_allow : bpy.props.BoolProperty( 
+        name=translate("Enable this category"),
+        description=translate("Mute all features of this category"),
+        default=True, 
+        update=scattering.update_factory.factory("s_gr_mask_master_allow",),
+        )
+
+    ########## ########## Vgroups
+
+    s_gr_mask_vg_allow : bpy.props.BoolProperty( 
+        name=translate("Vertex-Group Mask"),
+        description=translate("Mask-out your instances with the help of a vertex-group"),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_vg_allow"),
+        )
+    s_gr_mask_vg_ptr : bpy.props.StringProperty(
+        name=translate("Vertex-Group Pointer"),
+        description=translate("Search across all surface(s) for shared vertex-group\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vg")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_gr_mask_vg_ptr"),
+        )
+    s_gr_mask_vg_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_vg_revert"),
+        )
+
+    ########## ########## VColors
+    
+    s_gr_mask_vcol_allow : bpy.props.BoolProperty( 
+        name=translate("Vertex-Color Mask"), 
+        description=translate("Mask-out your instances with the help of a color-attribute, specify which color-channel to sample"),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_vcol_allow"),
+        )
+    s_gr_mask_vcol_ptr : bpy.props.StringProperty(
+        name=translate("Color-Attribute Pointer"),
+        description=translate("Search across all surface(s) for shared color attributes\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("vcol")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_gr_mask_vcol_ptr"),
+        )
+    s_gr_mask_vcol_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_vcol_revert"),
+        )
+    s_gr_mask_vcol_color_sample_method : bpy.props.EnumProperty(
+        name=translate("Color Sampling"),
+        description=translate("Define how to consider the color values in order to influence the distribution, by default the colors will be simply converted to black and white"),
+        default="id_greyscale", 
+        items=( ("id_greyscale", translate("Greyscale"), "", "NONE", 0,),
+                ("id_red", translate("Red Channel"), "", "NONE", 1,),
+                ("id_green", translate("Green Channel"), "", "NONE", 2,),
+                ("id_blue", translate("Blue Channel"), "", "NONE", 3,),
+                ("id_black", translate("Pure Black"), "", "NONE", 4,),
+                ("id_white", translate("Pure White"), "", "NONE", 5,),
+                ("id_picker", translate("Color Match"), "", "NONE", 6,),
+                ("id_hue", translate("Hue"), "", "NONE", 7,),
+                ("id_saturation", translate("Saturation"), "", "NONE", 8,),
+                ("id_value", translate("Value"), "", "NONE", 9,),
+                ("id_lightness", translate("Lightness"), "", "NONE", 10,),
+                ("id_alpha", translate("Alpha Channel"), "", "NONE", 11,),
+              ),
+        update=scattering.update_factory.factory("s_gr_mask_vcol_color_sample_method"),
+        )
+    s_gr_mask_vcol_id_color_ptr : bpy.props.FloatVectorProperty(
+        name=translate("ID Value"),
+        subtype="COLOR",
+        min=0, max=1,
+        default=(1,0,0), 
+        update=scattering.update_factory.factory("s_gr_mask_vcol_id_color_ptr", delay_support=True,),
+        ) 
+
+    ########## ########## Bitmap 
+
+    s_gr_mask_bitmap_allow : bpy.props.BoolProperty( 
+        name=translate("Image Mask"), 
+        description=translate("Mask-out your instances with the help of an image texture, don't forget to save the image in your blend file!"),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_allow"),
+        )
+    s_gr_mask_bitmap_uv_ptr : bpy.props.StringProperty(
+        default="UVMap",
+        name=translate("UV-Map Pointer"),
+        description=translate("Search across all surface(s) for shared Uvmap\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("uv")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_uv_ptr"),
+        )
+    s_gr_mask_bitmap_ptr : bpy.props.StringProperty(
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_ptr"),
+        )
+    s_gr_mask_bitmap_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_revert"),
+        )
+    s_gr_mask_bitmap_color_sample_method : bpy.props.EnumProperty(
+        name=translate("Color Sampling"),
+        description=translate("Define how to consider the color values in order to influence the distribution, by default the colors will be simply converted to black and white"),
+        default="id_greyscale",
+        items=( ("id_greyscale", translate("Greyscale"), "", "NONE", 0,),
+                ("id_red", translate("Red Channel"), "", "NONE", 1,),
+                ("id_green", translate("Green Channel"), "", "NONE", 2,),
+                ("id_blue", translate("Blue Channel"), "", "NONE", 3,),
+                ("id_black", translate("Pure Black"), "", "NONE", 4,),
+                ("id_white", translate("Pure White"), "", "NONE", 5,),
+                ("id_picker", translate("Color Match"), "", "NONE", 6,),
+                ("id_hue", translate("Hue"), "", "NONE", 7,),
+                ("id_saturation", translate("Saturation"), "", "NONE", 8,),
+                ("id_value", translate("Value"), "", "NONE", 9,),
+                ("id_lightness", translate("Lightness"), "", "NONE", 10,),
+                ("id_alpha", translate("Alpha Channel"), "", "NONE", 11,),
+              ),
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_color_sample_method"),
+        )
+    s_gr_mask_bitmap_id_color_ptr : bpy.props.FloatVectorProperty(
+        name=translate("ID Value"),
+        subtype="COLOR",
+        min=0, max=1,
+        default=(1,0,0), 
+        update=scattering.update_factory.factory("s_gr_mask_bitmap_id_color_ptr", delay_support=True,),
+        ) 
+
+    ########## ########## Material
+
+    s_gr_mask_material_allow : bpy.props.BoolProperty( 
+        name=translate("Material ID Mask"), 
+        description=translate("Mask-out instances that are not distributed upon the selected material slot"),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_material_allow"),
+        )
+    s_gr_mask_material_ptr : bpy.props.StringProperty(
+        name=translate("Material Pointer: The faces assigned to chosen material slot will be used as a culling mask"),
+        description=translate("Search across all surface(s) for shared Materials\nIt Will highlight in red if the attribute is not shared across your surface(s)."),
+        search=lambda s,c,e: s.get_surfaces_match_attr("mat")(s,c,e),
+        search_options={'SUGGESTION','SORT'},
+        update=scattering.update_factory.factory("s_gr_mask_material_ptr"),
+        )
+    s_gr_mask_material_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_material_revert"),
+        )
+    
+    ########## ########## Curves
+
+    s_gr_mask_curve_allow : bpy.props.BoolProperty( 
+        name=translate("Bezier-Area Mask"), 
+        description=translate("Mask-out instances that are inside the area of a closed bezier-curve."),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_curve_allow"),
+        )
+    s_gr_mask_curve_ptr : bpy.props.PointerProperty(
+        name=translate("Bezier-Curve Pointer"),
+        type=bpy.types.Object, 
+        poll=lambda s,o: o.type=="CURVE",
+        update=scattering.update_factory.factory("s_gr_mask_curve_ptr"),
+        )
+    s_gr_mask_curve_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_curve_revert"),
+        )
+
+    ########## ########## Boolean Volume
+
+    s_gr_mask_boolvol_allow : bpy.props.BoolProperty( 
+        name=translate("Boolean Mask"), 
+        description=translate("Mask-out your instances located inside objects-volume from given collection"),
+        default=False,
+        update=scattering.update_factory.factory("s_gr_mask_boolvol_allow"),
+        )
+    s_gr_mask_boolvol_coll_ptr : bpy.props.StringProperty(
+        name=translate("Collection Pointer"),
+        update=scattering.update_factory.factory("s_gr_mask_boolvol_coll_ptr"),
+        )
+    passctxt_s_gr_mask_boolvol_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
+    s_gr_mask_boolvol_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_boolvol_revert"),
+        )
+
+    ########## ########## Upward Obstruction
+
+    s_gr_mask_upward_allow : bpy.props.BoolProperty( 
+        name=translate("Upward-Obstruction Mask"), 
+        description=translate("Mask-out your instances located underneath objects inside given collection"),
+        default=False, 
+        update=scattering.update_factory.factory("s_gr_mask_upward_allow"),
+        )
+    s_gr_mask_upward_coll_ptr : bpy.props.StringProperty(
+        name=translate("Collection Pointer"),
+        update=scattering.update_factory.factory("s_gr_mask_upward_coll_ptr"),
+        )
+    passctxt_s_gr_mask_upward_coll_ptr : bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class, description="needed for GUI drawing..",)
+    s_gr_mask_upward_revert : bpy.props.BoolProperty(
+        name=translate("Reverse"),
+        update=scattering.update_factory.factory("s_gr_mask_upward_revert"),
+        )
+    
+    # .dP"Y8  dP""b8    db    88     888888
+    # `Ybo." dP   `"   dPYb   88     88__
+    # o.`Y8b Yb       dP__Yb  88  .o 88""
+    # 8bodP'  YboodP dP""""Yb 88ood8 888888
+
+    def get_s_gr_scale_main_features(self, availability_conditions=True,):
+        return ["s_gr_scale_boost_allow"]
+
+    s_gr_scale_master_allow : bpy.props.BoolProperty( 
+        name=translate("Enable this category"),
+        description=translate("Mute all features of this category"),
+        default=True, 
+        update=scattering.update_factory.factory("s_gr_scale_master_allow"),
+        )
+    s_gr_scale_boost_allow : bpy.props.BoolProperty(
+        description=translate("Boost the scale attribute of all scatters contained in this group by a given percentage"),
+        default=False,
+        update=scattering.update_factory.factory("s_gr_scale_boost_allow"),
+        )
+    s_gr_scale_boost_value : bpy.props.FloatVectorProperty(
+        name=translate("Factor"),
+        subtype="XYZ", 
+        default=(1,1,1), 
+        soft_min=0,
+        soft_max=5,
+        update=scattering.update_factory.factory("s_gr_scale_boost_value", delay_support=True,),
+        )
+    s_gr_scale_boost_multiplier : bpy.props.FloatProperty(
+        name=translate("Factor"),
+        soft_max=5,
+        soft_min=0,
+        default=1,
+        update=scattering.update_factory.factory("s_gr_scale_boost_multiplier", delay_support=True,),
+        )
+
+    # 88""Yb    db    888888 888888 888888 88""Yb 88b 88 .dP"Y8
+    # 88__dP   dPYb     88     88   88__   88__dP 88Yb88 `Ybo."
+    # 88"""   dP__Yb    88     88   88""   88"Yb  88 Y88 o.`Y8b
+    # 88     dP""""Yb   88     88   888888 88  Yb 88  Y8 8bodP'
+
+    def get_s_gr_pattern_main_features(self, availability_conditions=True,):
+        return ["s_gr_pattern1_allow"]
+
+    s_gr_pattern_master_allow : bpy.props.BoolProperty( 
+        name=translate("Enable this category"),
+        description=translate("Mute all features of this category"),
+        default=True, 
+        update=scattering.update_factory.factory("s_gr_pattern_master_allow"),
+        )
+
+    s_gr_pattern1_allow : bpy.props.BoolProperty(
+        description=translate("Influence your instances scale and density with a scatter-texture datablock"),
+        default=False,
+        update=scattering.update_factory.factory("s_gr_pattern1_allow"),
+        )
+    s_gr_pattern1_texture_ptr : bpy.props.StringProperty(
+        description="Internal property that will update a TEXTURE_NODE node tree from given nodetree name, used for presets and most importantly copy/paste or synchronization",
+        update=scattering.update_factory.factory("s_gr_pattern1_texture_ptr"),
+        )
+    s_gr_pattern1_color_sample_method : bpy.props.EnumProperty(
+        name=translate("Color Sampling"),
+        description=translate("Define how consider translate the color values in order to influence the distribution, by default the colors will be simply converted to black and white"),
+        default="id_greyscale", 
+        items=( ("id_greyscale", translate("Greyscale"), "", "NONE", 0,),
+                ("id_red", translate("Red Channel"), "", "NONE", 1,),
+                ("id_green", translate("Green Channel"), "", "NONE", 2,),
+                ("id_blue", translate("Blue Channel"), "", "NONE", 3,),
+                ("id_black", translate("Pure Black"), "", "NONE", 4,),
+                ("id_white", translate("Pure White"), "", "NONE", 5,),
+                ("id_picker", translate("Color Match"), "", "NONE", 6,),
+                ("id_hue", translate("Hue"), "", "NONE", 7,),
+                ("id_saturation", translate("Saturation"), "", "NONE", 8,),
+                ("id_value", translate("Value"), "", "NONE", 9,),
+                ("id_lightness", translate("Lightness"), "", "NONE", 10,),
+                ("id_alpha", translate("Alpha Channel"), "", "NONE", 11,),
+               ),
+        update=scattering.update_factory.factory("s_gr_pattern1_color_sample_method"),
+        )
+    s_gr_pattern1_id_color_ptr : bpy.props.FloatVectorProperty(
+        name=translate("ID Value"),
+        subtype="COLOR",
+        min=0,
+        max=1,
+        default=(1,0,0),
+        update=scattering.update_factory.factory("s_gr_pattern1_id_color_ptr"),
+        )
+    s_gr_pattern1_id_color_tolerence : bpy.props.FloatProperty(
+        name=translate("Tolerence"),
+        default=0.15, 
+        soft_min=0, 
+        soft_max=1,
+        update=scattering.update_factory.factory("s_gr_pattern1_id_color_tolerence"),
+        )
+    #Feature Influence
+    s_gr_pattern1_dist_infl_allow : bpy.props.BoolProperty(
+        name=translate("Enable Influence"), 
+        default=True,
+        update=scattering.update_factory.factory("s_gr_pattern1_dist_infl_allow"),
+        )
+    s_gr_pattern1_dist_influence : bpy.props.FloatProperty(
+        name=translate("Density"),
+        default=100,
+        subtype="PERCENTAGE", 
+        min=0, 
+        max=100, 
+        precision=1,
+        update=scattering.update_factory.factory("s_gr_pattern1_dist_influence", delay_support=True,),
+        )
+    s_gr_pattern1_dist_revert : bpy.props.BoolProperty(
+        name=translate("Reverse Influence"),
+        update=scattering.update_factory.factory("s_gr_pattern1_dist_revert"), 
+        )
+    s_gr_pattern1_scale_infl_allow : bpy.props.BoolProperty(
+        name=translate("Enable Influence"), 
+        default=True,
+        update=scattering.update_factory.factory("s_gr_pattern1_scale_infl_allow"),
+        )
+    s_gr_pattern1_scale_influence : bpy.props.FloatProperty(
+        name=translate("Scale"),
+        default=70, 
+        subtype="PERCENTAGE", 
+        min=0, 
+        max=100, 
+        precision=1, 
+        update=scattering.update_factory.factory("s_gr_pattern1_scale_influence", delay_support=True,),
+        )
+    s_gr_pattern1_scale_revert : bpy.props.BoolProperty(
+        name=translate("Reverse Influence"), 
+        update=scattering.update_factory.factory("s_gr_pattern1_scale_revert"),
         )

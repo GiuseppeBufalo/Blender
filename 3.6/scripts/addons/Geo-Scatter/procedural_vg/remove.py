@@ -93,8 +93,8 @@ def general_mask_remove(obj_name=None ,mask_idx=None):
 class SCATTER5_OT_remove_mask(bpy.types.Operator):
 
     bl_idname      = "scatter5.remove_mask"
-    bl_label       = translate("Remove a Mask")
-    bl_description = translate("Remove a Mask")
+    bl_label       = translate("Remove a mask")
+    bl_description = translate("Remove a mask")
     bl_options     = {'INTERNAL','UNDO'}
 
     mask_type : bpy.props.StringProperty()

@@ -12,9 +12,9 @@ def dprint(string, depsgraph=False,):
 
     addon_prefs=bpy.context.preferences.addons["Geo-Scatter"].preferences 
 
-    if (not addon_prefs.debug_depsgraph) and depsgraph:  
-        return
-    if addon_prefs.debug:
+    if ((not addon_prefs.debug_depsgraph) and depsgraph):
+        return None
+    if (addon_prefs.debug):
         print(string)
 
     return None
@@ -147,15 +147,17 @@ class SCATTER5_OT_exec_line(bpy.types.Operator):
 
         #useful namespace
         import random 
-        C,D         = bpy.context, bpy.data
-        addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
-        scat_scene  = bpy.context.scene.scatter5
-        scat_ops    = scat_scene.operators
-        emitter     = scat_scene.emitter
-        scat_win    = bpy.context.window_manager.scatter5
-        psys        = emitter.scatter5.particle_systems if (emitter is not None) else []
-        psy_active  = emitter.scatter5.get_psy_active() if (emitter is not None) else None
-        
+        C,D           = bpy.context, bpy.data
+        addon_prefs   = bpy.context.preferences.addons["Geo-Scatter"].preferences
+        scat_scene    = bpy.context.scene.scatter5
+        scat_ops      = scat_scene.operators
+        emitter       = scat_scene.emitter
+        scat_win      = bpy.context.window_manager.scatter5
+        psys          = emitter.scatter5.particle_systems if (emitter is not None) else []
+        psys_sel      = emitter.scatter5. get_psys_selected() if (emitter is not None) else []
+        psy_active    = emitter.scatter5.get_psy_active() if (emitter is not None) else None
+        group_active  = emitter.scatter5.get_group_active() if (emitter is not None) else None
+
         #exec_line
         exec(self.api)
 
@@ -198,24 +200,24 @@ class SCATTER5_OT_set_solid_and_object_color(bpy.types.Operator):
 
 
 class SCATTER5_OT_image_utils(bpy.types.Operator):
+    """operator used to quickly create or paint images, with mutli-surface support, for the active psy or active group context or else
+    due to the nature of the geoscatter multi-surface workflow, this tool will set up a painting mode on many objects simultaneously"""
 
-    bl_idname      = "scatter5.image_utils"
-    bl_label       = translate("Create a New Image")
+    bl_idname  = "scatter5.image_utils"
+    bl_label   = translate("Create a New Image")
     bl_options = {'REGISTER', 'INTERNAL'}
 
+    img_name : bpy.props.StringProperty(name=translate("Image Name"), options={"SKIP_SAVE",},)    
     option : bpy.props.StringProperty() #enum in "open"/"new"/"paint"
     api : bpy.props.StringProperty()
     paint_color : bpy.props.FloatVectorProperty()
-    img_name : bpy.props.StringProperty(name=translate("Image Name"), options={"SKIP_SAVE",},)    
     uv_ptr : bpy.props.StringProperty(default="UVMap", options={"SKIP_SAVE",},)
-
-    #paint mode
-    use_surfaces : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
+    
+    context_surfaces : bpy.props.StringProperty(default="*PSY_CONTEXT*", options={"SKIP_SAVE",},)
 
     #new dialog 
     res_x : bpy.props.IntProperty(default=1080, name=translate("resolution X"), options={"SKIP_SAVE",},)
     res_y : bpy.props.IntProperty(default=1080, name=translate("resolution Y"), options={"SKIP_SAVE",},)
-
     quitandopen : bpy.props.BoolProperty(default=False,name=translate("Open From Explorer"), options={"SKIP_SAVE",},)
     
     #open dialog
@@ -223,12 +225,27 @@ class SCATTER5_OT_image_utils(bpy.types.Operator):
 
     def __init__(self):
         """store surfaces target"""
-
-        emitter = bpy.context.scene.scatter5.emitter
-        if (self.use_surfaces==True):
-              self.surfaces = emitter.scatter5.get_psy_active().get_surfaces()
-        else: self.surfaces = [ emitter ]
-
+        
+        #find surfaces automatically depending on group/psy interface context
+        if (self.context_surfaces=="*PSY_CONTEXT*"):
+            
+            #get active psy, or group
+            emitter = bpy.context.scene.scatter5.emitter
+            itm = emitter.scatter5.get_psy_active()
+            if (itm is None):
+                itm = emitter.scatter5.get_group_active()
+            
+            #get their surfaces
+            self.surfaces = itm.get_surfaces()
+            
+        #find surfaces simply using the active emitter
+        elif (self.context_surfaces=="*EMITTER_CONTEXT*"):
+            self.surfaces = [bpy.context.scene.scatter5.emitter]
+            
+        #custom surface context
+        else: 
+            self.surfaces = [ bpy.data.objects[sn] for sn in self.context_surfaces.split("_!#!_") ]
+        
         return None 
 
     @classmethod
@@ -261,7 +278,6 @@ class SCATTER5_OT_image_utils(bpy.types.Operator):
 
         return {'FINISHED'}
 
-
     def draw(self, context):
         layout = self.layout
         
@@ -283,7 +299,8 @@ class SCATTER5_OT_image_utils(bpy.types.Operator):
             #get img
             img = bpy.data.images.get(self.img_name)
             if (img is None):
-                return {'FINISHED'}    
+                return {'FINISHED'}
+            
             #need to set an object as active
             o = bpy.context.object
             if (o not in self.surfaces):
@@ -291,21 +308,24 @@ class SCATTER5_OT_image_utils(bpy.types.Operator):
                     if (self.uv_ptr in o.data.uv_layers):
                         bpy.context.view_layer.objects.active = o
                         break      
+                    
             #sett all uvlayers active
             for o in self.surfaces:
                 for l in o.data.uv_layers:
                     if (l.name==self.uv_ptr):
                         o.data.uv_layers.active = l
+                        
             #enter mode and set up tools settings
             bpy.ops.object.mode_set(mode='TEXTURE_PAINT')
             tool_sett = bpy.context.scene.tool_settings
             tool_sett.image_paint.mode = 'IMAGE'
             tool_sett.image_paint.canvas = img
             tool_sett.unified_paint_settings.color = self.paint_color
+            
             return {'FINISHED'}
 
         if (self.quitandopen):
-            bpy.ops.scatter5.image_utils(('INVOKE_DEFAULT'),option="open", img_name=self.img_name, api=self.api,)
+            bpy.ops.scatter5.image_utils(('INVOKE_DEFAULT'), option="open", img_name=self.img_name, api=self.api,)
             return {'FINISHED'}
 
         if (self.option=="open"):
@@ -316,41 +336,6 @@ class SCATTER5_OT_image_utils(bpy.types.Operator):
         if (self.option=="new"):
             img = bpy.data.images.new(self.img_name, self.res_x, self.res_y,)
             exec( f"{self.api}=img.name" )
-            return {'FINISHED'}
-
-        return {'FINISHED'}
-
-
-class SCATTER5_OT_list_move(bpy.types.Operator):
-
-    bl_idname      = "scatter5.list_move"
-    bl_label       = translate("Move Item")
-    bl_description = ""
-    bl_options     = {'INTERNAL','UNDO'}
-
-    direction : bpy.props.StringProperty(default="UP") #UP/DOWN
-    target_idx : bpy.props.IntProperty(default=0)
-
-    api_propgroup  : bpy.props.StringProperty(default="emitter.scatter5.mask_systems")
-    api_propgroup_idx : bpy.props.StringProperty(default="emitter.scatter5.mask_systems_idx")
-
-    def execute(self, context):
-
-        scat_scene = bpy.context.scene.scatter5
-        emitter    = scat_scene.emitter
-
-        target_idx    = self.target_idx
-        current_idx   = eval(f"{self.api_propgroup_idx}")
-        len_propgroup = eval(f"len({self.api_propgroup})")
-
-        if ((self.direction=="UP") and (current_idx!=0)):
-            exec(f"{self.api_propgroup}.move({target_idx},{target_idx}-1)")
-            exec(f"{self.api_propgroup_idx} -=1")
-            return {'FINISHED'}
-
-        if ((self.direction=="DOWN") and (current_idx!=len_propgroup-1)):
-            exec(f"{self.api_propgroup}.move({target_idx},{target_idx}+1)")
-            exec(f"{self.api_propgroup_idx} +=1")
             return {'FINISHED'}
 
         return {'FINISHED'}
@@ -564,9 +549,7 @@ classes = (
 
     SCATTER5_OT_set_solid_and_object_color,
     SCATTER5_OT_image_utils,
-
-    SCATTER5_OT_list_move,
-
+    
     SCATTER5_OT_make_asset_library,
 
     )

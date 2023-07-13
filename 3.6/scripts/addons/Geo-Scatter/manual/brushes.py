@@ -394,16 +394,18 @@ class ToolSessionCache():
             bm.free()
             
             me.validate()
-            me.calc_normals()
+            if(bpy.app.version < (4, 0, 0)):
+                # NOTE: useful in 3.4, deprecated and doing nothing in 3.5/3.6, removed in 4.0
+                me.calc_normals()
             me.calc_loop_triangles()
             
             l = len(me.vertices)
             
-            v_co = np.zeros(l * 3, dtype=float, )
+            v_co = np.zeros(l * 3, dtype=np.float64, )
             me.vertices.foreach_get('co', v_co)
             v_co.shape = (-1, 3)
             
-            v_normal = np.zeros(l * 3, dtype=float, )
+            v_normal = np.zeros(l * 3, dtype=np.float64, )
             me.vertices.foreach_get('normal', v_normal)
             v_normal.shape = (-1, 3)
             
@@ -413,11 +415,11 @@ class ToolSessionCache():
             me.loop_triangles.foreach_get('vertices', f_vertices)
             f_vertices.shape = (-1, 3)
             
-            f_normal = np.zeros(l * 3, dtype=float, )
+            f_normal = np.zeros(l * 3, dtype=np.float64, )
             me.loop_triangles.foreach_get('normal', f_normal)
             f_normal.shape = (-1, 3)
             
-            f_area = np.zeros(l, dtype=float, )
+            f_area = np.zeros(l, dtype=np.float64, )
             me.loop_triangles.foreach_get('area', f_area)
             f_area.shape = (-1, 1)
             
@@ -941,6 +943,8 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
                 if(self._pressure <= 0.001):
                     # prevent zero pressure which might sometimes happen..
                     self._pressure = 0.001
+                
+                self._tilt = tuple(event.tilt)
     
     # @verbose
     def _action_timer_private(self, ):
@@ -1131,16 +1135,16 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
         q = self._rotation_to(Vector((0.0, 0.0, 1.0)), nor, )
         m = q.to_matrix().to_4x4()
         _, r, _ = m.decompose()
-        m = np.array(r.to_matrix().to_4x4(), dtype=float, )
+        m = np.array(r.to_matrix().to_4x4(), dtype=np.float64, )
         ns = np.c_[ds, np.ones(len(ds), dtype=ds.dtype, )]
         ns = np.dot(m, ns.T)[0:4].T.reshape((-1, 4))
         directions = ns[:, :3]
         
-        # debug.points(self._target, np.full((n, 3), origin, dtype=float, ), directions, )
+        # debug.points(self._target, np.full((n, 3), origin, dtype=np.float64, ), directions, )
         
         # ray cast around..
         max_dst = (1.0 / np.cos(a)) * 1.1
-        ns = np.full((n, 3), nor, dtype=float, )
+        ns = np.full((n, 3), nor, dtype=np.float64, )
         for i in np.arange(n):
             _loc, _nor, _idx, _dst = self._bvh.ray_cast(origin, directions[i], max_dst, )
             if(_loc is not None):
@@ -1345,10 +1349,10 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
             # i have no steps to work with
             return
         
-        a = np.array(ns, dtype=float, )
+        a = np.array(ns, dtype=np.float64, )
         
         # NOTE: some wights to it, first in array is most important (because i go over reversed history), last will contrubute the least
-        w = np.linspace(1.0, 1.0 / self._get_prop_value('direction_interpolation_steps'), num=len(a), endpoint=True, retstep=False, dtype=float, axis=0, )
+        w = np.linspace(1.0, 1.0 / self._get_prop_value('direction_interpolation_steps'), num=len(a), endpoint=True, retstep=False, dtype=np.float64, axis=0, )
         a = a * w.reshape(-1, 1)
         
         dx = np.average(a[:, 0])
@@ -1382,10 +1386,10 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
             # i have no steps to work with
             return
         
-        a = np.array(ns, dtype=float, )
+        a = np.array(ns, dtype=np.float64, )
         
         # NOTE: some wights to it, first in array is most important (because i go over reversed history), last will contrubute the least
-        w = np.linspace(1.0, 1.0 / self._get_prop_value('direction_interpolation_steps'), num=len(a), endpoint=True, retstep=False, dtype=float, axis=0, )
+        w = np.linspace(1.0, 1.0 / self._get_prop_value('direction_interpolation_steps'), num=len(a), endpoint=True, retstep=False, dtype=np.float64, axis=0, )
         a = a * w.reshape(-1, 1)
         
         dx = np.average(a[:, 0])
@@ -2136,7 +2140,7 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
                 projection = context.region_data.window_matrix
                 # unit circle points
                 steps = self._theme._circle_steps
-                vs = np.zeros((steps, 3), dtype=float, )
+                vs = np.zeros((steps, 3), dtype=np.float64, )
                 angstep = 2 * np.pi / steps
                 a = np.arange(steps, dtype=int, )
                 center = [0.0, 0.0, ]
@@ -2158,11 +2162,11 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
                 x2d = (x_ndc + 1.0) / 2.0
                 y2d = (y_ndc + 1.0) / 2.0
                 # # NOTE: do i need some depth? lets go with zeros for now
-                # z = np.zeros(len(vs), dtype=float, )
+                # z = np.zeros(len(vs), dtype=np.float64, )
                 # vs2d = np.c_[x2d, y2d, z]
                 vs2d = np.c_[x2d, y2d]
                 # # and normalize path from pixels to 0.0-1.0
-                # vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+                # vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
                 # vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
                 # vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
                 # to pixel coordinates
@@ -2179,8 +2183,8 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
                 n.normalize()
                 # NOTE: move is something ridiculous
                 d = c + (n * 10 ** 6)
-                c = np.array(c, dtype=float, )
-                d = np.array(d, dtype=float, )
+                c = np.array(c, dtype=np.float64, )
+                d = np.array(d, dtype=np.float64, )
                 for i, segment in enumerate(indices):
                     a, b = vs2d[segment]
                     hit = mathutils.geometry.intersect_line_line_2d(a, b, c, d)
@@ -2317,7 +2321,11 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
             bh = int(bh / 2) * 2
             import blf
             font_id = 0
-            blf.size(font_id, self._theme._text_size, 72)
+            if(bpy.app.version < (4, 0, 0)):
+                blf.size(font_id, self._theme._text_size, 72)
+            else:
+                # 4.0, `dpi` argument is removed
+                blf.size(font_id, self._theme._text_size)
             _, th = blf.dimensions(font_id, 'A', )
             th = th + ((8 * self._theme._ui_scale) * 2)
             th = th + ((self._theme._text_tooltip_outline_thickness * self._theme._ui_line_width) / 2)
@@ -2565,8 +2573,8 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
                 n = int(round(vu * (r ** 2)))
                 if(n <= 0):
                     n = 1
-                x = rng_x.random(n, dtype=float, )
-                y = rng_y.random(n, dtype=float, )
+                x = rng_x.random(n, dtype=np.float64, )
+                y = rng_y.random(n, dtype=np.float64, )
                 
                 # s = 1.0 / 25
                 s = 1.0 / multiplier / 5
@@ -3326,6 +3334,8 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
             if(self._pressure <= 0.001):
                 # prevent zero pressure which might sometimes happen..
                 self._pressure = 0.001
+            
+            self._tilt = tuple(event.tilt)
         # ------------------------------------------------------------------ props <<<
         # ------------------------------------------------------------------ action >>>
         # in_viewport = self._is_viewport(context, event, )
@@ -3577,6 +3587,7 @@ class SCATTER5_OT_manual_brush_tool_base(Operator, ):
         
         self._lmb = False
         self._pressure = 1.0
+        self._tilt = (0.0, 0.0, )
         self._nav = False
         self._nav_enabled = True
         
@@ -4089,13 +4100,13 @@ class SCATTER5_OT_common_mixin():
         return loc, nor
     
     def _apply_matrix_np(self, matrix, vs, ns=None, ):
-        _m = np.array(matrix, dtype=float, )
+        _m = np.array(matrix, dtype=np.float64, )
         _vs = np.c_[vs, np.ones(len(vs), dtype=vs.dtype, )]
         _vs = np.dot(_m, _vs.T)[0:4].T.reshape((-1, 4))
         _vs = _vs[:, :3]
         if(ns is not None):
             _, _r, _ = m.decompose()
-            _m = np.array(r.to_matrix().to_4x4(), dtype=float, )
+            _m = np.array(r.to_matrix().to_4x4(), dtype=np.float64, )
             _ns = np.c_[ns, np.ones(len(ns), dtype=ns.dtype, )]
             _ns = np.dot(_m, _ns.T)[0:4].T.reshape((-1, 4))
             _ns = _ns[:, :3]
@@ -4103,7 +4114,7 @@ class SCATTER5_OT_common_mixin():
     
     def _distance_range(self, vertices, point, radius, ):
         # mask out points in cube around point of side 2x radius
-        mask = np.array((point[0] - radius <= vertices[:, 0]) & (vertices[:, 0] <= point[0] + radius) & (point[1] - radius <= vertices[:, 1]) & (vertices[:, 1] <= point[1] + radius) & (point[2] - radius <= vertices[:, 2]) & (vertices[:, 2] <= point[2] + radius), dtype=np.bool, )
+        mask = np.array((point[0] - radius <= vertices[:, 0]) & (vertices[:, 0] <= point[0] + radius) & (point[1] - radius <= vertices[:, 1]) & (vertices[:, 1] <= point[1] + radius) & (point[2] - radius <= vertices[:, 2]) & (vertices[:, 2] <= point[2] + radius), dtype=bool, )
         indices = np.arange(len(vertices))
         indices = indices[mask]
         vs = vertices[mask]
@@ -4296,7 +4307,7 @@ class SCATTER5_OT_common_mixin():
                 # uuid mask
                 mask = uid == u
                 # vectors
-                vs = np.zeros((len(mask), 3), dtype=float, )
+                vs = np.zeros((len(mask), 3), dtype=np.float64, )
                 vs[:, 2] = l[mask]
                 vs, _ = self._apply_matrix(m, vs, None, )
                 # WATCH: do i need to calculate vector magnitude? if i just scale? all zero vectors except z axis? i think not.. reading back z should be enough
@@ -4629,13 +4640,13 @@ class SCATTER5_OT_common_mixin():
         return ls
     
     def _widgets_fabricate_fixed_size_hints_loc_nor_lines_3d(self, context, event, loc, w_locations, w_normals, woc, ):
-        a = np.array(w_locations, dtype=float, )
+        a = np.array(w_locations, dtype=np.float64, )
         
         c = Vector((event.mouse_region_x, event.mouse_region_y, ))
         n = c + Vector((self._theme._fixed_radius, 0, ))
         n = view3d_utils.region_2d_to_location_3d(context.region, context.region_data, n, loc)
         l = Vector(n - loc).length
-        b = a + (np.array(w_normals, dtype=float, ) * l)
+        b = a + (np.array(w_normals, dtype=np.float64, ) * l)
         
         vs = np.concatenate([a, b, ])
         vs = vs.astype(np.float32)
@@ -4810,7 +4821,7 @@ class SCATTER5_OT_common_mixin():
         return ls
     
     def _widgets_fabricate_fixed_size_hints_loc_nor_lines_2d(self, context, event, w_locations, w_normals, woc, ):
-        a = np.array(self._w_locations, dtype=float, )
+        a = np.array(self._w_locations, dtype=np.float64, )
         
         region = context.region
         rv3d = context.region_data
@@ -4822,7 +4833,7 @@ class SCATTER5_OT_common_mixin():
         n = view3d_utils.region_2d_to_location_3d(region, rv3d, n, loc)
         l = Vector(n - loc).length
         
-        b = a + (np.array(self._w_normals, dtype=float, ) * l)
+        b = a + (np.array(self._w_normals, dtype=np.float64, ) * l)
         
         vs = np.concatenate([a, b, ])
         vs = vs.astype(np.float32)
@@ -4845,8 +4856,8 @@ class SCATTER5_OT_common_mixin():
         return ls
     
     def _widgets_fabricate_hints_origin_destination_lines(self, w_origins, w_destinations, matrix, woc, ):
-        a = np.array(w_origins, dtype=float, )
-        b = np.array(w_destinations, dtype=float, )
+        a = np.array(w_origins, dtype=np.float64, )
+        b = np.array(w_destinations, dtype=np.float64, )
         
         vs = np.concatenate([a, b, ])
         vs = vs.astype(np.float32)
@@ -5029,11 +5040,42 @@ class SCATTER5_OT_create_mixin():
         # bsb = self._brush
         
         l = len(vs)
-        if(self._get_prop_value('rotation_align') == 'GLOBAL_Z_AXIS'):
+        # NOTE: tilt override >>>
+        if(self._get_prop_value('use_rotation_align_tilt_override')):
+            # nor = Vector((0.0, 0.0, 1.0))
+            # nor.rotate(Euler(
+            #     Vector((
+            #         # NOTE: it seems to be already in radians? by empirical evidence.. hmmm.. and to not be a mirror image needs to be negated. weird..
+            #         -self._tilt[0],
+            #         -self._tilt[1],
+            #         0.0, ))
+            # ))
+            # nor.normalize()
+            
+            n = Vector((0.0, 0.0, 1.0))
+            view = self._context_region_data.view_matrix
+            projection = self._context_region_data.window_matrix
+            x = ((np.pi / 2) * self._tilt[0])
+            y = ((np.pi / 2) * self._tilt[1])
+            _, vr, _ = view.decompose()
+            _, pr, _ = projection.decompose()
+            vr = vr.to_matrix()
+            pr = pr.to_matrix()
+            n = vr @ n
+            n = pr @ n
+            # n.rotate(Euler(Vector((x, y, 0.0, ))))
+            n.rotate(Euler(Vector((y, -x, 0.0, ))))
+            n = pr.inverted() @ n
+            n = vr.inverted() @ n
+            nor = n
+            
+            nors = [nor for i in range(l)]
+        # NOTE: tilt override <<<
+        elif(self._get_prop_value('rotation_align') == 'GLOBAL_Z_AXIS'):
             nors = [Vector((0.0, 0.0, 1.0, )) for i in range(l)]
         elif(self._get_prop_value('rotation_align') == 'LOCAL_Z_AXIS'):
-            _vs = np.zeros((l, 3), dtype=float, )
-            _ns = np.full((l, 3), (0.0, 0.0, 1.0, ), dtype=float, )
+            _vs = np.zeros((l, 3), dtype=np.float64, )
+            _ns = np.full((l, 3), (0.0, 0.0, 1.0, ), dtype=np.float64, )
             _, _ns = self._surfaces_to_world_space(_vs, _ns, uids, )
             nors = [Vector(n) for i, n in enumerate(_ns)]
         elif(self._get_prop_value('rotation_align') == 'SURFACE_NORMAL'):
@@ -5059,8 +5101,8 @@ class SCATTER5_OT_create_mixin():
             return m.to_quaternion()
         
         if(self._get_prop_value('rotation_up') == 'LOCAL_Y_AXIS'):
-            _vs = np.zeros((l, 3), dtype=float, )
-            _ns = np.full((l, 3), (0.0, 1.0, 0.0, ), dtype=float, )
+            _vs = np.zeros((l, 3), dtype=np.float64, )
+            _ns = np.full((l, 3), (0.0, 1.0, 0.0, ), dtype=np.float64, )
             _, _ns = self._surfaces_to_world_space(_vs, _ns, uids, )
             ups = [Vector(n) for i, n in enumerate(_ns)]
             
@@ -5103,7 +5145,15 @@ class SCATTER5_OT_create_mixin():
             fq.append(q)
         
         _private_r_align = np.zeros(l, dtype=int, )
-        if(self._get_prop_value('rotation_align') == 'GLOBAL_Z_AXIS'):
+        _private_r_align_vector = np.zeros((l, 3), dtype=np.float64, )
+        # NOTE: tilt override >>>
+        if(self._get_prop_value('use_rotation_align_tilt_override')):
+            _private_r_align = _private_r_align + 3
+            _private_r_align_vector[:, 0] = nor.x
+            _private_r_align_vector[:, 1] = nor.y
+            _private_r_align_vector[:, 2] = nor.z
+        # NOTE: tilt override <<<
+        elif(self._get_prop_value('rotation_align') == 'GLOBAL_Z_AXIS'):
             _private_r_align = _private_r_align + 2
         elif(self._get_prop_value('rotation_align') == 'LOCAL_Z_AXIS'):
             _private_r_align = _private_r_align + 1
@@ -5116,10 +5166,11 @@ class SCATTER5_OT_create_mixin():
         elif(self._get_prop_value('rotation_up') == 'GLOBAL_Y_AXIS'):
             pass
         
-        _private_r_base = np.full((l, 3), self._get_prop_value('rotation_base'), dtype=float, )
-        _private_r_random = np.full((l, 3), self._get_prop_value('rotation_random'), dtype=float, )
+        _private_r_base = np.full((l, 3), self._get_prop_value('rotation_base'), dtype=np.float64, )
+        _private_r_random = np.full((l, 3), self._get_prop_value('rotation_random'), dtype=np.float64, )
         
         self._private_r_align = _private_r_align
+        self._private_r_align_vector = _private_r_align_vector
         self._private_r_up = _private_r_up
         self._private_r_base = _private_r_base
         self._private_r_random = _private_r_random
@@ -5281,8 +5332,8 @@ class SCATTER5_OT_create_mixin():
         self._set_target_attribute_masked(me.attributes, 'align_y', _align_y, )
     
     def _gen_scale(self, n, ):
-        d = np.array(self._get_prop_value('scale_default'), dtype=float, )
-        r = np.array(self._get_prop_value('scale_random_factor'), dtype=float, )
+        d = np.array(self._get_prop_value('scale_default'), dtype=np.float64, )
+        r = np.array(self._get_prop_value('scale_random_factor'), dtype=np.float64, )
         t = 0
         rr = np.random.rand(n, 3)
         if self._get_prop_value('scale_default_use_pressure'):
@@ -5298,13 +5349,13 @@ class SCATTER5_OT_create_mixin():
             f = r + (1.0 - r) * rr
             s = d * f
         # else:
-        #     s = np.ones((n, 3, ), dtype=float, )
+        #     s = np.ones((n, 3, ), dtype=np.float64, )
         
-        self._private_s_base = np.full((n, 3), d, dtype=float, )
-        self._private_s_random = np.full((n, 3), r, dtype=float, )
+        self._private_s_base = np.full((n, 3), d, dtype=np.float64, )
+        self._private_s_random = np.full((n, 3), r, dtype=np.float64, )
         self._private_s_random_random = rr
         self._private_s_random_type = np.full(n, t, dtype=int, )
-        self._private_s_change = np.zeros((n, 3), dtype=float, )
+        self._private_s_change = np.zeros((n, 3), dtype=np.float64, )
         
         self._private_s_change_random = np.random.rand(n, 3)
         
@@ -5414,12 +5465,12 @@ class SCATTER5_OT_create_mixin():
         
         # NOTE: should i do that? maybe better to run into error, set proper shape in tool itself before storing.. but i leave it here for now..
         if(type(vs) is not np.ndarray):
-            vs = np.array(vs, dtype=float, ).reshape((-1, 3))
+            vs = np.array(vs, dtype=np.float64, ).reshape((-1, 3))
         else:
             if(len(vs.shape) == 1):
                 vs.shape = (-1, 3)
         if(type(ns) is not np.ndarray):
-            ns = np.array(ns, dtype=float, ).reshape((-1, 3))
+            ns = np.array(ns, dtype=np.float64, ).reshape((-1, 3))
         else:
             if(len(ns.shape) == 1):
                 ns.shape = (-1, 3)
@@ -5472,7 +5523,7 @@ class SCATTER5_OT_create_mixin():
         d[_l:] = ee
         self._set_target_attribute_masked(me.attributes, n, d, mask=mask, )
         
-        az = np.zeros((l, 3, ), dtype=float, )
+        az = np.zeros((l, 3, ), dtype=np.float64, )
         az[:, 2] = 1.0
         for i in np.arange(l):
             v = Vector(az[i])
@@ -5484,7 +5535,7 @@ class SCATTER5_OT_create_mixin():
         d[_l:] = az
         self._set_target_attribute_masked(me.attributes, n, d, mask=mask, )
         
-        ay = np.zeros((l, 3, ), dtype=float, )
+        ay = np.zeros((l, 3, ), dtype=np.float64, )
         ay[:, 1] = 1.0
         for i in np.arange(l):
             v = Vector(ay[i])
@@ -5545,6 +5596,11 @@ class SCATTER5_OT_create_mixin():
         d.shape = (-1, 1, )
         d[_l:] = self._private_r_align.reshape(-1, 1)
         d.shape = (-1, )
+        self._set_target_attribute_masked(me.attributes, n, d, mask=mask, )
+        
+        n = 'private_r_align_vector'
+        d = self._get_target_attribute_masked(me.attributes, n, mask=mask, )
+        d[_l:] = self._private_r_align_vector
         self._set_target_attribute_masked(me.attributes, n, d, mask=mask, )
         
         n = 'private_r_up'
@@ -5628,7 +5684,7 @@ class SCATTER5_OT_create_mixin():
         me.attributes['{}normal'.format(self.attribute_prefix)].data[i].vector = nor
         
         # NOTE: rotation
-        r = self._gen_rotation(1, np.array(loc, dtype=float, ).reshape(-1, 3), np.array(nor, dtype=float, ).reshape(-1, 3), uid, )[0]
+        r = self._gen_rotation(1, np.array(loc, dtype=np.float64, ).reshape(-1, 3), np.array(nor, dtype=np.float64, ).reshape(-1, 3), uid, )[0]
         
         e = r.to_euler('XYZ')
         me.attributes['{}rotation'.format(self.attribute_prefix)].data[i].vector = e
@@ -5642,6 +5698,7 @@ class SCATTER5_OT_create_mixin():
         me.attributes['{}align_y'.format(self.attribute_prefix)].data[i].vector = v
         
         me.attributes['{}private_r_align'.format(self.attribute_prefix)].data[i].value = self._private_r_align[0]
+        me.attributes['{}private_r_align_vector'.format(self.attribute_prefix)].data[i].vector = self._private_r_align_vector[0]
         me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[i].value = self._private_r_up[0]
         me.attributes['{}private_r_base'.format(self.attribute_prefix)].data[i].vector = self._private_r_base[0]
         me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector = self._private_r_random[0]
@@ -5895,7 +5952,7 @@ class SCATTER5_OT_modify_mixin():
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -5942,7 +5999,7 @@ class SCATTER5_OT_modify_mixin():
         # return
         # # DEBUG
         
-        ds = np.zeros(l, dtype=float, )
+        ds = np.zeros(l, dtype=np.float64, )
         ds[indices] = distances
         ds = ds[mask]
         self._selection_distances = ds
@@ -5952,18 +6009,18 @@ class SCATTER5_OT_modify_mixin():
         # vs, _ = self._surface_to_global_space(vs.copy(), None, )
         # vs = vs[self._selection_indices]
         # l = len(vs)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_distances_normalized, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_distances_normalized, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
         
-        ws = np.zeros(l, dtype=float, )
+        ws = np.zeros(l, dtype=np.float64, )
         ad = self._selection_distances - falloff
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -5980,9 +6037,9 @@ class SCATTER5_OT_modify_mixin():
         # vs, _ = self._surface_to_global_space(vs.copy(), None, )
         # vs = vs[self._selection_indices]
         # l = len(self._selection_weights)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
     
@@ -6031,7 +6088,7 @@ class SCATTER5_OT_modify_mixin():
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -6042,7 +6099,7 @@ class SCATTER5_OT_modify_mixin():
         self._selection_distances = distances
         self._selection_distances_normalized = (distances - 0.0) / (radius - 0.0)
         
-        ws = np.zeros(l, dtype=float, )
+        ws = np.zeros(l, dtype=np.float64, )
         # center circle, always 1.0
         ws[center] = 1.0
         # annulus, linear transition from circle edge (1.0) to radius circle (0.0), normalized distances are it already
@@ -6059,9 +6116,9 @@ class SCATTER5_OT_modify_mixin():
         # vs, _ = self._surface_to_global_space(vs.copy(), None, )
         # vs = vs[self._selection_indices]
         # l = len(self._selection_weights)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
     
@@ -6107,12 +6164,12 @@ class SCATTER5_OT_modify_mixin():
         x2d = (x_ndc + 1.0) / 2.0
         y2d = (y_ndc + 1.0) / 2.0
         # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
+        # z = np.zeros(len(vs), dtype=np.float64, )
         # vs2d = np.c_[x2d, y2d, z]
         vs2d = np.c_[x2d, y2d]
         
         # # and normalize path from pixels to 0.0-1.0
-        # vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+        # vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
         # vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
         # vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
         
@@ -6128,7 +6185,7 @@ class SCATTER5_OT_modify_mixin():
         if(not len(indices)):
             return
         
-        ds = np.zeros(l, dtype=float, )
+        ds = np.zeros(l, dtype=np.float64, )
         ds[indices] = distances
         
         falloff = radius * self._get_prop_value('falloff')
@@ -6144,7 +6201,7 @@ class SCATTER5_OT_modify_mixin():
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -6188,18 +6245,18 @@ class SCATTER5_OT_modify_mixin():
         self._selection_mask = mask
         self._selection_indices = np.arange(l, dtype=int, )[mask]
         
-        ds = np.zeros(l, dtype=float, )
+        ds = np.zeros(l, dtype=np.float64, )
         ds[indices] = distances
         ds = ds[mask]
         self._selection_distances = ds
         self._selection_distances_normalized = (ds - 0.0) / (radius - 0.0)
         
-        ws = np.zeros(l, dtype=float, )
+        ws = np.zeros(l, dtype=np.float64, )
         ad = self._selection_distances - falloff
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -6218,9 +6275,9 @@ class SCATTER5_OT_modify_mixin():
         # vs, _ = self._surface_to_global_space(vs_orig.copy(), None, )
         # vs = vs[mask]
         # l = len(vs)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
     
@@ -6266,12 +6323,12 @@ class SCATTER5_OT_modify_mixin():
         x2d = (x_ndc + 1.0) / 2.0
         y2d = (y_ndc + 1.0) / 2.0
         # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
+        # z = np.zeros(len(vs), dtype=np.float64, )
         # vs2d = np.c_[x2d, y2d, z]
         vs2d = np.c_[x2d, y2d]
         
         # # and normalize path from pixels to 0.0-1.0
-        # vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+        # vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
         # vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
         # vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
         
@@ -6287,7 +6344,7 @@ class SCATTER5_OT_modify_mixin():
         if(not len(indices)):
             return
         
-        ds = np.zeros(l, dtype=float, )
+        ds = np.zeros(l, dtype=np.float64, )
         ds[indices] = distances
         
         falloff = radius * self._get_prop_value('falloff')
@@ -6300,7 +6357,7 @@ class SCATTER5_OT_modify_mixin():
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -6311,7 +6368,7 @@ class SCATTER5_OT_modify_mixin():
         self._selection_distances = distances
         self._selection_distances_normalized = (distances - 0.0) / (radius - 0.0)
         
-        ws = np.zeros(l, dtype=float, )
+        ws = np.zeros(l, dtype=np.float64, )
         # center circle, always 1.0
         ws[center] = 1.0
         # annulus, linear transition from circle edge (1.0) to radius circle (0.0), normalized distances are it already
@@ -6330,9 +6387,9 @@ class SCATTER5_OT_modify_mixin():
         # vs, _ = self._surface_to_global_space(vs_orig.copy(), None, )
         # vs = vs[mask]
         # l = len(vs)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
     
@@ -6369,10 +6426,10 @@ class SCATTER5_OT_modify_mixin():
         self._selection_mask = np.ones(l, dtype=bool, )
         self._selection_indices = np.arange(l, dtype=int, )
         # WATCH: not sure what will happen, should be zeros or ones?
-        self._selection_distances = np.zeros(l, dtype=float, )
+        self._selection_distances = np.zeros(l, dtype=np.float64, )
         # WATCH: not sure what will happen, should be zeros or ones?
-        self._selection_distances_normalized = np.ones(l, dtype=float, )
-        self._selection_weights = np.ones(l, dtype=float, )
+        self._selection_distances_normalized = np.ones(l, dtype=np.float64, )
+        self._selection_weights = np.ones(l, dtype=np.float64, )
         self._selection_vs_original = vs.copy()
         
         uids = self._get_target_attribute_masked(me.attributes, 'surface_uuid', )
@@ -6392,14 +6449,14 @@ class SCATTER5_OT_modify_mixin():
         
         self._selection_mask = np.zeros(l, dtype=bool, )
         self._selection_indices = np.arange(0, dtype=int, )
-        self._selection_distances = np.zeros(0, dtype=float, )
-        self._selection_distances_normalized = np.zeros(0, dtype=float, )
-        self._selection_weights = np.zeros(0, dtype=float, )
-        self._selection_vs_original = np.zeros((0, 3), dtype=float, )
-        self._selection_vs_original_world = np.zeros((0, 3), dtype=float, )
+        self._selection_distances = np.zeros(0, dtype=np.float64, )
+        self._selection_distances_normalized = np.zeros(0, dtype=np.float64, )
+        self._selection_weights = np.zeros(0, dtype=np.float64, )
+        self._selection_vs_original = np.zeros((0, 3), dtype=np.float64, )
+        self._selection_vs_original_world = np.zeros((0, 3), dtype=np.float64, )
         
         if(self._selection_type in ('INDICES_2D', 'WEIGHTS_2D', )):
-            self._selection_vs_2d = np.zeros((0, 2), dtype=float, )
+            self._selection_vs_2d = np.zeros((0, 2), dtype=np.float64, )
     
     # ------------------------------------------------------------------ selection <<<
     # ------------------------------------------------------------------ action >>>
@@ -6492,8 +6549,8 @@ class SCATTER5_OT_modify_mixin():
         elif(private_r_up == 2):
             aq = self._direction_to_rotation(nor, Vector(me.attributes['{}private_r_up_vector'.format(self.attribute_prefix)].data[i].vector), )
         
-        private_r_random = np.array(me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector, dtype=float, )
-        private_r_random_random = np.array(me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector, dtype=float, )
+        private_r_random = np.array(me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector, dtype=np.float64, )
+        private_r_random_random = np.array(me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector, dtype=np.float64, )
         err = Euler(private_r_random * private_r_random_random)
         
         mwi = surface_matrix.inverted()
@@ -6765,6 +6822,56 @@ class SCATTER5_OT_manual_brush_tool_dot(SCATTER5_OT_common_mixin, SCATTER5_OT_cr
                 if(self._mouse_active_surface_uuid != self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[ii].value):
                     self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[ii].value = self._mouse_active_surface_uuid
                 
+                # NOTE: tilt override >>>
+                if(self._get_prop_value('use_rotation_align_tilt_override')):
+                    # nor = Vector((0.0, 0.0, 1.0))
+                    # nor.rotate(Euler(
+                    #     Vector((
+                    #         # NOTE: it seems to be already in radians? by empirical evidence.. hmmm.. and to not be a mirror image needs to be negated. weird..
+                    #         -self._tilt[0],
+                    #         -self._tilt[1],
+                    #         0.0, ))
+                    # ))
+                    # nor.normalize()
+                    
+                    n = Vector((0.0, 0.0, 1.0))
+                    view = self._context_region_data.view_matrix
+                    projection = self._context_region_data.window_matrix
+                    x = ((np.pi / 2) * self._tilt[0])
+                    y = ((np.pi / 2) * self._tilt[1])
+                    _, vr, _ = view.decompose()
+                    _, pr, _ = projection.decompose()
+                    vr = vr.to_matrix()
+                    pr = pr.to_matrix()
+                    n = vr @ n
+                    n = pr @ n
+                    # n.rotate(Euler(Vector((x, y, 0.0, ))))
+                    n.rotate(Euler(Vector((y, -x, 0.0, ))))
+                    n = pr.inverted() @ n
+                    n = vr.inverted() @ n
+                    nor = n
+                    
+                    self._target.data.attributes['{}private_r_align'.format(self.attribute_prefix)].data[ii].value = 3
+                    self._target.data.attributes['{}private_r_align_vector'.format(self.attribute_prefix)].data[ii].vector = nor
+                
+                # n = Vector((0.0, 0.0, 1.0))
+                # view = self._context_region_data.view_matrix
+                # projection = self._context_region_data.window_matrix
+                # x = ((np.pi / 2) * self._tilt[0])
+                # y = ((np.pi / 2) * self._tilt[1])
+                # _, vr, _ = view.decompose()
+                # _, pr, _ = projection.decompose()
+                # vr = vr.to_matrix()
+                # pr = pr.to_matrix()
+                # n = vr @ n
+                # n = pr @ n
+                # # n.rotate(Euler(Vector((x, y, 0.0, ))))
+                # n.rotate(Euler(Vector((y, -x, 0.0, ))))
+                # n = pr.inverted() @ n
+                # n = vr.inverted() @ n
+                # debug.points(self._target, [self._mouse_3d_loc, ], [n * 10.0, ])
+                # NOTE: tilt override <<<
+                
                 if(self._modal_rotate_radians != 0.0):
                     # TODO: this is ridiculous, i need that so many lines to rotate y along z according to all rotation related attributes? i think rotation attributes system is bad.. and need to change
                     '''
@@ -6797,8 +6904,8 @@ class SCATTER5_OT_manual_brush_tool_dot(SCATTER5_OT_common_mixin, SCATTER5_OT_cr
                     elif(private_r_up == 2):
                         aq = self._direction_to_rotation(nor, Vector(me.attributes['{}private_r_up_vector'.format(self.attribute_prefix)].data[i].vector), )
                     
-                    private_r_random = np.array(me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector, dtype=float, )
-                    private_r_random_random = np.array(me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector, dtype=float, )
+                    private_r_random = np.array(me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector, dtype=np.float64, )
+                    private_r_random_random = np.array(me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector, dtype=np.float64, )
                     err = Euler(private_r_random * private_r_random_random)
                     
                     mwi = self._surface.matrix_world.inverted()
@@ -8449,8 +8556,8 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         # debug.points(self._target, origin, )
         # # DEBUG
         
-        vs = np.zeros((num_dots, 3, ), dtype=float, )
-        ns = np.zeros((num_dots, 3, ), dtype=float, )
+        vs = np.zeros((num_dots, 3, ), dtype=np.float64, )
+        ns = np.zeros((num_dots, 3, ), dtype=np.float64, )
         uids = np.zeros((num_dots, ), dtype=int, )
         
         # cone slice = right angle triangle so:
@@ -8458,8 +8565,8 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         angle = angle * 2
         
         _l = num_dots
-        _origin = np.array(origin, dtype=float, )
-        _directions = np.zeros((_l, 3, ), dtype=float, )
+        _origin = np.array(origin, dtype=np.float64, )
+        _directions = np.zeros((_l, 3, ), dtype=np.float64, )
         _rng = np.random.default_rng()
         _axes = (_rng.random((_l, 3, )) - 0.5) * 2.0
         
@@ -8482,10 +8589,10 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         # debug.points(self._target, np.full((len(_directions), 3), _origin), _directions, )
         # # DEBUG
         
-        _locs = np.zeros((_l, 3), dtype=float, )
-        _nors = np.zeros((_l, 3), dtype=float, )
+        _locs = np.zeros((_l, 3), dtype=np.float64, )
+        _nors = np.zeros((_l, 3), dtype=np.float64, )
         _idxs = np.zeros(_l, dtype=int, )
-        _dsts = np.zeros(_l, dtype=float, )
+        _dsts = np.zeros(_l, dtype=np.float64, )
         _status = np.zeros(_l, dtype=bool, )
         for i in np.arange(num_dots):
             _loc, _nor, _idx, _dst = self._bvh.ray_cast(_origin, _directions[i], )
@@ -8499,7 +8606,7 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         def distance(a, b, ):
             return ((a[:, 0] - b[:, 0]) ** 2 + (a[:, 1] - b[:, 1]) ** 2 + (a[:, 2] - b[:, 2]) ** 2) ** 0.5
         
-        _dd = distance(np.full((_l, 3, ), _origin, dtype=float, ), _locs, )
+        _dd = distance(np.full((_l, 3, ), _origin, dtype=np.float64, ), _locs, )
         _mask = _dd < max_d
         
         _cache_f_surface = ToolSessionCache._cache['arrays']['f_surface']
@@ -8583,8 +8690,8 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         epsilon_d = epsilon * 2
         
         origin = loc + (nor * d)
-        vs = np.zeros((num_dots, 3, ), dtype=float, )
-        ns = np.zeros((num_dots, 3, ), dtype=float, )
+        vs = np.zeros((num_dots, 3, ), dtype=np.float64, )
+        ns = np.zeros((num_dots, 3, ), dtype=np.float64, )
         uids = np.zeros((num_dots, ), dtype=int, )
         
         rng = np.random.default_rng()
@@ -8592,7 +8699,7 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         r = brush_radius * (rng.uniform(0.0, 1.0, num_dots) ** 0.5)
         x = r * np.cos(theta)
         y = r * np.sin(theta)
-        z = np.zeros(num_dots, dtype=float, )
+        z = np.zeros(num_dots, dtype=np.float64, )
         cpoints = np.c_[x, y, z]
         
         m = self._direction_to_rotation(nor).to_matrix().to_4x4()
@@ -8605,14 +8712,14 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
                 r = v / np.linalg.norm(v, axis=1, ).reshape((-1, 1, ))
                 return np.nan_to_num(r)
         
-        directions = normalize(cpoints - np.array(origin, dtype=float, ))
+        directions = normalize(cpoints - np.array(origin, dtype=np.float64, ))
         
         _l = num_dots
-        _origin = np.array(origin, dtype=float, )
-        _locs = np.zeros((_l, 3), dtype=float, )
-        _nors = np.zeros((_l, 3), dtype=float, )
+        _origin = np.array(origin, dtype=np.float64, )
+        _locs = np.zeros((_l, 3), dtype=np.float64, )
+        _nors = np.zeros((_l, 3), dtype=np.float64, )
         _idxs = np.zeros(_l, dtype=int, )
-        _dsts = np.zeros(_l, dtype=float, )
+        _dsts = np.zeros(_l, dtype=np.float64, )
         _status = np.zeros(_l, dtype=bool, )
         for i in np.arange(_l):
             _loc, _nor, _idx, _dst = self._bvh.ray_cast(_origin, directions[i], )
@@ -8626,7 +8733,7 @@ class SCATTER5_OT_manual_brush_tool_spray(SCATTER5_OT_common_mixin, SCATTER5_OT_
         def distance(a, b, ):
             return ((a[:, 0] - b[:, 0]) ** 2 + (a[:, 1] - b[:, 1]) ** 2 + (a[:, 2] - b[:, 2]) ** 2) ** 0.5
         
-        _dd = distance(np.full((_l, 3, ), _origin, dtype=float, ), _locs, )
+        _dd = distance(np.full((_l, 3, ), _origin, dtype=np.float64, ), _locs, )
         _mask = _dd < max_d
         
         _cache_f_surface = ToolSessionCache._cache['arrays']['f_surface']
@@ -8839,16 +8946,16 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         d = self._mouse_3d_direction
         if(self._get_prop_value('use_direction_interpolation')):
             d = self._mouse_3d_direction_interpolated
-        upvec = np.full((l, 3), d, dtype=float, )
+        upvec = np.full((l, 3), d, dtype=np.float64, )
         
         def get_vectors(length, where, what, ):
-            a = np.zeros(length * 3, dtype=float, )
+            a = np.zeros(length * 3, dtype=np.float64, )
             where.foreach_get(what, a)
             a.shape = (-1, 3)
             return a
         
         def get_floats(length, where, what, ):
-            a = np.zeros(length, dtype=float, )
+            a = np.zeros(length, dtype=np.float64, )
             where.foreach_get(what, a)
             a.shape = (-1, 1)
             return a
@@ -8894,7 +9001,7 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         #     vs.append(v)
         #     ns.append(me.attributes['{}align_z'.format(self.attribute_prefix)].data[i].vector)
         #     uids.append(u)
-        # vs, ns = self._surfaces_to_world_space(np.array(vs, dtype=float, ), np.array(ns, dtype=float, ), np.array(uids, dtype=int, ), )
+        # vs, ns = self._surfaces_to_world_space(np.array(vs, dtype=np.float64, ), np.array(ns, dtype=np.float64, ), np.array(uids, dtype=int, ), )
         # debug.points(self._target, vs, ns)
         # # DEBUG
         
@@ -9115,8 +9222,8 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         epsilon_d = epsilon * 2
         
         origin = loc + (nor * d)
-        vs = np.zeros((num_dots, 3, ), dtype=float, )
-        ns = np.zeros((num_dots, 3, ), dtype=float, )
+        vs = np.zeros((num_dots, 3, ), dtype=np.float64, )
+        ns = np.zeros((num_dots, 3, ), dtype=np.float64, )
         uids = np.zeros((num_dots, ), dtype=int, )
         
         # cone slice = right angle triangle so:
@@ -9124,8 +9231,8 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         angle = angle * 2
         
         _l = num_dots
-        _origin = np.array(origin, dtype=float, )
-        _directions = np.zeros((_l, 3, ), dtype=float, )
+        _origin = np.array(origin, dtype=np.float64, )
+        _directions = np.zeros((_l, 3, ), dtype=np.float64, )
         _rng = np.random.default_rng()
         _axes = (_rng.random((_l, 3, )) - 0.5) * 2.0
         
@@ -9144,10 +9251,10 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
             _d.rotate(_q)
             _directions[i] = _d
         
-        _locs = np.zeros((_l, 3), dtype=float, )
-        _nors = np.zeros((_l, 3), dtype=float, )
+        _locs = np.zeros((_l, 3), dtype=np.float64, )
+        _nors = np.zeros((_l, 3), dtype=np.float64, )
         _idxs = np.zeros(_l, dtype=int, )
-        _dsts = np.zeros(_l, dtype=float, )
+        _dsts = np.zeros(_l, dtype=np.float64, )
         _status = np.zeros(_l, dtype=bool, )
         for i in np.arange(num_dots):
             _loc, _nor, _idx, _dst = self._bvh.ray_cast(_origin, _directions[i], )
@@ -9161,7 +9268,7 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         def distance(a, b, ):
             return ((a[:, 0] - b[:, 0]) ** 2 + (a[:, 1] - b[:, 1]) ** 2 + (a[:, 2] - b[:, 2]) ** 2) ** 0.5
         
-        _dd = distance(np.full((_l, 3, ), _origin, dtype=float, ), _locs, )
+        _dd = distance(np.full((_l, 3, ), _origin, dtype=np.float64, ), _locs, )
         _mask = _dd < max_d
         
         _indices = np.arange(_l)
@@ -9245,8 +9352,8 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         epsilon_d = epsilon * 2
         
         origin = loc + (nor * d)
-        vs = np.zeros((num_dots, 3, ), dtype=float, )
-        ns = np.zeros((num_dots, 3, ), dtype=float, )
+        vs = np.zeros((num_dots, 3, ), dtype=np.float64, )
+        ns = np.zeros((num_dots, 3, ), dtype=np.float64, )
         uids = np.zeros((num_dots, ), dtype=int, )
         
         rng = np.random.default_rng()
@@ -9254,7 +9361,7 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         r = brush_radius * (rng.uniform(0.0, 1.0, num_dots) ** 0.5)
         x = r * np.cos(theta)
         y = r * np.sin(theta)
-        z = np.zeros(num_dots, dtype=float, )
+        z = np.zeros(num_dots, dtype=np.float64, )
         cpoints = np.c_[x, y, z]
         
         m = self._direction_to_rotation(nor).to_matrix().to_4x4()
@@ -9267,14 +9374,14 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
                 r = v / np.linalg.norm(v, axis=1, ).reshape((-1, 1, ))
                 return np.nan_to_num(r)
         
-        directions = normalize(cpoints - np.array(origin, dtype=float, ))
+        directions = normalize(cpoints - np.array(origin, dtype=np.float64, ))
         
         _l = num_dots
-        _origin = np.array(origin, dtype=float, )
-        _locs = np.zeros((_l, 3), dtype=float, )
-        _nors = np.zeros((_l, 3), dtype=float, )
+        _origin = np.array(origin, dtype=np.float64, )
+        _locs = np.zeros((_l, 3), dtype=np.float64, )
+        _nors = np.zeros((_l, 3), dtype=np.float64, )
         _idxs = np.zeros(_l, dtype=int, )
-        _dsts = np.zeros(_l, dtype=float, )
+        _dsts = np.zeros(_l, dtype=np.float64, )
         _status = np.zeros(_l, dtype=bool, )
         for i in np.arange(_l):
             _loc, _nor, _idx, _dst = self._bvh.ray_cast(_origin, directions[i], )
@@ -9288,7 +9395,7 @@ class SCATTER5_OT_manual_brush_tool_spray_aligned(SCATTER5_OT_common_mixin, SCAT
         def distance(a, b, ):
             return ((a[:, 0] - b[:, 0]) ** 2 + (a[:, 1] - b[:, 1]) ** 2 + (a[:, 2] - b[:, 2]) ** 2) ** 0.5
         
-        _dd = distance(np.full((_l, 3, ), _origin, dtype=float, ), _locs, )
+        _dd = distance(np.full((_l, 3, ), _origin, dtype=np.float64, ), _locs, )
         _mask = _dd < max_d
         
         _cache_f_surface = ToolSessionCache._cache['arrays']['f_surface']
@@ -9480,7 +9587,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         areas = np.nan_to_num(areas, copy=True, nan=0.0, posinf=0.0, neginf=0.0, )
         
         # drawn polygon in 2d to arrays
-        vertices = np.array(self._lasso_path, dtype=float, )
+        vertices = np.array(self._lasso_path, dtype=np.float64, )
         indices = np.array(mathutils.geometry.tessellate_polygon((vertices, )), dtype=int, )
         
         # adjust coordinates to be the same for both, i.e. convert to normalized 2d coordinates x 0.0-1.0, y 0.0-1.0
@@ -9499,18 +9606,18 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         x2d = (x_ndc + 1.0) / 2.0
         y2d = (y_ndc + 1.0) / 2.0
         # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
+        # z = np.zeros(len(vs), dtype=np.float64, )
         # vs2d = np.c_[x2d, y2d, z]
         vs2d = np.c_[x2d, y2d]
         
         # and normalize path from pixels to 0.0-1.0
-        vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+        vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
         vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
         vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
         
         # slice box border points
-        pmin_xy = np.array([np.min(vertices2d[:, 0]), np.min(vertices2d[:, 1]), ], dtype=float, )
-        pmax_xy = np.array([np.max(vertices2d[:, 0]), np.max(vertices2d[:, 1]), ], dtype=float, )
+        pmin_xy = np.array([np.min(vertices2d[:, 0]), np.min(vertices2d[:, 1]), ], dtype=np.float64, )
+        pmax_xy = np.array([np.max(vertices2d[:, 0]), np.max(vertices2d[:, 1]), ], dtype=np.float64, )
         
         vtris = vs2d[tris]
         # slice between min to max in x and y
@@ -9524,7 +9631,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         rvs2d = vs2d[rtris]
         
         # bvh from path polygons
-        z = np.zeros(len(vertices2d), dtype=float, )
+        z = np.zeros(len(vertices2d), dtype=np.float64, )
         vertices2d_3d = np.c_[vertices2d[:, 0], vertices2d[:, 1], z, ]
         pbvh = BVHTree.FromPolygons(vertices2d_3d.tolist(), indices.tolist(), all_triangles=True, epsilon=0.0, )
         
@@ -9544,7 +9651,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         
         # when drawn area does not cover any surface vertex i need to raycast area vertices to surface
         if(not len(selected_tris_indices)):
-            z = np.zeros(len(vs2d), dtype=float, )
+            z = np.zeros(len(vs2d), dtype=np.float64, )
             vs2d_3d = np.c_[vs2d[:, 0], vs2d[:, 1], z, ]
             s_bvh = BVHTree.FromPolygons(vs2d_3d.tolist(), tris.tolist(), all_triangles=True, epsilon=0.0, )
             s_rc_indices = np.zeros(len(vertices2d), dtype=int, )
@@ -9608,13 +9715,13 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         gen_nums = gen_nums.astype(int)
         gen_nums_max = np.max(gen_nums)
         
-        points = np.zeros((np.sum(gen_nums), 3), dtype=float, )
+        points = np.zeros((np.sum(gen_nums), 3), dtype=np.float64, )
         rng = np.random.default_rng()
         pi = 0
         for ni, n in enumerate(gen_nums):
-            a = np.full((n, 3), sel_vertices[ni][0], dtype=float, )
-            b = np.full((n, 3), sel_vertices[ni][1], dtype=float, )
-            c = np.full((n, 3), sel_vertices[ni][2], dtype=float, )
+            a = np.full((n, 3), sel_vertices[ni][0], dtype=np.float64, )
+            b = np.full((n, 3), sel_vertices[ni][1], dtype=np.float64, )
+            c = np.full((n, 3), sel_vertices[ni][2], dtype=np.float64, )
             r1 = rng.random(n).reshape((-1, 1))
             r2 = rng.random(n).reshape((-1, 1))
             ps = (1 - np.sqrt(r1)) * a + (np.sqrt(r1) * (1 - r2)) * b + (np.sqrt(r1) * r2) * c
@@ -9628,7 +9735,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         pindices = np.arange(len(points), dtype=int, )
         
         # now 3d points to 2d 0.0-1.0 coords
-        z = np.ones(len(points), dtype=float, )
+        z = np.ones(len(points), dtype=np.float64, )
         vs = np.c_[points[:, 0], points[:, 1], points[:, 2], z]
         vs = np.dot(view, vs.T)[0:4].T.reshape((-1, 4))
         vs = np.dot(projection, vs.T)[0:4].T.reshape((-1, 4))
@@ -9707,7 +9814,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
             points = points[mask]
         
         # now, generate normals from points, i have handy function for that already
-        normals = np.zeros(points.shape, dtype=float, )
+        normals = np.zeros(points.shape, dtype=np.float64, )
         # and get uids if i got face index for free here
         uids = np.zeros(len(points), dtype=int, )
         f_surface = ToolSessionCache._cache['arrays']['f_surface']
@@ -9726,10 +9833,10 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
     
     def _area_erase(self, ):
         # drawn polygon
-        vertices = np.array(self._lasso_path, dtype=float, )
+        vertices = np.array(self._lasso_path, dtype=np.float64, )
         tris = np.array(mathutils.geometry.tessellate_polygon((vertices, )), dtype=int, )
         # and normalize from pixels to 0.0-1.0
-        vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+        vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
         vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
         vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
         
@@ -9739,7 +9846,7 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         vs, _ = self._surfaces_to_world_space(vs, None, uids, )
         
         # to 2d ndc
-        z = np.ones(len(vs), dtype=float, )
+        z = np.ones(len(vs), dtype=np.float64, )
         vs = np.c_[vs[:, 0], vs[:, 1], vs[:, 2], z]
         # model = self._surface.matrix_world
         view = self._context_region_data.view_matrix
@@ -9758,13 +9865,13 @@ class SCATTER5_OT_manual_brush_tool_lasso_fill(SCATTER5_OT_common_mixin, SCATTER
         x2d = (x_ndc + 1.0) / 2.0
         y2d = (y_ndc + 1.0) / 2.0
         # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
+        # z = np.zeros(len(vs), dtype=np.float64, )
         # vs2d = np.c_[x2d, y2d, z]
         vs2d = np.c_[x2d, y2d]
         
         m = np.zeros(len(vs), dtype=bool, )
         epsilon = 0.001
-        a = np.c_[vertices2d[:, 0], vertices2d[:, 1], np.zeros(len(vertices2d), dtype=float, )]
+        a = np.c_[vertices2d[:, 0], vertices2d[:, 1], np.zeros(len(vertices2d), dtype=np.float64, )]
         bvh = BVHTree.FromPolygons(a.tolist(), tris.tolist(), all_triangles=True, epsilon=0.0, )
         for i, v2d in enumerate(vs2d):
             v = [v2d[0], v2d[1], 0.0]
@@ -10112,7 +10219,7 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
         # # FIXMENOT: NOTWATCH: NOTTODO: NOTE: if i don't copy here, it will draw just mess, even though values, shape and dtype is the same. what is happening???
         # self._w_points = vs.copy()
         
-        self._w_points = self._sample_vs + np.array(self._mouse_3d_loc, dtype=float, )
+        self._w_points = self._sample_vs + np.array(self._mouse_3d_loc, dtype=np.float64, )
         ToolWidgets._tag_redraw()
         
         # # # DEBUG
@@ -10192,7 +10299,7 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
             # zero out so it is ready for next
             self._modal_scale_factor = 0.0
         
-        self._w_points = self._sample_vs + np.array(self._mouse_3d_loc, dtype=float, )
+        self._w_points = self._sample_vs + np.array(self._mouse_3d_loc, dtype=np.float64, )
         ToolWidgets._tag_redraw()
         
         # NOTE: to session tool cache, so i can get it back on next tool run
@@ -10215,7 +10322,7 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
         
         # # # DEBUG
         # loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
-        # vs = self._sample_vs + np.array(loc, dtype=float, )
+        # vs = self._sample_vs + np.array(loc, dtype=np.float64, )
         # ns = self._sample_ns
         # debug.points(self._target, vs, ns, )
         # # # DEBUG
@@ -10226,10 +10333,10 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
         loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
         me = self._target.data
         
-        vs = self._sample_vs + np.array(loc, dtype=float, )
+        vs = self._sample_vs + np.array(loc, dtype=np.float64, )
         ns = self._sample_ns
         
-        surface_normals = np.zeros((len(ns), 3), dtype=float, )
+        surface_normals = np.zeros((len(ns), 3), dtype=np.float64, )
         bnor = np.array(nor)
         for i, v in enumerate(vs):
             l, n, ii, d = self._bvh.ray_cast(v, bnor)
@@ -10305,7 +10412,7 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
         
         # # DEBUG
         # # _vs, _ns = self._surfaces_to_world_space(vs, ns, self._sample_uids)
-        # _vs = self._sample_vs + np.array(loc, dtype=float, )
+        # _vs = self._sample_vs + np.array(loc, dtype=np.float64, )
         # _ns = self._sample_ns
         # debug.points(self._target, _vs, _ns)
         # # DEBUG
@@ -10702,7 +10809,7 @@ class SCATTER5_OT_manual_brush_tool_clone(SCATTER5_OT_common_mixin, SCATTER5_OT_
         
         self._last_random_scale_factor = 0.0
         
-        self._w_points = np.zeros((0, 3), dtype=float, )
+        self._w_points = np.zeros((0, 3), dtype=np.float64, )
         self._w_rotate_steps = 0
         
         # NOTE: get from session tool cache, if available
@@ -11058,7 +11165,7 @@ class SCATTER5_OT_manual_brush_tool_eraser(SCATTER5_OT_common_mixin, SCATTER5_OT
     def _action_finish(self, ):
         super()._action_finish()
         
-        self._w_points = np.zeros((0, 3), dtype=float, )
+        self._w_points = np.zeros((0, 3), dtype=np.float64, )
     
     def _execute(self, ):
         if(self._get_prop_value('mode') == '2D'):
@@ -11132,7 +11239,7 @@ class SCATTER5_OT_manual_brush_tool_eraser(SCATTER5_OT_common_mixin, SCATTER5_OT
         
         # NOTE: brush specific props..
         
-        self._w_points = np.zeros((0, 3), dtype=float, )
+        self._w_points = np.zeros((0, 3), dtype=np.float64, )
 
 
 # DONE: try to fix weird bigger gaps between instances that are sometimes happening (i notice it mostly at starting position), no idea what is causing it..
@@ -11343,7 +11450,7 @@ class SCATTER5_OT_manual_brush_tool_dilute(SCATTER5_OT_common_mixin, SCATTER5_OT
     def _action_finish(self, ):
         super()._action_finish()
         
-        self._w_points = np.zeros((0, 3), dtype=float, )
+        self._w_points = np.zeros((0, 3), dtype=np.float64, )
     
     def _dilute_action(self, ):
         loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
@@ -11435,7 +11542,7 @@ class SCATTER5_OT_manual_brush_tool_dilute(SCATTER5_OT_common_mixin, SCATTER5_OT
         
         # NOTE: brush specific props..
         
-        self._w_points = np.zeros((0, 3), dtype=float, )
+        self._w_points = np.zeros((0, 3), dtype=np.float64, )
 
 
 # ------------------------------------------------------------------ destroy brushes <<<
@@ -11544,7 +11651,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
             ii = np.array(g, dtype=int, )
             
             # make direction normals from circle split to len(group) pieces
-            c = np.zeros((l, 2), dtype=float, )
+            c = np.zeros((l, 2), dtype=np.float64, )
             angstep = 2 * np.pi / l
             a = np.arange(l, dtype=int, )
             c[:, 0] = 0.0 + (np.sin(a * angstep) * 1.0)
@@ -11596,7 +11703,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
             np.min(hvs[:, 0]) + ((np.max(hvs[:, 0]) - np.min(hvs[:, 0])) / 2),
             np.min(hvs[:, 1]) + ((np.max(hvs[:, 1]) - np.min(hvs[:, 1])) / 2),
             0.0,
-        ], dtype=float, )
+        ], dtype=np.float64, )
         bvs = bvs - center
         
         # TODO: is there some way to have this adjusted to overall dimensions? or average distance between points? or something else?
@@ -11672,7 +11779,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         loc2d = Vector((loc.x, loc.y, 0.0))
         
         l = len(me.vertices)
-        vs = np.zeros(l * 3, dtype=float, )
+        vs = np.zeros(l * 3, dtype=np.float64, )
         me.vertices.foreach_get('co', vs)
         vs.shape = (-1, 3)
         
@@ -11689,7 +11796,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         bm.to_mesh(me)
         bm.free()
         
-        vs = np.zeros(l * 3, dtype=float, )
+        vs = np.zeros(l * 3, dtype=np.float64, )
         me.vertices.foreach_get('co', vs)
         vs.shape = (-1, 3)
         m = np.zeros(len(vs), dtype=bool, )
@@ -11842,7 +11949,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         if(self._get_prop_value('radius_pressure')):
             radius = radius * self._pressure
         
-        vs = np.zeros(l * 3, dtype=float, )
+        vs = np.zeros(l * 3, dtype=np.float64, )
         me.vertices.foreach_get('co', vs)
         vs.shape = (-1, 3)
         if(not len(vs)):
@@ -11874,7 +11981,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -11921,7 +12028,7 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         # return
         # # DEBUG
         
-        ds = np.zeros(l, dtype=float, )
+        ds = np.zeros(l, dtype=np.float64, )
         ds[indices] = distances
         ds = ds[mask]
         self._selection_distances = ds
@@ -11931,18 +12038,18 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         # vs, _ = self._surface_to_global_space(vs.copy(), None, )
         # vs = vs[self._selection_indices]
         # l = len(vs)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_distances_normalized, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_distances_normalized, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # DEBUG
         
-        ws = np.zeros(l, dtype=float, )
+        ws = np.zeros(l, dtype=np.float64, )
         ad = self._selection_distances - falloff
         
         # DONE: RuntimeWarning: divide by zero encountered in true_divide
         if(radius == falloff):
-            nd = np.ones(len(ad), dtype=float, )
+            nd = np.ones(len(ad), dtype=np.float64, )
         else:
             nd = 1.0 - ((ad - 0.0) / ((radius - falloff) - 0.0))
         
@@ -11960,9 +12067,9 @@ class SCATTER5_OT_manual_brush_tool_smooth(SCATTER5_OT_common_mixin, SCATTER5_OT
         # # # vs, _ = self._surface_to_global_space(vs.copy(), None, )
         # vs = vs[self._selection_indices]
         # l = len(self._selection_weights)
-        # ns = np.zeros((l, 3), dtype=float, )
-        # z = np.zeros(l, dtype=float, )
-        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=float, )]
+        # ns = np.zeros((l, 3), dtype=np.float64, )
+        # z = np.zeros(l, dtype=np.float64, )
+        # cs = np.c_[self._selection_weights, z, z, np.ones(l, dtype=np.float64, )]
         # debug.points(self._target, vs, ns, cs, )
         # # # DEBUG
     
@@ -12286,12 +12393,12 @@ class SCATTER5_OT_manual_brush_tool_move(SCATTER5_OT_common_mixin, SCATTER5_OT_c
             weights = self._selection_weights
             il = self._brush_initial_location
             d = Vector(il - loc)
-            ds = np.full((len(self._vs), 3), d, dtype=float, )
+            ds = np.full((len(self._vs), 3), d, dtype=np.float64, )
             wds = ds * (1.0 - weights.reshape((-1, 1, )))
             vs = self._vs + wds
-            vs += np.array(loc, dtype=float, )
+            vs += np.array(loc, dtype=np.float64, )
         else:
-            vs = self._vs + np.array(loc, dtype=float, )
+            vs = self._vs + np.array(loc, dtype=np.float64, )
         
         # # DEBUG
         # debug.points(self._target, vs, )
@@ -12933,7 +13040,7 @@ class SCATTER5_OT_manual_brush_tool_random_rotation(SCATTER5_OT_common_mixin, SC
         me = self._target.data
         
         indices = self._selection_indices
-        weights = np.zeros(len(me.vertices), dtype=float, )
+        weights = np.zeros(len(me.vertices), dtype=np.float64, )
         weights[indices] = self._selection_weights
         
         uids = self._get_target_attribute_masked(me.attributes, 'surface_uuid', )
@@ -13233,7 +13340,7 @@ class SCATTER5_OT_manual_brush_tool_comb(SCATTER5_OT_common_mixin, SCATTER5_OT_c
         me = self._target.data
         
         indices = self._selection_indices
-        weights = np.zeros(len(me.vertices), dtype=float, )
+        weights = np.zeros(len(me.vertices), dtype=np.float64, )
         weights[indices] = self._selection_weights
         
         d = self._mouse_3d_direction.copy()
@@ -13332,7 +13439,7 @@ class SCATTER5_OT_manual_brush_tool_comb(SCATTER5_OT_common_mixin, SCATTER5_OT_c
         me = self._target.data
         
         indices = self._selection_indices
-        weights = np.zeros(len(me.vertices), dtype=float, )
+        weights = np.zeros(len(me.vertices), dtype=np.float64, )
         weights[indices] = self._selection_weights
         
         d = self._mouse_3d_direction.copy()
@@ -13847,7 +13954,7 @@ class SCATTER5_OT_manual_brush_tool_spin(SCATTER5_OT_common_mixin, SCATTER5_OT_c
         me = self._target.data
         
         indices = self._selection_indices
-        weights = np.zeros(len(me.vertices), dtype=float, )
+        weights = np.zeros(len(me.vertices), dtype=np.float64, )
         weights[indices] = self._selection_weights
         
         # NOTE: this is not for strictly unique number per particle, but having seed per particles really slow it down.. so this result in stable rotation increment per instance at current state, if some are removed, than it changes, but while in brush it will get the same random number per instance..
@@ -14363,7 +14470,7 @@ class SCATTER5_OT_manual_brush_tool_scale_set(SCATTER5_OT_common_mixin, SCATTER5
         indices = self._selection_indices
         me = self._target.data
         
-        r = np.array(self._get_prop_value('scale_random_factor'), dtype=float, )
+        r = np.array(self._get_prop_value('scale_random_factor'), dtype=np.float64, )
         if(self._get_prop_value('scale_random_type') == 'UNIFORM'):
             t = 0
         elif(self._get_prop_value('scale_random_type') == 'VECTORIAL'):
@@ -14538,13 +14645,13 @@ class SCATTER5_OT_manual_brush_tool_grow_shrink(SCATTER5_OT_common_mixin, SCATTE
         me = self._target.data
         
         indices = self._selection_indices
-        weights = np.zeros(len(me.vertices), dtype=float, )
+        weights = np.zeros(len(me.vertices), dtype=np.float64, )
         weights[indices] = self._selection_weights
         
         for i in indices:
             ii = self._get_masked_index_to_target_vertex_index(i, )
             
-            change = np.array(self._get_prop_value('change'), dtype=float, )
+            change = np.array(self._get_prop_value('change'), dtype=np.float64, )
             
             # NOTE: apply falloff
             change = change * weights[i]
@@ -14559,14 +14666,14 @@ class SCATTER5_OT_manual_brush_tool_grow_shrink(SCATTER5_OT_common_mixin, SCATTE
                 change = -change
             
             if(self._get_prop_value('use_change_random')):
-                rnd = np.array(me.attributes['{}private_s_change_random'.format(self.attribute_prefix)].data[ii].vector, dtype=float, )
+                rnd = np.array(me.attributes['{}private_s_change_random'.format(self.attribute_prefix)].data[ii].vector, dtype=np.float64, )
                 rr = self._get_prop_value('change_random_range')
                 rv = rr[0] + (rr[1] - rr[0]) * rnd[1]
                 change = change * rv
             
             if(self._get_prop_value('use_limits')):
-                s = np.array(me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[ii].vector, dtype=float, )
-                ch = np.array(me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[ii].vector, dtype=float, )
+                s = np.array(me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[ii].vector, dtype=np.float64, )
+                ch = np.array(me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[ii].vector, dtype=np.float64, )
                 r = change.copy()
                 minv, maxv = self._get_prop_value('limits')
                 
@@ -14594,7 +14701,7 @@ class SCATTER5_OT_manual_brush_tool_grow_shrink(SCATTER5_OT_common_mixin, SCATTE
                 else:
                     r[2] = ch[2] + r[2]
             else:
-                ch = np.array(me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[ii].vector, dtype=float, )
+                ch = np.array(me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[ii].vector, dtype=np.float64, )
                 r = ch + change
             
             me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[ii].vector = r
@@ -14786,7 +14893,7 @@ class SCATTER5_OT_manual_brush_tool_object_set(SCATTER5_OT_common_mixin, SCATTER
         
         # # DEBUG
         # l = len(self._target.data.vertices)
-        # vs = np.zeros(l * 3, dtype=float, )
+        # vs = np.zeros(l * 3, dtype=np.float64, )
         # self._target.data.vertices.foreach_get('co', vs, )
         # vs.shape = (-1, 3)
         # self._w_points = vs
@@ -15183,7 +15290,7 @@ class SCATTER5_OT_manual_brush_tool_free_move(SCATTER5_OT_common_mixin, SCATTER5
         cx = x[0] + ((x[1] - x[0]) / 2)
         cy = y[0] + ((y[1] - y[0]) / 2)
         cz = z[0] + ((z[1] - z[0]) / 2)
-        c = np.array([cx, cy, cz, ], dtype=float, )
+        c = np.array([cx, cy, cz, ], dtype=np.float64, )
         self._center = c
         
         self._start_2d = self._mouse_2d_region.copy()
@@ -15204,8 +15311,8 @@ class SCATTER5_OT_manual_brush_tool_free_move(SCATTER5_OT_common_mixin, SCATTER5
         weights = self._selection_weights
         
         # NOTE: apply falloff
-        diff = np.array(diff, dtype=float, )
-        diff = np.full((len(indices), 3), diff, dtype=float, )
+        diff = np.array(diff, dtype=np.float64, )
+        diff = np.full((len(indices), 3), diff, dtype=np.float64, )
         diff = diff * weights.reshape(-1, 1)
         
         me = self._target.data
@@ -15218,7 +15325,7 @@ class SCATTER5_OT_manual_brush_tool_free_move(SCATTER5_OT_common_mixin, SCATTER5
         self._target.data.update()
         
         self._w_origins = self._locations[indices].copy()
-        self._w_destinations = self._w_origins + np.array(diff, dtype=float, )
+        self._w_destinations = self._w_origins + np.array(diff, dtype=np.float64, )
     
     @verbose
     def _action_drop(self, ):
@@ -15634,18 +15741,18 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         
         l = len(me.vertices)
         
-        _rotation = np.zeros(l * 3, dtype=float, )
+        _rotation = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}rotation'.format(self.attribute_prefix)].data.foreach_get('vector', _rotation, )
         _rotation.shape = (-1, 3)
         
-        _private_r_base = np.zeros(l * 3, dtype=float, )
+        _private_r_base = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}private_r_base'.format(self.attribute_prefix)].data.foreach_get('vector', _private_r_base, )
         _private_r_base.shape = (-1, 3)
         
-        _align_z = np.zeros((l * 3), dtype=float, )
+        _align_z = np.zeros((l * 3), dtype=np.float64, )
         me.attributes['{}align_z'.format(self.attribute_prefix)].data.foreach_get('vector', _align_z, )
         _align_z.shape = (-1, 3)
-        _align_y = np.zeros((l * 3), dtype=float, )
+        _align_y = np.zeros((l * 3), dtype=np.float64, )
         me.attributes['{}align_y'.format(self.attribute_prefix)].data.foreach_get('vector', _align_y, )
         _align_y.shape = (-1, 3)
         
@@ -15657,9 +15764,9 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         
         # ---------------------------------------------------------------------
         
-        rotation = np.zeros((len(indices), 3), dtype=float, )
-        align_z = np.zeros((len(indices), 3), dtype=float, )
-        align_y = np.zeros((len(indices), 3), dtype=float, )
+        rotation = np.zeros((len(indices), 3), dtype=np.float64, )
+        align_z = np.zeros((len(indices), 3), dtype=np.float64, )
+        align_y = np.zeros((len(indices), 3), dtype=np.float64, )
         for i in range(len(indices)):
             v = Vector((0.0, 0.0, 1.0))
             v.rotate(Euler(private_r_base[i]))
@@ -15686,26 +15793,26 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         l = len(me.vertices)
         
         # get all..
-        _scale = np.zeros(l * 3, dtype=float, )
+        _scale = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}scale'.format(self.attribute_prefix)].data.foreach_get('vector', _scale, )
         _scale.shape = (-1, 3)
         
-        _private_s_base = np.zeros(l * 3, dtype=float, )
+        _private_s_base = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}private_s_base'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_base, )
         _private_s_base.shape = (-1, 3)
         
-        _private_s_random = np.zeros(l * 3, dtype=float, )
+        _private_s_random = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}private_s_random'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_random, )
         _private_s_random.shape = (-1, 3)
         
-        _private_s_random_random = np.zeros(l * 3, dtype=float, )
+        _private_s_random_random = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_random_random, )
         _private_s_random_random.shape = (-1, 3)
         
         _private_s_random_type = np.zeros(l, dtype=int, )
         me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data.foreach_get('value', _private_s_random_type, )
         
-        _private_s_change = np.zeros(l * 3, dtype=float, )
+        _private_s_change = np.zeros(l * 3, dtype=np.float64, )
         me.attributes['{}private_s_change'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_change, )
         _private_s_change.shape = (-1, 3)
         
@@ -15758,13 +15865,13 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         allowed_mask = self._get_target_active_mask()
         
         # get target vertices
-        vs = np.zeros(len(self._target.data.vertices) * 3, dtype=float, )
+        vs = np.zeros(len(self._target.data.vertices) * 3, dtype=np.float64, )
         self._target.data.vertices.foreach_get('co', vs, )
         vs.shape = (-1, 3, )
         vs = vs[allowed_mask]
         
         # transform to screen space
-        # model = np.array(self._surface.matrix_world, dtype=float, )
+        # model = np.array(self._surface.matrix_world, dtype=np.float64, )
         uids = np.zeros(len(self._target.data.vertices), dtype=int, )
         self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data.foreach_get('value', uids, )
         uids = uids[allowed_mask]
@@ -15772,8 +15879,8 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         vs, _ = self._surfaces_to_world_space(vs, None, uids, )
         world_points = vs.copy()
         
-        view = np.array(self._context_region_data.view_matrix, dtype=float, )
-        projection = np.array(self._context_region_data.window_matrix, dtype=float, )
+        view = np.array(self._context_region_data.view_matrix, dtype=np.float64, )
+        projection = np.array(self._context_region_data.window_matrix, dtype=np.float64, )
         
         vs = np.c_[vs, np.ones(len(vs), dtype=vs.dtype, )]
         # vs = np.dot(model, vs.T)[0:4].T.reshape((-1, 4))
@@ -15793,12 +15900,12 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         # z2d = (z_ndc + 1.0) / 2.0
         
         # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
+        # z = np.zeros(len(vs), dtype=np.float64, )
         # vs2d = np.c_[x2d, y2d, z]
         # vs2d = np.c_[x2d, y2d, z2d]
         vs2d = np.c_[x2d, y2d, ]
         # # and normalize path from pixels to 0.0-1.0
-        # vertices2d = np.zeros((len(vertices), 2), dtype=float, )
+        # vertices2d = np.zeros((len(vertices), 2), dtype=np.float64, )
         # vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
         # vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
         # to pixel coordinates
@@ -15842,7 +15949,7 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
         
         # # # DEBUG
         # vs = vs2d.copy()
-        # # vs = np.c_[vs[:, 0], vs[:, 1], np.zeros(len(vs), dtype=float, )]
+        # # vs = np.c_[vs[:, 0], vs[:, 1], np.zeros(len(vs), dtype=np.float64, )]
         # # vs = vs.astype(np.float32)
         # # vs[:, 0] = vs[:, 0] / self._context_region.width
         # # vs[:, 1] = vs[:, 1] / self._context_region.height
@@ -16066,192 +16173,190 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
 
 
 # ------------------------------------------------------------------ special brushes <<<
+# ------------------------------------------------------------------ physics brushes >>>
 
 
-"""
-class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTER5_OT_manual_brush_tool_base, ):
-    bl_idname = "scatter5.manual_brush_tool_manipulator"
-    bl_label = "Manipulator"
-    bl_description = "Manipulator"
+class SCATTER5_OT_manual_brush_tool_heaper(SCATTER5_OT_common_mixin, SCATTER5_OT_create_mixin, SCATTER5_OT_manual_brush_tool_base, ):
+    bl_idname = "scatter5.manual_brush_tool_heaper"
+    bl_label = "Heaper Brush"
+    bl_description = "Heaper Brush"
     bl_options = {'INTERNAL', }
     
-    tool_id = "scatter5.manual_brush_tool_manipulator"
-    tool_category = 'SPECIAL'
-    tool_label = "Manipulator"
+    tool_id = "scatter5.manual_brush_tool_heaper"
+    tool_category = 'CREATE'
+    tool_label = "Heaper Brush"
     tool_gesture_definitions = {
         '__gesture_primary__': {
-            'name': 'Swap Gizmo',
-            'function': '_swap_mode',
-            'arguments': {},
-            'widget': 'FUNCTION_CALL',
+            'property': 'drop_height',
+            'datatype': 'float',
+            'change': 1 / 100,
+            'change_pixels': 1,
+            'change_wheel': 20 * 10,
+            'text': '{}: {:.3f}',
+            'name': 'Drop Height',
+            'widget': 'LENGTH_3D',
+        },
+        '__gesture_secondary__': {
+            'property': 'max_alive',
+            'datatype': 'int',
+            'change': 1,
+            'change_pixels': 5,
+            'change_wheel': 20,
+            'text': '{}: {:d}',
+            'name': 'Max Alive',
+            'widget': 'TOOLTIP_3D',
         },
     }
     tool_gesture_space = '3D'
     tool_infobox = (
-        "• Select: LMB",
-        "• Select Add: SHIFT+LMB",
-        "• Select Sub: CTRL+SHIFT+LMB",
-        "• Mode: SPACE",
+        "• Draw: LMB",
+        "• Erase Simulation Objects: CTRL+LMB",
     )
     
-    tool_widget = "OBJECT_GGT_sc5_manipulator"
-    
-    icon = "EMPTY_ARROWS"
-    dat_icon = "SCATTER5_MANIPULATOR"
+    icon = "W_CLICK"
+    dat_icon = "SCATTER5_CLICK"
     
     # ---------------------------------------------------------------------------------------------------
-    # NOTE: legacy brush code
+    # NOTE: overrides
+    
+    def _store_vertex_before(self, loc, nor, uid, ):
+        # # NOTE: do some post modifications if needed, like aligning axis, or similar stuff
+        # # NOTE: return False if nothing can be stored because of some condition
+        # if(self._get_prop_value('use_align_y_to_stroke')):
+        #     # NOTE: if brush is invoked by shortcut and mouse is not moved, following will fail and point will be rejected until mouse is moved
+        #
+        #     # if align is enabled, but mouse did not moved yet, skip until it moves so i have direction to use.. this is preventing having the first instance oriented in wrong direction..
+        #     if(self._stroke_directions[-1].length == 0.0):
+        #         return False
+        #
+        #     if(self._mouse_3d_direction is None):
+        #         return False
+        #     if(self._mouse_3d_direction_interpolated is None):
+        #         return False
+        
+        return True
+    
+    def _store_vertex_after(self, index, ):
+        # # NOTE: do some post modifications if needed, like aligning axis, or similar stuff
+        # # NOTE: return True if mesh data need to be updated, for example when operation is fully numpyfied, blender will not be triggered to update itself
+        #
+        # if(self._get_prop_value('use_align_y_to_stroke')):
+        #     d = self._stroke_directions[-1]
+        #     if(self._get_prop_value('use_direction_interpolation')):
+        #         d = self._mouse_3d_direction_interpolated
+        #
+        #     me = self._target.data
+        #     me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[index].value = 2
+        #     me.attributes['{}private_r_up_vector'.format(self.attribute_prefix)].data[index].vector = d
+        #
+        #     # NOTE: sanitize indices
+        #     i = int(self._get_target_vertex_index_to_masked_index([index, ], )[0])
+        #     indices = [i, ]
+        #
+        #     self._regenerate_rotation_from_attributes(indices, )
+        #
+        #     # TODO: until `_regenerate_rotation_from_attributes` is fully numpyfied, return False, after it can return True so it is updated once
+        #     # TODO: hmmm? `_regenerate_rotation_from_attributes` does not trigger? modifying vertex attributes does not trigger update?
+        #     return True
+        
+        return True
     
     # ---------------------------------------------------------------------------------------------------
     # NOTE: widgets
     
-    '''
-    def _widgets_fabricate_selected_point(self, region, rv3d, pos, woc, ):
-        coord = view3d_utils.location_3d_to_region_2d(region, rv3d, pos, )
-        ls = tuple()
-        if(coord is not None):
-            # NOTE: coord is None when outside of view.. so be careful
-            ls = (
-                # circle
-                {
-                    'function': 'circle_thick_outline_dashed_2d',
-                    'arguments': {
-                        'center': coord,
-                        'radius': int(self._theme._fixed_radius / 2),
-                        'steps': int(self._theme._circle_steps / 2),
-                        'color': woc,
-                        'thickness': self._theme._outline_thickness,
-                    }
-                },
-                # dot
-                {
-                    # 'function': 'dot_shader_2d',
-                    'function': 'dot_shader_2_2d',
-                    'arguments': {
-                        'center': coord,
-                        'diameter': self._theme._fixed_center_dot_radius * 2,
-                        'color': woc,
-                    },
-                },
-            )
-        return ls
-    '''
-    
-    def _widgets_fabricate_multiple_selected_points(self, region, rv3d, vertices, woc, ):
-        vs = []
-        for pos in vertices:
-            coord = view3d_utils.location_3d_to_region_2d(region, rv3d, pos, )
-            vs.append(coord)
-        
-        ls = (
-            {
-                'function': 'vertices_selection_circles_2d',
-                'arguments': {
-                    'vertices': vs,
-                    # 'c_radius': int(self._theme._fixed_radius / 2),
-                    'c_radius': int(self._theme._fixed_radius / 4),
-                    'c_steps': int(self._theme._circle_steps / 2),
-                    'c_color': woc,
-                    'c_thickness': self._theme._outline_thickness,
-                    'd_diameter': self._theme._fixed_center_dot_radius * 2,
-                    'd_color': woc,
-                }
-            },
-        )
-        return ls
-    
-    def _widgets_fabricate_center(self, region, rv3d, pos, woc, ):
-        coord = view3d_utils.location_3d_to_region_2d(region, rv3d, pos, )
-        ls = tuple()
-        if(coord is not None):
-            # NOTE: coord is None when outside of view.. so be careful
-            ls = (
-                # circle
-                {
-                    'function': 'circle_thick_outline_dashed_2d',
-                    'arguments': {
-                        'center': coord,
-                        'radius': int(self._theme._fixed_radius / 2),
-                        'steps': int(self._theme._circle_steps / 2),
-                        'color': woc,
-                        'thickness': self._theme._outline_thickness,
-                    }
-                },
-                # dot
-                {
-                    'function': 'dot_shader_2_2d',
-                    'arguments': {
-                        'center': coord,
-                        'diameter': self._theme._fixed_center_dot_radius * 2,
-                        'color': woc,
-                    },
-                },
-            )
-        return ls
-    
     def _widgets_mouse_idle(self, context, event, ):
-        from .gizmos import SC5GizmoManager
-        # if(SC5GizmoManager.index != -1):
-        if(len(SC5GizmoManager.indices)):
-            self._widgets_clear(context, event, )
-            return
-        
-        woc = self._theme._outline_color
-        wfc = self._theme._fill_color
-        
-        coord = (event.mouse_region_x, event.mouse_region_y, )
-        
-        ls = []
-        
-        c = self._widgets_fabricate_fixed_size_cross_cursor_and_dot_2d(coord, woc, wfc, )
-        ls.extend(c)
-        
-        # for pos in self._w_dots:
-        #     sel = self._widgets_fabricate_selected_point(context.region, context.region_data, pos, self._theme._outline_color_press, )
-        #     ls.extend(sel)
-        
-        sel = self._widgets_fabricate_multiple_selected_points(context.region, context.region_data, self._w_dots, self._theme._outline_color_press, )
-        ls.extend(sel)
-        
-        if(self._w_center is not None):
-            sel = self._widgets_fabricate_center(context.region, context.region_data, self._w_center, self._theme._outline_color_press, )
-            ls.extend(sel)
-        
-        ToolWidgets._cache[self.tool_id]['screen_components'] = ls
-        ToolWidgets._cache[self.tool_id]['cursor_components'] = []
+        loc, nor, idx, dst = self._project_mouse_to_surface(context, event, )
+        if(loc is not None):
+            woc = self._theme._outline_color
+            wfc = self._theme._fill_color
+            
+            radius = self._widgets_compute_fixed_scale_3d(context.region, context.region_data, loc, self._theme._fixed_radius, )
+            mt, mr, ms = self._widgets_compute_surface_matrix_components_3d(loc, nor, radius, )
+            
+            ls = []
+            
+            c = self._widgets_fabricate_fixed_size_cross_cursor_3d(mt, mr, ms, radius, woc, wfc, )
+            ls.extend(c)
+            
+            mr = Matrix()
+            ms = self._widgets_compute_surface_matrix_scale_component_3d(radius / 2, )
+            d = self._get_prop_value('drop_height')
+            cm = Matrix.Translation(Vector((loc.x, loc.y, loc.z + d))) @ mr @ ms
+            ls.extend((
+                {
+                    'function': 'box_outline_3d',
+                    'arguments': {
+                        'side_length': 1.0,
+                        'matrix': cm,
+                        'offset': (0.0, 0.0, 0.0, ),
+                        'color': woc[:3] + (self._theme._outline_color_falloff_helper_alpha, ),
+                        'thickness': self._theme._outline_thickness_helper,
+                    }
+                },
+            ))
+            
+            dot = self._widgets_fabricate_center_dot_3d(context.region, context.region_data, loc, mt, mr, woc, )
+            ls.extend(dot)
+            
+            ToolWidgets._cache[self.tool_id]['screen_components'] = ls
+            ToolWidgets._cache[self.tool_id]['cursor_components'] = []
+        else:
+            ls = []
+            sign = self._widgets_fabricate_no_entry_sign(event, )
+            ls.extend(sign)
+            
+            ToolWidgets._cache[self.tool_id]['screen_components'] = []
+            ToolWidgets._cache[self.tool_id]['cursor_components'] = ls
         
         ToolWidgets._tag_redraw()
     
     def _widgets_mouse_press(self, context, event, ):
-        from .gizmos import SC5GizmoManager
-        # if(SC5GizmoManager.index != -1):
-        if(len(SC5GizmoManager.indices)):
-            self._widgets_clear(context, event, )
-            return
-        
-        woc = self._theme._outline_color_press
-        wfc = self._theme._fill_color_press
-        
-        coord = (event.mouse_region_x, event.mouse_region_y, )
-        
-        ls = []
-        
-        c = self._widgets_fabricate_fixed_size_cross_cursor_and_dot_2d(coord, woc, wfc, )
-        ls.extend(c)
-        
-        # for pos in self._w_dots:
-        #     sel = self._widgets_fabricate_selected_point(context.region, context.region_data, pos, self._theme._outline_color_press, )
-        #     ls.extend(sel)
-        
-        sel = self._widgets_fabricate_multiple_selected_points(context.region, context.region_data, self._w_dots, self._theme._outline_color_press, )
-        ls.extend(sel)
-        
-        if(self._w_center is not None):
-            sel = self._widgets_fabricate_center(context.region, context.region_data, self._w_center, self._theme._outline_color_press, )
-            ls.extend(sel)
-        
-        ToolWidgets._cache[self.tool_id]['screen_components'] = ls
-        ToolWidgets._cache[self.tool_id]['cursor_components'] = []
+        loc, nor, idx, dst = self._project_mouse_to_surface(context, event, )
+        if(loc is not None):
+            woc = self._theme._outline_color_press
+            wfc = self._theme._fill_color_press
+            if(event.ctrl):
+                woc = self._theme._outline_color_eraser
+                wfc = self._theme._fill_color_eraser
+            
+            radius = self._widgets_compute_fixed_scale_3d(context.region, context.region_data, loc, self._theme._fixed_radius, )
+            mt, mr, ms = self._widgets_compute_surface_matrix_components_3d(loc, nor, radius, )
+            
+            ls = []
+            
+            c = self._widgets_fabricate_fixed_size_cross_cursor_3d(mt, mr, ms, radius, woc, wfc, )
+            ls.extend(c)
+            
+            if(not event.ctrl):
+                mr = Matrix()
+                ms = self._widgets_compute_surface_matrix_scale_component_3d(radius / 2, )
+                d = self._get_prop_value('drop_height')
+                cm = Matrix.Translation(Vector((loc.x, loc.y, loc.z + d))) @ mr @ ms
+                ls.extend((
+                    {
+                        'function': 'box_outline_3d',
+                        'arguments': {
+                            'side_length': 1.0,
+                            'matrix': cm,
+                            'offset': (0.0, 0.0, 0.0, ),
+                            'color': woc[:3] + (self._theme._outline_color_falloff_helper_alpha, ),
+                            'thickness': self._theme._outline_thickness_helper,
+                        }
+                    },
+                ))
+                
+                dot = self._widgets_fabricate_center_dot_3d(context.region, context.region_data, loc, mt, mr, woc, )
+                ls.extend(dot)
+            
+            ToolWidgets._cache[self.tool_id]['screen_components'] = ls
+            ToolWidgets._cache[self.tool_id]['cursor_components'] = []
+        else:
+            ls = []
+            sign = self._widgets_fabricate_no_entry_sign(event, )
+            ls.extend(sign)
+            
+            ToolWidgets._cache[self.tool_id]['screen_components'] = []
+            ToolWidgets._cache[self.tool_id]['cursor_components'] = ls
         
         ToolWidgets._tag_redraw()
     
@@ -16261,582 +16366,1084 @@ class SCATTER5_OT_manual_brush_tool_manipulator(SCATTER5_OT_common_mixin, SCATTE
     def _widgets_mouse_release(self, context, event, ):
         self._widgets_mouse_idle(context, event, )
     
+    # @verbose
+    def _widgets_modifiers_change(self, context, event, ):
+        # NOTE: tool with modifier key function change, i need to redraw on modifiers change
+        if(self._lmb):
+            self._widgets_mouse_press(context, event, )
+        else:
+            self._widgets_mouse_idle(context, event, )
+    
     # ---------------------------------------------------------------------------------------------------
-    # NOTE: actual brush code.. without integration bit (ui rebuild) for now..
+    # NOTE: brush
     
-    def _modal_shortcuts(self, context, event, ):
-        # NOTE: so i can still add some dubug stuff in base class i will then hace everywhere. currently on manipulator defines own `_modal_shortcuts`..
-        super()._modal_shortcuts(context, event, )
-        
-        # NOTE: is called from `_modal`, after all else is handled (apart from exit), any custom keys can be put here..
-        if(event.type == 'SPACE' and event.value == 'RELEASE'):
-            from .gizmos import SC5GizmoManager
-            
-            if(self._gizmo_mode):
-                self._gizmo_mode = False
-                # gizmo is shown, hide
-                # SC5GizmoManager.index = -1
-                SC5GizmoManager.indices = []
-                
-                # co = self._target.data.vertices[self._index].co.copy()
-                # # co, _ = self._apply_matrix(self._surface.matrix_world, co, )
-                # uid = self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[self._index].value
-                # co, _ = self._surfaces_to_world_space(co, None, uid, )
-                # self._w_position = co
-                
-                vs = np.zeros(len(self._target.data.vertices) * 3, dtype=float, )
-                self._target.data.vertices.foreach_get('co', vs, )
-                vs.shape = (-1, 3, )
-                local_points = vs.copy()
-                uids = np.zeros(len(self._target.data.vertices), dtype=int, )
-                self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data.foreach_get('value', uids, )
-                vs, _ = self._surfaces_to_world_space(vs, None, uids, )
-                world_points = vs.copy()
-                
-                # self._g_vertices = local_points[self._g_mask]
-                self._g_vertices = world_points[self._g_mask]
-                self._g_indices = np.arange(len(self._target.data.vertices), dtype=int, )[self._g_mask]
-                self._g_uids = uids[self._g_mask]
-                self._g_center = world_points[self._g_mask].mean(axis=0, )
-                self._w_dots = world_points[self._g_mask]
-                self._w_center = self._g_center.copy()
-                
-                self._widgets_mouse_idle(context, event, )
-            else:
-                # gizmo is not shown,
-                # if(self._index < 0):
-                # if(len(self._g_vertices) == 0):
-                if(len(self._g_indices) == 0):
-                    # nothing selected.. cannot run
-                    self._gizmo_mode = False
-                    # SC5GizmoManager.index = -1
-                    SC5GizmoManager.indices = []
-                    
-                    self._widgets_mouse_idle(context, event, )
-                    return
-                else:
-                    # something selected, show gizmo
-                    self._gizmo_mode = True
-                    
-                    '''
-                    if(SC5GizmoManager.index != self._index):
-                        # push to history..
-                        bpy.ops.ed.undo_push(message=self.bl_label, )
-                        
-                        SC5GizmoManager.index = self._index
-                        self._flatten(self._index, )
-                        
-                        # NOTE: in some rare cases (and seems to be connected with higher number of vertices), hidden gizmos were not updated by newly selected vertex, lets call it again here.. it is called on index change anyway.. seems to be fixed, but test it properly, with gizmos you never know..
-                        # TODO: check if `group.refresh()` should not be called as well. this time i guess with `SC5GizmoManager.group.refresh(bpy.context, )` to have some effect, like with internal `setup()` call..
-                        if(SC5GizmoManager.group is not None):
-                            SC5GizmoManager.group.rebuild()
-                    '''
-                    
-                    # push to history..
-                    bpy.ops.ed.undo_push(message=self.bl_label, )
-                    
-                    # SC5GizmoManager.surface = self._surfaces_db[int(self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[self._index].value)]
-                    SC5GizmoManager.surfaces = self._surfaces_db
-                    # SC5GizmoManager.index = self._index
-                    SC5GizmoManager.indices = self._g_indices
-                    # self._flatten(self._index, )
-                    
-                    for i in self._g_indices:
-                        self._flatten(i)
-                    
-                    # # DEBUG
-                    # v = bpy.data.objects.get(SC5GizmoManager.surface).matrix_world @ self._target.data.vertices[SC5GizmoManager.index].co
-                    # e = Euler(self._target.data.attributes['manual_private_r_base'].data[SC5GizmoManager.index].vector).to_matrix().to_4x4()
-                    # n = e @ Vector((0.0, 0.0, 1.0))
-                    # debug.points(self._target, v, n, )
-                    # # DEBUG
-                    
-                    # NOTE: in some rare cases (and seems to be connected with higher number of vertices), hidden gizmos were not updated by newly selected vertex, lets call it again here.. it is called on index change anyway.. seems to be fixed, but test it properly, with gizmos you never know..
-                    # TODO: check if `group.refresh()` should not be called as well. this time i guess with `SC5GizmoManager.group.refresh(bpy.context, )` to have some effect, like with internal `setup()` call..
-                    if(SC5GizmoManager.group is not None):
-                        SC5GizmoManager.group.rebuild()
-                        # SC5GizmoManager.group.refresh(context, )
-                    
-                    self._widgets_clear(context, event, )
+    def _action_generate(self, loc, nor, ):
+        # d = self._get_prop_value('divergence')
+        # if(d > 0.0):
+        #     if(self._get_prop_value('divergence_pressure')):
+        #         d = d * self._pressure
+        #     r = d * np.random.random()
+        #     a = (2 * np.pi) * np.random.random()
+        #     x = r * np.cos(a)
+        #     y = r * np.sin(a)
+        #     z = 0.0
+        #     v = Vector((x, y, z, ))
+        #     z = Vector((0.0, 0.0, 1.0, ))
+        #     q = self._rotation_to(z, nor, )
+        #     v.rotate(q)
+        #     c = loc + v
+        #     loc, nor, idx, dst = self._bvh.find_nearest(c)
+        #     nor = self._interpolate_smooth_face_normal(loc, nor, idx, )
+        return loc, nor
     
-    def _lock(self, ):
-        # NOTE: called on invoke, lock selectability on all objects in scene, store their status in SC5GizmoManager and restore on brush cleanup
-        d = {}
-        for o in bpy.data.objects:
-            d[o.name] = o.hide_select
-            o.hide_select = True
-        
-        from .gizmos import SC5GizmoManager
-        SC5GizmoManager.restore = d
-    
-    def _unlock(self, ):
-        # NOTE: have to be called on brush cleanup, use this for manipulator only and use event blocking like in other brushes
-        from .gizmos import SC5GizmoManager
-        d = SC5GizmoManager.restore
-        for k, v in d.items():
-            o = bpy.data.objects.get(k)
-            if(o is not None):
-                o.hide_select = v
-        
-        SC5GizmoManager.restore = {}
-    
-    def _swap_mode(self, ):
-        if(not self._gizmo_mode):
-            return
-        
-        if(self._get_prop_value('translation')):
-            self._set_prop_value('translation', False)
-            self._set_prop_value('rotation', True)
-            self._set_prop_value('scale', True)
-        else:
-            self._set_prop_value('translation', True)
-            self._set_prop_value('rotation', False)
-            self._set_prop_value('scale', False)
-    
-    def _flatten(self, i, ):
-        # DONE: flatten transformation attributes into base rotation and scale, gizmos will work only with these, so flatten all random and extra components into base attribute
-        target = self._target
-        me = target.data
-        
-        # rotation
-        r = me.attributes['{}rotation'.format(self.attribute_prefix)].data[i].vector[:]
-        me.attributes['{}private_r_base'.format(self.attribute_prefix)].data[i].vector = r
-        me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        me.attributes['{}private_r_align'.format(self.attribute_prefix)].data[i].value = 2
-        me.attributes['{}private_r_align_vector'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 1.0]
-        me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[i].value = 0
-        me.attributes['{}private_r_up_vector'.format(self.attribute_prefix)].data[i].vector = [0.0, 1.0, 0.0]
-        
-        # scale
-        s = me.attributes['{}scale'.format(self.attribute_prefix)].data[i].vector[:]
-        me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[i].vector = s
-        me.attributes['{}private_s_random'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data[i].value = 0
-        me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        me.attributes['{}private_s_change_random'.format(self.attribute_prefix)].data[i].vector = [0.0, 0.0, 0.0]
-        
-        self._regenerate_scale_from_attributes(np.array([i, ], dtype=int, ), )
-        self._regenerate_rotation_from_attributes(np.array([i, ], dtype=int, ), )
-    
-    def _regenerate_rotation_from_attributes(self, indices, ):
-        target = self._target
-        me = target.data
-        # surface = self._surface
-        
-        l = len(me.vertices)
-        
-        _rotation = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}rotation'.format(self.attribute_prefix)].data.foreach_get('vector', _rotation, )
-        _rotation.shape = (-1, 3)
-        
-        _private_r_base = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}private_r_base'.format(self.attribute_prefix)].data.foreach_get('vector', _private_r_base, )
-        _private_r_base.shape = (-1, 3)
-        
-        _align_z = np.zeros((l * 3), dtype=float, )
-        me.attributes['{}align_z'.format(self.attribute_prefix)].data.foreach_get('vector', _align_z, )
-        _align_z.shape = (-1, 3)
-        _align_y = np.zeros((l * 3), dtype=float, )
-        me.attributes['{}align_y'.format(self.attribute_prefix)].data.foreach_get('vector', _align_y, )
-        _align_y.shape = (-1, 3)
-        
-        # select points to modify by indices
-        rotation = _rotation[indices]
-        private_r_base = _private_r_base[indices]
-        align_z = _align_z[indices]
-        align_y = _align_y[indices]
-        
-        # ---------------------------------------------------------------------
-        
-        rotation = np.zeros((len(indices), 3), dtype=float, )
-        align_z = np.zeros((len(indices), 3), dtype=float, )
-        align_y = np.zeros((len(indices), 3), dtype=float, )
-        for i in range(len(indices)):
-            v = Vector((0.0, 0.0, 1.0))
-            v.rotate(Euler(private_r_base[i]))
-            align_z[i] = v.to_tuple()
-            
-            v = Vector((0.0, 1.0, 0.0))
-            v.rotate(Euler(private_r_base[i]))
-            align_y[i] = v.to_tuple()
-            
-            rotation[i] = private_r_base[i]
-        
-        _rotation[indices] = rotation
-        me.attributes['{}rotation'.format(self.attribute_prefix)].data.foreach_set('vector', _rotation.flatten(), )
-        _align_z[indices] = align_z
-        me.attributes['{}align_z'.format(self.attribute_prefix)].data.foreach_set('vector', _align_z.flatten(), )
-        _align_y[indices] = align_y
-        me.attributes['{}align_y'.format(self.attribute_prefix)].data.foreach_set('vector', _align_y.flatten(), )
-    
-    def _regenerate_scale_from_attributes(self, indices, ):
-        target = self._target
-        me = target.data
-        # surface = self._surface
-        
-        l = len(me.vertices)
-        
-        # get all..
-        _scale = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}scale'.format(self.attribute_prefix)].data.foreach_get('vector', _scale, )
-        _scale.shape = (-1, 3)
-        
-        _private_s_base = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}private_s_base'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_base, )
-        _private_s_base.shape = (-1, 3)
-        
-        _private_s_random = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}private_s_random'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_random, )
-        _private_s_random.shape = (-1, 3)
-        
-        _private_s_random_random = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_random_random, )
-        _private_s_random_random.shape = (-1, 3)
-        
-        _private_s_random_type = np.zeros(l, dtype=int, )
-        me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data.foreach_get('value', _private_s_random_type, )
-        
-        _private_s_change = np.zeros(l * 3, dtype=float, )
-        me.attributes['{}private_s_change'.format(self.attribute_prefix)].data.foreach_get('vector', _private_s_change, )
-        _private_s_change.shape = (-1, 3)
-        
-        # slice by indices..
-        scale = _scale[indices]
-        private_s_base = _private_s_base[indices]
-        private_s_random = _private_s_random[indices]
-        private_s_random_random = _private_s_random_random[indices]
-        private_s_random_type = _private_s_random_type[indices]
-        private_s_change = _private_s_change[indices]
-        
-        # calculate..
-        l = len(indices)
-        for i in range(l):
-            d = private_s_base[i]
-            r = private_s_random[i]
-            rr = private_s_random_random[i]
-            
-            if(private_s_random_type[i] == 0):
-                # 'UNIFORM'
-                f = rr[0]
-                fn = 1.0 - f
-                dr = d * r
-                s = (d * fn) + (dr * f)
-            elif(private_s_random_type[i] == 1):
-                # 'VECTORIAL'
-                f = r + (1.0 - r) * rr
-                s = d * f
-            
-            s = s + private_s_change[i]
-            
-            scale[i] = s
-        
-        # and set back to attribute..
-        _scale[indices] = scale
-        me.attributes['{}scale'.format(self.attribute_prefix)].data.foreach_set('vector', _scale.flatten(), )
-    
-    # @verbose
-    def _regenerate(self, ):
-        from .gizmos import SC5GizmoManager
-        # self._regenerate_scale_from_attributes(np.array([SC5GizmoManager.index, ], dtype=int, ), )
-        self._regenerate_scale_from_attributes(np.array(SC5GizmoManager.indices, dtype=int, ), )
-        # self._regenerate_rotation_from_attributes(np.array([SC5GizmoManager.index, ], dtype=int, ), )
-        self._regenerate_rotation_from_attributes(np.array(SC5GizmoManager.indices, dtype=int, ), )
-    
-    # TODO: there will be a bit better performance if i cache 2d points until view is moved (not easy to know if it is or not). or at least cache vertices from mesh until mode is swapped (after that i can expect modifications..)
     @verbose
-    def _choose(self, add=False, sub=False, ):
-        if(not len(self._target.data.vertices)):
-            return
-        
-        # get target vertices
-        vs = np.zeros(len(self._target.data.vertices) * 3, dtype=float, )
-        self._target.data.vertices.foreach_get('co', vs, )
-        vs.shape = (-1, 3, )
-        local_points = vs.copy()
-        
-        # transform to screen space
-        # model = np.array(self._surface.matrix_world, dtype=float, )
-        uids = np.zeros(len(self._target.data.vertices), dtype=int, )
-        self._target.data.attributes['{}surface_uuid'.format(self.attribute_prefix)].data.foreach_get('value', uids, )
-        vs, _ = self._surfaces_to_world_space(vs, None, uids, )
-        world_points = vs.copy()
-        
-        view = np.array(self._context_region_data.view_matrix, dtype=float, )
-        projection = np.array(self._context_region_data.window_matrix, dtype=float, )
-        
-        vs = np.c_[vs, np.ones(len(vs), dtype=vs.dtype, )]
-        # vs = np.dot(model, vs.T)[0:4].T.reshape((-1, 4))
-        vs = np.dot(view, vs.T)[0:4].T.reshape((-1, 4))
-        vs = np.dot(projection, vs.T)[0:4].T.reshape((-1, 4))
-        
-        x = vs[:, 0]
-        y = vs[:, 1]
-        z = vs[:, 1]
-        w = vs[:, 3]
-        x_ndc = x / w
-        y_ndc = y / w
-        z_ndc = z / w
-        
-        x2d = (x_ndc + 1.0) / 2.0
-        y2d = (y_ndc + 1.0) / 2.0
-        # z2d = (z_ndc + 1.0) / 2.0
-        
-        # # NOTE: do i need some depth? lets go with zeros for now
-        # z = np.zeros(len(vs), dtype=float, )
-        # vs2d = np.c_[x2d, y2d, z]
-        # vs2d = np.c_[x2d, y2d, z2d]
-        vs2d = np.c_[x2d, y2d, ]
-        # # and normalize path from pixels to 0.0-1.0
-        # vertices2d = np.zeros((len(vertices), 2), dtype=float, )
-        # vertices2d[:, 0] = vertices[:, 0] * (1.0 / self._context_region.width)
-        # vertices2d[:, 1] = vertices[:, 1] * (1.0 / self._context_region.height)
-        # to pixel coordinates
-        vs2d[:, 0] = vs2d[:, 0] * self._context_region.width
-        vs2d[:, 1] = vs2d[:, 1] * self._context_region.height
-        
-        # x, y are in pixels, z is normalized 0-1, so put mouse at z 1.0 to select by depth as well
-        # point = Vector((self._mouse_2d_region.x, self._mouse_2d_region.y, 1.0, ))
-        point = self._mouse_2d_region
-        
-        # # 3d
-        # ds = ((vs2d[:, 0] - point[0]) ** 2 + (vs2d[:, 1] - point[1]) ** 2 + (vs2d[:, 2] - point[2]) ** 2) ** 0.5
-        # 2d
-        ds = ((vs2d[:, 0] - point[0]) ** 2 + (vs2d[:, 1] - point[1]) ** 2) ** 0.5
-        
-        closest = np.argmin(ds, )
-        # self._index = closest
-        
-        # # self._w_position = self._surface.matrix_world @ self._target.data.vertices[closest].co
-        # m = bpy.data.objects.get(self._surfaces_db[uids[closest]]).matrix_world
-        # self._w_position = m @ self._target.data.vertices[closest].co
-        
-        if(add):
-            self._g_mask[closest] = True
-        elif(sub):
-            self._g_mask[closest] = False
-        else:
-            self._g_mask[:] = False
-            self._g_mask[closest] = True
-        
-        # self._g_vertices = local_points[self._g_mask]
-        self._g_vertices = world_points[self._g_mask]
-        self._g_indices = np.arange(len(self._target.data.vertices), dtype=int, )[self._g_mask]
-        self._g_uids = uids[self._g_mask]
-        self._g_center = world_points[self._g_mask].mean(axis=0, )
-        
-        self._w_dots = world_points[self._g_mask]
-        self._w_center = self._g_center.copy()
-        
-        # # # DEBUG
-        # vs = vs2d.copy()
-        # # vs = np.c_[vs[:, 0], vs[:, 1], np.zeros(len(vs), dtype=float, )]
-        # # vs = vs.astype(np.float32)
-        # # vs[:, 0] = vs[:, 0] / self._context_region.width
-        # # vs[:, 1] = vs[:, 1] / self._context_region.height
-        # cs = np.ones((len(vs), 4), dtype=np.float32, )
-        # cs[:, 0] = 1.0 - (ds / 300)
-        # cs[:, 1] = 1.0 - (ds / 300)
-        # cs[:, 2] = 1.0 - (ds / 300)
-        # cs[closest] = (1, 0, 0, 1)
-        # cs = np.clip(cs, 0.0, 1.0, )
-        # # debug.points(self._target, vs, None, cs)
-        # debug.points_2d(self._context_region, self._context_region_data, self._target, vs, cs, )
-        # # # DEBUG
-    
-    # ------------------------------------------------------------------ action methods >>>
-    
-    # @verbose
-    def _action_begin_private(self, context, event, ):
-        if(self._gizmo_mode):
-            self._lmb = False
-            return
-        
-        self._action_any_private(context, event, )
-        
-        if(self._action_execute_on in ('TIMER', 'BOTH', )):
-            bpy.app.timers.register(self._action_timer_private, first_interval=self._action_timer_interval, )
-        
-        self._action_begin()
-    
-    # @verbose
-    def _action_update_private(self, context, event, ):
-        if(self._gizmo_mode):
-            self._lmb = False
-            return
-        
-        self._action_any_private(context, event, )
-        
-        if(self._action_execute_on in ('MOUSEMOVE', 'BOTH', )):
-            self._action_update()
-    
-    # @verbose
-    def _action_finish_private(self, context, event, ):
-        if(self._gizmo_mode):
-            self._lmb = False
-            return
-        
-        self._action_any_private(context, event, )
-        
-        self._action_finish()
-    
-    # ------------------------------------------------------------------ action methods <<<
-    
-    # @verbose
     def _action_begin(self, ):
-        if(self._shift):
-            if(self._shift and self._ctrl):
-                self._choose(sub=True)
+        # NOTE: here is the right spot to do actual brush work
+        loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
+        if(loc is not None):
+            if(self._ctrl):
+                self._modal_eraser_action_fixed_radius_size_simulation_objects_only()
+                
+                # NOTE: eraser should break stroke
+                self._stroke_locations = []
+                self._stroke_directions = []
             else:
-                self._choose(add=True)
-        else:
-            self._choose()
-    
-    def _action_update(self, ):
-        if(self._shift):
-            if(self._shift and self._ctrl):
-                self._choose(sub=True)
-            else:
-                self._choose(add=True)
-        else:
-            self._choose()
+                self._stroke_locations.append(loc)
+                if(self._mouse_3d_direction):
+                    self._stroke_directions.append(self._mouse_3d_direction)
+                else:
+                    self._stroke_directions.append(Vector())
+                
+                loc, nor = self._action_generate(loc, nor, )
+                
+                if(len(self.alive.keys()) == 0):
+                    bpy.context.scene.frame_current = 1
+                    bpy.ops.screen.animation_play()
+                
+                self._add_simulation_object(loc, nor, )
+            
+            # self._stroke_locations.append(loc)
+            # if(self._mouse_3d_direction):
+            #     self._stroke_directions.append(self._mouse_3d_direction)
+            # else:
+            #     self._stroke_directions.append(Vector())
+            # loc, nor = self._action_generate(loc, nor, )
+            # # self._store_vertex(loc, nor, )
+            #
+            # if(len(self.alive.keys()) == 0):
+            #     bpy.context.scene.frame_current = 1
+            #     bpy.ops.screen.animation_play()
+            #
+            # self._add_simulation_object(loc, nor, )
     
     # @verbose
+    def _action_update(self, ):
+        # NOTE: here is the right spot to do actual brush work
+        loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
+        if(loc is not None):
+            if(self._ctrl):
+                self._modal_eraser_action_fixed_radius_size_simulation_objects_only()
+                
+                # NOTE: eraser should break stroke
+                self._stroke_locations = []
+                self._stroke_directions = []
+            else:
+                self._stroke_locations.append(loc)
+                if(self._mouse_3d_direction):
+                    self._stroke_directions.append(self._mouse_3d_direction)
+                else:
+                    self._stroke_directions.append(Vector())
+                
+                loc, nor = self._action_generate(loc, nor, )
+                
+                self._add_simulation_object(loc, nor, )
+            
+            # self._stroke_locations.append(loc)
+            # if(self._mouse_3d_direction):
+            #     self._stroke_directions.append(self._mouse_3d_direction)
+            # else:
+            #     self._stroke_directions.append(Vector())
+            # loc, nor = self._action_generate(loc, nor, )
+            # # self._store_vertex(loc, nor, )
+            #
+            # self._add_simulation_object(loc, nor, )
+    
+    @verbose
     def _action_finish(self, ):
-        # # NOTE: here is the right spot to do actual brush work
-        # pass
-        # # # push to history..
-        # # bpy.ops.ed.undo_push(message=self.bl_label, )
+        # NOTE: here is the right spot to do actual brush work
+        self._stroke_locations = []
+        self._stroke_directions = []
+        
+        # push to history..
+        bpy.ops.ed.undo_push(message=self.bl_label, )
+    
+    def _choose_next_simulation_object(self, ):
+        l = len(self.pool_instance_names)
+        rng = np.random.default_rng()
+        i = rng.integers(l)
+        n = self.pool_instance_names[i]
+        o = bpy.data.objects.get(n)
+        
+        # NOTE: this got to be mentioned in docs, that only random is allowed for physics
+        # NOTE: i might be able to simulate probability method, maybe add support for index, but that's it
+        
+        # psys = self._emitter.scatter5.get_psy_active()
+        # m = psys.s_instances_pick_method = 'pick_random'
+        
+        return o, n
+    
+    def _add_simulation_object(self, loc, nor, ):
+        if(len(self.alive.keys()) >= self._get_prop_value('max_alive')):
+            return
+        
+        # l = len(self.pool_instance_names)
+        # rng = np.random.default_rng()
+        # i = rng.integers(l)
+        # n = self.pool_instance_names[i]
+        # o = bpy.data.objects.get(n)
+        o, n = self._choose_next_simulation_object()
+        if(not o):
+            # do nothing
+            return
+        c = bpy.data.objects.new("{}-simulation".format(n), o.data)
+        col = bpy.data.collections.get(self.col_name)
+        col.objects.link(c)
+        
+        loc = Vector((loc.x, loc.y, loc.z + self._get_prop_value('drop_height')))
+        
+        rng = np.random.default_rng()
+        
+        eb = Euler(self._get_prop_value('rotation_base'))
+        rr = self._get_prop_value('rotation_random')
+        _r = rng.random(3)
+        er = Euler((rr.x * _r[0], rr.y * _r[1], rr.z * _r[2]))
+        rot = Quaternion()
+        rot.rotate(eb)
+        rot.rotate(er)
+        
+        s = np.ones(3, dtype=float, )
+        d = np.array(self._get_prop_value('scale_default'), dtype=float, )
+        r = np.array(self._get_prop_value('scale_random_factor'), dtype=float, )
+        _r = rng.random(1)
+        if(self._get_prop_value('scale_default_use_pressure')):
+            d = d * self._pressure
+        if(self._get_prop_value('scale_random_type') == 'UNIFORM'):
+            fn = 1.0 - _r
+            dr = d * r
+            s = (d * fn) + (dr * _r)
+        elif(self._get_prop_value('scale_random_type') == 'VECTORIAL'):
+            f = r + (1.0 - r) * _r
+            s = d * f
+        sca = Vector(s)
+        
+        c.matrix_world = Matrix.LocRotScale(loc, rot, sca, )
+        # c.matrix_world = Matrix.LocRotScale(loc, None, None, )
+        
+        self._activate_object(c)
+        bpy.ops.rigidbody.objects_add(type='ACTIVE')
+        # is there any way to get these presets? without rewriting them?
+        # list is in: source/blender/editors/physics/rigidbody_object.c
+        bpy.ops.rigidbody.mass_calculate(material='Stone', density=2515, )
+        c.rigid_body.friction = 0.75
+        c.rigid_body.linear_damping = 0.1
+        c.rigid_body.angular_damping = 0.2
+        
+        self.alive[c.name] = {
+            'f': bpy.context.scene.frame_current,
+            'm': np.array(c.matrix_world),
+            'u': self._mouse_active_surface_uuid,
+            'n': nor.copy(),
+        }
+        
+        self._activate_none()
+    
+    def _update_references_and_settings(self, context, event, ):
+        super()._update_references_and_settings(context, event, )
+        
+        self._action_execute_on = self._get_prop_value('draw_on')
+        self._action_timer_interval = self._get_prop_value('interval')
+    
+    def _activate_object(self, ob, ):
+        # activation of object for use with builtinn operators
+        if(type(ob) == str):
+            o = bpy.data.objects[ob]
+        else:
+            o = ob
+        bpy.ops.object.select_all(action='DESELECT')
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        return o
+    
+    def _activate_none(self, ):
+        bpy.ops.object.select_all(action='DESELECT')
+        bpy.context.view_layer.objects.active = None
+    
+    def _on_frame_change_pre(self, scene, depsgraph, ):
         pass
     
-    def _modal(self, context, event, ):
-        r = super()._modal(context, event, )
-        # return r
+    def _on_frame_change_post(self, scene, depsgraph, ):
+        # find dead instances by comparing current matrix and matrix from previous frame
+        # if values are within _atol, consider it stable
+        dead = {}
+        for k, v in self.alive.items():
+            o = bpy.data.objects.get(k)
+            if(o):
+                a = np.array(o.matrix_world)
+                if(np.allclose(v['m'], a, atol=self._get_prop_value('np_allclose_atol'), ) and v['f'] != scene.frame_current):
+                    # bpy.ops.screen.animation_cancel(restore_frame=False, )
+                    dead[k] = {
+                        'u': v['u'],
+                        'n': v['n'],
+                    }
+                else:
+                    self.alive[k]['m'] = a
         
-        # # WATCH: why this was here? it was blocking trackpad. it is from before `_gizmo_mode`, it is redundant now with flag for gizmos enabled/disabled?
-        # NOTE: why? to not get stuck in navigating while gizmos are active.. that's why. now check on trackpad+ndof again
-        if(self._nav):
-            return {'RUNNING_MODAL'}
+        # freeze dead and remove from alive dict
+        for k, v in dead.items():
+            o = bpy.data.objects.get(k)
+            m = o.matrix_world.copy()
+            self._activate_object(o)
+            bpy.ops.rigidbody.objects_add(type='PASSIVE')
+            o.matrix_world = m
+            del self.alive[k]
+            self.frozen[k] = {
+                'u': v['u'],
+                'n': v['n'],
+            }
         
-        # # WATCH: and now, why this was here?
-        # if(r != {'RUNNING_MODAL'}):
-        #     return r
+        # i use many builtin operators (sadly) so deselect all to look ok
+        bpy.ops.object.select_all(action='DESELECT')
         
-        if(not self._gizmo_mode):
-            return r
+        if(len(self.alive.keys()) == 0):
+            scene.frame_current = 1
+            bpy.ops.screen.animation_cancel(restore_frame=False, )
         
-        if(event.type != 'TIMER'):
-            # NOTE: there is running timer in background. so if event is timer, don't refresh, refresh only on user events
-            from .gizmos import SC5GizmoManager
-            # if(SC5GizmoManager.index > -1):
-            if(len(SC5GizmoManager.indices)):
-                self._regenerate()
+        dead = {}
+        for k, v in self.alive.items():
+            if(v['f'] + self._get_prop_value('frames_alive') < scene.frame_current):
+                o = bpy.data.objects.get(k)
+                if(o):
+                    bpy.data.objects.remove(o, do_unlink=True, )
+                    dead[k] = True
+        for k, v in dead.items():
+            del self.alive[k]
         
-        allow = (
-            # 'NONE',
-            # manipulating with gizmos.. and navigation
-            'LEFTMOUSE', 'MIDDLEMOUSE', 'RIGHTMOUSE', 'BUTTON4MOUSE', 'BUTTON5MOUSE', 'BUTTON6MOUSE', 'BUTTON7MOUSE', 'PEN', 'ERASER', 'MOUSEMOVE', 'INBETWEEN_MOUSEMOVE',
-            'TRACKPADPAN', 'TRACKPADZOOM', 'MOUSEROTATE', 'MOUSESMARTZOOM', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', 'WHEELINMOUSE', 'WHEELOUTMOUSE',
-            # 'EVT_TWEAK_L','EVT_TWEAK_M','EVT_TWEAK_R','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y',
-            # undo..
-            'Z',
-            # 'ZERO','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE',
-            # modifiers for gizmos
-            'LEFT_CTRL', 'LEFT_ALT', 'LEFT_SHIFT', 'RIGHT_ALT', 'RIGHT_CTRL', 'RIGHT_SHIFT', 'OSKEY',
-            # ?
-            # 'APP',
-            # 'GRLESS',
-            # kill all key
-            'ESC',
-            # 'TAB','RET','SPACE','LINE_FEED','BACK_SPACE','DEL','SEMI_COLON','PERIOD','COMMA','QUOTE','ACCENT_GRAVE',
-            # 'MINUS','PLUS',
-            # 'SLASH','BACK_SLASH','EQUAL','LEFT_BRACKET','RIGHT_BRACKET','LEFT_ARROW','DOWN_ARROW','RIGHT_ARROW','UP_ARROW',
-            # navigation viewport
-            'NUMPAD_2', 'NUMPAD_4', 'NUMPAD_6', 'NUMPAD_8', 'NUMPAD_1', 'NUMPAD_3', 'NUMPAD_5', 'NUMPAD_7', 'NUMPAD_9', 'NUMPAD_0',
-            # 'NUMPAD_PERIOD','NUMPAD_SLASH','NUMPAD_ASTERIX',
-            'NUMPAD_MINUS',
-            # 'NUMPAD_ENTER',
-            'NUMPAD_PLUS',
-            # 'F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','F13','F14','F15','F16','F17','F18','F19','F20','F21','F22','F23','F24',
-            # 'PAUSE','INSERT','HOME','PAGE_UP','PAGE_DOWN','END','MEDIA_PLAY','MEDIA_STOP','MEDIA_FIRST','MEDIA_LAST','TEXTINPUT','WINDOW_DEACTIVATE',
-            # 'TIMER','TIMER0','TIMER1','TIMER2','TIMER_JOBS','TIMER_AUTOSAVE','TIMER_REPORT','TIMERREGION',
-            # ndof device
-            'NDOF_MOTION', 'NDOF_BUTTON_MENU', 'NDOF_BUTTON_FIT', 'NDOF_BUTTON_TOP', 'NDOF_BUTTON_BOTTOM', 'NDOF_BUTTON_LEFT', 'NDOF_BUTTON_RIGHT', 'NDOF_BUTTON_FRONT',
-            'NDOF_BUTTON_BACK', 'NDOF_BUTTON_ISO1', 'NDOF_BUTTON_ISO2', 'NDOF_BUTTON_ROLL_CW', 'NDOF_BUTTON_ROLL_CCW', 'NDOF_BUTTON_SPIN_CW', 'NDOF_BUTTON_SPIN_CCW',
-            'NDOF_BUTTON_TILT_CW', 'NDOF_BUTTON_TILT_CCW', 'NDOF_BUTTON_ROTATE', 'NDOF_BUTTON_PANZOOM', 'NDOF_BUTTON_DOMINANT', 'NDOF_BUTTON_PLUS', 'NDOF_BUTTON_MINUS',
-            'NDOF_BUTTON_ESC', 'NDOF_BUTTON_ALT', 'NDOF_BUTTON_SHIFT', 'NDOF_BUTTON_CTRL', 'NDOF_BUTTON_1', 'NDOF_BUTTON_2', 'NDOF_BUTTON_3', 'NDOF_BUTTON_4', 'NDOF_BUTTON_5',
-            'NDOF_BUTTON_6', 'NDOF_BUTTON_7', 'NDOF_BUTTON_8', 'NDOF_BUTTON_9', 'NDOF_BUTTON_10', 'NDOF_BUTTON_A', 'NDOF_BUTTON_B', 'NDOF_BUTTON_C',
-            # 'ACTIONZONE_AREA','ACTIONZONE_REGION','ACTIONZONE_FULLSCREEN','XR_ACTION',
-        )
+        self._activate_none()
+    
+    def _create_world(self, context, event, ):
+        # reset some external things if need to be..
+        bpy.ops.screen.animation_cancel(restore_frame=False, )
         
-        if(event.type not in allow):
-            return {'RUNNING_MODAL'}
+        # store initial state
+        self._initial_frame_current = context.scene.frame_current
+        self._initial_fps = context.scene.render.fps
+        self._initial_frame_start = context.scene.frame_start
+        self._initial_frame_end = context.scene.frame_end
+        self._initial_frame_step = context.scene.frame_step
+        self._initial_frame_map_old = context.scene.render.frame_map_old
+        self._initial_frame_map_new = context.scene.render.frame_map_new
         
-        # pass through allowed events..
-        return {'PASS_THROUGH'}
+        # set something suitable
+        context.scene.render.fps = self._get_prop_value('scene_render_fps')
+        context.scene.frame_start = self._get_prop_value('scene_frame_start')
+        context.scene.frame_end = self._get_prop_value('scene_frame_end')
+        context.scene.frame_step = self._get_prop_value('scene_frame_step')
+        context.scene.render.frame_map_old = self._get_prop_value('scene_render_frame_map_old')
+        context.scene.render.frame_map_new = self._get_prop_value('scene_render_frame_map_new')
+        
+        # remove existing rigid body world so we can start with default one
+        if(context.scene.rigidbody_world is not None):
+            bpy.ops.rigidbody.world_remove()
+        
+        # setup collection to store all simulation obejcts
+        col = bpy.data.collections.get(self._get_prop_value('simulation_collection_name'))
+        if(not col):
+            col = bpy.data.collections.new(self._get_prop_value('simulation_collection_name'))
+            context.scene.collection.children.link(col)
+        self.col_name = col.name
+        
+        # set passive for surfaces and by this rigid world will be created again
+        for _, n in self._surfaces_db.items():
+            o = bpy.data.objects.get(n)
+            if(o):
+                self._activate_object(o)
+                if(o.type == 'MESH'):
+                    if(o.rigid_body is not None):
+                        bpy.ops.rigidbody.objects_remove()
+                    
+                    bpy.ops.rigidbody.objects_add(type='PASSIVE')
+                    o.rigid_body.collision_shape = 'MESH'
+                    o.rigid_body.friction = 0.75
+        
+        # if(self._get_prop_value('include_existing')):
+        #     self._target.hide_select = False
+        #     self._activate_object(self._target)
+        #     if(self._target.rigid_body is not None):
+        #         bpy.ops.rigidbody.objects_remove()
+        #     bpy.ops.rigidbody.objects_add(type='PASSIVE')
+        #     self._target.rigid_body.collision_shape = 'MESH'
+        #     self._target.rigid_body.friction = 0.75
+        #     self._target.hide_select = True
+        
+        # set some props to rigid body world
+        context.scene.rigidbody_world.use_split_impulse = True
+        context.scene.rigidbody_world.point_cache.frame_start = self._get_prop_value('scene_frame_start')
+        context.scene.rigidbody_world.point_cache.frame_end = self._get_prop_value('scene_frame_end')
+        context.scene.rigidbody_world.point_cache.frame_step = self._get_prop_value('scene_frame_step')
+        
+        # if(self._get_prop_value('include_existing')):
+        #     self._activate_object(self._target)
+        #     bpy.ops.rigidbody.objects_add(type='PASSIVE')
+        #     self._target.rigid_body.collision_shape = 'MESH'
+        #     self._target.rigid_body.friction = 0.75
+        
+        # add frame change handlers
+        bpy.app.handlers.frame_change_pre.append(self._on_frame_change_pre)
+        bpy.app.handlers.frame_change_post.append(self._on_frame_change_post)
+        
+        # play timeline
+        bpy.ops.screen.animation_play()
+    
+    def _frozen_to_instances(self, context, event, ):
+        if(not len(self.frozen.keys())):
+            # nothing has been done yet..
+            return
+        
+        # NOTE: add n (frozen * multiplier) points
+        bm = self._get_prop_value('batch_multiplier')
+        vl = len(self._target.data.vertices)
+        num = int(len(self.frozen) * bm)
+        if(num <= 1):
+            num = 1
+        # offset = -10.0
+        offset = -1000.0
+        vs = np.zeros((num, 3), dtype=float, )
+        vs[:, 2] += offset
+        vs[:, 2] -= np.arange(num, dtype=int, )
+        ns = np.full((num, 3), (0.0, 0.0, 1.0), dtype=float, )
+        # NOTE: use random surface id, correct will be set afterwards. surface at zero index is safest bet.
+        u = self._surfaces[0].scatter5.uuid
+        uu = np.full(num, u, dtype=int, )
+        self._store_vertices_np(vs, ns, uu, )
+        
+        # map each point to final instance, make a pool of objects to choose from..
+        obmap = {}
+        depsgraph = bpy.context.evaluated_depsgraph_get()
+        for i, oi in enumerate(depsgraph.object_instances):
+            iloc = np.array(oi.matrix_world.translation, dtype=float, )
+            for vi, v in enumerate(vs):
+                if(np.allclose(iloc, v, atol=self._get_prop_value('np_allclose_atol'), )):
+                    # NOTE: key is target mesh vertex index
+                    obmap[vl + vi] = {
+                        'name': oi.object.original.data.name,
+                        'object': None,
+                        'normal': None,
+                        'uid': None,
+                        'status': None,
+                    }
+        
+        object_instance_match_error_counter = 0
+        # now, choose from pool what i need
+        for k, v in self.frozen.items():
+            o = bpy.data.objects.get(k)
+            if(o):
+                name = o.data.name
+                # NOTE: lets not assume dict is ordered, they are, but it may not be best practice.. i use indices for keys, so it is a matter of sorting a few integers..
+                # NOTE: just to be extra safe, alright? order in this case really matters..
+                # for _k, _v in obmap.items():
+                flag = False
+                for _k in sorted(obmap.keys()):
+                    _v = obmap[_k]
+                    if(_v['name'] == name):
+                        if(_v['object'] is None):
+                            _v['object'] = o
+                            _v['normal'] = v['n']
+                            _v['uid'] = v['u']
+                            _v['status'] = 'USED'
+                            flag = True
+                            break
+                if(not flag):
+                    object_instance_match_error_counter += 1
+        
+        # the rest mark as orphan, or if there is no more used, mark for removal
+        flag = False
+        # for i in reversed(obmap.keys()):
+        for i in reversed(sorted(obmap.keys())):
+            if(obmap[i]['status'] is not None):
+                flag = True
+            if(obmap[i]['status'] is None):
+                if(flag):
+                    obmap[i]['status'] = 'ORPHAN'
+                else:
+                    obmap[i]['status'] = 'DELETE'
+        
+        # for k, v in obmap.items():
+        #     print(k, ':', v)
+        
+        # loop over map, if used, turn into instance, if orphan hide and there rest delete..
+        rng = np.random.default_rng()
+        
+        # make orphan uid non zero value, start at -1 and make sure it is not accidentally surface uid
+        orphan_uid = -1
+        if(orphan_uid in self._surfaces_db.keys()):
+            while(orphan_uid in self._surfaces_db.keys()):
+                orphan_uid -= 1
+        
+        ii = []
+        me = self._target.data
+        _rm = []
+        # for k, v in obmap.items():
+        for k in sorted(obmap.keys()):
+            v = obmap[k]
+            
+            if(v['status'] == 'USED'):
+                o = v['object']
+                m = o.matrix_world
+                l, r, s = m.decompose()
+                
+                n = v['normal']
+                u = v['uid']
+                
+                z = Vector((0.0, 0.0, 1.0))
+                z.rotate(r)
+                y = Vector((0.0, 1.0, 0.0))
+                y.rotate(r)
+                
+                _, _, _is = bpy.data.objects.get(self._surfaces_db[u]).matrix_world.inverted().decompose()
+                s = s * _is
+                
+                _l, _n = self._world_to_surfaces_space(l, n, u, )
+                me.vertices[k].co = _l
+                me.attributes['{}normal'.format(self.attribute_prefix)].data[k].vector = _n
+                me.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[k].value = u
+                
+                # pass rotation
+                me.attributes['{}private_r_align'.format(self.attribute_prefix)].data[k].value = 3
+                me.attributes['{}private_r_align_vector'.format(self.attribute_prefix)].data[k].vector = z
+                me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[k].value = 2
+                me.attributes['{}private_r_up_vector'.format(self.attribute_prefix)].data[k].vector = y
+                # reset rotation
+                me.attributes['{}private_r_base'.format(self.attribute_prefix)].data[k].vector = (0.0, 0.0, 0.0)
+                me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[k].vector = (0.0, 0.0, 0.0)
+                me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[k].vector = rng.random(3)
+                # pass scale
+                me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[k].vector = s
+                # reset scale
+                me.attributes['{}private_s_random'.format(self.attribute_prefix)].data[k].vector = (1.0, 1.0, 1.0)
+                me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data[k].vector = rng.random(3)
+                me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data[k].value = 0
+                
+                ii.append(k)
+            elif(v['status'] == 'ORPHAN'):
+                me.vertices[k].co = (0.0, 0.0, 0.0)
+                # me.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[k].value = u
+                # NOTE: if is orphan and uid is zero, instances will get visible.. for some reason..
+                # me.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[k].value = 0
+                me.attributes['{}surface_uuid'.format(self.attribute_prefix)].data[k].value = orphan_uid
+                me.attributes['{}private_orphan_mask'.format(self.attribute_prefix)].data[k].value = True
+            else:
+                _rm.append(k)
+        
+        # regenerate just modified instances
+        if(len(ii)):
+            ii = self._get_target_vertex_index_to_masked_index(np.array(ii, dtype=int, ))
+            self._regenerate_rotation_from_attributes(ii)
+            self._regenerate_scale_from_attributes(ii)
+        
+        # remove extra vertices, orphan have to be left there..
+        if(len(_rm)):
+            bm = bmesh.new()
+            bm.from_mesh(me)
+            rm = []
+            bm.verts.ensure_lookup_table()
+            for i, v in enumerate(bm.verts):
+                if(i in _rm):
+                    rm.append(v)
+            for v in rm:
+                bm.verts.remove(v)
+            bm.to_mesh(me)
+            bm.free()
+        
+        if(object_instance_match_error_counter):
+            self.report({'ERROR'}, 'Unable to match {} simulation object(s) to an instance(s).'.format(object_instance_match_error_counter))
+    
+    def _destroy_world(self, context, event, ):
+        # handlers
+        if(self._on_frame_change_pre in bpy.app.handlers.frame_change_pre):
+            bpy.app.handlers.frame_change_pre.remove(self._on_frame_change_pre)
+        if(self._on_frame_change_post in bpy.app.handlers.frame_change_post):
+            bpy.app.handlers.frame_change_post.remove(self._on_frame_change_post)
+        # timeline
+        bpy.ops.screen.animation_cancel(restore_frame=False, )
+        # remove rigidbody flag
+        for _, n in self._surfaces_db.items():
+            o = bpy.data.objects.get(n)
+            if(o):
+                self._activate_object(o)
+                if(o.type == 'MESH'):
+                    if(o.rigid_body is not None):
+                        bpy.ops.rigidbody.objects_remove()
+        
+        # restore initial state
+        context.scene.frame_current = self._initial_frame_current
+        context.scene.render.fps = self._initial_fps
+        context.scene.frame_start = self._initial_frame_start
+        context.scene.frame_end = self._initial_frame_end
+        context.scene.frame_step = self._initial_frame_step
+        context.scene.render.frame_map_old = self._initial_frame_map_old
+        context.scene.render.frame_map_new = self._initial_frame_map_new
+        # remove rigidbody world
+        if(context.scene.rigidbody_world is not None):
+            bpy.ops.rigidbody.world_remove()
+        
+        # TODO: process objects used in simulation, add stable as instances, remove unstable, mark unused in pool to hide from instancing (or remove if possible)
+        self._frozen_to_instances(context, event, )
+        
+        # and working collection
+        col = bpy.data.collections.get(self.col_name)
+        if(col):
+            bpy.data.collections.remove(col)
     
     def _invoke(self, context, event, ):
         # NOTE: set brush props name before `super()._invoke` so it can get correct reference
         # NOTE: with name identification i can handle getting reference after undo/redo automatically, no need for special fuction in subclasses.. which is good!
-        self._brush_props_name = 'tool_manipulator'
+        self._brush_props_name = 'tool_heaper'
         # NOTE: super!
         super()._invoke(context, event, )
         
         # NOTE: overrides..
         # self._cursor_modal_set = 'DOT'
         
+        # NOTE: overrides..
+        self._action_execute_on = self._get_prop_value('draw_on')
+        self._action_timer_interval = self._get_prop_value('interval')
+        
         # NOTE: brush specific props..
-        self._lock()
+        self._stroke_locations = []
+        self._stroke_directions = []
         
-        from .gizmos import SC5GizmoManager
-        # SC5GizmoManager.surface = s.name
-        # SC5GizmoManager.surface = None
-        SC5GizmoManager.surfaces = self._surfaces_db
-        SC5GizmoManager.target = self._target.name
+        self._create_world(context, event, )
+        # self._initialize_pool(context, event, )
         
-        # if(len(t.data.vertices) == 0):
-        if(len(self._target.data.vertices) == 0):
-            # SC5GizmoManager.index = -1
-            SC5GizmoManager.indices = []
+        self.alive = {}
+        self.frozen = {}
         
-        # self._index = -1
+        emitter = bpy.context.scene.scatter5.emitter
+        psys = emitter.scatter5.get_psy_active()
+        self.pool_instance_names = []
+        if(psys.s_instances_coll_ptr is not None):
+            for o in psys.s_instances_coll_ptr.objects:
+                if(bpy.data.objects.get(o.name)):
+                    self.pool_instance_names.append(o.name)
         
-        # self._w_position = None
-        self._gizmo_mode = False
+        # NOTE: kill all history at startup
+        n = context.preferences.edit.undo_steps
+        for i in np.arange(n):
+            bpy.ops.ed.undo_push(message='{}: clear'.format(self.bl_label), )
+        # NOTE: hm, aaand one more..
+        bpy.ops.ed.undo_push(message='{}: clear'.format(self.bl_label), )
+        # NOTE: now user cannot go past initialization. if this is any problem, i would need to implement some history states counter just for this tool so user cannot go past initialization
+    
+    @verbose
+    def _undo_redo_callback(self, context, event, ):
+        super()._undo_redo_callback(context, event, )
+        # NOTE: since i only allow undo, just clear alive objects, leaving frozen as they are.. if there are more steps back, frozen dict will be not valid, but if object is missing, it will be skipped
+        # NOTE: just keep in mind, use only what is available both in scene and in frozen dict..
+        self.alive = {}
+    
+    # NOTE: THIS IS DIRECT COPY EXCEPT PART THAT DISABLED REDO
+    def _modal(self, context, event, ):
+        # if i need something to be constantly refreshed.. not widgets..
+        self._on_any_modal_event(context, event, )
         
-        self._g_mask = np.zeros(len(self._target.data.vertices), dtype=bool, )
-        self._g_vertices = []
-        self._g_indices = []
-        self._g_uids = []
-        self._g_center = None
+        # update..
+        self._context_region = context.region
+        self._context_region_data = context.region_data
+        # update settings..
+        self._update_references_and_settings(context, event, )
         
-        self._w_dots = []
-        self._w_center = None
+        # ------------------------------------------------------------------ gesture >>>
+        if(self._gesture_mode):
+            if(event.type in {'ESC', 'RIGHTMOUSE', } and event.value == 'PRESS'):
+                self._gesture_cancel(context, event, )
+                self._gesture_mode = False
+                self._gesture_data = None
+            elif(event.type in {'LEFTMOUSE', } and event.value == 'PRESS'):
+                self._gesture_finish(context, event, )
+                self._gesture_mode = False
+                self._gesture_data = None
+            elif(event.type in {'MOUSEMOVE', 'WHEELUPMOUSE', 'WHEELDOWNMOUSE', }):
+                self._gesture_update(context, event, )
+                self._gesture_widget(context, event, )
+            
+            # NOTE: early exit while in gesture (and when i just finished)..
+            return {'RUNNING_MODAL'}
+        # ------------------------------------------------------------------ gesture <<<
+        # ------------------------------------------------------------------ exit >>>
+        # process exit at the top, so it works in any area..
+        if(event.type in {'ESC', } and event.value == 'PRESS'):
+            self._abort(context, event, )
+            
+            # NOTE: integration with custom ui. restore ui
+            self._integration_on_finish(context, event, )
+            
+            return {'CANCELLED'}
+        # ------------------------------------------------------------------ exit <<<
+        
+        # ------------------------------------------------------------------ undo/redo >>>
+        if(event.type in {'Z', } and (event.oskey or event.ctrl)):
+            
+            # NOTE: -------------------------------------------------------- THIS HERE IS MODIFIED FROM BASE CLASS >>>
+            if(event.shift):
+                return {'RUNNING_MODAL'}
+            # NOTE: -------------------------------------------------------- THIS HERE IS MODIFIED FROM BASE CLASS <<<
+            
+            self._undo_redo_callback(context, event, )
+            # pass through undo..
+            return {'PASS_THROUGH'}
+        # ------------------------------------------------------------------ undo/redo <<<
+        
+        # ------------------------------------------------------------------ workspace >>>
+        # NOTE: this is better placement, change in toolbar is detected sooner and outside of 3d view..
+        
+        # NOTE: integration with custom ui. observe active workspace tool and if does not match current operator, stop it, and run new
+        active = context.workspace.tools.from_space_view3d_mode(context.mode).idname
+        if(self.tool_id != active):
+            opc = get_tool_class(active)
+            n = opc.bl_idname.split('.', 1)
+            op = getattr(getattr(bpy.ops, n[0]), n[1])
+            if(op.poll()):
+                # i am allowed to run new tool, so stop current tool
+                self._abort(context, event, )
+                # and run it..
+                op('INVOKE_DEFAULT', )
+                return {'CANCELLED'}
+        
+        # ------------------------------------------------------------------ workspace <<<
+        
+        # ------------------------------------------------------------------ areas >>>
+        # allow asset briwser to get events
+        in_asset_browser = self._is_asset_browser(context, event, )
+        if(in_asset_browser):
+            if(not self._lmb):
+                self._widgets_mouse_outside(context, event, )
+                self._status_idle(context, event, )
+                context.window.cursor_modal_restore()
+                return {'PASS_THROUGH'}
+        
+        # allow header, toolbar etc. access..
+        in_other_regions = self._is_3dview_other_regions(context, event, )
+        if(in_other_regions):
+            if(not self._lmb):
+                self._widgets_mouse_outside(context, event, )
+                self._status_idle(context, event, )
+                context.window.cursor_modal_restore()
+                return {'PASS_THROUGH'}
+        
+        if(debug.debug_mode()):
+            debug_area = self._is_debug_console_or_spreadsheet(context, event, )
+            if(debug_area):
+                if(not self._lmb):
+                    self._widgets_mouse_outside(context, event, )
+                    self._status_idle(context, event, )
+                    context.window.cursor_modal_restore()
+                    return {'PASS_THROUGH'}
+        
+        in_viewport = self._is_viewport(context, event, )
+        # deny all other areas but initial 3d view (the one passed in context)
+        if(not in_viewport):
+            if(not self._lmb):
+                self._widgets_mouse_outside(context, event, )
+                self._status_idle(context, event, )
+                # context.window.cursor_modal_restore()
+                # context.window.cursor_modal_set('NONE')
+                # context.window.cursor_modal_set('WAIT')
+                context.window.cursor_modal_set('STOP')
+                return {'RUNNING_MODAL'}
+        
+        # FIXME: if tool is running, any menu that hovers over 3d view and is double clicked in empty ui space (i.e. no ui button) the event passes through and inits tool, this was present also in old system, but nobody ever noticed. problem is, i found no way to detect when mouse is in menu. i would guess all event should be blocked in menu, but they are not. another time to ui related bug report? that will haunt bug tracker for years to come? everybody to scared to even touch it..
+        
+        # # NOTE: sidebar disabled for now..
+        # in_sidebar = self._is_sidebar(context, event, )
+        # if(in_sidebar):
+        #     if(not self._lmb):
+        #         self._widgets_mouse_outside(context, event, )
+        #         # standard cursor only on sidebar and only when mouse is not dragged there while lmb is down
+        #         context.window.cursor_modal_restore()
+        #         return {'PASS_THROUGH'}
+        
+        # ------------------------------------------------------------------ areas <<<
+        
+        # everywhere else use tool cursor, even on disabled areas, so user is reminded that tool is running
+        context.window.cursor_modal_set(self._cursor_modal_set)
+        
+        # TODO: i meant that for anything that is linked to mouse directly, i mean `cursor_components`, but is it good approach? shouldn't it be part of idle/press/move/release? with all the troubles with navigation, this is another thing to worry about.. lets think about that some more..
+        self._widgets_any_event(context, event, )
+        
+        # ------------------------------------------------------------------ mouse 2d and 3d coordinates, directions, path, etc.. >>>
+        # NOTE: only to update props, no other work to be done here. actual work is dane in action callbacks
+        if(event.type == 'MOUSEMOVE'):
+            self._on_mouse_move(context, event, )
+        elif(event.type == 'INBETWEEN_MOUSEMOVE'):
+            self._on_mouse_move_inbetween(context, event, )
+        # ------------------------------------------------------------------ mouse 2d and 3d coordinates, directions, path, etc.. <<<
+        
+        # key events, runs event when mouse is pressed
+        # TODO: placement of this might be unuseable, it should be after modifier setting? it is not used yet for anything..
+        # TODO: modifiers are detected by set of flags later and tool/gesture shortcuts also later
+        # TODO: this does nothing now, and might get useful in tools that defines special behavior..
+        if(event.value in {'PRESS', 'RELEASE', }):
+            if(self._is_key_event(context, event, )):
+                if(event.value == 'PRESS'):
+                    if(event.is_repeat):
+                        self._on_any_key_repeat(context, event, )
+                    else:
+                        self._on_any_key_press(context, event, )
+                if(event.value == 'RELEASE'):
+                    self._on_any_key_release(context, event, )
+        
+        # ------------------------------------------------------------------ navigation >>>
+        if(self._nav and event.type == 'TIMER'):
+            # redraw while navigating
+            self._widgets_mouse_idle(context, event, )
+            self._status_idle(context, event, )
+        if(self._nav and event.type != 'TIMER'):
+            # i was navigating and now i am not because some other event is here, turn nav off and run anotehr idle redraw
+            self._nav = False
+            self._widgets_mouse_idle(context, event, )
+            self._status_idle(context, event, )
+        if(event.type != 'TIMER'):
+            # now test if i have another nav event
+            # NOTE: warning, in no way i can rely on `self._nav` being correct, when user stops navigating and then does not move mouse or hit any key, no event is fired so i cannot know what is happening, this is only for timer to redraw screen. and screen drawing should be in idle mode, no cursor changes, or i get cursor glitches.. so it will look that user does not iteract with anything, i draw idle state, then user starts navigating and idle state is redrawn, then stops, then idle is being drawn until something happen..
+            if(self._nav_enabled):
+                self._nav = self._navigator.run(context, event, None, )
+            else:
+                self._nav = False
+            
+            if(self._nav):
+                # WATCH: maybe this is not needed..
+                self._widgets_mouse_idle(context, event, )
+            
+            # NOTE: for 3d mouse use passing event out, becuase from some unknown reason, if operator is called directly, returns cancelled even when event iscorrect type.
+            # TODO: investigate why ndof events are rejected in source/blender/editors/space_view_3d/view3d_navigate_ndof.c @499
+            # TODO: and do that the same with trackpad events, it does not behave like mouse events..
+            if(not self._nav):
+                if(event.type.startswith('NDOF_')):
+                    if(self._nav_enabled):
+                        self._nav = True
+                        return {'PASS_THROUGH'}
+                if(event.type.startswith('TRACKPAD')):
+                    if(self._nav_enabled):
+                        self._nav = True
+                        return {'PASS_THROUGH'}
+        if(self._nav):
+            return {'RUNNING_MODAL'}
+        # ------------------------------------------------------------------ navigation <<<
+        
+        # # NOTE: do i need it? it can be useful, not to care about redrawing. but what about performance? do it manually for now, and see if i get into some problems or not.
+        # context.area.tag_redraw()
+        
+        # ------------------------------------------------------------------ modifiers >>>
+        mod = False
+        if(event.ctrl != self._ctrl):
+            self._ctrl = event.ctrl
+            mod = True
+        if(event.alt != self._alt):
+            self._alt = event.alt
+            mod = True
+        if(event.shift != self._shift):
+            self._shift = event.shift
+            mod = True
+        if(event.oskey != self._oskey):
+            self._oskey = event.oskey
+            mod = True
+        if(mod):
+            # NOTE: i think this is redundant, this should be handled in widgets drawing key mouse functions, if some modifier is on, draw something extra
+            self._widgets_modifiers_change(context, event, )
+            # NOTE: and for actions, because i pass modal args (context, event, ) all over, it is preffered way to get modifier status, so if something is pressed, do something accordingly, do not rely on another prop somewhere updated on key press/release.
+            # NOTE: but yet somehow to refresh widgets on modifier press it is needed...
+        # ------------------------------------------------------------------ modifiers <<<
+        
+        # # ------------------------------------------------------------------ workspace >>>
+        #
+        # # NOTE: integration with custom ui. observe active workspace tool and if does not match current operator, stop it, and run new
+        # active = context.workspace.tools.from_space_view3d_mode(context.mode).idname
+        # if(self.tool_id != active):
+        #     opc = get_tool_class(active)
+        #     n = opc.bl_idname.split('.', 1)
+        #     op = getattr(getattr(bpy.ops, n[0]), n[1])
+        #     if(op.poll()):
+        #         # i am allowed to run new tool, so stop current tool
+        #         self._abort(context, event, )
+        #         # and run it..
+        #         op('INVOKE_DEFAULT', )
+        #         return {'CANCELLED'}
+        #
+        # # ------------------------------------------------------------------ workspace <<<
+        
+        # ------------------------------------------------------------------ shortcuts >>>
+        shortcut = self._configurator.check(context, event, )
+        if(shortcut):
+            if(shortcut['call'] == 'OPERATOR'):
+                # NOTE: this will stop current operator, so no much need for elaborate resetting
+                if(shortcut['execute'] != self.tool_id):
+                    # get new tool op
+                    n = shortcut['execute'].split('.', 1)
+                    op = getattr(getattr(bpy.ops, n[0]), n[1])
+                    if(op.poll()):
+                        # i am allowed to run new tool, so stop current tool
+                        self._abort(context, event, )
+                        # and run it..
+                        op('INVOKE_DEFAULT', )
+                        return {'CANCELLED'}
+            elif(shortcut['call'] == 'GESTURE'):
+                ok = False
+                # empty shortcut have properties as None
+                if(shortcut['properties'] is not None):
+                    # NOTE: 3D and 2.5D gesture widgets need mouse surface location
+                    widget = shortcut['properties']['widget']
+                    if(widget.endswith('_3D') and self.tool_gesture_space == '3D'):
+                        if(self._mouse_3d_loc is not None):
+                            ok = True
+                    elif(widget.endswith('_2_5D') and self.tool_gesture_space == '3D'):
+                        if(self._mouse_3d_loc is not None):
+                            ok = True
+                    elif(widget.endswith('_2D') and self.tool_gesture_space == '2D'):
+                        ok = True
+                    elif(widget == 'FUNCTION_CALL'):
+                        # NOTE: not sure if i need to diffrentiate to 3d and 2d with this, it have only single use in manipulator..
+                        ok = True
+                    else:
+                        # NOTE: after that, it is unknown definition, skip? error?
+                        pass
+                
+                if(ok):
+                    # NOTE: all other functionality has to stop, so navigation, drawing, anything taht is running should stop
+                    if(shortcut['properties'] and not event.is_repeat):
+                        # NOTE: so, some resets first..
+                        if(self._nav):
+                            self._nav = False
+                            self._widgets_mouse_idle(context, event, )
+                            self._status_idle(context, event, )
+                        if(self._lmb):
+                            self._lmb = False
+                            self._action_finish_private(context, event, )
+                            self._widgets_mouse_release(context, event, )
+                            self._status_idle(context, event, )
+                        
+                        # gesture properties are set, so tool defines gesture and i can continue
+                        self._gesture_mode = True
+                        self._gesture_data = shortcut
+                        self._gesture_begin(context, event, )
+                        self._gesture_widget(context, event, )
+                    
+                        # NOTE: early exit while in gesture..
+                        return {'RUNNING_MODAL'}
+        # ------------------------------------------------------------------ shortcuts <<<
+        # ------------------------------------------------------------------ props <<<
+        if(event.is_tablet):
+            self._pressure = event.pressure
+            if(self._pressure <= 0.001):
+                # prevent zero pressure which might sometimes happen..
+                self._pressure = 0.001
+            
+            self._tilt = tuple(event.tilt)
+        # ------------------------------------------------------------------ props <<<
+        # ------------------------------------------------------------------ action >>>
+        # in_viewport = self._is_viewport(context, event, )
+        #
+        # if(not in_viewport):
+        #     if(not self._lmb):
+        #         self._widgets_mouse_outside(context, event, )
+        #         self._status_idle(context, event, )
+        #         context.window.cursor_modal_restore()
+        #         return {'RUNNING_MODAL'}
+        
+        # WATCH: this caused to running idle redraw on any event including timers, i think i can exclude timer, but beware of possible consequences
+        # if(not self._lmb):
+        # WATCH: still too much redraws..
+        # if(not self._lmb and event.type != 'TIMER'):
+        # WATCH: so, no timers and no betweens
+        if(not self._lmb and event.type not in ('TIMER', 'INBETWEEN_MOUSEMOVE', )):
+            # call idle when mouse is not pressed down, so i detect modifiers and update
+            # when mouse is down press, move and release handles things..
+            self._widgets_mouse_idle(context, event, )
+            self._status_idle(context, event, )
+        
+        if(event.type == 'LEFTMOUSE' and event.value == 'PRESS'):
+            if(not in_viewport):
+                return {'RUNNING_MODAL'}
+            self._lmb = True
+            self._action_begin_private(context, event, )
+            self._widgets_mouse_press(context, event, )
+            self._status_action(context, event, )
+        elif(event.type == 'MOUSEMOVE'):
+            if(self._lmb):
+                self._action_update_private(context, event, )
+                self._widgets_mouse_move(context, event, )
+                self._status_action(context, event, )
+            else:
+                self._action_idle_private(context, event, )
+        elif(event.type == 'INBETWEEN_MOUSEMOVE'):
+            if(self._lmb):
+                self._action_update_inbetween_private(context, event, )
+                self._widgets_mouse_move_inbetween(context, event, )
+            else:
+                self._action_idle_inbetween_private(context, event, )
+        elif(event.type == 'LEFTMOUSE' and event.value == 'RELEASE'):
+            if(not self._lmb):
+                return {'RUNNING_MODAL'}
+            self._lmb = False
+            self._action_finish_private(context, event, )
+            self._widgets_mouse_release(context, event, )
+            # TODO: is this correct? action or idle status here?
+            self._status_action(context, event, )
+            return {'RUNNING_MODAL'}
+        # ------------------------------------------------------------------ action <<<
+        self._modal_shortcuts(context, event, )
+        # r = self._modal_shortcuts(context, event, )
+        # if(r is not None):
+        #     return r
+        # # ------------------------------------------------------------------ exit >>>
+        # # if(event.type in {'RIGHTMOUSE', 'ESC', 'RET', }):
+        # if(event.type in {'ESC', }):
+        #     self._abort(context, event, )
+        #     return {'CANCELLED'}
+        # # ------------------------------------------------------------------ exit <<<
+        return {'RUNNING_MODAL'}
+    
+    # NOTE: THIS IS DIRECT COPY EXCEPT PART THAT DISABLED REDO
+    def _infobox_collect_texts(self, ):
+        h1 = "Manual Distribution Mode"
+        h2 = self.bl_label
+        
+        ls = []
+        
+        if(hasattr(self, 'tool_infobox')):
+            ls.extend(self.tool_infobox)
+        
+        def gesture(v, ):
+            if(v['properties'] is None):
+                return None
+            
+            k = v['type']
+            n = v['properties']['name']
+            f = v['flag']
+            
+            # NOTE: swap keys order for key combo string so they appear in logical order on screen
+            # NOTE: command is irrelevant, i thought it might function as ctrl on mac (windows oskey is not usable in this way), but it would mess up thigs a lot
+            ns = ['CTRL', 'ALT', 'SHIFT', 'COMMAND', ]
+            bs = ToolKeyConfigurator.from_flag(f)
+            bs = [bs[1], bs[2], bs[0], bs[3], ]
+            
+            r = "• {}: ".format(n)
+            for i in range(4):
+                if(bs[i]):
+                    r = "{}{}+".format(r, ns[i])
+            r = "{}{}".format(r, k)
+            return r
+        
+        gls = [
+            '__gesture_primary__',
+            '__gesture_secondary__',
+            '__gesture_tertiary__',
+            '__gesture_quaternary__',
+        ]
+        
+        if(any(n in self._configurator._db.keys() and self._configurator._db[n]['properties'] is not None for n in gls)):
+            # separator if there is any gesture
+            ls.append(None)
+        
+        for i, g in enumerate(gls):
+            g = gesture(self._configurator._db[g])
+            if(g):
+                ls.append(g)
+        
+        # separator, it so common for all brushes
+        ls.append(None)
+        
+        # NOTE: -------------------------------------------------------- THIS HERE IS MODIFIED FROM BASE CLASS >>>
+        # ls.append("• Undo/Redo: CTRL+(SHIFT)+Z")
+        ls.append("• Undo: CTRL+Z")
+        # NOTE: -------------------------------------------------------- THIS HERE IS MODIFIED FROM BASE CLASS <<<
+        ls.append("• Exit: ESC")
+        
+        return h1, h2, ls
+    
+    # NOTE: based on `_modal_eraser_action_fixed_radius_size`
+    def _modal_eraser_action_fixed_radius_size_simulation_objects_only(self, ):
+        loc, nor = self._mouse_3d_loc, self._mouse_3d_nor
+        if(loc is None):
+            return
+        
+        region = self._context_region
+        rv3d = self._context_region_data
+        
+        loc_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, loc, )
+        loc2_2d = Vector((loc_2d.x, loc_2d.y + self._theme._fixed_radius))
+        loc2_3d = view3d_utils.region_2d_to_location_3d(region, rv3d, loc2_2d, loc)
+        radius = ((loc.x - loc2_3d.x) ** 2 + (loc.y - loc2_3d.y) ** 2 + (loc.z - loc2_3d.z) ** 2) ** 0.5
+        # because of cursor circle..
+        radius = radius * 0.5
+        
+        vs = []
+        ks = []
+        status = []
+        for k, v in self.frozen.items():
+            o = bpy.data.objects.get(k)
+            if(o):
+                # NOTE: put origin of object to closest point on surface so i can erase within brush radius (which is sticking to surface)
+                t = o.matrix_world.translation
+                # n = Vector(v['n'])
+                # n.negate()
+                # v, _, _, _ = self._bvh.ray_cast(t, n, )
+                v, _, _, _ = self._bvh.find_nearest(t, )
+                if(not v):
+                    v = t
+                vs.append(v.to_tuple())
+                ks.append(k)
+                status.append('FROZEN')
+        
+        for k, v in self.alive.items():
+            o = bpy.data.objects.get(k)
+            if(o):
+                # NOTE: put origin of object to closest point on surface so i can erase within brush radius (which is sticking to surface)
+                t = o.matrix_world.translation
+                # n = Vector(v['n'])
+                # n.negate()
+                # v, _, _, _ = self._bvh.ray_cast(t, n, )
+                v, _, _, _ = self._bvh.find_nearest(t, )
+                if(not v):
+                    v = t
+                vs.append(v.to_tuple())
+                ks.append(k)
+                status.append('ALIVE')
+        
+        vs = np.array(vs, dtype=float, )
+        # debug.points(self._target, vs)
+        
+        vs.shape = (-1, 3)
+        _, _, indices = self._distance_range(vs, loc, radius, )
+        if(not len(indices)):
+            return
+        
+        for i in indices:
+            k = ks[i]
+            o = bpy.data.objects.get(k)
+            if(o):
+                bpy.data.objects.remove(o, do_unlink=True, )
+                if(status[i] == 'ALIVE'):
+                    del self.alive[k]
+                else:
+                    del self.frozen[k]
     
     def _cleanup(self, context, event, ):
-        from .gizmos import SC5GizmoManager
-        
-        try:
-            # NOTE: rebuild heere seems redundant and most of the time raises error. on the other hand i added it later dor some reason i don't remember. maybe because it should be prepared (reset) for next use? i think so..
-            # NOTE: `print(SC5GizmoManager.group)` returns `<bpy_struct, SC5ManipulatorWidgetGroup invalid>` is there any way to get GizmoGroup valid/invalid status? i don't see any in docs..
-            if(SC5GizmoManager.group is not None):
-                SC5GizmoManager.group.rebuild()
-        except Exception as e:
-            pass
-        
-        # SC5GizmoManager.index = -1
-        # SC5GizmoManager.group = None
-        # SC5GizmoManager.surface = None
-        # SC5GizmoManager.target = None
-        SC5GizmoManager.clear()
-        
-        self._unlock()
+        self._destroy_world(context, event, )
         
         super()._cleanup(context, event, )
-"""
 
 
+# ------------------------------------------------------------------ physics brushes <<<
 # ------------------------------------------------------------------ debug brushes >>>
 
 
@@ -17793,889 +18400,6 @@ if(WATCH_DEPSGRAPH_UPDATES):
 # ------------------------------------------------------------------ DEBUG <<<
 
 
-# -----------------------------------------------------------------------------------------------------------------------------
-
-"""
-class SCATTER5_OT_manual_physics_brush(SCATTER5_OT_manual_base_brush, ):
-    bl_idname = "scatter5.manual_physics_brush"
-    bl_label = translate("Physics Brush")
-    bl_description = translate("Physics Brush")
-    
-    brush_type = "physics_brush"
-    icon = "W_CLICK"
-    dat_icon = "SCATTER5_CLICK"
-    
-    modal_adjust_map = []
-    
-    tool_id = "scatter5.manual_physics_brush"
-    
-    DUMMY_INSTANCE_INITIAL_GLOBAL_LOCATION = Vector((0.0, 0.0, -1000.0, ))
-    
-    @classmethod
-    def poll(cls, context, ):
-        # NOTE: disable physics brush for 5.1
-        return False
-    
-    def activate(self, ob, ):
-        # activation of object for use with builtinn operators
-        if(type(ob) == str):
-            o = bpy.data.objects[ob]
-        else:
-            o = ob
-        bpy.ops.object.select_all(action='DESELECT')
-        o.select_set(True)
-        bpy.context.view_layer.objects.active = o
-        return o
-    
-    def invoke(self, context, event, ):
-        # set brush props here so subclass can inject its own collection..
-        self.brush = context.scene.scatter5.manual.physics_brush
-        
-        self._theme = ToolTheme(self, )
-        ToolWidgets.init(self, context, )
-        ToolWidgets._cache[self.tool_id] = {
-            'screen_components': [],
-            'cursor_components': [],
-        }
-        
-        r = super().invoke(context, event, )
-        
-        self._max_reached = False
-        self._alive = {}
-        self.scene = context.scene
-        
-        # self._unique_location_counter = 0
-        self._ignore_existing_pids_from = -1
-        if(len(self.target.data.vertices)):
-            me = self.target.data
-            pids = np.zeros(len(me.vertices), dtype=int, )
-            me.attributes['{}id'.format(self.attribute_prefix)].data.foreach_get('value', pids, )
-            self._ignore_existing_pids_from = np.max(pids)
-        
-        # store initial state
-        self._initial_fps = self.scene.render.fps
-        self._initial_frame_start = self.scene.frame_start
-        self._initial_frame_end = self.scene.frame_end
-        self._initial_frame_step = self.scene.frame_step
-        self._initial_frame_map_old = self.scene.render.frame_map_old
-        self._initial_frame_map_new = self.scene.render.frame_map_new
-        # set something suitable
-        self.scene.render.fps = self.brush.scene_render_fps
-        self.scene.frame_start = self.brush.scene_frame_start
-        self.scene.frame_end = self.brush.scene_frame_end
-        self.scene.frame_step = self.brush.scene_frame_step
-        self.scene.render.frame_map_old = self.brush.scene_render_frame_map_old
-        self.scene.render.frame_map_new = self.brush.scene_render_frame_map_new
-        
-        # remove existing rigid body world so we can start with default one
-        if(self.scene.rigidbody_world is not None):
-            bpy.ops.rigidbody.world_remove()
-        
-        # setup collection to store all simulation obejcts
-        self.col = bpy.data.collections.get(self.brush.simulation_collection_name)
-        if(not self.col):
-            self.col = bpy.data.collections.new(self.brush.simulation_collection_name)
-            self.scene.collection.children.link(self.col)
-        
-        # set passive for surface and by this rigid world will be created
-        self.activate(self.surface)
-        bpy.ops.rigidbody.objects_add(type='PASSIVE')
-        self.surface.rigid_body.collision_shape = 'MESH'
-        self.surface.rigid_body.friction = 0.75
-        
-        # # use existing.. set them as passive to act as obstacle. like tool never stopped
-        # bpy.ops.object.select_all(action='DESELECT')
-        # if(len(self.col.objects)):
-        #     for o in self.col.objects:
-        #         o.select_set(True)
-        #     bpy.context.view_layer.objects.active = o
-        #     bpy.ops.rigidbody.objects_add(type='PASSIVE')
-        #     bpy.ops.object.select_all(action='DESELECT')
-        
-        # set some props to rigid body world
-        self.scene.rigidbody_world.use_split_impulse = True
-        self.scene.rigidbody_world.point_cache.frame_start = self.brush.scene_frame_start
-        self.scene.rigidbody_world.point_cache.frame_end = self.brush.scene_frame_end
-        self.scene.rigidbody_world.point_cache.frame_step = self.brush.scene_frame_step
-        
-        # add frame change handlers
-        bpy.app.handlers.frame_change_pre.append(self.on_frame_change_pre)
-        bpy.app.handlers.frame_change_post.append(self.on_frame_change_post)
-        
-        # play timeline
-        bpy.ops.screen.animation_play()
-        
-        return r
-    
-    '''
-    def _get_unique_location_counter(self, ):
-        self._unique_location_counter += 1
-        return self._unique_location_counter
-    '''
-    
-    def _add_blank(self, ):
-        self._ensure_attributes()
-        
-        me = self.target.data
-        me.vertices.add(1)
-        i = len(me.vertices) - 1
-        
-        pid = self._gen_id(1, )[0]
-        
-        # move it somewhere away..
-        loc = self.DUMMY_INSTANCE_INITIAL_GLOBAL_LOCATION.copy()
-        # loc.z -= self._get_unique_location_counter()
-        loc.z -= pid
-        nor = Vector((0.0, 0.0, 1.0))
-        loc, nor = self._global_to_surface_space(loc, nor, )
-        
-        me.vertices[i].co = loc
-        
-        me.attributes['{}index'.format(self.attribute_prefix)].data[i].value = self.brush.instance_index
-        me.attributes['{}id'.format(self.attribute_prefix)].data[i].value = pid
-        
-        me.attributes['{}normal'.format(self.attribute_prefix)].data[i].vector = nor
-        me.attributes['{}rotation'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}align_z'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 1.0)
-        me.attributes['{}align_y'.format(self.attribute_prefix)].data[i].vector = (0.0, 1.0, 0.0)
-        
-        # and scale to zero so it is not visible
-        scale = (0.0, 0.0, 0.0)
-        me.attributes['{}scale'.format(self.attribute_prefix)].data[i].vector = scale
-        me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[i].vector = scale
-        me.attributes['{}private_s_random'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data[i].value = 0
-        me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}private_s_change_random'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        
-        me.attributes['{}private_r_align'.format(self.attribute_prefix)].data[i].value = 0
-        me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[i].value = 0
-        me.attributes['{}private_r_base'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector = (0.0, 0.0, 0.0)
-        
-        return i
-    
-    def get_new_instance_object(self, ):
-        # # TODO: use instance list.. somehow..
-        # return bpy.data.objects['Cube']
-        
-        # col = self.surface.scatter5.get_psy_active().s_instances_coll_ptr
-        # return col.objects[0]
-        
-        i = self._add_blank()
-        self.target.data.update()
-        
-        z_max = 0
-        o_name = None
-        
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        for o in depsgraph.object_instances:
-            if(o.is_instance):
-                if(o.parent.original == self.target):
-                    z = int(abs(round(o.matrix_world[2][3])))
-                    if(z > z_max and z > 1000):
-                        # NOTE: what if something goes wrong? and i don't find correct instance?
-                        z_max = z
-                        o_name = o.object.original.name
-        
-        col = self.surface.scatter5.get_psy_active().s_instances_coll_ptr
-        return col.objects[o_name]
-    
-    def get_recycled_instance_object(self, pi, ):
-        for i, v in enumerate(self.target.data.vertices):
-            pid = self.target.data.attributes['{}id'.format(self.attribute_prefix)].data[i].value
-            if(pid == pi):
-                break
-        
-        zz = self.DUMMY_INSTANCE_INITIAL_GLOBAL_LOCATION.z - ((int(pi) - 1) + 1)
-        zz = int(abs(round(zz)))
-        depsgraph = bpy.context.evaluated_depsgraph_get()
-        for o in depsgraph.object_instances:
-            if(o.is_instance):
-                if(o.parent.original == self.target):
-                    z = int(abs(round(o.matrix_world[2][3])))
-                    if(zz == z):
-                        o_name = o.object.original.name
-                        break
-        
-        col = self.surface.scatter5.get_psy_active().s_instances_coll_ptr
-        return col.objects[o_name], pi, v.index
-    
-    def on_frame_change_pre(self, scene, depsgraph, ):
-        if(self._max_reached is True):
-            return
-        # if mouse is down
-        if(self.lmb):
-            loc, nor, idx, dst = self._project(None, None)
-            if(loc is None):
-                return
-            # and i have some space in alive instances count
-            if(len(self._alive.keys()) < self.brush.max_active):
-                if(self._loc is None):
-                    # and i project something before
-                    return
-                
-                reuse = []
-                for i, v in enumerate(self.target.data.vertices):
-                    pid = self.target.data.attributes['{}id'.format(self.attribute_prefix)].data[i].value
-                    if(pid <= self._ignore_existing_pids_from):
-                        continue
-                    
-                    f = False
-                    for o in self.col.objects:
-                        props = o.scatter5.manual_physics_brush_object_properties
-                        if(props.point_id == pid):
-                            f = True
-                    if(not f):
-                        reuse.append(pid)
-                
-                if(len(reuse)):
-                    oo, pi, vi = self.get_recycled_instance_object(np.min(reuse))
-                    o = self.clone(oo, True)
-                    props = o.scatter5.manual_physics_brush_object_properties
-                    props.point_id = pi
-                    props.vertex_index = vi
-                    props.object_name = oo.name
-                    props.active = True
-                    props.frozen = False
-                else:
-                    # clone
-                    oo = self.get_new_instance_object()
-                    o = self.clone(oo, True)
-                    props = o.scatter5.manual_physics_brush_object_properties
-                    props.point_id = self.target.data.attributes['{}id'.format(self.attribute_prefix)].data[len(self.target.data.vertices) - 1].value
-                    props.vertex_index = len(self.target.data.vertices) - 1
-                    props.object_name = oo.name
-                    props.active = True
-                    props.frozen = False
-                
-                # and store in alive dict
-                self._alive[o.name] = {
-                    'start_frame': self.scene.frame_current,
-                    'matrix_world': np.array(o.matrix_world),
-                }
-                
-                if(len(self._alive.keys()) >= self.brush.max_active):
-                    self._max_reached = True
-    
-    def on_frame_change_post(self, scene, depsgraph, ):
-        # find dead instances by comparing current matrix and matrix from previous frame
-        # if values are within _atol, consider it stable
-        dead = {}
-        for k, v in self._alive.items():
-            o = bpy.data.objects[k]
-            a = np.array(o.matrix_world)
-            if(np.allclose(v['matrix_world'], a, atol=self.brush.np_allclose_atol, ) and v['start_frame'] != self.scene.frame_current):
-                # bpy.ops.screen.animation_cancel(restore_frame=False, )
-                dead[k] = True
-            else:
-                self._alive[k]['matrix_world'] = a
-        
-        # freeze dead and remove from alive dict
-        for k, v in dead.items():
-            self.freeze(k)
-            
-            o = bpy.data.objects.get(k)
-            props = o.scatter5.manual_physics_brush_object_properties
-            props.active = False
-            props.frozen = True
-            
-            del self._alive[k]
-        
-        if(not len(self._alive.keys())):
-            self._max_reached = False
-        
-        # i use many builtin operators (sadly) so deselect all to look ok
-        bpy.ops.object.select_all(action='DESELECT')
-        
-        # if i am out of timeout
-        if(self.scene.frame_current >= self.brush.timeout):
-            # and some are still alive
-            if(len(self._alive.keys())):
-                log('timeout: removing {} object(s)'.format(len(self._alive.keys())))
-                # kill them all..
-                self.kill()
-                self._max_reached = False
-        
-        # # DEBUG
-        # vs = []
-        # ns = []
-        # for o in self.col.objects:
-        #     l, r, s = o.matrix_world.decompose()
-        #     vs.append(l.to_tuple())
-        #     ns.append(Vector(r.to_matrix().to_4x4() @ Vector((0.0, 0.0, 1.0))).to_tuple())
-        # debug.points(self.target, vs, ns, None, )
-        # # DEBUG
-        
-        # # DEBUG
-        # vs = []
-        # cs = []
-        # for o in self.col.objects:
-        #     l, r, s = o.matrix_world.decompose()
-        #     vs.append(l.to_tuple())
-        #     props = o.scatter5.manual_physics_brush_object_properties
-        #     if(props.frozen):
-        #         cs.append((1.0, 1.0, 0.0, 1.0))
-        #     else:
-        #         cs.append((1.0, 1.0, 1.0, 1.0))
-        # debug.points(self.target, vs, None, cs, )
-        # # DEBUG
-    
-    def kill(self, ):
-        # on abort or timeout, kill all alive instances so they don't mess simulation on first frame
-        for k, v in self._alive.items():
-            o = bpy.data.objects[k]
-            me = o.data
-            self.col.objects.unlink(o)
-            bpy.data.objects.remove(o)
-            bpy.data.meshes.remove(me)
-        
-        self._alive = {}
-    
-    def freeze(self, k, ):
-        # set instance to passive and add its already simulated matrix
-        o = self.activate(k)
-        m = o.matrix_world.copy()
-        bpy.ops.rigidbody.objects_add(type='PASSIVE')
-        o.matrix_world = m
-    
-    def clone(self, ob, active=True, ):
-        # duplicate instance object and set active
-        # object data is copied as well, i want matrix aplied and in the end instance will be converted to manual system vertex with attributes..
-        if(type(ob) == str):
-            o = bpy.data.objects[ob]
-        else:
-            o = ob
-        
-        o = o.copy()
-        o.name = 'tmp-instance-{}'.format(uuid.uuid1())
-        o.data = o.data.copy()
-        o.data.name = o.name
-        # o.data.transform(o.matrix_world)
-        self.col.objects.link(o)
-        # o.select_set(True)
-        # bpy.context.view_layer.objects.active = o
-        xy = [-self.brush.radius, self.brush.radius]
-        a = np.random.uniform(xy[0], xy[1], [2, ])
-        '''
-        mt = Matrix.Translation((self._loc.x + a[0], self._loc.y + a[1], self._loc.z + self.brush.height)).to_4x4()
-        # TODO: use rotation and scale from panels, following is just basic randomization so something is there..
-        mr = Matrix.Rotation(np.random.uniform(0.0, np.pi, ), 4, 'Z', )
-        # d = 0.2
-        # ms = Matrix.Scale(np.random.uniform(1.0 - d, 1.0 + d, ), 4, )
-        
-        gl, gr, gs = self.surface.matrix_world.decompose()
-        gms = Matrix(((gs[0], 0.0, 0.0, 0.0), (0.0, gs[1], 0.0, 0.0), (0.0, 0.0, gs[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        ms = Matrix()
-        # ms = gms.inverted() @ ms
-        ms = gms @ ms
-        
-        m = mt @ mr @ ms
-        # o.matrix_world = Matrix.Translation((self._loc.x + a[0], self._loc.y + a[1], self._loc.z + self.height))
-        o.matrix_world = m
-        # self.cinstance = o
-        '''
-        mt = Matrix.Translation((self._loc.x + a[0], self._loc.y + a[1], self._loc.z + self.brush.height)).to_4x4()
-        r = self._gen_rotation(1, np.array(self._loc, dtype=float, ).reshape(-1, 3), np.array(self._nor, dtype=float, ).reshape(-1, 3), )[0]
-        s = self._gen_scale(1, )[0]
-        gl, gr, gs = self.surface.matrix_world.decompose()
-        mr = r.to_matrix().to_4x4()
-        gmr = gr.to_matrix().to_4x4()
-        mr = gmr @ mr
-        ms = Matrix(((s[0], 0.0, 0.0, 0.0), (0.0, s[1], 0.0, 0.0), (0.0, 0.0, s[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        gms = Matrix(((gs[0], 0.0, 0.0, 0.0), (0.0, gs[1], 0.0, 0.0), (0.0, 0.0, gs[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        ms = gms @ ms
-        m = mt @ mr @ ms
-        # m = m @ self.surface.matrix_world
-        o.matrix_world = m
-        
-        if(active):
-            self.activate(o)
-            bpy.ops.rigidbody.objects_add(type='ACTIVE')
-            # is there any way to get these presets? without rewriting them?
-            # list is in: source/blender/editors/physics/rigidbody_object.c
-            bpy.ops.rigidbody.mass_calculate(material='Stone', density=2515, )
-            
-            o.rigid_body.friction = 0.75
-            o.rigid_body.linear_damping = 0.1
-            o.rigid_body.angular_damping = 0.2
-        
-        return o
-    
-    def _self_brush_modal_update(self, context, ):
-        self.brush = context.scene.scatter5.manual.physics_brush
-    
-    def _on_mouse_hover(self, context, event, ):
-        self._drawing(context, event, )
-        loc = self._loc
-        nor = self._nor
-        
-        l = loc.copy()
-        h = self.brush.height
-        # l = l + (nor * h)
-        l.z += h
-        mt = Matrix.Translation(l, )
-        # mr = self._rotation_to(Vector((0.0, 0.0, 1.0, )), nor, ).to_matrix().to_4x4()
-        mr = Matrix()
-        radius = self.brush.radius
-        ms = Matrix(((radius, 0.0, 0.0, 0.0), (0.0, radius, 0.0, 0.0), (0.0, 0.0, radius, 0.0), (0.0, 0.0, 0.0, 1.0)))
-        m = mt @ mr @ ms
-        
-        wcf = self._theme._fill_color
-        wco = self._theme._outline_color
-        if(len(self._alive.keys()) and self.lmb and len(self._alive.keys()) < self.brush.max_active and not self._max_reached):
-            # wcf = (1.0, 0.0, 0.0, 0.1, )
-            wcf = (1.0, 1.0, 0.0, 0.5, )
-            wco = (1.0, 1.0, 0.0, 1.0, )
-        elif(len(self._alive.keys())):
-            # wcf = (1.0, 1.0, 0.0, 0.1, )
-            wcf = (1.0, 1.0, 0.0, 0.5, )
-            wco = (1.0, 1.0, 0.0, 1.0, )
-        
-        lpx = 20
-        region = context.region
-        rv3d = context.region_data
-        loc_2d = view3d_utils.location_3d_to_region_2d(region, rv3d, self._loc, )
-        loc2_2d = Vector((loc_2d.x, loc_2d.y + lpx))
-        loc2_3d = view3d_utils.region_2d_to_location_3d(region, rv3d, loc2_2d, self._loc)
-        al = ((self._loc.x - loc2_3d.x) ** 2 + (self._loc.y - loc2_3d.y) ** 2 + (self._loc.z - loc2_3d.z) ** 2) ** 0.5
-        
-        ll = loc.copy()
-        ll.z += al
-        mt = Matrix.Translation(ll, )
-        mr = Matrix.Rotation(np.radians(180.0), 3, 'X').to_4x4()
-        marr = mt @ mr
-        
-        alen = self.brush.height
-        
-        ls = []
-        ls.extend([
-            {
-                'function': 'circle_outline_3d',
-                'arguments': {
-                    'matrix': m,
-                    'color': wco,
-                },
-            },
-            {
-                'function': 'thick_line_3d',
-                'arguments': {
-                    'a': loc,
-                    'b': l,
-                    'matrix': Matrix(),
-                    'color': wco,
-                }
-            },
-            {
-                'function': 'arrow_3d',
-                'arguments': {
-                    'point': self._loc,
-                    # 'length': self.brush.height,
-                    # 'length': 1 / 5 * 4,
-                    'length': al,
-                    'matrix': marr,
-                    'color': wco,
-                    # # 'outer_radius': 1 / 20,
-                    # # 'inner_radius': 1 / 60,
-                    # # 'shoulder_offset': 1 / 5,
-                    # # 'steps': 16,
-                    # 'outer_radius': 1 / 5,
-                    # 'inner_radius': 1 / 15,
-                    # 'shoulder_offset': 1 / 5 * 4,
-                    'outer_radius': alen / 20,
-                    'inner_radius': alen / 60,
-                    'shoulder_offset': alen / 5,
-                }
-            },
-        ])
-        
-        if(self.lmb):
-            # ls.extend([
-            #     {
-            #         'function': 'circle_fill_3d',
-            #         'arguments': {
-            #             'matrix': m,
-            #             'color': wcf,
-            #         },
-            #     },
-            # ])
-            ls.insert(0, {
-                'function': 'circle_fill_3d',
-                'arguments': {
-                    'matrix': m,
-                    'color': wcf,
-                },
-            })
-        
-        l = len(self._alive.keys())
-        if(l):
-            x = event.mouse_region_x
-            y = event.mouse_region_y
-            ls.extend([
-                {
-                    'function': 'label_2d',
-                    'arguments': {
-                        'coords': (x, y, ),
-                        'offset': (10, -10 * 2, ),
-                        'text': "Active: {}".format(l),
-                        # 'color': self._theme._text_color,
-                        'color': wco,
-                        'size': self._theme._text_size,
-                    },
-                },
-            ])
-        
-        ToolWidgets._cache[self.tool_id]['screen_components'] = ls
-        ToolWidgets._tag_redraw()
-    
-    def _on_mouse_out(self, context, event, ):
-        ls = []
-        
-        wcf = self._theme._fill_color
-        wco = self._theme._outline_color
-        l = len(self._alive.keys())
-        if(l):
-            wcf = self._theme._fill_color
-            wco = self._theme._outline_color
-            if(len(self._alive.keys()) and self.lmb and len(self._alive.keys()) < self.brush.max_active and not self._max_reached):
-                # wcf = (1.0, 0.0, 0.0, 0.1, )
-                wcf = (1.0, 0.5, 0.0, 0.5, )
-                wco = (1.0, 0.5, 0.0, 1.0, )
-            elif(len(self._alive.keys())):
-                # wcf = (1.0, 1.0, 0.0, 0.1, )
-                wcf = (1.0, 1.0, 0.0, 0.5, )
-                wco = (1.0, 1.0, 0.0, 1.0, )
-            
-            x = event.mouse_region_x
-            y = event.mouse_region_y
-            ls.extend([
-                {
-                    'function': 'label_2d',
-                    'arguments': {
-                        'coords': (x, y, ),
-                        'offset': (10, -10 * 2, ),
-                        'text': "Active: {}".format(l),
-                        # 'color': self._theme._text_color,
-                        'color': wco,
-                        'size': self._theme._text_size,
-                    },
-                },
-            ])
-        
-        ToolWidgets._cache[self.tool_id]['screen_components'] = ls
-        ToolWidgets._tag_redraw()
-    
-    def _drawing(self, context, event, ):
-        loc, nor, idx, dst = self._project(context, event, )
-        if(loc is not None):
-            # for each draw event, those two should be the same for all generated points, so i can keep this on class.. might get easier in future to access that
-            self._loc = loc.copy()
-            self._nor = nor.copy()
-            
-            # r = self._generate(loc, nor, idx, dst, )
-            # if(r is not None):
-            #     loc, nor = r
-            #     self._store(loc, nor, )
-            #
-            # self.target.data.update()
-    
-    def _on_lmb_press(self, context, event, ):
-        # NOTE: very important, if there was some drawing done, then undo without dropping tool, this is pointing somewhere invalid, each brush MUST set this again on each use AND before super()
-        self.brush = context.scene.scatter5.manual.physics_brush
-        super()._on_lmb_press(context, event, )
-        
-        self._drawing(context, event, )
-        
-        # kill alive
-        self.kill()
-        # restart timeline
-        self.scene.frame_set(1)
-    
-    def _on_lmb_move(self, context, event, ):
-        super()._on_lmb_move(context, event, )
-        
-        self._drawing(context, event, )
-    
-    def _on_lmb_release(self, context, event, ):
-        super()._on_lmb_release(context, event, )
-        
-        self._drawing(context, event, )
-        
-        # # # push to history..
-        # bpy.ops.ed.undo_push(message=self.bl_label, )
-    
-    def _cleanup(self, ):
-        ToolWidgets.deinit()
-        
-        # handlers
-        bpy.app.handlers.frame_change_pre.remove(self.on_frame_change_pre)
-        bpy.app.handlers.frame_change_post.remove(self.on_frame_change_post)
-        # timeline
-        bpy.ops.screen.animation_cancel(restore_frame=True, )
-        # remove rigidbody flag
-        self.activate(self.surface)
-        bpy.ops.rigidbody.objects_remove()
-        # kill alive instances
-        self.kill()
-        # remove rigidbody flag from instances in collection
-        if(len(self.col.objects)):
-            bpy.ops.object.select_all(action='DESELECT')
-            for o in self.col.objects:
-                o.select_set(True)
-            bpy.context.view_layer.objects.active = o
-            bpy.ops.rigidbody.objects_remove()
-        bpy.ops.object.select_all(action='DESELECT')
-        
-        # restore initial state
-        self.scene.render.fps = self._initial_fps
-        self.scene.frame_start = self._initial_frame_start
-        self.scene.frame_end = self._initial_frame_end
-        self.scene.frame_step = self._initial_frame_step
-        self.scene.render.frame_map_old = self._initial_frame_map_old
-        self.scene.render.frame_map_new = self._initial_frame_map_new
-        
-        # remove rigidbody world
-        if(self.scene.rigidbody_world is not None):
-            bpy.ops.rigidbody.world_remove()
-        
-        # # TODO: at this stage, objects in collection should be converted to manual system vertices and removed together with collection from scene..
-        # if(len(self.col.objects)):
-        #     for o in self.col.objects:
-        #         self._store_instance(o, )
-        
-        # frozen object to instances
-        not_void = []
-        if(len(self.col.objects)):
-            for o in self.col.objects:
-                props = o.scatter5.manual_physics_brush_object_properties
-                i = props.vertex_index
-                not_void.append(i)
-                self._store_instance2(o, )
-        # NOTE: points that don't have corresponding frozen objects leave in void, scaled to zero in center. what to do with them? if i remove them it will change order..
-        l = len(self.target.data.vertices)
-        void = []
-        if(len(not_void) < l):
-            for i in range(l):
-                if(i not in not_void):
-                    # ignore existing, instances that been there before brush started
-                    pid = self.target.data.attributes['{}id'.format(self.attribute_prefix)].data[i].value
-                    if(pid <= self._ignore_existing_pids_from):
-                        continue
-                    
-                    self.target.data.vertices[i].co = Vector()
-                    void.append(i)
-        # NOTE: the only thing i can do is look if they are all at the end of list, then i can safely remove them, any in the middle need to stay.
-        if(len(void)):
-            a = np.zeros(l, dtype=bool, )
-            a[not_void] = True
-            b = a[:len(not_void)]
-            safe = np.all(b)
-            if(safe):
-                bm = bmesh.new()
-                bm.from_mesh(self.target.data)
-                bm.verts.ensure_lookup_table()
-                for v in bm.verts:
-                    if(v.index in void):
-                        bm.verts.remove(v)
-                bm.to_mesh(self.target.data)
-                bm.free()
-        
-        # now just remove all generated stuff..
-        if(len(self.col.objects)):
-            for o in self.col.objects:
-                me = o.data
-                self.col.objects.unlink(o)
-                bpy.data.objects.remove(o)
-                bpy.data.meshes.remove(me)
-        bpy.data.collections.remove(self.col)
-        
-        # # DEBUG
-        # vs = []
-        # ns = []
-        # cs = []
-        # me = self.target.data
-        # m = self.surface.matrix_world
-        # _, r, _ = m.decompose()
-        # r = r.to_matrix()
-        # for i, v in enumerate(me.vertices):
-        #     vs.append(Vector(m @ v.co).to_tuple())
-        #     n = Vector(r @ me.attributes['{}normal'.format(self.attribute_prefix)].data[i].vector)
-        #     n.normalize()
-        #     ns.append(n.to_tuple())
-        #     cs.append((1.0, 1.0, 0.0, 1.0))
-        # debug.points(self.target, vs, ns, cs, )
-        # # DEBUG
-        
-        super()._cleanup()
-    
-    def _store_instance(self, o, ):
-        self._ensure_attributes()
-        
-        location, rotation, scale = o.matrix_world.decompose()
-        
-        gl, gr, gs = self.surface.matrix_world.decompose()
-        # mr = rotation.to_matrix().to_4x4()
-        # gmr = gr.to_matrix().to_4x4()
-        # mr = gmr.inverted() @ mr
-        # _, rotation, _ = mr.decompose()
-        ms = Matrix(((scale[0], 0.0, 0.0, 0.0), (0.0, scale[1], 0.0, 0.0), (0.0, 0.0, scale[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        gms = Matrix(((gs[0], 0.0, 0.0, 0.0), (0.0, gs[1], 0.0, 0.0), (0.0, 0.0, gs[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        ms = gms.inverted() @ ms
-        _, _, scale = ms.decompose()
-        
-        nor = rotation.to_matrix().to_4x4() @ Vector((0.0, 0.0, 1.0))
-        up = rotation.to_matrix().to_4x4() @ Vector((0.0, 1.0, 0.0))
-        
-        loc, nor = self._global_to_surface_space(location, nor, )
-        
-        me = self.target.data
-        me.vertices.add(1)
-        i = len(me.vertices) - 1
-        me.vertices[i].co = loc
-        
-        me.attributes['{}index'.format(self.attribute_prefix)].data[i].value = self.brush.instance_index
-        
-        nm = '{}normal'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].vector = nor
-        
-        # r = self._gen_rotation(1, np.array(loc, dtype=float, ).reshape(-1, 3), np.array(nor, dtype=float, ).reshape(-1, 3), )[0]
-        r = self._direction_to_rotation_with_m3x3(nor, up, )
-        
-        e = r.to_euler('XYZ')
-        nm = '{}rotation'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].vector = e
-        
-        v = Vector((0.0, 0.0, 1.0))
-        v.rotate(e)
-        nm = '{}align_z'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].vector = v
-        
-        v = Vector((0.0, 1.0, 0.0))
-        v.rotate(e)
-        nm = '{}align_y'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].vector = v
-        
-        # s = self._gen_scale(1, )
-        s = scale
-        
-        nm = '{}scale'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].vector = s
-        
-        anm = '{}private_s_base'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_s_base[0]
-        
-        anm = '{}private_s_random'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_s_random[0]
-        
-        anm = '{}private_s_random_random'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_s_random_random[0]
-        
-        anm = '{}private_s_random_type'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].value = self._private_s_random_type[0]
-        
-        anm = '{}private_s_change'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_s_change[0]
-        
-        anm = '{}private_s_change_random'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_s_change_random[0]
-        
-        # id
-        ids = self._gen_id(1, )
-        nm = '{}id'.format(self.attribute_prefix)
-        me.attributes[nm].data[i].value = ids[0]
-        
-        # rotation intermediates v2 ---------------------------------------------------
-        anm = '{}private_r_align'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].value = self._private_r_align[0]
-        
-        anm = '{}private_r_up'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].value = self._private_r_up[0]
-        
-        anm = '{}private_r_base'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_r_base[0]
-        
-        anm = '{}private_r_random'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_r_random[0]
-        
-        anm = '{}private_r_random_random'.format(self.attribute_prefix)
-        att = me.attributes[anm].data
-        att[i].vector = self._private_r_random_random[0]
-    
-    def _store_instance2(self, o, ):
-        self._ensure_attributes()
-        
-        location, rotation, scale = o.matrix_world.decompose()
-        
-        gl, gr, gs = self.surface.matrix_world.decompose()
-        ms = Matrix(((scale[0], 0.0, 0.0, 0.0), (0.0, scale[1], 0.0, 0.0), (0.0, 0.0, scale[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        gms = Matrix(((gs[0], 0.0, 0.0, 0.0), (0.0, gs[1], 0.0, 0.0), (0.0, 0.0, gs[2], 0.0), (0.0, 0.0, 0.0, 1.0)))
-        ms = gms.inverted() @ ms
-        _, _, scale = ms.decompose()
-        
-        nor = rotation.to_matrix().to_4x4() @ Vector((0.0, 0.0, 1.0))
-        up = rotation.to_matrix().to_4x4() @ Vector((0.0, 1.0, 0.0))
-        
-        loc, nor = self._global_to_surface_space(location, nor, )
-        
-        props = o.scatter5.manual_physics_brush_object_properties
-        pid = props.point_id
-        i = props.vertex_index
-        
-        me = self.target.data
-        
-        me.vertices[i].co = loc
-        
-        me.attributes['{}index'.format(self.attribute_prefix)].data[i].value = self.brush.instance_index
-        
-        me.attributes['{}normal'.format(self.attribute_prefix)].data[i].vector = nor
-        
-        r = self._direction_to_rotation_with_m3x3(nor, up, )
-        e = r.to_euler('XYZ')
-        me.attributes['{}rotation'.format(self.attribute_prefix)].data[i].vector = e
-        
-        v = Vector((0.0, 0.0, 1.0))
-        v.rotate(e)
-        me.attributes['{}align_z'.format(self.attribute_prefix)].data[i].vector = v
-        
-        v = Vector((0.0, 1.0, 0.0))
-        v.rotate(e)
-        me.attributes['{}align_y'.format(self.attribute_prefix)].data[i].vector = v
-        
-        s = scale
-        me.attributes['{}scale'.format(self.attribute_prefix)].data[i].vector = s
-        me.attributes['{}private_s_base'.format(self.attribute_prefix)].data[i].vector = self._private_s_base[0]
-        me.attributes['{}private_s_random'.format(self.attribute_prefix)].data[i].vector = self._private_s_random[0]
-        me.attributes['{}private_s_random_random'.format(self.attribute_prefix)].data[i].vector = self._private_s_random_random[0]
-        me.attributes['{}private_s_random_type'.format(self.attribute_prefix)].data[i].value = self._private_s_random_type[0]
-        me.attributes['{}private_s_change'.format(self.attribute_prefix)].data[i].vector = self._private_s_change[0]
-        me.attributes['{}private_s_change_random'.format(self.attribute_prefix)].data[i].vector = self._private_s_change_random[0]
-        
-        # ids = self._gen_id(1, )
-        # me.attributes['{}id'.format(self.attribute_prefix)].data[i].value = ids[0]
-        me.attributes['{}id'.format(self.attribute_prefix)].data[i].value = pid
-        
-        me.attributes['{}private_r_align'.format(self.attribute_prefix)].data[i].value = self._private_r_align[0]
-        me.attributes['{}private_r_up'.format(self.attribute_prefix)].data[i].value = self._private_r_up[0]
-        me.attributes['{}private_r_base'.format(self.attribute_prefix)].data[i].vector = self._private_r_base[0]
-        me.attributes['{}private_r_random'.format(self.attribute_prefix)].data[i].vector = self._private_r_random[0]
-        me.attributes['{}private_r_random_random'.format(self.attribute_prefix)].data[i].vector = self._private_r_random_random[0]
-"""
-
-# -----------------------------------------------------------------------------------------------------------------------------
-
-
 classes = (
     SCATTER5_OT_manual_brush_tool_dot,
     SCATTER5_OT_manual_brush_tool_pose,
@@ -18701,6 +18425,7 @@ classes = (
     SCATTER5_OT_manual_brush_tool_scale_set,
     SCATTER5_OT_manual_brush_tool_grow_shrink,
     SCATTER5_OT_manual_brush_tool_object_set,
+    SCATTER5_OT_manual_brush_tool_heaper,
     
     # # DEBUG -------------------------------------------
     # SCATTER5_OT_manual_brush_tool_debug_3d,

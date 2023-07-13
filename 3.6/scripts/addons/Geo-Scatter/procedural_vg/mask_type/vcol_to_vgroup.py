@@ -76,7 +76,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,'["Input_2_attribute_name"]', emitter.data,"vertex_colors",text="",)
         eval_ptr = mod["Input_2_attribute_name"]
         exists = (eval_ptr in emitter.data.vertex_colors)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vcol" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Input_2_attribute_name']" ; op.set_color = (1,1,1)
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vcol" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Input_2_attribute_name']" ; op.set_color = (1,1,1) ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
         lbl.separator(factor=1)
         prp.separator(factor=1)
@@ -92,7 +92,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,'["Output_3_attribute_name"]', emitter,"vertex_groups",text="",)
         eval_ptr = mod["Output_3_attribute_name"]
         exists = (eval_ptr in emitter.vertex_groups)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_3_attribute_name']"
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_3_attribute_name']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
         lbl.separator(factor=0.7)
         prp.separator(factor=0.7)
@@ -102,7 +102,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,'["Output_4_attribute_name"]', emitter,"vertex_groups",text="",)
         eval_ptr = mod["Output_4_attribute_name"]
         exists = (eval_ptr in emitter.vertex_groups)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_4_attribute_name']"
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_4_attribute_name']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
         lbl.separator(factor=0.7)
         prp.separator(factor=0.7)
@@ -112,7 +112,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,'["Output_5_attribute_name"]', emitter,"vertex_groups",text="",)
         eval_ptr = mod["Output_5_attribute_name"]
         exists = (eval_ptr in emitter.vertex_groups)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_5_attribute_name']"
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_5_attribute_name']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
         lbl.separator(factor=0.7)
         prp.separator(factor=0.7)
@@ -122,7 +122,7 @@ def draw_settings(layout,i):
         prprow.prop_search(mod,'["Output_6_attribute_name"]', emitter,"vertex_groups",text="",)
         eval_ptr = mod["Output_6_attribute_name"]
         exists = (eval_ptr in emitter.vertex_groups)
-        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_6_attribute_name']"
+        op = prprow.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=is_vg_active(emitter,eval_ptr)) ; op.mode = "vg" ; op.group_name = eval_ptr ; op.api = f"emitter.modifiers['{modname}']['Output_6_attribute_name']" ; op.context_surfaces = "*EMITTER_CONTEXT*"
 
     layout.separator()
 
@@ -155,7 +155,7 @@ def add():
     modname = f"Scatter5 {m.name}"
     if (modname not in emitter.modifiers):
 
-        mod = utils.import_utils.import_and_add_geonode( emitter, mod_name=modname, node_name=".Scatter5 VcolToVgroup", blend_path=directories.addon_vgmasks_blend, copy=False,)
+        mod = utils.import_utils.import_and_add_geonode(emitter, mod_name=modname, node_name=".Scatter5 VcolToVgroup", blend_path=directories.addon_vgmasks_blend, copy=False,)
         mod.show_expanded = False
         mod["Input_2_use_attribute"] = True
 
@@ -189,7 +189,7 @@ def refresh(i,obj=None):
     modname = f"Scatter5 {m.name}"
     mod = emitter.modifiers.get(modname)
     if mod is None:
-        mod = utils.import_utils.import_and_add_geonode( emitter, mod_name=modname, node_name=".Scatter5 VcolToVgroup", blend_path=directories.addon_vgmasks_blend, copy=False,)
+        mod = utils.import_utils.import_and_add_geonode(emitter, mod_name=modname, node_name=".Scatter5 VcolToVgroup", blend_path=directories.addon_vgmasks_blend, copy=False,)
         mod.show_expanded = False
         m.mod_list = modname
 

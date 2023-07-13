@@ -17,12 +17,7 @@ import bpy
 from .. resources.icons import cust_icon
 from .. resources.translate import translate
 
-from .. utils.extra_utils import is_rendered_view
 from .. utils.str_utils import word_wrap, count_repr
-
-from .. scattering.emitter import is_ready_for_scattering
-
-from .. manual import brushes
 
 from .. scattering.texture_datablock import draw_texture_datablock
 
@@ -40,7 +35,8 @@ from . ui_emitter_select import emitter_header
 
 
 def get_props():
-    """get useful props used in interface"""
+    """get useful props used in interface""" 
+    #IMPORTANT NOTE: perhaps a bad idea to constanly call this funciton in GUI, too many repetitive calls?
 
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
     scat_win    = bpy.context.window_manager.scatter5
@@ -48,9 +44,9 @@ def get_props():
     scat_scene  = bpy.context.scene.scatter5
     emitter     = scat_scene.emitter
     psy_active  = emitter.scatter5.get_psy_active()
+    group_active  = emitter.scatter5.get_group_active()
 
-    return (addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active)
-
+    return (addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active)
 
 def warnings(layout, active=True, created=True,):
     """check if interface should be drawn, if nothing created or active"""
@@ -69,7 +65,6 @@ def warnings(layout, active=True, created=True,):
 
     return False
 
-
 def lock_check(psy_active, s_category="s_distribution", prop=None ):
     """check if category is locked"""
 
@@ -78,25 +73,30 @@ def lock_check(psy_active, s_category="s_distribution", prop=None ):
     return prop
 
 def active_check(psy_active, s_category="s_distribution", prop=None ):
-
     """check if category master allow is off"""
+
     if ( not getattr(psy_active,f"{s_category}_master_allow") ):
         return False 
     return prop
 
 
+#  8888b.  88""Yb    db    Yb        dP     888888 888888 8b    d8 88""Yb 88        db    888888 888888 .dP"Y8
+#   8I  Yb 88__dP   dPYb    Yb  db  dP        88   88__   88b  d88 88__dP 88       dPYb     88   88__   `Ybo."
+#   8I  dY 88"Yb   dP__Yb    YbdPYbdP         88   88""   88YbdP88 88"""  88  .o  dP__Yb    88   88""   o.`Y8b
+#  8888Y"  88  Yb dP""""Yb    YP  YP          88   888888 88 YY 88 88     88ood8 dP""""Yb   88   888888 8bodP'
+
+
 def draw_visibility_methods(psy_active, layout, api):
     """draw viewport method in visibility and display features"""
 
-    if not layout:
+    if (not layout):
         return None
 
-    if bpy.context.preferences.addons["Geo-Scatter"].preferences.debug:
+    if (bpy.context.preferences.addons["Geo-Scatter"].preferences.debug_interface):
         row = layout.row(align=True)
         row.alignment = "RIGHT"
-        row.scale_x = 0.65
+        row.scale_x = 0.9
         row.prop(psy_active,f"{api}_viewport_method", text="")
-        return None 
 
     row = layout.box().row(align=True)
     row.alignment = "RIGHT"
@@ -113,10 +113,10 @@ def draw_visibility_methods(psy_active, layout, api):
 
     return None 
 
-def draw_coll_ptr_prop(layout=None, psy_active=None, api="", revert_api="", add_coll_name="", add_parent_name="Geo-Scatter User Col", draw_popover=True):
-    """draw collection pointer template"""
+def draw_coll_ptr_prop(layout=None, system=None, api="", revert_api="", add_coll_name="", add_parent_name="Geo-Scatter User Col", draw_popover=True):
+    """draw collection pointer template, for psy or group"""
         
-    ptr_str = getattr(psy_active,api)
+    ptr_str = getattr(system,api)
     coll = bpy.data.collections.get(ptr_str)
 
     row = layout.row(align=True)
@@ -124,21 +124,22 @@ def draw_coll_ptr_prop(layout=None, psy_active=None, api="", revert_api="", add_
     #draw popover 
     if (coll is not None and draw_popover):
         pop = row.row(align=True)
+        
         #transfer arguments for collection drawing & add/remove buttons
-        pop.context_pointer_set("s5_ctxt_ptr_collection",coll,)
-        pop.context_pointer_set("s5_ctxt_ptr_prop_name",getattr(psy_active, f"passctxt_{api}",),)
+        pop.context_pointer_set("pass_ui_arg_collection", coll,)
+        pop.context_pointer_set("pass_ui_arg_prop_name", getattr(system, f"passctxt_{api}"),)
         pop.popover(panel="SCATTER5_PT_collection_popover", text="", icon="OUTLINER",)
 
     #draw prop search
-    row.prop_search( psy_active, api, bpy.data, "collections",text="",)
+    row.prop_search( system, api, bpy.data, "collections",text="",)
 
     #draw arrow if filled and option
     if (coll is not None):
         if (revert_api!=""):
-            row.prop( psy_active, revert_api, text="",icon="ARROW_LEFTRIGHT")
+            row.prop( system, revert_api, text="",icon="ARROW_LEFTRIGHT")
     else: 
         op = row.operator("scatter5.create_coll", text="", icon="ADD")
-        op.api = f"psy_active.{api}"
+        op.api = f"{'psy_active' if (type(system).__name__=='SCATTER5_PR_particle_systems') else 'group_active'}.{api}" 
         op.pointer_type = "str"
         op.coll_name = add_coll_name
         op.parent_name = add_parent_name
@@ -218,17 +219,6 @@ def draw_transition_control_feature(layout=None, psy_active=None, api="", fallno
 
     return tocol, is_toggled 
 
-
-
-# ooooo     ooo              o8o                                                    oooo       ooo        ooooo                    oooo
-# `888'     `8'              `"'                                                    `888       `88.       .888'                    `888
-#  888       8  ooo. .oo.   oooo  oooo    ooo  .ooooo.  oooo d8b  .oooo.o  .oooo.    888        888b     d'888   .oooo.    .oooo.o  888  oooo   .oooo.o
-#  888       8  `888P"Y88b  `888   `88.  .8'  d88' `88b `888""8P d88(  "8 `P  )88b   888        8 Y88. .P  888  `P  )88b  d88(  "8  888 .8P'   d88(  "8
-#  888       8   888   888   888    `88..8'   888ooo888  888     `"Y88b.   .oP"888   888        8  `888'   888   .oP"888  `"Y88b.   888888.    `"Y88b.
-#  `88.    .8'   888   888   888     `888'    888    .o  888     o.  )88b d8(  888   888        8    Y     888  d8(  888  o.  )88b  888 `88b.  o.  )88b
-#    `YbodP'    o888o o888o o888o     `8'     `Y8bod8P' d888b    8""888P' `Y888""8o o888o      o8o        o888o `Y888""8o 8""888P' o888o o888o 8""888P'
-
-
 def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
     """every universal masks api should have _mask_ptr _mask_reverse"""
 
@@ -237,6 +227,8 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
     _mask_method_val = getattr(psy_api,f"{mask_api}_mask_method")
     _mask_color_sample_method_val = getattr(psy_api,f"{mask_api}_mask_color_sample_method")
 
+    #group_api = "particle_groups" if (type(system).__name__=="SCATTER5_PR_particle_systems") else "particle_groups" if (type(system).__name__=="SCATTER5_PR_particle_groups") else "ERROR_NOT_FOUND"
+    
     col = layout.column(align=True)
 
     col.separator(factor=0.5)
@@ -260,7 +252,7 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
         mask = col.row(align=True)
 
         ptr = mask.row(align=True)
-        ptr.alert = ( bool(_mask_ptr_val) and (_mask_ptr_val not in psy_api.get_surfaces_match_vg(bpy.context, _mask_ptr_val)) )
+        ptr.alert = ( bool(_mask_ptr_val) and (_mask_ptr_val not in psy_api.get_surfaces_match_attr("vg")(psy_api, bpy.context, _mask_ptr_val)) )
         ptr.prop( psy_api, _mask_ptr_str, text="", icon="GROUP_VERTEX",)
 
         buttons = mask.row(align=True)
@@ -269,9 +261,12 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
         if (_mask_ptr_val!=""):
             buttons.prop( psy_api, f"{mask_api}_mask_reverse",text="",icon="ARROW_LEFTRIGHT")
 
-        op = buttons.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if _mask_ptr_val else "ADD", depress=((bpy.context.mode=="PAINT_WEIGHT") and (bpy.context.object.vertex_groups.active.name==_mask_ptr_val)),)
+        op = buttons.operator("scatter5.vg_quick_paint",
+            text="",
+            icon="BRUSH_DATA" if _mask_ptr_val else "ADD",
+            depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==_mask_ptr_val)),
+            )
         op.group_name = _mask_ptr_val
-        op.use_surfaces = True
         op.mode = "vg"
         op.api = f"emitter.scatter5.particle_systems['{psy_api.name}'].{_mask_ptr_str}"
 
@@ -301,7 +296,7 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
         mask = col.row(align=True)
 
         ptr = mask.row(align=True)
-        ptr.alert = ( bool(_mask_ptr_val) and (_mask_ptr_val not in psy_api.get_surfaces_match_vcol(bpy.context, _mask_ptr_val)) )
+        ptr.alert = ( bool(_mask_ptr_val) and (_mask_ptr_val not in psy_api.get_surfaces_match_attr("vcol")(psy_api, bpy.context, _mask_ptr_val)) )
         ptr.prop( psy_api, _mask_ptr_str, text="", icon="GROUP_VCOL",)
 
         buttons = mask.row(align=True)
@@ -310,9 +305,11 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
         if (_mask_ptr_val!=""):
             buttons.prop( psy_api, f"{mask_api}_mask_reverse",text="",icon="ARROW_LEFTRIGHT")
 
-        op = buttons.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if _mask_ptr_val else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==_mask_ptr_val)),)
+        op = buttons.operator("scatter5.vg_quick_paint",
+            text="",icon="BRUSH_DATA" if _mask_ptr_val else "ADD",
+            depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==_mask_ptr_val)),
+            )
         op.group_name =_mask_ptr_val
-        op.use_surfaces = True
         op.mode = "vcol"
         op.set_color = set_color
         op.api = f"emitter.scatter5.particle_systems['{psy_api.name}'].{_mask_ptr_str}"
@@ -337,8 +334,7 @@ def draw_universal_masks(layout=None, mask_api="", psy_api=None,):
 
     return col
 
-
-def draw_feature_influence(layout=None, psy_api=None, api_name="",):
+def draw_feature_influence(layout=None, system=None, api_name="",):
     """draw the feature influence api"""
 
     col=layout.column(align=True)
@@ -354,27 +350,27 @@ def draw_feature_influence(layout=None, psy_api=None, api_name="",):
         prop = f"{domain_api}_infl_allow"
 
         #is property domain supported? 
-        if prop not in psy_api.bl_rna.properties.keys(): 
+        if (prop not in system.bl_rna.properties.keys()): 
             continue
 
-        allow = getattr(psy_api,prop)
+        allow = getattr(system,prop)
             
         #enable influence
         row = col.row(align=True)
-        enabled = getattr(psy_api, prop)
+        enabled = getattr(system, prop)
         
-        row.prop( psy_api, prop, text="", icon="CHECKBOX_HLT" if enabled else "CHECKBOX_DEHLT",)
+        row.prop( system, prop, text="", icon="CHECKBOX_HLT" if enabled else "CHECKBOX_DEHLT",)
 
         row = row.row(align=True)
         row.enabled = enabled
 
         #influence value 
-        row.prop( psy_api, f"{domain_api}_influence")
+        row.prop( system, f"{domain_api}_influence")
 
         #influence revert if exists?
         rev_api = f"{domain_api}_revert"
-        if rev_api in psy_api.bl_rna.properties.keys(): 
-            row.prop( psy_api, rev_api, text="", icon="ARROW_LEFTRIGHT")
+        if (rev_api in system.bl_rna.properties.keys()): 
+            row.prop( system, rev_api, text="", icon="ARROW_LEFTRIGHT")
 
         continue
 
@@ -393,7 +389,7 @@ def draw_feature_influence(layout=None, psy_api=None, api_name="",):
 def draw_tweaking_panel(self,layout):
     """draw main tweaking panel"""
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     main = layout.column()
     main.enabled = scat_scene.ui_enabled
@@ -403,57 +399,76 @@ def draw_tweaking_panel(self,layout):
 
     draw_particle_selection(self,main)
     ui_templates.separator_box_out(main)
+
+    if (group_active is not None):
         
-    # draw_beginner_interface(self,main)
-    # ui_templates.separator_box_out(main)
+    
+        draw_group_masks(self,main)
+        ui_templates.separator_box_out(main)
 
-    # draw_removal_interface(self,main)
-    # ui_templates.separator_box_out(main)
+        draw_group_scale(self,main)
+        ui_templates.separator_box_out(main)
 
-    # draw_pros_interface(self,main)
-    # ui_templates.separator_box_out(main)
+        draw_group_pattern(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_particle_surface(self,main)
-    ui_templates.separator_box_out(main)
+        """
+        #Really needed?
+        draw_group_members(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_particle_distribution(self,main)
-    ui_templates.separator_box_out(main)
+        #Maybe later?
+        draw_group_distribution(self,main)
+        ui_templates.separator_box_out(main)
+        """
+    
+    elif (psy_active is not None):
+        
 
-    draw_particle_masks(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_surface(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_particle_rot(self, main)
-    ui_templates.separator_box_out(main)
+        draw_particle_distribution(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_particle_scale(self, main)
-    ui_templates.separator_box_out(main)
+        draw_particle_masks(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_pattern(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_rot(self, main)
+        ui_templates.separator_box_out(main)
 
-    draw_geo_filter(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_scale(self, main)
+        ui_templates.separator_box_out(main)
 
-    draw_ecosystem(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_pattern(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_proximity(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_abiotic(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_particle_push(self, main)
-    ui_templates.separator_box_out(main)
-            
-    draw_wind(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_ecosystem(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_visibility(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_proximity(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_instances(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_push(self, main)
+        ui_templates.separator_box_out(main)
+                
+        draw_particle_wind(self,main)
+        ui_templates.separator_box_out(main)
 
-    draw_display(self,main)
-    ui_templates.separator_box_out(main)
+        draw_particle_visibility(self,main)
+        ui_templates.separator_box_out(main)
+
+        draw_particle_instances(self,main)
+        ui_templates.separator_box_out(main)
+
+        if ( (psy_active is None) or (psy_active is not None and psy_active.s_instances_method=="ins_collection") ):
+
+            draw_particle_display(self,main)
+            ui_templates.separator_box_out(main)
+
 
     ui_templates.separator_box_out(main)
     ui_templates.separator_box_out(main)
@@ -470,503 +485,26 @@ def draw_tweaking_panel(self,layout):
 # 8""88888P'  `Y8bod8P' o888o `Y8bod8P' `Y8bod8P'   "888" o888o `Y8bod8P' o888o o888o      o88o     o8888o d888b    `Y8bod8P' `Y888""8o
 
 
-
-class SCATTER5_UL_list_scatter_small(bpy.types.UIList):
-    """selection ui-list area"""
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        
-        if not item:
-            return 
-        row  = layout.row(align=True)
-        row.scale_y = bpy.context.preferences.addons["Geo-Scatter"].preferences.ui_selection_y
-        
-        #Color 
-
-        color = row.row()
-        color.scale_x = 0.25
-        color.prop(item,"s_color",text="")
-
-        #Name 
-
-        name = row.row(align=True)
-        name.prop(item,"name", text="", emboss=False, )
-
-        #Render Status
-    
-        sub = row.row(align=True)
-        sub.active = item.active
-        sub.scale_x = 0.95
-        rwoo = sub.row(align=True) ; rwoo.scale_x = 0.85 ; rwoo.prop(item,"sel", text="", icon="RESTRICT_SELECT_OFF"if item.sel else "RESTRICT_SELECT_ON", emboss=False,)
-        rwoo = sub.row(align=True) ;                       rwoo.prop(item, "hide_viewport", text="", icon="RESTRICT_VIEW_ON" if item.hide_viewport else "RESTRICT_VIEW_OFF", invert_checkbox=True, emboss=False,)
-        rwoo = sub.row(align=True) ;                       rwoo.prop(item, "hide_render", text="", icon="RESTRICT_RENDER_ON" if item.hide_render else "RESTRICT_RENDER_OFF", invert_checkbox=True, emboss=False,)
-
-        return
-
-def draw_particle_selection_inner(layout, addon_prefs=None, scat_scene=None, emitter=None, psy_active=None): 
-    """used in tweaking panel but also in quick lister interface"""
-
-    row = layout.row()
-
-    #left spacers
-    row.separator(factor=0.5)
-
-    #list template
-    
-    template = row.column()
-
-    ui_list = template.column()
-    ui_list.scale_y = addon_prefs.ui_selection_y
-    ui_list.template_list("SCATTER5_UL_list_scatter_small", "", emitter.scatter5, "particle_systems", emitter.scatter5, "particle_systems_idx", type="DEFAULT", rows=10,)
-
-    #warnings right below ui list  
-
-    if (psy_active is not None): 
-        
-        #debug info 
-
-        if (addon_prefs.debug):
-
-            template.separator(factor=0.5)
-            debug = template.column().box()
-
-            debug.prop(psy_active, "name_bis")
-            debug.prop(psy_active, "scatter_obj")
-            if psy_active.scatter_obj:
-                scatter_mod = psy_active.get_scatter_mod()
-                if scatter_mod:
-                    debug.prop(scatter_mod, "node_group")
-            debug.prop(psy_active, "blender_version")
-            debug.prop(psy_active, "addon_version")
-            debug.prop(psy_active, "addon_type")
-
-        #user removed scatter_obj ? 
-
-        if ( (psy_active.scatter_obj is None) or (psy_active.scatter_obj.name not in bpy.context.scene.objects) ):
-            template.separator(factor=0.5)
-            warn = layout.column()
-            word_wrap( string=translate("Warning, we couldn't find the scatter-object used by this scatter-system."), active=True,  layout=warn, alignment="CENTER", max_char=35, icon="INFO")
-
-        #user has hidden the scatter_obj ? 
-
-        elif (not psy_active.scatter_obj.visible_get() and not psy_active.hide_viewport):
-            if (bpy.context.space_data.local_view is None):
-                msg = translate("This scatter-system collection is hidden. Check your outliner.")
-            else:
-                if (bpy.context.object is emitter):
-                    msg = translate("To bring your system(s) in local view, an operator is available in the side menu.")
-                else:
-                    msg = translate("This Scatter-system is hidden. Are you on local view?")
-            template.separator(factor=0.5)
-            warn = layout.column()
-            word_wrap( string=msg, active=True,  layout=warn, alignment="CENTER", max_char=35, icon="INFO")
-
-    #Operators side menu
-    
-    ope = row.column(align=True)
-
-    #add
-    
-    add = ope.column(align=True)
-    op = add.operator("scatter5.add_psy_simple",text="",icon="ADD",)
-    op.emitter_name = emitter.name
-    op.surfaces_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects if (o.type=="MESH")] )
-    op.instances_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects] )
-    op.psy_color_random = True 
-
-    #remove
-    
-    rem = ope.column(align=True)
-    rem.enabled = (psy_active is not None)
-    op = rem.operator("scatter5.remove_system",text="",icon="REMOVE",)
-    op.emitter_name = emitter.name
-    op.method = "alt"
-    op.undo_push = True
-
-    ope.separator()
-    
-    #selection menu
-
-    menu = ope.row()
-    menu.context_pointer_set("s5_ctxt_ptr_emitter", emitter)
-    menu.menu("SCATTER5_MT_selection_menu", icon='DOWNARROW_HLT', text="",)
-
-    ope.separator()        
-
-    #move up & down
-
-    updo = ope.column(align=True)
-    updo.enabled = (len(emitter.scatter5.particle_systems)!=0)
-    op = updo.operator("scatter5.list_move",text="",icon="TRIA_UP")
-    op.target_idx = emitter.scatter5.particle_systems_idx       
-    op.direction = "UP"    
-    op.api_propgroup = "emitter.scatter5.particle_systems"
-    op.api_propgroup_idx = "emitter.scatter5.particle_systems_idx"
-    op = updo.operator("scatter5.list_move",text="",icon="TRIA_DOWN")
-    op.target_idx = emitter.scatter5.particle_systems_idx       
-    op.direction = "DOWN"   
-    op.api_propgroup = "emitter.scatter5.particle_systems"
-    op.api_propgroup_idx = "emitter.scatter5.particle_systems_idx"
-
-    #right spacers
-    row.separator(factor=0.1)
-
-    return None
-
-
 def draw_particle_selection(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_select", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_select";UI_BOOL_VAL:"1"
+        prop_str = "ui_tweak_select", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_select");BOOL_VALUE(1)
         icon = "PARTICLES", 
         name = translate("System(s) List"),
         doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_tweak_select", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_tweak_select"
+        popover_argument = "ui_tweak_select", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_tweak_select")
         )
     if is_open:
 
-        draw_particle_selection_inner(box, addon_prefs, scat_scene, emitter, psy_active)
+        from .ui_system_list import draw_particle_selection_inner
+        draw_particle_selection_inner(box, addon_prefs, scat_scene, emitter, psy_active, group_active)
 
         ui_templates.separator_box_in(box)
 
     return None
 
-# oooooooooo.                        o8o
-# `888'   `Y8b                       `"'
-#  888     888  .ooooo.   .oooooooo oooo  ooo. .oo.   ooo. .oo.    .ooooo.  oooo d8b  .oooo.o
-#  888oooo888' d88' `88b 888' `88b  `888  `888P"Y88b  `888P"Y88b  d88' `88b `888""8P d88(  "8
-#  888    `88b 888ooo888 888   888   888   888   888   888   888  888ooo888  888     `"Y88b.
-#  888    .88P 888    .o `88bod8P'   888   888   888   888   888  888    .o  888     o.  )88b
-# o888bood8P'  `Y8bod8P' `8oooooo.  o888o o888o o888o o888o o888o `Y8bod8P' d888b    8""888P'
-#                        d"     YD
-#                        "Y88888P'
-
-
-
-sepa_small = 0.15
-sepa_large = 3.15
-
-
-def draw_beginner_interface(self,layout):
-
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
-
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_beginners", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_beginners";UI_BOOL_VAL:"1"
-        icon = "W_BIOME", 
-        name = translate("Beginner Interface"),
-        )
-    if is_open:
-
-        if warnings(box):
-            return None
-
-        main = box.column()
-
-        row = main.row()
-        s1 = row.column()
-        s1.scale_x = 1.25
-        s1.active = True
-        s1.alignment = "RIGHT"
-        s2 = row.column() 
-
-        #density controls 
-
-        if (psy_active.s_distribution_method=="random"):
-            s1.label(text="Density")
-            s2.prop(psy_active, "s_distribution_density",text="")
-        else:
-            s1.label(text="Density")
-            ope = s2.row()
-            ope.active = False
-            ope.operator("scatter5.dummy", text="Read Only")
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        #vgroup paint
-
-        s1.label(text=translate("Vertex-Group"),)
-
-        ope = s2.row(align=True)
-        ope.prop(psy_active,"s_mask_vg_allow", text="", icon="CHECKBOX_HLT" if psy_active.s_mask_vg_allow else "CHECKBOX_DEHLT")
-        ope2 = ope.row(align=True)
-        ope2.enabled = psy_active.s_mask_vg_allow
-        exists = (psy_active.s_mask_vg_ptr!="")
-        op = ope2.operator("scatter5.vg_quick_paint",text="Paint",icon="BRUSH_DATA" if exists else "ADD", depress=((bpy.context.mode=="PAINT_WEIGHT") and (bpy.context.object.vertex_groups.active.name==psy_active.s_mask_vg_ptr)))
-        op.group_name = psy_active.s_mask_vg_ptr
-        op.use_surfaces = True
-        op.mode = "vg" 
-        op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_vg_ptr"
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        #seed 
-
-        s1.label(text="Seed")
-        ope = s2.row(align=True)
-        op = ope.operator("scatter5.exec_line", text="Randomize", icon_value=cust_icon("W_DICE"),)
-        op.api = f"psy_active.s_distribution_is_random_seed = True ; psy_active.get_scatter_mod().node_group.nodes['s_pattern1'].node_tree.nodes['texture'].node_tree.scatter5.texture.mapping_random_is_random_seed = True"
-
-        #scale
-
-        s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
-
-        s1.label(text="Scale")
-        s2.prop(psy_active,"s_beginner_default_scale",text="") 
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        s1.label(text="Random")
-        s2.prop(psy_active,"s_beginner_random_scale",text="", slider=True,) 
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        s1.label(text=translate("Vertex-Group"),)
-
-        ope = s2.row(align=True)
-
-        op = ope.operator("scatter5.exec_line", text="", icon="CHECKBOX_HLT" if psy_active.s_scale_shrink_allow else "CHECKBOX_DEHLT", depress=psy_active.s_scale_shrink_allow, )
-        op.api = f"psy_active.s_scale_shrink_allow = {not psy_active.s_scale_shrink_allow} ; psy_active.s_scale_shrink_mask_method = 'mask_vg' ; psy_active.s_scale_shrink_mask_reverse = True" 
-        ope2 = ope.row(align=True)
-        ope2.enabled = psy_active.s_scale_shrink_allow
-        exists = (psy_active.s_scale_shrink_mask_ptr!="")
-        op = ope2.operator("scatter5.vg_quick_paint",text="Paint",icon="BRUSH_DATA" if exists else "ADD", depress=((bpy.context.mode=="PAINT_WEIGHT") and (bpy.context.object.vertex_groups.active.name==psy_active.s_scale_shrink_mask_ptr)))
-        op.group_name = psy_active.s_scale_shrink_mask_ptr
-        op.use_surfaces = True
-        op.mode = "vg" 
-        op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_scale_shrink_mask_ptr"
-
-        #rotation 
-
-        s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
-
-        s1.label(text="Align")
-        ope = s2.row(align=True)
-        op = ope.operator("scatter5.exec_line",text="Normal", 
-            depress=(psy_active.s_rot_align_z_allow and psy_active.s_rot_align_z_method=='meth_align_z_normal'),)
-        op.api = f"psy_active.s_rot_align_z_allow = True ;  psy_active.s_rot_align_z_method ='meth_align_z_normal'"
-
-        op = ope.operator("scatter5.exec_line",text="Local Z",
-            depress=(psy_active.s_rot_align_z_allow and psy_active.s_rot_align_z_method=='meth_align_z_local'),)
-        op.api = f"psy_active.s_rot_align_z_allow = True ;  psy_active.s_rot_align_z_method ='meth_align_z_local'"
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        s1.label(text="Random")
-        s2.prop(psy_active,"s_beginner_random_rot",text="", slider=True,)
-
-        #texture
-
-        s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
-
-        texture_exists = True
-        texture_node = psy_active.get_scatter_mod().node_group.nodes["s_pattern1"].node_tree.nodes["texture"]
-        texture_props = texture_node.node_tree.scatter5.texture
-
-        if (texture_node.node_tree.name.startswith(".TEXTURE *DEFAULT")):
-
-            s1.label(text="Pattern")
-            ope = s2.row(align=True)
-            ope.context_pointer_set("s5_ctxt_ptr_psy", psy_active,)
-            ope.context_pointer_set("s5_ctxt_ptr_texture_node", texture_node,)
-            op = ope.operator("scatter5.exec_line", text="New", icon="ADD")
-            op.api = "bpy.ops.scatter5.scatter_texture_new(ptr_name='s_pattern1_texture_ptr',new_name='BR-Pattern') ; psy_active.s_pattern1_allow = True"
-            op.undo = "Creating New Pattern"
-
-        elif (psy_active.s_pattern1_allow):
-
-            s1.label(text="Pattern")
-            ope = s2.row(align=True)
-            op = ope.operator("scatter5.exec_line", text="Active", icon="CHECKBOX_HLT", depress=True)
-            op.api = f"psy_active.s_pattern1_allow = False"
-
-            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-            s1.label(text="Scale")
-            s2.prop(texture_props, "scale", text="",)
-
-            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-            s1.label(text="Brightness")
-            s2.prop(texture_props, "intensity", text="",)
-
-            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-            s1.label(text="Contrast")
-            s2.prop(texture_props, "contrast", text="",)
-
-            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-            
-        else:
-
-            s1.label(text="Pattern")
-            ope = s2.row(align=True)
-            op = ope.operator("scatter5.exec_line", text=translate("Inactive"), icon="CHECKBOX_DEHLT", depress=False,)
-            op.api = f"psy_active.s_pattern1_allow = True"
-
-        #define instances 
-
-        s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
-
-        s1.label(text=translate("Displays"),)
-
-        ope = s2.row(align=True)
-        op = ope.operator("scatter5.exec_line", text=translate("Active") if psy_active.s_display_allow else translate("Inactive"), icon="CHECKBOX_HLT" if psy_active.s_display_allow else "CHECKBOX_DEHLT", depress=psy_active.s_display_allow, )
-        op.api = f"psy_active.s_display_allow = {not psy_active.s_display_allow} " 
-
-        s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-        s1.label(text=translate("Instances"),)
-
-        ui_list = s2.column(align=True)
-        ui_list.template_list("SCATTER5_UL_list_instances", "", psy_active.s_instances_coll_ptr, "objects", psy_active, "s_instances_list_idx", rows=5, sort_lock=True,)
-            
-        add = ui_list.column(align=True)
-        add.active = (bpy.context.mode=="OBJECT")
-        add.operator_menu_enum("scatter5.add_instances", "method", text=translate("Add Instance(s)"), icon="ADD")
-        
-        #Separator 
-
-        ui_templates.separator_box_in(box)
-
-    return
-
-
-def draw_removal_interface(self,layout):
-
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
-
-    if (psy_active is None):
-        return
-
-    s_abiotic_used    = psy_active.is_category_used("s_abiotic")
-    s_ecosystem_used  = psy_active.is_category_used("s_ecosystem")
-    s_proximity_used  = psy_active.is_category_used("s_proximity")
-    s_push_used       = psy_active.is_category_used("s_push")
-    s_wind_used       = psy_active.is_category_used("s_wind")
-    s_visibility_used = psy_active.is_category_used("s_visibility")
-
-    if any([s_abiotic_used, s_ecosystem_used, s_proximity_used, s_push_used, s_wind_used, s_visibility_used,]):
-
-        box, is_open = ui_templates.box_panel(self, layout, 
-            prop_str = "ui_tweak_removal", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_removal";UI_BOOL_VAL:"1"
-            icon = "W_SCATTER", 
-            name = translate("Advanced Features"),
-            doc_panel = "SCATTER5_PT_docs", 
-            popover_argument = "s_beginners_remove", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_beginners_remove"
-            )
-        if is_open:
-
-            main = box.column()
-
-            row = main.row()
-            split = row.split(factor = 0.375)
-            s1 = split.column()
-            s1.alignment = "RIGHT"
-            s2 = split.column()
-
-            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-            if (s_visibility_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Optimizations"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_visibility_master_allow = False"
-                op.undo = translate("Remove Visibility Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-
-            if (s_abiotic_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Abiotic"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_abiotic_master_allow = False"
-                op.undo = translate("Remove Abiotic Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-
-            if (s_ecosystem_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Ecosystem"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_ecosystem_master_allow = False"
-                op.undo = translate("Remove Ecosystem Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-
-            if (s_proximity_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Proximity"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_proximity_master_allow = False"
-                op.undo = translate("Remove Proximity Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-
-            if (s_push_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Offset"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_push_master_allow = False"
-                op.undo = translate("Remove Offset Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-            
-            if (s_wind_used):
-                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
-
-                s1.label(text=translate("Wind"),)
-                ope = s2.row(align=True)
-                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
-                op.api = f"psy_active.s_wind_master_allow = False"
-                op.undo = translate("Remove Wind Features")
-                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
-            
-            #Separator 
-
-            ui_templates.separator_box_in(box)
-
-    return
-
-
-def draw_pros_interface(self,layout):
-
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
-
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_pros", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_pros";UI_BOOL_VAL:"1"
-        icon = "W_SCATTER", 
-        name = translate("Professional Workflow"),
-        force_open = True,
-        )
-    if is_open:
-
-        row = box.row()
-        r1 = row.separator(factor=0.3)
-        col = row.column()
-        r3 = row.separator(factor=0.3)
-
-        word_wrap(layout=col.box(), alignment="CENTER", max_char=42, active=True, string=translate("Get the tools you need to become a pro!\nOur user-friendly interface is perfect for newbies, but our paid tool-kit for professionals is where the magic happens.\n\nWith advanced features, an efficient pipelines, and useful scattering operators, you'll be able to handle the most challenging projects with ease."),)
-                
-        col.separator(factor=0.75)
-
-        ope = col.row()
-        ope.scale_y = 1.2
-        ope.operator("wm.url_open", text=translate("Take it to the Next Level"), icon_value=cust_icon("W_SCATTER"),).url = "https://blendermarket.com/products/scatter"
-
-        #Separator 
-
-        ui_templates.separator_box_in(box)
-
-    return
 
 
 #  .oooooo..o                       .o88o.
@@ -979,16 +517,16 @@ def draw_pros_interface(self,layout):
 
 def draw_particle_surface(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
     surf_len = 0 if (psy_active is None) else len(psy_active.get_surfaces())
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_surface", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_surface";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_surface", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_surface");BOOL_VALUE(0)
         icon = "SURFACE_NSURFACE", 
         name = translate("Surfaces") if (psy_active is None) else translate("Surfaces") +f" [{surf_len}]",
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",
-        popover_argument = "s_surface", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_surface"
+        popover_argument = "s_surface", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_surface")
         tweaking_panel = True,
         )
     if is_open:
@@ -1048,7 +586,7 @@ def draw_particle_surface(self,layout):
             elif (psy_active.s_surface_method=="collection"):
                 prop = col.column(align=True)
                 ptr = prop.row(align=True)
-                draw_coll_ptr_prop(layout=ptr, psy_active=psy_active, api="s_surface_collection", revert_api="", add_coll_name="ScatterSurfaces", add_parent_name="Geo-Scatter Surfaces",)
+                draw_coll_ptr_prop(layout=ptr, system=psy_active, api="s_surface_collection", revert_api="", add_coll_name="ScatterSurfaces", add_parent_name="Geo-Scatter Surfaces",)
 
             #Separator 
 
@@ -1067,15 +605,15 @@ def draw_particle_surface(self,layout):
 
 def draw_particle_distribution(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_distribute", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_distribute";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_distribute", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_distribute");BOOL_VALUE(0)
         icon = "STICKY_UVS_DISABLE", 
         name = translate("Distribution"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",
-        popover_argument = "s_distribution", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_distribution"
+        popover_argument = "s_distribution", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_distribution")
         tweaking_panel = True,
         )
     if is_open:
@@ -1158,7 +696,7 @@ def draw_particle_distribution(self,layout):
                 tocol, is_toggled = ui_templates.bool_toggle(col, 
                     prop_api=psy_active,
                     prop_str="s_distribution_limit_distance_allow", 
-                    label=translate("Limit Collision"), 
+                    label=translate("Limit Self-Collision"), 
                     icon="AUTOMERGE_ON" if psy_active.s_distribution_limit_distance_allow else "AUTOMERGE_OFF", 
                     left_space=False,
                     return_layout=True,
@@ -1181,7 +719,7 @@ def draw_particle_distribution(self,layout):
                 space_col.scale_x = 0.95
 
                 ptr = space_col.row(align=True)
-                ptr.alert = ( bool(psy_active.s_distribution_stable_uv_ptr) and (psy_active.s_distribution_stable_uv_ptr not in psy_active.get_surfaces_match_uv(bpy.context, psy_active.s_distribution_stable_uv_ptr)) )
+                ptr.alert = ( bool(psy_active.s_distribution_stable_uv_ptr) and (psy_active.s_distribution_stable_uv_ptr not in psy_active.get_surfaces_match_attr("uv")(psy_active, bpy.context, psy_active.s_distribution_stable_uv_ptr)) )
                 ptr.prop( psy_active, "s_distribution_stable_uv_ptr", text="", icon="GROUP_UVS", )
 
                 col.separator(factor=1.5)
@@ -1220,7 +758,7 @@ def draw_particle_distribution(self,layout):
                 tocol, is_toggled = ui_templates.bool_toggle(col, 
                     prop_api=psy_active,
                     prop_str="s_distribution_stable_limit_distance_allow", 
-                    label=translate("Limit Collision"), 
+                    label=translate("Limit Self-Collision"), 
                     icon="AUTOMERGE_ON" if psy_active.s_distribution_stable_limit_distance_allow else "AUTOMERGE_OFF", 
                     left_space=False,
                     return_layout=True,
@@ -1237,7 +775,7 @@ def draw_particle_distribution(self,layout):
                 method_lbl.scale_x = 0.63
                 methodinfo.scale_x = 0.9
                 methodinfo.emboss = "NONE"
-                methodinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"distinfos_clumping")) #REGTIME_INSTRUCTION:POPOVER_PROP:"distinfos_clumping"
+                methodinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"distinfos_clumping")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("distinfos_clumping")
                 methodinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                 col.separator()
@@ -1260,17 +798,11 @@ def draw_particle_distribution(self,layout):
                 button.prop( psy_active, "s_distribution_clump_is_random_seed", icon_value=cust_icon("W_DICE"),text="")
 
                 col.separator()
-                
-                col.prop( psy_active, "s_distribution_clump_max_distance")
-                col.prop( psy_active, "s_distribution_clump_falloff")
-                col.prop( psy_active, "s_distribution_clump_random_factor")
-
-                col.separator()
 
                 tocol, is_toggled = ui_templates.bool_toggle(col, 
                     prop_api=psy_active,
                     prop_str="s_distribution_clump_limit_distance_allow",
-                    label=translate("Clump Limit Collision"),
+                    label=translate("Limit Self-Collision"),
                     icon="AUTOMERGE_ON" if psy_active.s_distribution_clump_limit_distance_allow else "AUTOMERGE_OFF", 
                     left_space=False,
                     return_layout=True,
@@ -1280,6 +812,12 @@ def draw_particle_distribution(self,layout):
                     tocol.prop( psy_active, "s_distribution_clump_limit_distance")
 
                     tocol.separator(factor=0.2)
+                    
+                col.separator()
+                
+                col.prop( psy_active, "s_distribution_clump_max_distance")
+                col.prop( psy_active, "s_distribution_clump_falloff")
+                col.prop( psy_active, "s_distribution_clump_random_factor")
 
                 col.separator(factor=0.65)
 
@@ -1305,7 +843,7 @@ def draw_particle_distribution(self,layout):
                 tocol, is_toggled = ui_templates.bool_toggle(col, 
                     prop_api=psy_active,
                     prop_str="s_distribution_clump_children_limit_distance_allow", 
-                    label=translate("Children Limit Collision"), 
+                    label=translate("Limit Self-Collision"), 
                     icon="AUTOMERGE_ON" if psy_active.s_distribution_clump_children_limit_distance_allow else "AUTOMERGE_OFF", 
                     left_space=False,
                     return_layout=True,
@@ -1338,7 +876,7 @@ def draw_particle_distribution(self,layout):
                 method_lbl.scale_x = 0.63
                 methodinfo.scale_x = 0.9
                 methodinfo.emboss = "NONE"
-                methodinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"distinfos_faces")) #REGTIME_INSTRUCTION:POPOVER_PROP:"distinfos_faces"
+                methodinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"distinfos_faces")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("distinfos_faces")
                 methodinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                 col.separator()
@@ -1359,7 +897,7 @@ def draw_particle_distribution(self,layout):
                 method_lbl.scale_x = 0.63
                 methodinfo.scale_x = 0.9
                 methodinfo.emboss = "NONE"
-                methodinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"distinfos_edges")) #REGTIME_INSTRUCTION:POPOVER_PROP:"distinfos_edges"
+                methodinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"distinfos_edges")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("distinfos_edges")
                 methodinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                 col.separator()
@@ -1398,7 +936,7 @@ def draw_particle_distribution(self,layout):
                 method_lbl.scale_x = 0.63
                 methodinfo.scale_x = 0.9
                 methodinfo.emboss = "NONE"
-                methodinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"distinfos_volume")) #REGTIME_INSTRUCTION:POPOVER_PROP:"distinfos_volume"
+                methodinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"distinfos_volume")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("distinfos_volume")
                 methodinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                 col.separator()
@@ -1447,7 +985,7 @@ def draw_particle_distribution(self,layout):
                 tocol, is_toggled = ui_templates.bool_toggle(col, 
                     prop_api=psy_active,
                     prop_str="s_distribution_volume_limit_distance_allow", 
-                    label=translate("Limit Collision"), 
+                    label=translate("Limit Self-Collision"), 
                     icon="AUTOMERGE_ON" if psy_active.s_distribution_volume_limit_distance_allow else "AUTOMERGE_OFF", 
                     left_space=False,
                     return_layout=True,
@@ -1464,7 +1002,7 @@ def draw_particle_distribution(self,layout):
                 method_lbl.scale_x = 0.63
                 methodinfo.scale_x = 0.9
                 methodinfo.emboss = "NONE"
-                methodinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"distinfos_manual")) #REGTIME_INSTRUCTION:POPOVER_PROP:"distinfos_manual"
+                methodinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"distinfos_manual")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("distinfos_manual")
                 methodinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                 col.separator()
@@ -1643,16 +1181,16 @@ def draw_particle_distribution(self,layout):
 
 def draw_particle_masks(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_masks", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_masks";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_masks", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_masks");BOOL_VALUE(0)
         icon = "MOD_MASK", 
         master_category_toggle = "s_mask_master_allow",
         name = translate("Culling Masks"),
         doc_panel = "SCATTER5_PT_docs",
         pref_panel = "SCATTER5_PT_per_settings_category_header",
-        popover_argument = "s_mask", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_mask"
+        popover_argument = "s_mask", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_mask")
         tweaking_panel = True,
         )
     if is_open:
@@ -1674,7 +1212,7 @@ def draw_particle_masks(self,layout):
                 icon="WPAINT_HLT", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_vg_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_vg_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_mask_vg_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_vg_allow");BOOL_VALUE(1)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -1690,7 +1228,7 @@ def draw_particle_masks(self,layout):
                     mask = mask_col.row(align=True)
 
                     ptr = mask.row(align=True)
-                    ptr.alert = ( bool(psy_active.s_mask_vg_ptr) and (psy_active.s_mask_vg_ptr not in psy_active.get_surfaces_match_vg(bpy.context, psy_active.s_mask_vg_ptr)) )
+                    ptr.alert = ( bool(psy_active.s_mask_vg_ptr) and (psy_active.s_mask_vg_ptr not in psy_active.get_surfaces_match_attr("vg")(psy_active, bpy.context, psy_active.s_mask_vg_ptr)) )
                     ptr.prop( psy_active, f"s_mask_vg_ptr", text="", icon="GROUP_VERTEX",)
                     
                     if exists:
@@ -1698,9 +1236,12 @@ def draw_particle_masks(self,layout):
 
                     #paint or create operator
 
-                    op = mask.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=((bpy.context.mode=="PAINT_WEIGHT") and (bpy.context.object.vertex_groups.active.name==psy_active.s_mask_vg_ptr)))
+                    op = mask.operator("scatter5.vg_quick_paint",
+                        text="",
+                        icon="BRUSH_DATA" if exists else "ADD",
+                        depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==psy_active.s_mask_vg_ptr)),
+                        )
                     op.group_name = psy_active.s_mask_vg_ptr
-                    op.use_surfaces = True
                     op.mode = "vg" 
                     op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_vg_ptr"
 
@@ -1715,7 +1256,7 @@ def draw_particle_masks(self,layout):
                 icon="VPAINT_HLT", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_vcol_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_vcol_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_vcol_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_vcol_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -1728,7 +1269,7 @@ def draw_particle_masks(self,layout):
                     mask = mask_col.row(align=True)
 
                     ptr = mask.row(align=True)
-                    ptr.alert = ( bool(psy_active.s_mask_vcol_ptr) and (psy_active.s_mask_vcol_ptr not in psy_active.get_surfaces_match_vcol(bpy.context, psy_active.s_mask_vcol_ptr)) )
+                    ptr.alert = ( bool(psy_active.s_mask_vcol_ptr) and (psy_active.s_mask_vcol_ptr not in psy_active.get_surfaces_match_attr("vcol")(psy_active, bpy.context, psy_active.s_mask_vcol_ptr)) )
                     ptr.prop( psy_active, f"s_mask_vcol_ptr", text="", icon="GROUP_VCOL",)
 
                     #color for add/paint operator 
@@ -1747,9 +1288,12 @@ def draw_particle_masks(self,layout):
 
                     #add operator 
 
-                    op = mask.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA" if exists else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==psy_active.s_mask_vcol_ptr)),)
+                    op = mask.operator("scatter5.vg_quick_paint",
+                        text="",
+                        icon="BRUSH_DATA" if exists else "ADD",
+                        depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==psy_active.s_mask_vcol_ptr)),
+                        )
                     op.group_name = psy_active.s_mask_vcol_ptr
-                    op.use_surfaces = True
                     op.mode = "vcol" 
                     op.set_color = set_color
                     op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_vcol_ptr"
@@ -1764,7 +1308,7 @@ def draw_particle_masks(self,layout):
                         methrow = meth.row(align=True)
                         methrow.prop( psy_active, "s_mask_vcol_color_sample_method", text="")
 
-                        if psy_active.s_mask_vcol_color_sample_method=="id_picker":
+                        if (psy_active.s_mask_vcol_color_sample_method=="id_picker"):
                             color = methrow.row(align=True)
                             color.scale_x = 0.35
                             color.prop(psy_active, "s_mask_vcol_id_color_ptr",text="")
@@ -1780,7 +1324,7 @@ def draw_particle_masks(self,layout):
                 icon="TPAINT_HLT", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_bitmap_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_bitmap_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_bitmap_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_bitmap_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -1796,7 +1340,6 @@ def draw_particle_masks(self,layout):
                     #color for add/paint operator 
 
                     exists = (psy_active.s_mask_bitmap_ptr!="")
-
                     set_color = (0,0,0)
 
                     if exists:
@@ -1806,32 +1349,31 @@ def draw_particle_masks(self,layout):
                         set_color = equivalence[psy_active.s_mask_bitmap_color_sample_method]
 
                         #reverse button 
-                        mask.prop( psy_active, "s_mask_bitmap_revert",text="",icon="ARROW_LEFTRIGHT")
+                        mask.prop( psy_active, "s_mask_bitmap_revert", text="", icon="ARROW_LEFTRIGHT")
 
                     #add operator 
 
                     if not exists:
 
-                        op = mask.operator("scatter5.image_utils",text="", icon="ADD",)
+                        op = mask.operator("scatter5.image_utils", text="", icon="ADD",)
                         op.option = "new"
                         op.img_name = psy_active.s_mask_bitmap_ptr
                         op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_bitmap_ptr"
 
                     else:
 
-                        op = mask.operator("scatter5.image_utils",text="", icon="BRUSH_DATA", depress=( (bpy.context.mode=="PAINT_TEXTURE") and (bpy.context.scene.tool_settings.image_paint.mode=='IMAGE') and (bpy.context.scene.tool_settings.image_paint.canvas==bpy.data.images.get(psy_active.s_mask_bitmap_ptr)) and (bpy.context.object.data.uv_layers.active.name==psy_active.s_mask_bitmap_uv_ptr) ),)
+                        op = mask.operator("scatter5.image_utils", text="", icon="BRUSH_DATA", depress=( (bpy.context.mode=="PAINT_TEXTURE") and (bpy.context.scene.tool_settings.image_paint.mode=='IMAGE') and (bpy.context.scene.tool_settings.image_paint.canvas==bpy.data.images.get(psy_active.s_mask_bitmap_ptr)) and (bpy.context.object.data.uv_layers.active.name==psy_active.s_mask_bitmap_uv_ptr) ),)
                         op.option = "paint"
-                        op.use_surfaces = True
                         op.paint_color = set_color
                         op.uv_ptr = psy_active.s_mask_bitmap_uv_ptr
-                        op.img_name= psy_active.s_mask_bitmap_ptr
+                        op.img_name = psy_active.s_mask_bitmap_ptr
                         op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_bitmap_ptr"
 
                         mask_col.label(text=translate("UvMap")+":",)
 
                         ptr = mask_col.row(align=True)
-                        ptr.alert = ( bool(psy_active.s_mask_bitmap_uv_ptr) and (psy_active.s_mask_bitmap_uv_ptr not in psy_active.get_surfaces_match_uv(bpy.context, psy_active.s_mask_bitmap_uv_ptr)) )
-                        ptr.prop( psy_active, "s_mask_bitmap_uv_ptr", text="", icon="GROUP_UVS", )
+                        ptr.alert = ( bool(psy_active.s_mask_bitmap_uv_ptr) and (psy_active.s_mask_bitmap_uv_ptr not in psy_active.get_surfaces_match_attr("uv")(psy_active, bpy.context, psy_active.s_mask_bitmap_uv_ptr)) )
+                        ptr.prop( psy_active, "s_mask_bitmap_uv_ptr", text="", icon="GROUP_UVS",)
 
                         #sample method 
 
@@ -1839,15 +1381,14 @@ def draw_particle_masks(self,layout):
                         meth.label(text=translate("Sample")+":")
 
                         methrow = meth.row(align=True)
-                        methrow.prop( psy_active, "s_mask_bitmap_color_sample_method", text="")
+                        methrow.prop( psy_active, "s_mask_bitmap_color_sample_method", text="",)
 
-                        if psy_active.s_mask_bitmap_color_sample_method=="id_picker":
+                        if (psy_active.s_mask_bitmap_color_sample_method=="id_picker"):
                             color = methrow.row(align=True)
                             color.scale_x = 0.35
-                            color.prop(psy_active, "s_mask_bitmap_id_color_ptr",text="")
+                            color.prop(psy_active, "s_mask_bitmap_id_color_ptr", text="",)
 
                     tocol.separator(factor=1.15)
-                        
 
             ########## ########## Material
 
@@ -1858,7 +1399,7 @@ def draw_particle_masks(self,layout):
                 icon="MATERIAL", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_material_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_material_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_material_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_material_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -1867,10 +1408,10 @@ def draw_particle_masks(self,layout):
                     mask = tocol.row(align=True)
 
                     ptr = mask.row(align=True)
-                    ptr.alert = ( bool(psy_active.s_mask_material_ptr) and (psy_active.s_mask_material_ptr not in psy_active.get_surfaces_match_mat(bpy.context, psy_active.s_mask_material_ptr)) )
+                    ptr.alert = ( bool(psy_active.s_mask_material_ptr) and (psy_active.s_mask_material_ptr not in psy_active.get_surfaces_match_attr("mat")(psy_active, bpy.context, psy_active.s_mask_material_ptr)) )
                     ptr.prop( psy_active, "s_mask_material_ptr", text="", icon="MATERIAL", )
                     
-                    if psy_active.s_mask_material_ptr:
+                    if (psy_active.s_mask_material_ptr!=""):
                         mask.prop( psy_active, "s_mask_material_revert", text="",icon="ARROW_LEFTRIGHT")
 
                     tocol.separator(factor=1)
@@ -1884,7 +1425,7 @@ def draw_particle_masks(self,layout):
                 icon="CURVE_BEZCIRCLE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_curve_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_curve_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_curve_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_curve_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -1899,11 +1440,6 @@ def draw_particle_masks(self,layout):
                         mask.prop( psy_active, "s_mask_curve_revert", text="",icon="ARROW_LEFTRIGHT")
                         op = mask.operator("scatter5.draw_bezier_area",text="", icon="BRUSH_DATA", depress=scat_win.mode=="DRAW_AREA")
                         op.edit_existing = psy_active.s_mask_curve_ptr.name 
-                        
-                        # from ..manual.debug import debug_mode
-                        # if(debug_mode()):
-                        #     op = mask.operator("scatter5.brush_bezier_area",text="", icon="BRUSH_DATA", depress=scat_win.mode=="DRAW_AREA")
-                        #     op.edit_existing = psy_active.s_mask_curve_ptr.name
                     else: 
                         op = mask.operator("scatter5.add_curve_area",text="", icon="ADD", )
                         op.api = f"bpy.context.scene.scatter5.emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_curve_ptr"
@@ -1919,12 +1455,12 @@ def draw_particle_masks(self,layout):
                 icon="MOD_BOOLEAN", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_boolvol_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_boolvol_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_boolvol_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_boolvol_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
 
-                    draw_coll_ptr_prop(layout=tocol, psy_active=psy_active, api="s_mask_boolvol_coll_ptr", revert_api="s_mask_boolvol_revert", add_coll_name="Boolean-Objects")
+                    draw_coll_ptr_prop(layout=tocol, system=psy_active, api="s_mask_boolvol_coll_ptr", revert_api="s_mask_boolvol_revert", add_coll_name="Boolean-Objects")
 
                     tocol.separator(factor=1)
 
@@ -1937,12 +1473,12 @@ def draw_particle_masks(self,layout):
                 icon="TRIA_UP_BAR", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_mask_upward_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_mask_upward_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_mask_upward_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_mask_upward_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
 
-                    draw_coll_ptr_prop(layout=tocol, psy_active=psy_active, api="s_mask_upward_coll_ptr", revert_api="s_mask_upward_revert", add_coll_name="Upward-Objects")
+                    draw_coll_ptr_prop(layout=tocol, system=psy_active, api="s_mask_upward_coll_ptr", revert_api="s_mask_upward_revert", add_coll_name="Upward-Objects")
 
                     tocol.separator(factor=0.5)
 
@@ -1962,16 +1498,16 @@ def draw_particle_masks(self,layout):
 
 def draw_particle_rot(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_rot", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_rot";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_rot", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_rot");BOOL_VALUE(0)
         icon = "CON_ROTLIKE", 
         master_category_toggle = "s_rot_master_allow",
         name = translate("Rotation"),
         doc_panel = "SCATTER5_PT_docs",
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_rot", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_rot"
+        popover_argument = "s_rot", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_rot")
         tweaking_panel = True,
         )
     if is_open:
@@ -1993,7 +1529,7 @@ def draw_particle_rot(self,layout):
                 icon="W_ARROW_NORMAL", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_rot_align_z_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_rot_align_z_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_rot_align_z_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_rot_align_z_allow");BOOL_VALUE(1)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2066,7 +1602,7 @@ def draw_particle_rot(self,layout):
                 icon="W_ARROW_TANGENT", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_rot_align_y_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_rot_align_y_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_rot_align_y_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_rot_align_y_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2115,19 +1651,22 @@ def draw_particle_rot(self,layout):
                         mask = met.row(align=True)
 
                         ptr = mask.row(align=True)
-                        ptr.alert = ( bool(psy_active.s_rot_align_y_vcol_ptr) and (psy_active.s_rot_align_y_vcol_ptr not in psy_active.get_surfaces_match_vcol(bpy.context, psy_active.s_rot_align_y_vcol_ptr)) )
+                        ptr.alert = ( bool(psy_active.s_rot_align_y_vcol_ptr) and (psy_active.s_rot_align_y_vcol_ptr not in psy_active.get_surfaces_match_attr("vcol")(psy_active, bpy.context, psy_active.s_rot_align_y_vcol_ptr)) )
                         ptr.prop( psy_active, "s_rot_align_y_vcol_ptr", text="", icon="GROUP_VCOL",)
 
-                        op = mask.operator("scatter5.vg_quick_paint",text="",icon="VPAINT_HLT" if psy_active.s_rot_align_y_vcol_ptr else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==psy_active.s_rot_align_y_vcol_ptr)),)
+                        op = mask.operator("scatter5.vg_quick_paint",
+                            text="",
+                            icon="VPAINT_HLT" if psy_active.s_rot_align_y_vcol_ptr else "ADD",
+                            depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==psy_active.s_rot_align_y_vcol_ptr)),
+                            )
                         op.group_name = psy_active.s_rot_align_y_vcol_ptr
-                        op.use_surfaces = True
                         op.mode = "vcol" 
                         op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_rot_align_y_vcol_ptr"
 
                         moreinfo = mask.row()
                         moreinfo.separator(factor=0.1)
                         moreinfo.emboss = "NONE"
-                        moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #REGTIME_INSTRUCTION:POPOVER_PROP:"get_flowmap"
+                        moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("get_flowmap")
                         moreinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                     elif (psy_active.s_rot_align_y_flow_method=="flow_text"):
@@ -2136,7 +1675,7 @@ def draw_particle_rot(self,layout):
 
                         block = met.column()
                         node = psy_active.get_scatter_mod().node_group.nodes["s_rot_align_y"].node_tree.nodes["texture"]
-                        draw_texture_datablock(block, psy=psy_active, ptr_name=f"s_rot_align_y_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}AlignY",)
+                        draw_texture_datablock(block, system=psy_active, ptr_name=f"s_rot_align_y_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}AlignY",)
 
                     met.separator()
 
@@ -2153,7 +1692,7 @@ def draw_particle_rot(self,layout):
                 icon="CON_ROTLIKE",
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_rot_add_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_rot_add_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_rot_add_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_rot_add_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2195,7 +1734,7 @@ def draw_particle_rot(self,layout):
                 icon="ORIENTATION_GIMBAL", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_rot_random_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_rot_random_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_rot_random_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_rot_random_allow");BOOL_VALUE(1)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2225,7 +1764,7 @@ def draw_particle_rot(self,layout):
                 icon="W_ARROW_SWINGY", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_rot_tilt_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_rot_tilt_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_rot_tilt_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_rot_tilt_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2248,19 +1787,22 @@ def draw_particle_rot(self,layout):
                         mask = met.row(align=True)
 
                         ptr = mask.row(align=True)
-                        ptr.alert = ( bool(psy_active.s_rot_tilt_vcol_ptr) and (psy_active.s_rot_tilt_vcol_ptr not in psy_active.get_surfaces_match_vcol(bpy.context, psy_active.s_rot_tilt_vcol_ptr)) )
+                        ptr.alert = ( bool(psy_active.s_rot_tilt_vcol_ptr) and (psy_active.s_rot_tilt_vcol_ptr not in psy_active.get_surfaces_match_attr("vcol")(psy_active, bpy.context, psy_active.s_rot_tilt_vcol_ptr)) )
                         ptr.prop( psy_active, "s_rot_tilt_vcol_ptr", text="", icon="GROUP_VCOL",)
 
-                        op = mask.operator("scatter5.vg_quick_paint",text="",icon="VPAINT_HLT" if psy_active.s_rot_tilt_vcol_ptr else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==psy_active.s_rot_tilt_vcol_ptr)),)
+                        op = mask.operator("scatter5.vg_quick_paint",
+                            text="",
+                            icon="VPAINT_HLT" if psy_active.s_rot_tilt_vcol_ptr else "ADD",
+                            depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==psy_active.s_rot_tilt_vcol_ptr)),
+                            )
                         op.group_name = psy_active.s_rot_tilt_vcol_ptr
-                        op.use_surfaces = True
                         op.mode = "vcol" 
                         op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_rot_tilt_vcol_ptr"
 
                         moreinfo = mask.row()
                         moreinfo.separator(factor=0.1)
                         moreinfo.emboss = "NONE"
-                        moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #REGTIME_INSTRUCTION:POPOVER_PROP:"get_flowmap"
+                        moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("get_flowmap")
                         moreinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
 
                     #Draw Texture Data Block
@@ -2268,7 +1810,7 @@ def draw_particle_rot(self,layout):
 
                         block = met.column()
                         node = psy_active.get_scatter_mod().node_group.nodes[f"s_rot_tilt"].node_tree.nodes["texture"]
-                        draw_texture_datablock(block, psy=psy_active, ptr_name=f"s_rot_tilt_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}Tilt",)
+                        draw_texture_datablock(block, system=psy_active, ptr_name=f"s_rot_tilt_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}Tilt",)
 
                 #strength
 
@@ -2306,17 +1848,18 @@ def draw_particle_rot(self,layout):
 
 def draw_particle_scale(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_scale", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_scale";UI_BOOL_VAL:"0"
+    ocol, box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_scale", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_scale");BOOL_VALUE(0)
         icon = "OBJECT_ORIGIN", 
         master_category_toggle = "s_scale_master_allow",
         name = translate("Scale"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_scale", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_scale"
+        popover_argument = "s_scale", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_scale")
         tweaking_panel = True,
+        return_extra_layout = True,
         )
     if is_open:
             
@@ -2337,7 +1880,7 @@ def draw_particle_scale(self,layout):
                 icon="OBJECT_ORIGIN", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_default_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_default_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_default_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_default_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2382,7 +1925,7 @@ def draw_particle_scale(self,layout):
                 icon="W_DICE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_random_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_random_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_scale_random_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_random_allow");BOOL_VALUE(1)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2425,7 +1968,7 @@ def draw_particle_scale(self,layout):
                 icon="W_SCALE_SHRINK", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_shrink_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_shrink_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_shrink_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_shrink_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2448,7 +1991,7 @@ def draw_particle_scale(self,layout):
                 icon="W_SCALE_GROW", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_grow_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_grow_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_grow_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_grow_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2471,7 +2014,7 @@ def draw_particle_scale(self,layout):
                 icon="MOD_WAVE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_fading_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_fading_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_fading_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_fading_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2481,7 +2024,7 @@ def draw_particle_scale(self,layout):
                     tocol.separator(factor=0.3)
                     moreinfo = tocol.row()
                     moreinfo.emboss = "NONE"
-                    moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #REGTIME_INSTRUCTION:POPOVER_PROP:"nocamera_info"
+                    moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("nocamera_info")
                     moreinfo.popover(panel="SCATTER5_PT_docs",text=translate("No Camera Found"),icon="INFO",)
                     tocol.separator(factor=0.9)
 
@@ -2500,25 +2043,25 @@ def draw_particle_scale(self,layout):
 
                     #per cam data
 
-                    tocol2, is_toggled3 = ui_templates.bool_toggle(tocol, 
+                    _, is_toggled3 = ui_templates.bool_toggle(tocol, 
                         prop_api=psy_active,
                         prop_str="s_scale_fading_per_cam_data", 
                         label=translate("Per Cam Settings"),
                         icon="SHADERFX", 
                         left_space=False,
-                        return_layout=True,
+                        return_layout=False,
                         )
                     if is_toggled3:
 
-                        prop = tocol2.column(align=True)
+                        tocol.separator(factor=0.25)
+
+                        prop = tocol.column(align=True)
                         prop.enabled = False
                         prop.prop(bpy.context.scene, "camera", text="")
 
-                        tocol.separator(factor=0.3)
+                        tocol.separator(factor=0.25)
 
-                    tocol.separator(factor=0.45)
-
-                    if psy_active.s_scale_fading_per_cam_data:
+                    if (psy_active.s_scale_fading_per_cam_data):
                         prop = tocol.column(align=True)
                         prop.scale_y = 0.9
                         prop.label(text=translate("Distance")+":",)
@@ -2548,7 +2091,7 @@ def draw_particle_scale(self,layout):
                 icon="W_CLUMP_STRAIGHT", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_clump_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_clump_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_clump_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_clump_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method=="clumping",
                 )
@@ -2567,7 +2110,7 @@ def draw_particle_scale(self,layout):
                 icon="SURFACE_NSURFACE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_faces_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_faces_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_faces_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_faces_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method=="faces",
                 )
@@ -2586,7 +2129,7 @@ def draw_particle_scale(self,layout):
                 icon="SNAP_INCREMENT",
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_edges_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_edges_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_edges_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_edges_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method=="edges",
                 )
@@ -2608,8 +2151,9 @@ def draw_particle_scale(self,layout):
                 icon="MOD_MIRROR", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_mirror_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_mirror_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_mirror_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_mirror_allow");BOOL_VALUE(0)
                 return_layout=True,
+                feature_availability=psy_active.s_instances_method=="ins_collection",
                 )
             if is_toggled:
 
@@ -2642,7 +2186,7 @@ def draw_particle_scale(self,layout):
                 icon="CON_SAMEVOL", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_scale_min_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_scale_min_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_scale_min_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_scale_min_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2654,6 +2198,20 @@ def draw_particle_scale(self,layout):
                 subcol.prop( psy_active, "s_scale_min_value")
 
             ui_templates.separator_box_in(box)
+            
+            ########## ########## Extra Warning Box
+
+            if (addon_prefs.ui_apply_scale_warn):
+                    
+                applied_scales = [ s.scale[:]==(1.0,1.0,1.0) for s in psy_active.get_surfaces() ]
+                if (not all(applied_scales)):
+                    
+                    box = ocol.box()
+                    box.separator(factor=0.5)
+                    word_wrap(layout=box, alignment="CENTER", max_char=34, active=False, string=translate("One of your surface(s) scale isn't applied. Use [CTRL+A] to apply the selected objects(s) transforms."), icon="ERROR",)
+                    
+                    ui_templates.separator_box_in(box)
+            
     return 
 
 
@@ -2666,20 +2224,20 @@ def draw_particle_scale(self,layout):
 # o888o        `Y888""8o   "888"   "888" `Y8bod8P' d888b    o888o o888o
 
 
-def draw_pattern(self,layout):
+def draw_particle_pattern(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     big_col = layout.column(align=True)
 
     box, is_open = ui_templates.box_panel(self, big_col, 
-        prop_str = "ui_tweak_pattern", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_pattern";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_pattern", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_pattern");BOOL_VALUE(0)
         icon = f"TEXTURE", 
         master_category_toggle = "s_pattern_master_allow",
         name = translate("Pattern"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_pattern", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_pattern"
+        popover_argument = "s_pattern", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_pattern")
         tweaking_panel = True,
         )
     if is_open:
@@ -2691,10 +2249,10 @@ def draw_pattern(self,layout):
 
             ui_is_enabled = lock_check(psy_active, s_category="s_pattern", prop=ui_is_enabled, )
             ui_is_active = active_check(psy_active, s_category="s_pattern", prop=ui_is_active, )
+            
+            ########## ########## Pattern 1,2,3
 
             for i in (1,2,3):
-
-                ########## ########## Pattern 1&2
 
                 tocol, is_toggled = ui_templates.bool_toggle(box, 
                     prop_api=psy_active,
@@ -2703,9 +2261,9 @@ def draw_pattern(self,layout):
                     icon=f"W_PATTERN{i}", 
                     enabled=ui_is_enabled,
                     active=ui_is_active,
-                    open_close_api=f"ui_pattern{i}_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_pattern1_allow";UI_BOOL_VAL:"1"
-                    return_layout=True,                    #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_pattern2_allow";UI_BOOL_VAL:"0"
-                    )                                      #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_pattern3_allow";UI_BOOL_VAL:"0" 
+                    open_close_api=f"ui_pattern{i}_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_pattern1_allow");BOOL_VALUE(1)
+                    return_layout=True,                    #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_pattern2_allow");BOOL_VALUE(0)
+                    )                                      #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_pattern3_allow");BOOL_VALUE(0 )
                 if is_toggled:
 
 
@@ -2714,7 +2272,7 @@ def draw_pattern(self,layout):
                     block = tocol.column()
                     block.label(text=translate("Texture-Data")+":")
                     node = psy_active.get_scatter_mod().node_group.nodes[f"s_pattern{i}"].node_tree.nodes["texture"]
-                    draw_texture_datablock(block, psy=psy_active, ptr_name=f"s_pattern{i}_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}Pattern{i}",)
+                    draw_texture_datablock(block, system=psy_active, ptr_name=f"s_pattern{i}_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}Pattern{i}",)
 
                     #Draw Particle ID specific
                         
@@ -2735,7 +2293,7 @@ def draw_pattern(self,layout):
                     tocol.separator(factor=0.75)
 
                     #Feature Influence 
-                    draw_feature_influence(layout=tocol, psy_api=psy_active, api_name=f"s_pattern{i}",)
+                    draw_feature_influence(layout=tocol, system=psy_active, api_name=f"s_pattern{i}",)
 
                     tocol.separator(factor=0.5)
 
@@ -2758,18 +2316,18 @@ def draw_pattern(self,layout):
 # o88o     o8888o  `Y8bod8P' o888o `Y8bod8P'   "888" o888o `Y8bod8P'
 
 
-def draw_geo_filter(self,layout):
+def draw_particle_abiotic(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_abiotic", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_abiotic";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_abiotic", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_abiotic");BOOL_VALUE(0)
         icon = "W_TERRAIN", 
         master_category_toggle = "s_abiotic_master_allow",
         name = ("Abiotic"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_abiotic", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_abiotic"
+        popover_argument = "s_abiotic", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_abiotic")
         tweaking_panel = True,
         )
     if is_open:
@@ -2791,7 +2349,7 @@ def draw_geo_filter(self,layout):
                 icon="W_ALTITUDE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_abiotic_elev_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_abiotic_elev_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_abiotic_elev_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_abiotic_elev_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -2832,7 +2390,7 @@ def draw_geo_filter(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence 
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_abiotic_elev",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_abiotic_elev",)
 
                 tocol.separator(factor=0.5)
 
@@ -2850,7 +2408,7 @@ def draw_geo_filter(self,layout):
                 icon="W_SLOPE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_abiotic_slope_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_abiotic_slope_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_abiotic_slope_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_abiotic_slope_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -2897,7 +2455,7 @@ def draw_geo_filter(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_abiotic_slope",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_abiotic_slope",)
 
                 tocol.separator(factor=0.5)
 
@@ -2915,7 +2473,7 @@ def draw_geo_filter(self,layout):
                 icon="NORMALS_FACE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_abiotic_dir_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_abiotic_dir_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_abiotic_dir_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_abiotic_dir_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -2954,7 +2512,7 @@ def draw_geo_filter(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_abiotic_dir",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_abiotic_dir",)
 
                 tocol.separator(factor=0.5)
 
@@ -2972,7 +2530,7 @@ def draw_geo_filter(self,layout):
                 icon="W_CURVATURE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_abiotic_cur_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_abiotic_cur_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_abiotic_cur_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_abiotic_cur_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -3002,7 +2560,7 @@ def draw_geo_filter(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_abiotic_cur",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_abiotic_cur",)
 
                 tocol.separator(factor=0.5)
 
@@ -3020,7 +2578,7 @@ def draw_geo_filter(self,layout):
                 icon="W_BORDER", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_abiotic_border_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_abiotic_border_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_abiotic_border_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_abiotic_border_allow");BOOL_VALUE(0)
                 return_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
                 )
@@ -3048,7 +2606,7 @@ def draw_geo_filter(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_abiotic_border",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_abiotic_border",)
 
                 tocol.separator(factor=0.5)
 
@@ -3069,18 +2627,18 @@ def draw_geo_filter(self,layout):
 #                                                                                   .o..P'
 #                                                                                   `Y8P'
 
-def draw_proximity(self,layout):
+def draw_particle_proximity(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_proxmity", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_proxmity";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_proxmity", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_proxmity");BOOL_VALUE(0)
         icon = "W_SNAP", 
         master_category_toggle = "s_proximity_master_allow",
         name = ("Proximity"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_proximity", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_proximity"
+        popover_argument = "s_proximity", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_proximity")
         tweaking_panel = True,
         )
     if is_open:
@@ -3104,8 +2662,8 @@ def draw_proximity(self,layout):
                     icon=f"W_SNAP{i}",
                     enabled=ui_is_enabled,
                     active=ui_is_active,
-                    open_close_api=f"ui_proximity_repel{i}_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_proximity_repel1_allow";UI_BOOL_VAL:"0"
-                    return_layout=True,                            #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_proximity_repel2_allow";UI_BOOL_VAL:"0"
+                    open_close_api=f"ui_proximity_repel{i}_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_proximity_repel1_allow");BOOL_VALUE(0)
+                    return_layout=True,                            #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_proximity_repel2_allow");BOOL_VALUE(0)
                     )                                              
                 if is_toggled:
 
@@ -3114,7 +2672,7 @@ def draw_proximity(self,layout):
                     proxprp = tocol.column(align=True)
                     proxprp.label(text=translate("Colliders")+":")
                     
-                    repel_coll_ptr,ptr_row = draw_coll_ptr_prop(layout=proxprp, psy_active=psy_active, api=f"s_proximity_repel{i}_coll_ptr", add_coll_name="Object-Repel")
+                    repel_coll_ptr,ptr_row = draw_coll_ptr_prop(layout=proxprp, system=psy_active, api=f"s_proximity_repel{i}_coll_ptr", add_coll_name="Object-Repel")
                     
                     if (repel_coll_ptr is not None):
 
@@ -3157,7 +2715,7 @@ def draw_proximity(self,layout):
                     tocol.separator(factor=0.7)
 
                     #Feature Influence
-                    draw_feature_influence(layout=tocol, psy_api=psy_active, api_name=f"s_proximity_repel{i}",)
+                    draw_feature_influence(layout=tocol, system=psy_active, api_name=f"s_proximity_repel{i}",)
 
                     tocol.separator(factor=0.5)
 
@@ -3175,7 +2733,7 @@ def draw_proximity(self,layout):
                 icon="W_PROXBOU", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_proximity_outskirt_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_proximity_outskirt_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_proximity_outskirt_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_proximity_outskirt_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3183,7 +2741,7 @@ def draw_proximity(self,layout):
                 #Detect
 
                 prop = tocol.column(align=True)
-                prop.label(text=translate("Detection")+":")                
+                prop.label(text=translate("Edge Detection")+":")                
                 prop.prop(psy_active, "s_proximity_outskirt_detection")
                 prop.prop(psy_active, "s_proximity_outskirt_precision")
 
@@ -3204,7 +2762,7 @@ def draw_proximity(self,layout):
                 tocol.separator(factor=0.3)
 
                 #Feature Influence
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name=f"s_proximity_outskirt",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name=f"s_proximity_outskirt",)
 
                 tocol.separator(factor=0.5)
 
@@ -3274,18 +2832,18 @@ def draw_ecosystem_slots_status(p, i, api_start="", check_if_draw_props=False, c
     return None
 
 
-def draw_ecosystem(self,layout):
+def draw_particle_ecosystem(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_ecosystem", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_ecosystem";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_ecosystem", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_ecosystem");BOOL_VALUE(0)
         icon = "W_ECOSYSTEM", 
         master_category_toggle = "s_ecosystem_master_allow",
         name = ("Ecosystem"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_ecosystem", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_ecosystem"
+        popover_argument = "s_ecosystem", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_ecosystem")
         tweaking_panel = True,
         )
     if is_open:
@@ -3307,7 +2865,7 @@ def draw_ecosystem(self,layout):
                 icon="W_AFFINITY",
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_ecosystem_affinity_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_ecosystem_affinity_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_ecosystem_affinity_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_ecosystem_affinity_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3322,7 +2880,7 @@ def draw_ecosystem(self,layout):
 
                 tocol.separator(factor=0.3)
 
-                if bpy.context.preferences.addons["Geo-Scatter"].preferences.debug:
+                if bpy.context.preferences.addons["Geo-Scatter"].preferences.debug_interface:
                     tocol.prop(psy_active,"s_ecosystem_affinity_ui_max_slot",)
                     tocol.separator(factor=0.3)
 
@@ -3390,7 +2948,7 @@ def draw_ecosystem(self,layout):
                 tocol.separator(factor=0.75)
 
                 #Feature Influence 
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_ecosystem_affinity",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_ecosystem_affinity",)
 
                 tocol.separator(factor=0.5)
 
@@ -3408,7 +2966,7 @@ def draw_ecosystem(self,layout):
                 icon="W_REPULSION",
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_ecosystem_repulsion_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_ecosystem_repulsion_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_ecosystem_repulsion_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_ecosystem_repulsion_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3423,7 +2981,7 @@ def draw_ecosystem(self,layout):
 
                 tocol.separator(factor=0.3)
 
-                if bpy.context.preferences.addons["Geo-Scatter"].preferences.debug:
+                if bpy.context.preferences.addons["Geo-Scatter"].preferences.debug_interface:
                     tocol.prop(psy_active,"s_ecosystem_repulsion_ui_max_slot",)
                     tocol.separator(factor=0.3)
 
@@ -3490,7 +3048,7 @@ def draw_ecosystem(self,layout):
                 tocol.separator(factor=0.75)
 
                 #Feature Influence 
-                draw_feature_influence(layout=tocol, psy_api=psy_active, api_name="s_ecosystem_repulsion",)
+                draw_feature_influence(layout=tocol, system=psy_active, api_name="s_ecosystem_repulsion",)
 
                 tocol.separator(factor=0.5)
 
@@ -3512,16 +3070,16 @@ def draw_ecosystem(self,layout):
 
 def draw_particle_push(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_push", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_push";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_push", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_push");BOOL_VALUE(0)
         icon = "CON_LOCLIKE", 
         master_category_toggle = "s_push_master_allow",
         name = translate("Offset"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_push", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_push"
+        popover_argument = "s_push", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_push")
         tweaking_panel = True,
         )
     if is_open:
@@ -3543,7 +3101,7 @@ def draw_particle_push(self,layout):
                 icon="CON_LOCLIKE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_push_offset_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_push_offset_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_push_offset_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_push_offset_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3604,7 +3162,7 @@ def draw_particle_push(self,layout):
                 icon="SORT_DESC", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_push_dir_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_push_dir_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_push_dir_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_push_dir_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3615,7 +3173,7 @@ def draw_particle_push(self,layout):
                 met.separator()
 
                 vec = tocol.column()
-                vec.label(text=translate("Offset")+":")
+                vec.label(text=translate("Distance")+":")
                 veccol = vec.column(align=True)
                 veccol.scale_y = 0.9
                 veccol.prop(psy_active,"s_push_dir_add_value",)
@@ -3637,7 +3195,7 @@ def draw_particle_push(self,layout):
                 icon="BOIDS", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_push_noise_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_push_noise_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_push_noise_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_push_noise_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3663,7 +3221,7 @@ def draw_particle_push(self,layout):
                 icon="FORCE_FORCE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_push_fall_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_push_fall_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_push_fall_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_push_fall_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3736,18 +3294,18 @@ def draw_particle_push(self,layout):
 #       `8'      `8'       o888o o888o o888o `Y8bod88P"
 
 
-def draw_wind(self,layout):
+def draw_particle_wind(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_wind", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_wind";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_wind", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_wind");BOOL_VALUE(0)
         icon = "FORCE_WIND", 
         master_category_toggle = "s_wind_master_allow",
         name = ("Wind"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_wind", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_wind"
+        popover_argument = "s_wind", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_wind")
         tweaking_panel = True,
         )
     if is_open:
@@ -3769,7 +3327,7 @@ def draw_wind(self,layout):
                 icon="FORCE_WIND", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_wind_wave_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_wind_wave_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_wind_wave_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_wind_wave_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3852,19 +3410,22 @@ def draw_wind(self,layout):
                     mask = tocol.row(align=True)
 
                     ptr = mask.row(align=True)
-                    ptr.alert = ( bool(psy_active.s_wind_wave_flowmap_ptr) and (psy_active.s_wind_wave_flowmap_ptr not in psy_active.get_surfaces_match_vcol(bpy.context, psy_active.s_wind_wave_flowmap_ptr)) )
+                    ptr.alert = ( bool(psy_active.s_wind_wave_flowmap_ptr) and (psy_active.s_wind_wave_flowmap_ptr not in psy_active.get_surfaces_match_attr("vcol")(psy_active, bpy.context, psy_active.s_wind_wave_flowmap_ptr)) )
                     ptr.prop( psy_active, "s_wind_wave_flowmap_ptr", text="", icon="GROUP_VCOL",)
 
-                    op = mask.operator("scatter5.vg_quick_paint",text="",icon="VPAINT_HLT" if psy_active.s_wind_wave_flowmap_ptr else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==psy_active.s_wind_wave_flowmap_ptr)),)
+                    op = mask.operator("scatter5.vg_quick_paint",
+                        text="",
+                        icon="VPAINT_HLT" if psy_active.s_wind_wave_flowmap_ptr else "ADD",
+                        depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==psy_active.s_wind_wave_flowmap_ptr)),
+                        )
                     op.group_name = psy_active.s_wind_wave_flowmap_ptr
-                    op.use_surfaces = True
                     op.mode = "vcol" 
                     op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_wind_wave_flowmap_ptr"
 
                     moreinfo = mask.row()
                     moreinfo.separator(factor=0.1)
                     moreinfo.emboss = "NONE"
-                    moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #REGTIME_INSTRUCTION:POPOVER_PROP:"get_flowmap"
+                    moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"get_flowmap")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("get_flowmap")
                     moreinfo.popover(panel="SCATTER5_PT_docs",text="",icon="INFO",)
                         
                     tocol.separator(factor=0.5)
@@ -3901,7 +3462,7 @@ def draw_wind(self,layout):
                 icon="FORCE_TURBULENCE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_wind_noise_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_wind_noise_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_wind_noise_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_wind_noise_allow");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -3969,18 +3530,18 @@ def draw_wind(self,layout):
 #                                                                           .o..P'
 #                                                                           `Y8P'
 
-def draw_visibility(self,layout):
+def draw_particle_visibility(self,layout):
     
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_visibility", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_visibility";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_visibility", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_visibility");BOOL_VALUE(0)
         icon = "HIDE_OFF", 
         master_category_toggle = "s_visibility_master_allow",
         name = translate("Visibility"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_visibility", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_visibility"
+        popover_argument = "s_visibility", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_visibility")
         tweaking_panel = True,
         )
     if is_open:
@@ -4002,7 +3563,7 @@ def draw_visibility(self,layout):
                 icon="SORTSIZE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_visibility_statistics_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_visibility_statistics_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_visibility_statistics_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_visibility_statistics_allow");BOOL_VALUE(1)
                 return_layout=True,
                 )
             if is_toggled:
@@ -4036,7 +3597,7 @@ def draw_visibility(self,layout):
                 icon="W_PERCENTAGE", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_visibility_view_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_visibility_view_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_visibility_view_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_visibility_view_allow");BOOL_VALUE(0)
                 return_layout=True,
                 return_title_layout=True,
                 )
@@ -4056,10 +3617,10 @@ def draw_visibility(self,layout):
                 prop_api=psy_active,
                 prop_str="s_visibility_maxload_allow", 
                 label=translate("Max Amount"), 
-                icon="W_FIRE", 
+                icon="W_SHOW_VIS_MAXLOAD_ON", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_visibility_maxload_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_visibility_maxload_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_visibility_maxload_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_visibility_maxload_allow");BOOL_VALUE(0)
                 return_layout=True,
                 return_title_layout=True,
                 )
@@ -4069,7 +3630,7 @@ def draw_visibility(self,layout):
                 #Maxload Feature
 
                 subcol = tocol.column(align=True)
-                subcol.label(text=translate("Method")+":")
+                subcol.label(text=translate("Limit Method")+":")
                 enum = subcol.row(align=True) 
                 enum.prop(psy_active, "s_visibility_maxload_cull_method", expand=True)
                 subcol.prop( psy_active, "s_visibility_maxload_treshold")
@@ -4082,10 +3643,10 @@ def draw_visibility(self,layout):
                 prop_api=psy_active,
                 prop_str="s_visibility_facepreview_allow", 
                 label=translate("Preview Area"), 
-                icon="SELECT_INTERSECT", 
+                icon="W_SHOW_VIS_VIEW_ON", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_visibility_facepreview_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_visibility_facepreview_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_visibility_facepreview_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_visibility_facepreview_allow");BOOL_VALUE(0)
                 return_layout=True,
                 return_title_layout=True,
                 feature_availability=psy_active.s_distribution_method!="volume",
@@ -4110,7 +3671,7 @@ def draw_visibility(self,layout):
                 icon="OUTLINER_OB_CAMERA", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_visibility_cam_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_visibility_cam_allow";UI_BOOL_VAL:"0"
+                open_close_api="ui_visibility_cam_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_visibility_cam_allow");BOOL_VALUE(0)
                 return_layout=True,
                 return_title_layout=True,
                 )
@@ -4122,7 +3683,7 @@ def draw_visibility(self,layout):
                     tocol.separator(factor=0.3)
                     moreinfo = tocol.row()
                     moreinfo.emboss = "NONE"
-                    moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #REGTIME_INSTRUCTION:POPOVER_PROP:"nocamera_info"
+                    moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("nocamera_info")
                     moreinfo.popover(panel="SCATTER5_PT_docs",text=translate("No Camera Found"),icon="INFO",)
                     tocol.separator(factor=0.9)
 
@@ -4163,58 +3724,55 @@ def draw_visibility(self,layout):
 
                         tocol2.separator(factor=0.35)
 
-                        tocol3, is_toggled3 = ui_templates.bool_toggle(tocol2, 
+                        _, is_toggled3 = ui_templates.bool_toggle(tocol2, 
                             prop_api=psy_active,
                             prop_str="s_visibility_camclip_cam_autofill", 
                             label=translate("Per Cam Settings"),
                             icon="SHADERFX", 
                             left_space=False,
-                            return_layout=True,
+                            return_layout=False,
                             )
                         if is_toggled3:
 
-                            prop = tocol3.column(align=True)
+                            tocol2.separator(factor=0.25)
+
+                            prop = tocol2.column(align=True)
                             prop.enabled = False
                             prop.prop(bpy.context.scene, "camera", text="")
 
-                            tocol2.separator(factor=0.45)
-
-                        tocol2.separator(factor=0.1)
+                            tocol2.separator(factor=0.25)
 
                         if (psy_active.s_visibility_camclip_cam_autofill):
-                            pass
-                            # prop = tocol2.column(align=True)
-                            # prop.enabled = False
-                            # prop.scale_y = 0.85
-                            # prop.label(text=translate("Resolution")+":")
-                            # prop.prop(bpy.context.scene.render, "resolution_x", text="X")
-                            # prop.prop(bpy.context.scene.render, "resolution_y", text="Y")
+                            prop = tocol2.column(align=True)
+                            prop.enabled = False
+                            prop.scale_y = 0.85
+                            prop.label(text=translate("Resolution")+":")
+                            prop.prop(bpy.context.scene.render, "resolution_x", text="X")
+                            prop.prop(bpy.context.scene.render, "resolution_y", text="Y")
                         else: 
                             prop = tocol2.column(align=True)
                             prop.scale_y = 0.85
                             prop.prop(psy_active, "s_visibility_camclip_cam_res_xy")
 
                         if (psy_active.s_visibility_camclip_cam_autofill):
-                            pass
-                            # prop = tocol2.column(align=True)
-                            # prop.enabled = False
-                            # prop.scale_y = 0.85
-                            # prop.label(text=translate("Shift")+":")
-                            # prop.prop(bpy.context.scene.camera.data, "shift_x", text="X")
-                            # prop.prop(bpy.context.scene.camera.data, "shift_y", text="Y")
+                            prop = tocol2.column(align=True)
+                            prop.enabled = False
+                            prop.scale_y = 0.85
+                            prop.label(text=translate("Shift")+":")
+                            prop.prop(bpy.context.scene.camera.data, "shift_x", text="X")
+                            prop.prop(bpy.context.scene.camera.data, "shift_y", text="Y")
                         else: 
                             prop = tocol2.column(align=True)
                             prop.scale_y = 0.85
                             prop.prop(psy_active, "s_visibility_camclip_cam_shift_xy")
 
                         if (psy_active.s_visibility_camclip_cam_autofill):
-                            pass
-                            # prop = tocol2.column(align=True)
-                            # prop.label(text=translate("Lenses")+":",)
-                            # prop.enabled = False
-                            # prop.scale_y = 0.85
-                            # prop.prop(bpy.context.scene.camera.data, "lens", text=translate("Lens"),)
-                            # prop.prop(bpy.context.scene.camera.data, "sensor_width", text=translate("Sensor"),)
+                            prop = tocol2.column(align=True)
+                            prop.label(text=translate("Lenses")+":",)
+                            prop.enabled = False
+                            prop.scale_y = 0.85
+                            prop.prop(bpy.context.scene.camera.data, "lens", text=translate("Lens"),)
+                            prop.prop(bpy.context.scene.camera.data, "sensor_width", text=translate("Sensor"),)
                         else: 
                             prop = tocol2.column(align=True)
                             prop.label(text=translate("Lenses")+":",)
@@ -4224,9 +3782,14 @@ def draw_visibility(self,layout):
 
                         tocol2.separator(factor=0.1)
 
-                        prop = tocol2.column(align=True)
-                        prop.scale_y = 0.85
-                        prop.prop(psy_active, "s_visibility_camclip_cam_boost_xy",)
+                        if (psy_active.s_visibility_camclip_cam_autofill):
+                            prop = tocol2.column(align=True)
+                            prop.scale_y = 0.85
+                            prop.prop(bpy.context.scene.camera.scatter5, "s_visibility_camclip_per_cam_boost_xy",)
+                        else:
+                            prop = tocol2.column(align=True)
+                            prop.scale_y = 0.85
+                            prop.prop(psy_active, "s_visibility_camclip_cam_boost_xy",)
 
                         tocol2.separator(factor=0.2)
 
@@ -4252,23 +3815,23 @@ def draw_visibility(self,layout):
 
                         tocol2.separator(factor=0.35)          
 
-                        tocol3, is_toggled3 = ui_templates.bool_toggle(tocol2, 
+                        _, is_toggled3 = ui_templates.bool_toggle(tocol2, 
                             prop_api=psy_active,
                             prop_str="s_visibility_camdist_per_cam_data", 
                             label=translate("Per Cam Settings"),
                             icon="SHADERFX", 
                             left_space=False,
-                            return_layout=True,
+                            return_layout=False,
                             )
                         if is_toggled3:
 
-                            prop = tocol3.column(align=True)
+                            tocol2.separator(factor=0.25)
+
+                            prop = tocol2.column(align=True)
                             prop.enabled = False
                             prop.prop(bpy.context.scene, "camera", text="")
 
-                            tocol2.separator(factor=0.45)
-
-                        tocol2.separator(factor=0.3)
+                            tocol2.separator(factor=0.25)
 
                         if (psy_active.s_visibility_camdist_per_cam_data):
                             prop = tocol2.column(align=True)
@@ -4310,7 +3873,7 @@ def draw_visibility(self,layout):
                             prop = tocol2.column(align=True)
                             prop.label(text=translate("Colliders")+":")
 
-                            draw_coll_ptr_prop(layout=prop, psy_active=psy_active, api="s_visibility_camoccl_coll_ptr", add_coll_name="OcclusionColl")
+                            draw_coll_ptr_prop(layout=prop, system=psy_active, api="s_visibility_camoccl_coll_ptr", add_coll_name="OcclusionColl")
 
                             tocol2.separator(factor=0.5)
 
@@ -4354,7 +3917,7 @@ class SCATTER5_UL_list_instances(bpy.types.UIList):
         if not item:
             return 
 
-        addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
+        addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
         coll = psy_active.s_instances_coll_ptr
 
         #find index 
@@ -4378,9 +3941,6 @@ class SCATTER5_UL_list_instances(bpy.types.UIList):
             op = selct.operator("scatter5.select_object",emboss=False,text="",icon="RESTRICT_SELECT_OFF" if item in bpy.context.selected_objects else "RESTRICT_SELECT_ON")
             op.obj_name = item.name
             op.coll_name = coll.name
-        
-        else:
-            selct.separator(factor=1.2)
 
         #name 
 
@@ -4444,18 +4004,18 @@ class SCATTER5_UL_list_instances(bpy.types.UIList):
         return
 
 
-def draw_instances(self,layout):
+def draw_particle_instances(self,layout):
 
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
-    ins_len = 0 if (psy_active is None) else len(psy_active.get_instances_obj())
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+    ins_len = 0 if (psy_active is None) else len(psy_active.get_instance_objs())
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_instances", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_instances";UI_BOOL_VAL:"0"
-        icon = "W_INSTANCE", 
-        name = translate("Instances") if (psy_active is None) else translate("Instances")+f" [{ins_len}]",
+        prop_str = "ui_tweak_instances", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_instances");BOOL_VALUE(0)
+        icon = "W_INSTANCE",
+        name = translate("Instances") if (psy_active is None) else translate("Instances")+f" [{ins_len}]" if (psy_active.s_instances_method=="ins_collection") else translate("Instances"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_instances", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_instances"
+        popover_argument = "s_instances", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_instances")
         tweaking_panel = True,
         )
     if is_open:
@@ -4490,14 +4050,23 @@ def draw_instances(self,layout):
 
             #instancing method? 
 
-            #c1.label(text=translate("Method")+":",)
-            #c2.prop( psy_active, "s_instances_method", text="",)
-
+            c1.label(text=translate("Method")+":",)
+            c2.prop( psy_active, "s_instances_method", text="",)
+            
             #collection method?
 
-            if (psy_active.s_instances_method == "ins_collection"): 
-                                
+            if (psy_active.s_instances_method=="ins_collection"): 
+                
+                #collection list 
+                
+                c1.separator(factor=0.55) ; c2.separator(factor=0.55)     
+                
+                c1.label(text="")
+                c2.prop( psy_active, "s_instances_coll_ptr", text="",)
+                
                 #spawning method 
+                
+                c1.separator(factor=0.55) ; c2.separator(factor=0.55)     
 
                 c1.label(text=translate("Spawn")+":",)
                 c2.prop( psy_active, "s_instances_pick_method", text="",)
@@ -4509,13 +4078,6 @@ def draw_instances(self,layout):
                     col.separator()
 
                     return None 
-
-                #collection list 
-                
-                col.separator(factor=1.5)
-
-                colrow = col.row(align=True)
-                colrow.prop( psy_active, "s_instances_coll_ptr", text="",)
 
                 col.separator(factor=0.75)
 
@@ -4583,12 +4145,15 @@ def draw_instances(self,layout):
                         mask = col.row(align=True)
 
                         ptr = mask.row(align=True)
-                        ptr.alert = ( bool(psy_active.s_instances_vcol_ptr) and (psy_active.s_instances_vcol_ptr not in psy_active.get_surfaces_match_vcol(bpy.context, psy_active.s_instances_vcol_ptr)) )
+                        ptr.alert = ( bool(psy_active.s_instances_vcol_ptr) and (psy_active.s_instances_vcol_ptr not in psy_active.get_surfaces_match_attr("vcol")(psy_active, bpy.context, psy_active.s_instances_vcol_ptr)) )
                         ptr.prop( psy_active, "s_instances_vcol_ptr", text="", icon="GROUP_VCOL",)
 
-                        op = mask.operator("scatter5.vg_quick_paint",text="",icon="VPAINT_HLT" if psy_active.s_instances_vcol_ptr else "ADD", depress=((bpy.context.mode=="PAINT_VERTEX") and (bpy.context.object.data.color_attributes.active_color.name==psy_active.s_instances_vcol_ptr)),)
+                        op = mask.operator("scatter5.vg_quick_paint",
+                            text="",
+                            icon="VPAINT_HLT" if psy_active.s_instances_vcol_ptr else "ADD",
+                            depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==psy_active.s_instances_vcol_ptr)),
+                            )
                         op.group_name = psy_active.s_instances_vcol_ptr
-                        op.use_surfaces = True
                         op.mode = "vcol" 
                         op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_instances_vcol_ptr"
 
@@ -4598,7 +4163,7 @@ def draw_instances(self,layout):
 
                         block = col.column()
                         node = psy_active.get_scatter_mod().node_group.nodes[f"s_instances_pick_color_textures"].node_tree.nodes["texture"]
-                        draw_texture_datablock(block, psy=psy_active, ptr_name=f"s_instances_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}InstanceIdx",)
+                        draw_texture_datablock(block, system=psy_active, ptr_name=f"s_instances_texture_ptr", texture_node=node, new_name=f"{psy_active.name.title()}InstanceIdx",)
 
                     col.separator(factor=1)
 
@@ -4660,18 +4225,18 @@ def draw_instances(self,layout):
 #                              o888o                      `Y8P'
 
 
-def draw_display(self,layout):
+def draw_particle_display(self,layout):
     
-    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active = get_props()
-
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+    
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_tweak_display", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_tweak_display";UI_BOOL_VAL:"0"
+        prop_str = "ui_tweak_display", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_display");BOOL_VALUE(0)
         icon = "CAMERA_STEREO", 
         master_category_toggle = "s_display_master_allow",
         name = translate("Display"),
         doc_panel = "SCATTER5_PT_docs", 
         pref_panel = "SCATTER5_PT_per_settings_category_header",       
-        popover_argument = "s_display", #REGTIME_INSTRUCTION:POPOVER_PROP:"s_display"
+        popover_argument = "s_display", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_display")
         tweaking_panel = True,
         )
     if is_open:
@@ -4693,9 +4258,10 @@ def draw_display(self,layout):
                 icon="CAMERA_STEREO", 
                 enabled=ui_is_enabled,
                 active=ui_is_active,
-                open_close_api="ui_display_allow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_display_allow";UI_BOOL_VAL:"1"
+                open_close_api="ui_display_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_display_allow");BOOL_VALUE(1)
                 return_layout=True,
                 return_title_layout=True,
+                feature_availability=psy_active.s_instances_method=="ins_collection",
                 )
             draw_visibility_methods(psy_active, tits, "s_display")
             if is_toggled:
@@ -4760,7 +4326,7 @@ def draw_display(self,layout):
                         tocol2.separator(factor=0.3)
                         moreinfo = tocol2.row()
                         moreinfo.emboss = "NONE"
-                        moreinfo.context_pointer_set("s5_ctxt_ptr_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #REGTIME_INSTRUCTION:POPOVER_PROP:"nocamera_info"
+                        moreinfo.context_pointer_set("pass_ui_arg_popover",getattr(scat_ui.popovers_args,"nocamera_info")) #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("nocamera_info")
                         moreinfo.popover(panel="SCATTER5_PT_docs",text=translate("No Camera Found"),icon="INFO",)
                         tocol2.separator(factor=0.01)
 
@@ -4777,6 +4343,923 @@ def draw_display(self,layout):
             ui_templates.separator_box_in(box)
     return 
 
+
+#   .oooooo.
+#  d8P'  `Y8b
+# 888           oooo d8b  .ooooo.  oooo  oooo  oo.ooooo.
+# 888           `888""8P d88' `88b `888  `888   888' `88b
+# 888     ooooo  888     888   888  888   888   888   888
+# `88.    .88'   888     888   888  888   888   888   888
+#  `Y8bood8P'   d888b    `Y8bod8P'  `V88V"V8P'  888bod8P'
+#                                               888
+#                                              o888o
+
+""""
+def draw_group_members(self,layout):
+    
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+    psy_members = group_active.get_psy_members()
+    
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_group_members", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_group_members");BOOL_VALUE(1)
+        icon = "COMMUNITY", 
+        name = translate("Group Members")+f" [{len(psy_members)}]",
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "s_gr_members", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_gr_members")
+        )
+    if is_open:
+            
+            tocol = box.column()
+
+            tocol.prop(group_active, "name", icon="OUTLINER_COLLECTION", text="",)
+
+            items = tocol.column(align=True)
+            
+            #browse interface item
+            for item in emitter.scatter5.particle_interface_items:
+                
+                #filter non psy members
+                p = item.get_interface_item_source()
+                if (p not in psy_members):
+                    continue
+                
+                itembox = items.box()
+                itemrow = itembox.row()
+                
+                if (item.interface_ident_icon!=""): 
+                    indent = itemrow.row(align=True)
+                    indent.scale_x = 0.85
+                    indent.label(text="", icon_value=cust_icon(item.interface_ident_icon),)
+                
+                colname = itemrow.row(align=True)
+                colname.alignment = "LEFT"
+
+                color = colname.row()
+                color.scale_x = 0.25
+                color.prop(p,"s_color",text="")
+
+                name = colname.row()
+                name.prop(p,"name", text="", emboss=False, )
+                
+                ope = colname.row()
+                ope.operator("scatter5.dummy", text="", icon="TRASH",)
+                
+                continue
+            
+            add = tocol.row()
+            add.operator_menu_enum("scatter5.add_instances", "method", text=translate("Add System(s)"), icon="ADD")
+                        
+            ui_templates.separator_box_in(box)
+        
+    return 
+"""
+
+"""
+def draw_group_distribution(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_group_distribution", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_group_distribution");BOOL_VALUE(0)
+        icon = "STICKY_UVS_DISABLE", 
+        master_category_toggle = "s_gr_distribution_master_allow",
+        name = translate("Group Density"),
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "s_gr_distribution", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_gr_distribution")
+        tweaking_panel = True,
+        )
+    if is_open:
+
+            ui_is_active = True 
+            ui_is_active = active_check(group_active, s_category="s_gr_distribution", prop=ui_is_active, )
+            
+            ########## ########## Density Boost
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_distribution_density_boost_allow",
+                label=translate("Density Boost"),
+                icon="ZOOM_IN",
+                active=ui_is_active,
+                open_close_api="ui_gr_distribution_density_boost_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_distribution_density_boost_allow");BOOL_VALUE(1)
+                return_layout=True,
+                )
+            if is_toggled:
+                
+                tocol.prop(group_active,"s_gr_distribution_density_boost_factor")
+                
+            ui_templates.separator_box_in(box)
+    return 
+"""
+
+def draw_group_masks(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_group_masks", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_group_masks");BOOL_VALUE(1)
+        icon = "MOD_MASK",
+        master_category_toggle = "s_gr_mask_master_allow",
+        name = translate("Group Culling Masks"),
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "s_gr_mask", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_gr_mask")
+        tweaking_panel = True,
+        )
+    if is_open:
+                
+            ui_is_active = True 
+            ui_is_active = active_check(group_active, s_category="s_gr_mask", prop=ui_is_active, )
+            
+            ########## ########## Vgroup
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_vg_allow", 
+                label=translate("Vertex-Group"), 
+                icon="WPAINT_HLT", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_vg_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_vg_allow");BOOL_VALUE(1)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    mask_col = tocol.column(align=True)
+                    mask_col.separator(factor=0.35)
+
+                    exists = (group_active.s_gr_mask_vg_ptr!="")
+
+                    #mask pointer
+
+                    mask = mask_col.row(align=True)
+
+                    ptr = mask.row(align=True)
+                    ptr.alert = ( bool(group_active.s_gr_mask_vg_ptr) and (group_active.s_gr_mask_vg_ptr not in group_active.get_surfaces_match_attr("vg")(group_active, bpy.context, group_active.s_gr_mask_vg_ptr)) )
+                    ptr.prop( group_active, f"s_gr_mask_vg_ptr", text="", icon="GROUP_VERTEX",)
+                    
+                    if exists:
+                        mask.prop( group_active, f"s_gr_mask_vg_revert",text="",icon="ARROW_LEFTRIGHT",)
+
+                    #paint or create operator
+
+                    op = mask.operator("scatter5.vg_quick_paint",
+                        text="",
+                        icon="BRUSH_DATA" if exists else "ADD",
+                        depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==group_active.s_gr_mask_vg_ptr)),
+                        )
+                    op.group_name = group_active.s_gr_mask_vg_ptr
+                    op.mode = "vg" 
+                    op.api = f"emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_vg_ptr"
+
+                    tocol.separator(factor=1)
+
+            ########## ########## Vcolor
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_vcol_allow", 
+                label=translate("Color Attribute"), 
+                icon="VPAINT_HLT", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_vcol_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_vcol_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    mask_col = tocol.column(align=True)
+
+                    #mask pointer
+
+                    mask = mask_col.row(align=True)
+
+                    ptr = mask.row(align=True)
+                    ptr.alert = ( bool(group_active.s_gr_mask_vcol_ptr) and (group_active.s_gr_mask_vcol_ptr not in group_active.get_surfaces_match_attr("vcol")(group_active, bpy.context, group_active.s_gr_mask_vcol_ptr)) )
+                    ptr.prop( group_active, f"s_gr_mask_vcol_ptr", text="", icon="GROUP_VCOL",)
+
+                    #color for add/paint operator 
+
+                    exists = (group_active.s_gr_mask_vcol_ptr!="")
+                    set_color = (1,1,1)
+
+                    if exists:
+
+                        #set color
+                        equivalence = {"id_picker":group_active.s_gr_mask_vcol_id_color_ptr,"id_greyscale":(1,1,1),"id_red":(1,0,0),"id_green":(0,1,0),"id_blue":(0,0,1),"id_black":(0,0,0),"id_white":(1,1,1),"id_saturation":(1,1,1),"id_value":(1,1,1),"id_hue":(1,1,1),"id_lightness":(1,1,1),"id_alpha":(1,1,1),}
+                        set_color = equivalence[group_active.s_gr_mask_vcol_color_sample_method]
+
+                        #reverse button 
+                        mask.prop( group_active, "s_gr_mask_vcol_revert",text="",icon="ARROW_LEFTRIGHT")
+
+                    #add operator 
+
+                    op = mask.operator("scatter5.vg_quick_paint",
+                        text="",
+                        icon="BRUSH_DATA" if exists else "ADD",
+                        depress=((bpy.context.mode=="PAINT_VERTEX") and (getattr(bpy.context.object.data.color_attributes.active_color,"name",'')==group_active.s_gr_mask_vcol_ptr)),
+                        )
+                    op.group_name = group_active.s_gr_mask_vcol_ptr
+                    op.mode = "vcol" 
+                    op.set_color = set_color
+                    op.api = f"emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_vcol_ptr"
+
+                    #sample method
+
+                    if exists: 
+
+                        meth = mask_col.column(align=True)
+                        meth.label(text=translate("Sample")+":")
+
+                        methrow = meth.row(align=True)
+                        methrow.prop( group_active, "s_gr_mask_vcol_color_sample_method", text="")
+
+                        if (group_active.s_gr_mask_vcol_color_sample_method=="id_picker"):
+                            color = methrow.row(align=True)
+                            color.scale_x = 0.35
+                            color.prop(group_active, "s_gr_mask_vcol_id_color_ptr",text="")
+
+                    tocol.separator(factor=1)
+
+            ########## ########## Bitmap
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_bitmap_allow", 
+                label=translate("Image"), 
+                icon="TPAINT_HLT", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_bitmap_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_bitmap_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    mask_col = tocol.column(align=True)
+
+                    #mask pointer and add operator 
+
+                    mask = mask_col.row(align=True)
+                    mask.prop_search( group_active, "s_gr_mask_bitmap_ptr", bpy.data, "images",text="")
+
+                    #color for add/paint operator 
+
+                    exists = (group_active.s_gr_mask_bitmap_ptr!="")
+                    set_color = (0,0,0)
+
+                    if exists:
+
+                        #set color
+                        equivalence = {"id_picker":group_active.s_gr_mask_bitmap_id_color_ptr,"id_greyscale":(1,1,1),"id_red":(1,0,0),"id_green":(0,1,0),"id_blue":(0,0,1),"id_black":(0,0,0),"id_white":(1,1,1),"id_saturation":(1,1,1),"id_value":(1,1,1),"id_hue":(1,1,1),"id_lightness":(1,1,1),"id_alpha":(1,1,1),}
+                        set_color = equivalence[group_active.s_gr_mask_bitmap_color_sample_method]
+
+                        #reverse button 
+                        mask.prop( group_active, "s_gr_mask_bitmap_revert", text="", icon="ARROW_LEFTRIGHT")
+
+                    #add operator 
+
+                    if not exists:
+
+                        op = mask.operator("scatter5.image_utils", text="", icon="ADD",)
+                        op.option = "new"
+                        op.img_name = group_active.s_gr_mask_bitmap_ptr
+                        op.api = f"emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_bitmap_ptr"
+
+                    else:
+
+                        op = mask.operator("scatter5.image_utils", text="", icon="BRUSH_DATA", depress=( (bpy.context.mode=="PAINT_TEXTURE") and (bpy.context.scene.tool_settings.image_paint.mode=='IMAGE') and (bpy.context.scene.tool_settings.image_paint.canvas==bpy.data.images.get(group_active.s_gr_mask_bitmap_ptr)) and (bpy.context.object.data.uv_layers.active.name==group_active.s_gr_mask_bitmap_uv_ptr) ),)
+                        op.option = "paint"
+                        op.paint_color = set_color
+                        op.uv_ptr = group_active.s_gr_mask_bitmap_uv_ptr
+                        op.img_name = group_active.s_gr_mask_bitmap_ptr
+                        op.api = f"emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_bitmap_ptr"
+
+                        mask_col.label(text=translate("UvMap")+":",)
+
+                        ptr = mask_col.row(align=True)
+                        ptr.alert = ( bool(group_active.s_gr_mask_bitmap_uv_ptr) and (group_active.s_gr_mask_bitmap_uv_ptr not in group_active.get_surfaces_match_attr("uv")(group_active, bpy.context, group_active.s_gr_mask_bitmap_uv_ptr)) )
+                        ptr.prop( group_active, "s_gr_mask_bitmap_uv_ptr", text="", icon="GROUP_UVS",)
+
+                        #sample method 
+
+                        meth = mask_col.column(align=True)
+                        meth.label(text=translate("Sample")+":")
+
+                        methrow = meth.row(align=True)
+                        methrow.prop( group_active, "s_gr_mask_bitmap_color_sample_method", text="",)
+
+                        if (group_active.s_gr_mask_bitmap_color_sample_method=="id_picker"):
+                            color = methrow.row(align=True)
+                            color.scale_x = 0.35
+                            color.prop(group_active, "s_gr_mask_bitmap_id_color_ptr", text="",)
+
+                    tocol.separator(factor=1.15)
+                    
+            ########## ########## Material
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_material_allow", 
+                label=translate("Material Slot"), 
+                icon="MATERIAL", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_material_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_material_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    mask = tocol.row(align=True)
+
+                    ptr = mask.row(align=True)
+                    ptr.alert = ( bool(group_active.s_gr_mask_material_ptr) and (group_active.s_gr_mask_material_ptr not in group_active.get_surfaces_match_attr("mat")(group_active, bpy.context, group_active.s_gr_mask_material_ptr)) )
+                    ptr.prop( group_active, "s_gr_mask_material_ptr", text="", icon="MATERIAL",)
+                    
+                    if (group_active.s_gr_mask_material_ptr!=""):
+                        mask.prop( group_active, "s_gr_mask_material_revert", text="",icon="ARROW_LEFTRIGHT",)
+
+                    tocol.separator(factor=1)
+
+            ########## ########## Curve 
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_curve_allow", 
+                label=translate("Bezier-Area"), 
+                icon="CURVE_BEZCIRCLE", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_curve_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_curve_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    mask = tocol.row(align=True)
+                    curve_row = mask.row(align=True)
+                    curve_row.alert = (group_active.s_gr_mask_curve_ptr is not None and group_active.s_gr_mask_curve_ptr.name not in bpy.context.scene.objects)
+                    curve_row.prop( group_active, "s_gr_mask_curve_ptr", text="", icon="CURVE_BEZCIRCLE")
+
+                    exists = (group_active.s_gr_mask_curve_ptr is not None)
+                    if exists:
+                        mask.prop( group_active, "s_gr_mask_curve_revert", text="",icon="ARROW_LEFTRIGHT")
+                        op = mask.operator("scatter5.draw_bezier_area",text="", icon="BRUSH_DATA", depress=scat_win.mode=="DRAW_AREA")
+                        op.edit_existing = group_active.s_gr_mask_curve_ptr.name 
+                    else: 
+                        op = mask.operator("scatter5.add_curve_area",text="", icon="ADD", )
+                        op.api = f"bpy.context.scene.scatter5.emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_curve_ptr"
+
+                    tocol.separator(factor=1)
+
+            ########## ########## Boolean
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_boolvol_allow", 
+                label=translate("Boolean"), 
+                icon="MOD_BOOLEAN", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_boolvol_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_boolvol_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    draw_coll_ptr_prop(layout=tocol, system=group_active, api="s_gr_mask_boolvol_coll_ptr", revert_api="s_gr_mask_boolvol_revert", add_coll_name="Boolean-Objects")
+
+                    tocol.separator(factor=1)
+
+            ########## ########## Upward Obstruction
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_mask_upward_allow", 
+                label=translate("Upward-Obstruction"), 
+                icon="TRIA_UP_BAR", 
+                active=ui_is_active,
+                open_close_api="ui_gr_mask_upward_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_mask_upward_allow");BOOL_VALUE(0)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                    draw_coll_ptr_prop(layout=tocol, system=group_active, api="s_gr_mask_upward_coll_ptr", revert_api="s_gr_mask_upward_revert", add_coll_name="Upward-Objects")
+
+                    tocol.separator(factor=0.5)
+                    
+            ui_templates.separator_box_in(box)
+    return 
+
+def draw_group_scale(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_group_scale", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_group_scale");BOOL_VALUE(1)
+        icon = "OBJECT_ORIGIN",
+        master_category_toggle = "s_gr_scale_master_allow",
+        name = translate("Group Scale"),
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "s_gr_scale", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_gr_scale")
+        tweaking_panel = True,
+        )
+    if is_open:
+
+            ui_is_active = True
+            ui_is_active = active_check(group_active, s_category="s_gr_scale", prop=ui_is_active, )
+            
+            ########## ########## Scale Boost
+            
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_scale_boost_allow",
+                label=translate("Scale Boost"),
+                icon="ZOOM_IN",
+                active=ui_is_active,
+                open_close_api="ui_gr_scale_boost_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_scale_boost_allow");BOOL_VALUE(1)
+                return_layout=True,
+                )
+            if is_toggled:
+                
+                vec = tocol.column()
+                vec.scale_y = 0.9
+                vec.prop( group_active, "s_gr_scale_boost_value",)
+
+                tocol.separator(factor=0.5)
+
+                vec = tocol.column(align=True)
+                vec.label(text=translate("Uniform")+":",)
+                vec.prop( group_active, "s_gr_scale_boost_multiplier",)
+                                
+                #ideally would need universal masks for groups as well.. 
+                #but well, complicated to implement 
+                
+            ui_templates.separator_box_in(box)
+    return 
+
+def draw_group_pattern(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_group_pattern", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_group_pattern");BOOL_VALUE(1)
+        icon = "TEXTURE", 
+        master_category_toggle = "s_gr_pattern_master_allow",
+        name = translate("Group Pattern"),
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "s_gr_pattern", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_gr_pattern")
+        )
+    if is_open:
+
+            ui_is_active = True
+            ui_is_active = active_check(group_active, s_category="s_gr_pattern", prop=ui_is_active, )
+
+            ########## ########## Pattern 1
+
+            tocol, is_toggled = ui_templates.bool_toggle(box, 
+                prop_api=group_active,
+                prop_str="s_gr_pattern1_allow",
+                label=translate("Pattern"),
+                icon=f"W_PATTERN1", 
+                active=ui_is_active,
+                open_close_api=f"ui_gr_pattern1_allow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_gr_pattern1_allow");BOOL_VALUE(1)
+                return_layout=True,
+                )
+            if is_toggled:
+
+                psy_members = group_active.get_psy_members()
+                if (len(psy_members)==0):
+                    tocol.label(text="Error, this group is empty")
+                    return
+                
+                #Draw Texture Data Block
+
+                block = tocol.column()
+                block.label(text=translate("Texture-Data")+":")
+                node = psy_members[0].get_scatter_mod().node_group.nodes["s_gr_pattern1"].node_tree.nodes["texture"]
+                draw_texture_datablock(block, system=group_active, ptr_name="s_gr_pattern1_texture_ptr", texture_node=node, new_name=f"{group_active.name.title()}Pattern",)
+
+                #Draw Particle ID specific
+                    
+                tocol.separator(factor=0.75)
+
+                met=tocol.column(align=True)
+                met.label(text=translate("Sample")+":")
+                met.prop( group_active, "s_gr_pattern1_color_sample_method", text="")
+                color_sample_method = eval("group_active.s_gr_pattern1_color_sample_method")
+                if (color_sample_method=="id_picker"):
+
+                    pick = met.row(align=True)
+                    ptrc = pick.row(align=True)
+                    ptrc.scale_x = 0.4
+                    ptrc.prop( group_active, "s_gr_pattern1_id_color_ptr", text="")
+                    pick.prop( group_active, "s_gr_pattern1_id_color_tolerence")
+
+                tocol.separator(factor=0.75)
+
+                #Feature Influence 
+                draw_feature_influence(layout=tocol, system=group_active, api_name="s_gr_pattern1",)
+                
+                #ideally would need universal masks for groups as well.. 
+                #but well, complicated to implement 
+                                
+            ui_templates.separator_box_in(box)
+    return 
+
+
+
+# oooooooooo.                        o8o
+# `888'   `Y8b                       `"'
+#  888     888  .ooooo.   .oooooooo oooo  ooo. .oo.   ooo. .oo.    .ooooo.  oooo d8b  .oooo.o
+#  888oooo888' d88' `88b 888' `88b  `888  `888P"Y88b  `888P"Y88b  d88' `88b `888""8P d88(  "8
+#  888    `88b 888ooo888 888   888   888   888   888   888   888  888ooo888  888     `"Y88b.
+#  888    .88P 888    .o `88bod8P'   888   888   888   888   888  888    .o  888     o.  )88b
+# o888bood8P'  `Y8bod8P' `8oooooo.  o888o o888o o888o o888o o888o `Y8bod8P' d888b    8""888P'
+#                        d"     YD
+#                        "Y88888P'
+
+
+sepa_small = 0.15
+sepa_large = 3.15
+
+def draw_beginner_interface(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_beginners", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_beginners");BOOL_VALUE(1)
+        name = translate("Beginner Interface"),
+        )
+    if is_open:
+
+            if warnings(box):
+                return None
+
+            main = box.column()
+
+            row = main.row()
+            s1 = row.column()
+            s1.scale_x = 1.25
+            s1.active = True
+            s1.alignment = "RIGHT"
+            s2 = row.column() 
+
+            #density controls 
+
+            if (psy_active.s_distribution_method=="random"):
+                s1.label(text="Density")
+                s2.prop(psy_active, "s_distribution_density",text="")
+
+                s1.label(text="Collision")
+                ope = s2.row(align=True)
+                ope.prop(psy_active,"s_distribution_limit_distance_allow", text="", icon="CHECKBOX_HLT" if psy_active.s_distribution_limit_distance_allow else "CHECKBOX_DEHLT")
+                ope2 = ope.row(align=True)
+                ope2.enabled = psy_active.s_distribution_limit_distance_allow
+                ope2.prop(psy_active,"s_distribution_limit_distance",text="") 
+                
+            else:
+                s1.label(text="Density")
+                ope = s2.row()
+                ope.active = False
+                ope.operator("scatter5.dummy", text="Read Only")
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            #vgroup paint
+
+            s1.label(text=translate("Vertex-Group"),)
+
+            ope = s2.row(align=True)
+            ope.prop(psy_active,"s_mask_vg_allow", text="", icon="CHECKBOX_HLT" if psy_active.s_mask_vg_allow else "CHECKBOX_DEHLT")
+            ope2 = ope.row(align=True)
+            ope2.enabled = psy_active.s_mask_vg_allow
+            exists = (psy_active.s_mask_vg_ptr!="")
+            op = ope2.operator("scatter5.vg_quick_paint",
+                text="Paint",
+                icon="BRUSH_DATA" if exists else "ADD",
+                depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==psy_active.s_mask_vg_ptr)),
+                )
+            op.group_name = psy_active.s_mask_vg_ptr
+            op.mode = "vg" 
+            op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_mask_vg_ptr"
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            #seed 
+
+            s1.label(text="Seed")
+            ope = s2.row(align=True)
+            op = ope.operator("scatter5.exec_line", text="Randomize", icon_value=cust_icon("W_DICE"),)
+            op.api = f"psy_active.s_distribution_is_random_seed = True ; psy_active.get_scatter_mod().node_group.nodes['s_pattern1'].node_tree.nodes['texture'].node_tree.scatter5.texture.mapping_random_is_random_seed = True"
+
+            #scale
+
+            s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
+
+            s1.label(text="Scale")
+            s2.prop(psy_active,"s_beginner_default_scale",text="") 
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            s1.label(text="Random")
+            s2.prop(psy_active,"s_beginner_random_scale",text="", slider=True,) 
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            s1.label(text=translate("Vertex-Group"),)
+
+            ope = s2.row(align=True)
+
+            op = ope.operator("scatter5.exec_line", text="", icon="CHECKBOX_HLT" if psy_active.s_scale_shrink_allow else "CHECKBOX_DEHLT", depress=psy_active.s_scale_shrink_allow, )
+            op.api = f"psy_active.s_scale_shrink_allow = {not psy_active.s_scale_shrink_allow} ; psy_active.s_scale_shrink_mask_method = 'mask_vg' ; psy_active.s_scale_shrink_mask_reverse = True" 
+            ope2 = ope.row(align=True)
+            ope2.enabled = psy_active.s_scale_shrink_allow
+            exists = (psy_active.s_scale_shrink_mask_ptr!="")
+            op = ope2.operator("scatter5.vg_quick_paint",
+                text="Paint",
+                icon="BRUSH_DATA" if exists else "ADD",
+                depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==psy_active.s_scale_shrink_mask_ptr)),
+                )
+            op.group_name = psy_active.s_scale_shrink_mask_ptr
+            op.mode = "vg" 
+            op.api = f"emitter.scatter5.particle_systems['{psy_active.name}'].s_scale_shrink_mask_ptr"
+
+            #rotation 
+
+            s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
+
+            s1.label(text="Align")
+            ope = s2.row(align=True)
+            op = ope.operator("scatter5.exec_line",text="Normal", 
+                depress=(psy_active.s_rot_align_z_allow and psy_active.s_rot_align_z_method=='meth_align_z_normal'),)
+            op.api = f"psy_active.s_rot_align_z_allow = True ;  psy_active.s_rot_align_z_method ='meth_align_z_normal'"
+
+            op = ope.operator("scatter5.exec_line",text="Local Z",
+                depress=(psy_active.s_rot_align_z_allow and psy_active.s_rot_align_z_method=='meth_align_z_local'),)
+            op.api = f"psy_active.s_rot_align_z_allow = True ;  psy_active.s_rot_align_z_method ='meth_align_z_local'"
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            s1.label(text="Random")
+            s2.prop(psy_active,"s_beginner_random_rot",text="", slider=True,)
+
+            #texture
+
+            s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
+
+            texture_exists = True
+            texture_node = psy_active.get_scatter_mod().node_group.nodes["s_pattern1"].node_tree.nodes["texture"]
+            texture_props = texture_node.node_tree.scatter5.texture
+
+            if (texture_node.node_tree.name.startswith(".TEXTURE *DEFAULT")):
+
+                s1.label(text="Pattern")
+                ope = s2.row(align=True)
+                ope.context_pointer_set("pass_ui_arg_system", psy_active,)
+                ope.context_pointer_set("pass_ui_arg_texture_node", texture_node,)
+                op = ope.operator("scatter5.exec_line", text="New", icon="ADD")
+                op.api = "bpy.ops.scatter5.scatter_texture_new(ptr_name='s_pattern1_texture_ptr',new_name='BR-Pattern') ; psy_active.s_pattern1_allow = True"
+                op.undo = "Creating New Pattern"
+
+            elif (psy_active.s_pattern1_allow):
+
+                s1.label(text="Pattern")
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text="Active", icon="CHECKBOX_HLT", depress=True)
+                op.api = f"psy_active.s_pattern1_allow = False"
+
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text="Scale")
+                s2.prop(texture_props, "scale", text="",)
+
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text="Brightness")
+                s2.prop(texture_props, "intensity", text="",)
+
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text="Contrast")
+                s2.prop(texture_props, "contrast", text="",)
+
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                
+            else:
+
+                s1.label(text="Pattern")
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Inactive"), icon="CHECKBOX_DEHLT", depress=False,)
+                op.api = f"psy_active.s_pattern1_allow = True"
+
+            #define instances 
+
+            s1.separator(factor=sepa_large) ; s2.separator(factor=sepa_large)
+
+            s1.label(text=translate("Displays"),)
+
+            ope = s2.row(align=True)
+            op = ope.operator("scatter5.exec_line", text=translate("Active") if psy_active.s_display_allow else translate("Inactive"), icon="CHECKBOX_HLT" if psy_active.s_display_allow else "CHECKBOX_DEHLT", depress=psy_active.s_display_allow, )
+            op.api = f"psy_active.s_display_allow = {not psy_active.s_display_allow} " 
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            s1.label(text=translate("Instances"),)
+
+            ui_list = s2.column(align=True)
+            ui_list.template_list("SCATTER5_UL_list_instances", "", psy_active.s_instances_coll_ptr, "objects", psy_active, "s_instances_list_idx", rows=5, sort_lock=True,)
+                
+            add = ui_list.column(align=True)
+            add.active = (bpy.context.mode=="OBJECT")
+            add.operator_menu_enum("scatter5.add_instances", "method", text=translate("Add Instance(s)"), icon="ADD")
+        
+            #Separator 
+
+            ui_templates.separator_box_in(box)
+
+    return
+
+def draw_removal_interface(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    if (psy_active is None):
+        return
+
+    s_abiotic_used    = psy_active.is_category_used("s_abiotic")
+    s_ecosystem_used  = psy_active.is_category_used("s_ecosystem")
+    s_proximity_used  = psy_active.is_category_used("s_proximity")
+    s_push_used       = psy_active.is_category_used("s_push")
+    s_wind_used       = psy_active.is_category_used("s_wind")
+    s_visibility_used = psy_active.is_category_used("s_visibility")
+
+    if any([s_abiotic_used, s_ecosystem_used, s_proximity_used, s_push_used, s_wind_used, s_visibility_used,]):
+
+        box, is_open = ui_templates.box_panel(self, layout, 
+            prop_str = "ui_tweak_removal", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_removal");BOOL_VALUE(1)
+            name = translate("Advanced Features"),
+            doc_panel = "SCATTER5_PT_docs", 
+            popover_argument = "s_beginners_remove", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("s_beginners_remove")
+            )
+        if is_open:
+
+            main = box.column()
+
+            row = main.row()
+            split = row.split(factor = 0.375)
+            s1 = split.column()
+            s1.alignment = "RIGHT"
+            s2 = split.column()
+
+            s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+            if (s_visibility_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Optimizations"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_visibility_master_allow = False"
+                op.undo = translate("Remove Visibility Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+
+            if (s_abiotic_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Abiotic"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_abiotic_master_allow = False"
+                op.undo = translate("Remove Abiotic Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+
+            if (s_ecosystem_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Ecosystem"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_ecosystem_master_allow = False"
+                op.undo = translate("Remove Ecosystem Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+
+            if (s_proximity_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Proximity"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_proximity_master_allow = False"
+                op.undo = translate("Remove Proximity Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+
+            if (s_push_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Offset"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_push_master_allow = False"
+                op.undo = translate("Remove Offset Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+            
+            if (s_wind_used):
+                s1.separator(factor=sepa_small) ; s2.separator(factor=sepa_small)
+
+                s1.label(text=translate("Wind"),)
+                ope = s2.row(align=True)
+                op = ope.operator("scatter5.exec_line", text=translate("Remove"), icon="PANEL_CLOSE", depress=False,)
+                op.api = f"psy_active.s_wind_master_allow = False"
+                op.undo = translate("Remove Wind Features")
+                op.description = translate("There are more advanced feature enabled for this scatter-system! Would you like to remove it?")
+            
+            #Separator 
+
+            ui_templates.separator_box_in(box)
+
+    return
+
+def draw_pros_interface(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_tweak_pros", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_tweak_pros");BOOL_VALUE(1)
+        name = translate("Professional Workflow"),
+        force_open = True,
+        )
+    if is_open:
+
+        row = box.row()
+        r1 = row.separator(factor=0.3)
+        col = row.column()
+        r3 = row.separator(factor=0.3)
+
+        word_wrap(layout=col.box(), alignment="CENTER", max_char=38, active=True, string=translate("Get the tools you need to become a pro!\nOur user-friendly interface is perfect for newbies, but our paid tool-kit for professionals is where the magic happens.\n\nWith advanced features, an efficient pipelines, and useful scattering operators, you'll be able to handle the most challenging projects with ease."),)
+                
+        col.separator(factor=0.75)
+
+        ope = col.row()
+        ope.scale_y = 1.2
+        ope.operator("wm.url_open", text=translate("Upgrade Today"),).url = "https://blendermarket.com/products/scatter"
+
+        #Separator 
+
+        ui_templates.separator_box_in(box)
+
+    return
+
+def draw_group_beginner_masks(self,layout):
+
+    addon_prefs, scat_scene, scat_ui, scat_win, emitter, psy_active, group_active = get_props()
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_beginners_tweak_group_masks", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_beginners_tweak_group_masks");BOOL_VALUE(1)
+        name = translate("Group Masks"),
+        )
+    if is_open:
+            
+        ui_is_active = True 
+        ui_is_active = active_check(group_active, s_category="s_gr_mask", prop=ui_is_active, )
+        
+        ########## ########## Vgroup
+
+        tocol, is_toggled = ui_templates.bool_toggle(box, 
+            prop_api=group_active,
+            prop_str="s_gr_mask_vg_allow", 
+            label=translate("Vertex-Group"), 
+            icon="WPAINT_HLT", 
+            active=ui_is_active,
+            return_layout=True,
+            )
+        if is_toggled:
+
+                mask_col = tocol.column(align=True)
+                mask_col.separator(factor=0.35)
+
+                exists = (group_active.s_gr_mask_vg_ptr!="")
+
+                #mask pointer
+
+                mask = mask_col.row(align=True)
+
+                ptr = mask.row(align=True)
+                ptr.alert = ( bool(group_active.s_gr_mask_vg_ptr) and (group_active.s_gr_mask_vg_ptr not in group_active.get_surfaces_match_attr("vg")(group_active, bpy.context, group_active.s_gr_mask_vg_ptr)) )
+                ptr.prop( group_active, f"s_gr_mask_vg_ptr", text="", icon="GROUP_VERTEX",)
+                
+                if exists:
+                    mask.prop( group_active, f"s_gr_mask_vg_revert",text="",icon="ARROW_LEFTRIGHT",)
+
+                #paint or create operator
+
+                op = mask.operator("scatter5.vg_quick_paint",
+                    text="",
+                    icon="BRUSH_DATA" if exists else "ADD",
+                    depress=((bpy.context.mode=="PAINT_WEIGHT") and (getattr(bpy.context.object.vertex_groups.active,"name",'')==group_active.s_gr_mask_vg_ptr)),
+                    )
+                op.group_name = group_active.s_gr_mask_vg_ptr
+                op.mode = "vg" 
+                op.api = f"emitter.scatter5.particle_groups['{group_active.name}'].s_gr_mask_vg_ptr"
+
+                tocol.separator(factor=1)
+
+        #Separator 
+
+        ui_templates.separator_box_in(box)
+            
+    return 
 
 
 #    .oooooo.   oooo
@@ -4818,7 +5301,6 @@ class SCATTER5_PT_tweaking(bpy.types.Panel):
 
 classes = (
         
-    SCATTER5_UL_list_scatter_small,
     SCATTER5_UL_list_instances,
     SCATTER5_PT_tweaking,
 

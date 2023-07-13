@@ -51,69 +51,98 @@ class SCATTER5_MT_selection_menu(bpy.types.Menu):
         layout = self.layout
 
         #get UILayout arg
-        scat_scene  = bpy.context.scene.scatter5
-        emitter     = context.s5_ctxt_ptr_emitter 
-        psys        = emitter.scatter5.particle_systems
-        psy_active  = emitter.scatter5.get_psy_active()
-        psys_sel    = emitter.scatter5.get_psys_selected()
-        lenselecstr = f" [{len(psys_sel)}]"
+        scat_scene   = bpy.context.scene.scatter5
+        emitter      = context.pass_ui_arg_emitter 
+        psys         = emitter.scatter5.particle_systems
+        group_active = emitter.scatter5.get_group_active()
+        psy_active   = emitter.scatter5.get_psy_active()
+        psys_sel     = emitter.scatter5.get_psys_selected()
 
         #Select All 
 
-        psys_sel = [p.sel for p in emitter.scatter5.particle_systems]
-        is_some_sel = (True in psys_sel)
-        count = f"{sum(psys_sel)}" if is_some_sel else " "
-        is_full = (False not in psys_sel)
+        is_some_sel = any(p.sel for p in emitter.scatter5.particle_systems)
+        is_addonprefs = (context.space_data.type=="PREFERENCES")
 
-        text = translate("De-Select System(s)")+lenselecstr if (is_some_sel) else translate("Select All System(s)")+f" [{len(psys)}]"
-        args = {"text":text, "icon_value":cust_icon("W_SELECT_FULL")}  if is_full else {"text":text, "icon":"RESTRICT_SELECT_OFF" if is_some_sel else "RESTRICT_SELECT_ON"}
-        sel = layout.row()
-        sel.enabled = bool(len(psys))
-        op = sel.operator("scatter5.toggle_selection",**args )
-        op.emitter_name = emitter.name
+         
+        #selection operators
+        
+        if (not is_addonprefs):
 
-        #Remove System 
+            if (len(psys_sel)==len(psys)):
+                seltxt = translate("De-Select All System(s)")+f" [{len(psys)}]"
+                selicon = cust_icon("W_GROUP_TOGGLE_SEL_NONE")
+            else:
+                seltxt = translate("Select All System(s)")+f" [{len(psys)}]"
+                selicon = cust_icon("W_GROUP_TOGGLE_SEL_ALL")
+
+            sel = layout.row()
+            sel.enabled = bool(len(psys))
+            op = sel.operator("scatter5.toggle_selection", text=seltxt, icon_value=selicon,)
+            op.emitter_name = emitter.name
+
+            layout.separator()
+
+        
+        #group
+
+        _ = translate("Group") + translate("Ungroup") #For biome reader version, they'll need this translation
+        
+        sub = layout.row(align=True)
+        sub.enabled = is_some_sel
+        sub.menu("SCATTER5_MT_selection_menu_sub_groups",text=translate("Group Selected")+f" [{len(psys_sel)}]", icon="OUTLINER_COLLECTION")
 
         sub = layout.row(align=True)
-        sub.enabled = bool(len(psys_sel))
-        op = sub.operator("scatter5.remove_system",text=translate("Clear All System(s)"), icon="TRASH")
+        ungroup_enabled = is_some_sel
+        if ( is_some_sel and all( (p.group=="") for p in psys_sel) ):
+            ungroup_enabled = False
+        sub.enabled = ungroup_enabled
+        op = sub.operator("scatter5.group_psys",text=translate("Ungroup Selected")+f" [{len(psys_sel)}]", icon="GROUP")
         op.emitter_name = emitter.name
-        op.method  = "clear"
-        op.undo_push = True
-
-        #lock selected only for 3D
-
-        if ((context.space_data.type=="VIEW_3D") and psy_active):
-            
-            sub = layout.row(align=True)
-            sub.enabled = bool(psy_active)
-            args = {"text":translate("Unlock Active-System"), "icon":"UNLOCKED"} if psy_active.is_all_locked() else {"text":translate("Lock Active-System"), "icon":"LOCKED"}
-            op = layout.operator("scatter5.exec_line", **args)
-            op.api = f"psy_active.lock = not psy_active.lock"
+        op.action = "UNGROUP"
 
         layout.separator()
+        
 
-        #3D view special, this menu is also available from addon prefs
+        #lock
 
-        if (context.space_data.type=="VIEW_3D"):
+        if (not is_addonprefs):
+            
+            sub = layout.row(align=True)
+            sub.enabled = bool(len(psys_sel))
+            op = sub.operator("scatter5.exec_line", icon="LOCKED", text=translate("Lock Selected")+f" [{len(psys_sel)}]")
+            op.api = f"[p.lock_all() for p in psys_sel]"
+            op.description = translate("Lock/unlock the scatter-system(s). Once locked, it will be impossible to interact with the settings. No signal will be sent to the scatter engine when you tweak a property, and their interface will be disabled.")
 
-            #show color 
+            sub = layout.row(align=True)
+            sub.enabled = bool(len(psys_sel))
+            op = sub.operator("scatter5.exec_line", icon="UNLOCKED", text=translate("Unlock Selected")+f" [{len(psys_sel)}]")
+            op.api = f"[p.unlock_all() for p in psys_sel]"
+            op.description = translate("Lock/unlock the scatter-system(s). Once locked, it will be impossible to interact with the settings. No signal will be sent to the scatter engine when you tweak a property, and their interface will be disabled.")
+
+            layout.separator()
+            
+        #randomize
+
+        if (not is_addonprefs):
+
+            sub = layout.row(align=True)
+            sub.enabled = bool(len(psys_sel))
+            op = sub.operator("scatter5.batch_randomize", icon_value=cust_icon("W_DICE"), text=translate("Randomize Selected")+f" [{len(psys_sel)}]")
+            op.context_selection=True
+            
+            layout.separator()
+            
+        #show color 
+
+        if (not is_addonprefs):
 
             sub = layout.row(align=True)
             sub.enabled = bool(len(psys))
             op = sub.operator("scatter5.set_solid_and_object_color",text=translate("Set Viewport Display Colors"), icon="RESTRICT_COLOR_ON",)
             op.mode = "restore" if ((context.space_data.shading.type=="SOLID") and (context.space_data.shading.color_type=="OBJECT")) else "set"
 
-            #isolate selected
-
-            row = layout.row()
-            row.enabled = is_some_sel
-            if (context.space_data.local_view is None):
-                op = row.operator("scatter5.emitter_local_view", text=translate("Toggle Local View with System(s)"), icon="VIEWZOOM",)
-                op.emitter_name = emitter.name
-            else: 
-                row.operator("view3d.localview", text=translate("Quit Local Local"), icon="VIEWZOOM",)
-
+            layout.separator()
+            
         #direct nodetree access
 
         row = layout.row()
@@ -121,6 +150,7 @@ class SCATTER5_MT_selection_menu(bpy.types.Menu):
         op = row.operator("scatter5.open_editor", text=translate("Reveal Active-System Engine"), icon="NODETREE",)
         op.editor_type = "GeometryNodeTree"
         op.instructions = f"area.spaces[0].pin = True ; area.spaces[0].node_tree = bpy.data.objects['{emitter.name}'].scatter5.get_psy_active().get_scatter_mod().node_group"
+        op.description = translate("Each scatter layers are based on a complex geometry-node nodetree. If you're an advanced user, you are able to precisely change the scatter-engine core nodetree at will, in order to, for example, add new features, or change precise algorithmic behaviors. This operator will reveal the active system nodetree in a blender node editor.")
 
         layout.separator()
 
@@ -128,7 +158,7 @@ class SCATTER5_MT_selection_menu(bpy.types.Menu):
 
         row = layout.row()
         row.enabled = is_some_sel
-        op = row.operator("scatter5.copy_paste_systems",text=translate("Copy Selected System(s)")+lenselecstr,icon="DUPLICATE")
+        op = row.operator("scatter5.copy_paste_systems",text=translate("Copy Selected System(s)")+f" [{len(psys_sel)}]",icon="DUPLICATE")
         op.emitter_name = emitter.name
         op.copy = True
 
@@ -144,43 +174,81 @@ class SCATTER5_MT_selection_menu(bpy.types.Menu):
 
         row = layout.row()
         row.enabled = is_BufferSystems_filled()
-        op = row.operator("scatter5.copy_paste_systems",text=translate("Paste System(s) & Synchronize Settings"),icon="DUPLICATE")
+        op = row.operator("scatter5.copy_paste_systems",text=translate("Paste System(s) & Synchronize"),icon="DUPLICATE")
         op.emitter_name = emitter.name
         op.paste = True
         op.synchronize = True
 
         #3D view special, this menu is also available from addon prefs
+        
+        layout.separator()
 
-        if (context.space_data.type=="VIEW_3D"):
+        row = layout.row()
+        row.enabled = is_some_sel
+        row.menu("SCATTER5_MT_preset_menu_uilist",text=translate("Apply Preset to Selected")+f" [{len(psys_sel)}]",icon="PRESET",)
+
+        
+        #Remove all System 
+        
+        if (not is_addonprefs):
 
             layout.separator()
-            layout.enabled = bool(len(psys_sel))
-            layout.menu("SCATTER5_MT_preset_menu_uilist",text=translate("Apply Preset to Selected")+lenselecstr,icon="PRESET",)
 
-        #Addon pref interface exclusives
-
-        # elif (context.space_data.type!="VIEW_3D"):
-
-        #     layout.separator()
-
-        #     if scat_scene.lister_show_render_state:
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Hide Viewport"), icon="RESTRICT_VIEW_OFF").api = f"[setattr(p,'hide_viewport',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Hide Render"), icon="RESTRICT_RENDER_OFF").api = f"[setattr(p,'hide_render',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
+            sub = layout.row(align=True)
+            sub.enabled = bool(len(psys))
+            op = sub.operator("scatter5.remove_system",text=translate("Clear All System(s)")+f" [{len(psys)}]", icon="TRASH")
+            op.emitter_name = emitter.name
+            op.method  = "clear"
+            op.undo_push = True
             
-        #     if scat_scene.lister_show_lock:
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Lock"), icon="LOCKED").api = f"[setattr(p,'lock',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems if not p.is_all_locked()]"
-            
-        #     if scat_scene.lister_show_visibility:
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Enable Face Preview"), icon="SELECT_INTERSECT").api = f"[setattr(p,'s_visibility_facepreview_allow',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Enable Percentage"), icon_value=cust_icon("W_PERCENTAGE_TRUE"),).api = f"[setattr(p,'s_visibility_view_allow',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Enable Cam Optimization"), icon="OUTLINER_OB_CAMERA").api = f"[setattr(p,'s_visibility_cam_allow',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Enable Max Visibility"), icon_value=cust_icon("W_FIRE"),).api = f"[setattr(p,'s_visibility_maxload_allow',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-            
-        #     if scat_scene.lister_show_display:
-        #         layout.operator("scatter5.exec_line", text=translate("Batch Enable Display As"), icon_value=cust_icon("W_DISPLAY_TRUE"),).api = f"[setattr(p,'s_display_allow',True) for p in bpy.data.objects['{emitter.name}'].scatter5.particle_systems]"
-
         return None
 
+
+class SCATTER5_MT_selection_menu_sub_groups(bpy.types.Menu):
+
+    bl_idname      = "SCATTER5_MT_selection_menu_sub_groups"
+    bl_label       = ""
+    bl_description = ""
+
+    def __init__(self):
+
+        scat_scene = bpy.context.scene.scatter5
+        emitter    = scat_scene.emitter
+
+        emitter.scatter5.cleanse_unused_particle_groups()
+
+        return None
+        
+    def draw(self, context):
+        layout = self.layout
+
+        #get UILayout arg
+        layout     = self.layout
+        scat_scene = bpy.context.scene.scatter5
+        emitter    = context.pass_ui_arg_emitter 
+        psys       = emitter.scatter5.particle_systems
+        psy_active = emitter.scatter5.get_psy_active()
+        psys_sel   = emitter.scatter5.get_psys_selected()
+
+        layout.enabled = bool(len(psys_sel))
+
+        for g in emitter.scatter5.particle_groups: 
+
+            sub = layout.row(align=True)
+            op = sub.operator("scatter5.group_psys",text=g.name, icon="GROUP")
+            op.emitter_name = emitter.name
+            op.action = "GROUP"
+            op.name = g.name
+
+        layout.separator()
+
+        sub = layout.row(align=True)
+        op = sub.operator("scatter5.group_psys",text=translate("New Group"), icon="ADD")
+        op.emitter_name = emitter.name
+        op.action = "NEWGROUP"
+        op.name = "MyGroup"
+
+        return None 
 
 
 # ooooo   ooooo                           .o8                          ooo        ooooo
@@ -190,7 +258,6 @@ class SCATTER5_MT_selection_menu(bpy.types.Menu):
 #  888     888  888ooo888  .oP"888  888   888  888ooo888  888           8  `888'   888  888ooo888  888   888   888   888  `"Y88b.
 #  888     888  888    .o d8(  888  888   888  888    .o  888           8    Y     888  888    .o  888   888   888   888  o.  )88b
 # o888o   o888o `Y8bod8P' `Y888""8o `Y8bod88P" `Y8bod8P' d888b         o8o        o888o `Y8bod8P' o888o o888o  `V88V"V8P' 8""888P'
-
 
 
 class SCATTER5_PT_scatter_preset_header(bpy.types.Panel):
@@ -326,7 +393,7 @@ class SCATTER5_PT_per_settings_category_header(bpy.types.Panel):
             return 
 
         #get UILayout arg
-        s_category = context.s5_ctxt_ptr_popover.path_from_id().split(".")[-1]
+        s_category = context.pass_ui_arg_popover.path_from_id().split(".")[-1]
         is_locked  = psy_active.is_locked(s_category)
 
         #### Category Operators
@@ -337,24 +404,19 @@ class SCATTER5_PT_per_settings_category_header(bpy.types.Panel):
         operators = col.row(align=True)
         operators.scale_x = 5
 
-        #COPY/PASTE/APPLY
+        #COPY
         rwoo = operators.row(align=True)
         rwoo.scale_x = 5
         op = rwoo.operator("scatter5.copy_paste_category",text="", icon_value=cust_icon("W_BOARD_COPY"),)
         op.copy = True
         op.single_category = s_category
-        
+            
+        #PASTE
         rwoo = operators.row(align=True)
         rwoo.scale_x = 5
         rwoo.enabled = is_BufferCategory_filled(s_category)
         op = rwoo.operator("scatter5.copy_paste_category",text="", icon_value=cust_icon("W_BOARD_PASTE"),)
         op.paste = True
-        op.single_category = s_category
-        
-        rwoo = operators.row(align=True)
-        rwoo.scale_x = 5
-        op = rwoo.operator("scatter5.copy_paste_category",text="", icon_value=cust_icon("W_BOARD_APPLY"),)
-        op.apply_selected = True 
         op.single_category = s_category
 
         #RESET
@@ -362,6 +424,13 @@ class SCATTER5_PT_per_settings_category_header(bpy.types.Panel):
         rwoo.scale_x = 5 
         op = rwoo.operator("scatter5.reset_settings",text="", icon="LOOP_BACK")
         op.single_category = s_category
+
+        #APPLY
+        rwoo = operators.row(align=True)
+        rwoo.scale_x = 5
+        op = rwoo.operator("scatter5.apply_category",text="", icon_value=cust_icon("W_BOARD_APPLY"),)
+        op.single_category = s_category
+        op.pop_dialog = True
             
         #### Lock Unlock
 
@@ -373,11 +442,11 @@ class SCATTER5_PT_per_settings_category_header(bpy.types.Panel):
 
         op = locking.operator("scatter5.exec_line", text="", icon="UNLOCKED", depress=not is_locked)
         op.api = f"psy_active.{s_category}_locked = False"
-        op.description = translate("Lock/Unlock Settings")
+        op.description = translate("Lock/unlock this scatter-system settings category. Once the category is locked, it will be impossible to interact with its settings. No signal will be sent to the scatter engine when you tweak a property, and their interface will be disabled.")
 
         op = locking.operator("scatter5.exec_line", text="", icon="LOCKED", depress=is_locked )
         op.api = f"psy_active.{s_category}_locked = True"
-        op.description = translate("Lock/Unlock Settings")
+        op.description = translate("Lock/unlock this scatter-system settings category. Once the category is locked, it will be impossible to interact with its settings. No signal will be sent to the scatter engine when you tweak a property, and their interface will be disabled.")
 
         #### Category Reset/Preset 
 
@@ -429,6 +498,20 @@ class SCATTER5_PT_per_settings_category_header(bpy.types.Panel):
             op = ope.operator("scatter5.set_solid_and_object_color",text=translate("Set Viewport Display Colors"), icon="COLOR", depress=condition)
             op.mode = "restore" if condition else "set"
 
+        if (s_category in ("s_display","s_instances",)):
+
+            #Bounding Box
+
+            col = layout.column(align=True)
+            txt = col.row()
+            txt.label(text=translate("Object(s) Bounding-Box")+" :")
+
+            ope = col.row()
+            condition = (bpy.context.space_data.shading.type == 'SOLID') and (bpy.context.space_data.shading.color_type == 'OBJECT')
+            op = ope.operator("scatter5.batch_bounding_box",text=translate("Toggle Bounding-Box"), icon="CUBE",)
+            op.emitter_name = emitter.name
+            op.psy_name = psy_active.name
+
         layout.separator(factor=0.3)
 
         return None
@@ -460,12 +543,6 @@ class SCATTER5_PT_mask_header(bpy.types.Panel):
         prp = col.row()
         prp.operator("scatter5.refresh_every_masks",text=translate("Recalculate All Masks"),icon="FILE_REFRESH")
         
-        # col = layout.column()
-        # txt = col.row()
-        # txt.label(text=translate("Export masks :"))
-        # prp = col.row()
-        # prp.operator("scatter5.bake_vertex_groups",text=translate("Bake Mask(s)"))
-        
         return None
 
 
@@ -486,7 +563,7 @@ class SCATTER5_PT_graph_subpanel(bpy.types.Panel):
         layout = self.layout
 
         #get UILayout arg
-        dialog = context.s5_ctxt_ptr_popover
+        dialog = context.pass_ui_arg_popover
 
         #Copy/Paste
 
@@ -550,170 +627,169 @@ class SCATTER5_PT_docs(bpy.types.Panel):
     bl_region_type = "HEADER" #Hide this panel? not sure how to hide them...
     #bl_options     = {"DRAW_BOX"}
 
-    txt_block_op_behavior = translate("Note that you are able to change the behavior of this operator in the popover menu right next to the operator button. Use these settings to directly set-up masks, or optimization features for example.")
-    
+    txt_block_op_behavior = translate("Optionally, you are able to change the behavior of the operator by going in the popover menu, right next to the operator button. Change these settings to directly set-up masks, set-up optimization features, or preciesely define the future surface(s) that your scatter will populate for example.")
     txt_block_feature_hover = translate("Please, hover your cursor on the feature toggles of your choice to read each feature description.")
-
     txt_block_disinfo = translate("This distribution method has an impact on the workflow, please pay attention to the following information.")
+    txt_block_grinfo = translate("This is a group features. These group settings will apply on all scatters while they are part of this group.")
 
     panel_docs = {
         #Creation Panel
         "ui_create_densit" : { 
-            "text": translate("Scatter the selected objects in your viewport or asset browser with the chosen density per square area in chosen unit scale.\nNote that the density will be converted to /m² automatically.")+"\n\n"+txt_block_op_behavior,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering",
+            "text": translate("Scatter the selected objects located in your viewport or in your asset browser with the chosen density per square area in chosen unit scale.\nNote that the density will be converted to /m² automatically.")+"\n\n"+txt_block_op_behavior,
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_density_scatter",
             "url_title":translate("Online Manual"),
             },
         "ui_create_preset" : { 
-            "text": translate("Scatter the selected objects in your viewport or asset browser with the selected preset. Preset files are storing Geo-Scatter settings information & their saved values, you are able to create and render your own preset in the header menu if needed.")+"\n\n"+txt_block_op_behavior,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering",
+            "text": translate("Scatter the selected objects located in your viewport or in your asset browser with the selected preset. Preset files are storing the plugin settings information & their saved values, you are able to create and render your own preset in the header menu if needed.")+"\n\n"+txt_block_op_behavior,
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_preset_scatter",
             "url_title":translate("Online Manual"),
             },
         "ui_create_manual" : { 
-            "text": translate("Scatter the selected objects in your viewport or asset browser and directly enter the manual workflow. Manual-mode is an entirely new scattering experience, you are able to precisely place / move / rescale / rotate instances with a subset of various brushes.")+"\n\n"+translate("Note that you are able to change the behavior of this operator in the popover menu right next to the operator button."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering",
+            "text": translate("Scatter the selected objects located in your viewport or in your asset browser and directly enter the manual workflow. Manual-mode is an entirely new scattering experience, you are able to precisely place / move / rescale / rotate instances with a subset of various brushes.")+"\n\n"+translate("Note that you are able to change the behavior of this operator in the popover menu right next to the operator button."), 
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_manual_scatter",
             "url_title":translate("Online Manual"),
             },
         "ui_create_quick" : { 
             "text": translate("The 'Quick Scatter' operator is a shortcut based workflow designed to be quick and effective. Scatter the selected objects in the viewport or asset browser depending on where you called the shortcut. You can change the shortcut in the popover settings.")+"\n\n"+txt_block_op_behavior,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_quick_scatter",
             "url_title":translate("Online Manual"),
             },
         "ui_create_biomes" : { 
-            "text": translate("Open your biome library from where you will be able to load new biomes into your designated surfaces, Geo-Scatter will first load the assets and scatter the encoded preset layers one by one. You are able to create your own biomes in the biome interface header or in the export panel.")+"\n\n"+txt_block_op_behavior+translate("Note that this menu is also available in the biome interface header."),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering#h.uixz6f3f1k1u",
+            "text": translate("Open your biome library from where you will be able to load new biomes into your designated surfaces, our biome-system will first load the assets and scatter the encoded preset layers one by one. You are able to create your own biomes in the biome interface header or in the export panel.")+"\n\n"+txt_block_op_behavior+translate("Note that this menu is also available in the biome interface header."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_biome_scatter",
             "url_title":translate("Online Manual"),
             },
         #Tweaking Panel
         "ui_tweak_select" : { 
             "text": translate("Select or set active your scatter-system in the interface below. Selecting multiple system(s) at the same time is key in order to batch change properties, this the most powerful functionality of our plugin; by pressing 'ALT' while changing the value of any settings, toggles or pointers you will apply the property value to all selected system(s).\n\nIf you are working with a lot of scatter-system(s) in your scene, we advise you to close this panel and use the Lister interface in our plugin manager or use the quick-lister shortcut (by default 'SHIFT+CTRL+Q').\n\n Pro-Tip: pressing the 'ALT' or 'SHIFT' key in the system-list will isolate or add the selection."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scattering#h.llfxvv18875z",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_list_interfaces",
             "url_title":translate("Online Manual"),
             },
         "s_surface" : { 
             "text": translate("By default, any new scatter will use the chosen emitter mesh as the distribution surface. With 5.3 you are able to pick surface(s) of your choice independently from the emitter.\n\nNote that if you choose to scatter a system on many surfaces, make sure that the UV(s), vertex-color(s) or vertex-group(s) attributes are share across all surfaces, otherwise the pointers will highlight in red."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_surfaces",
             "url_title":translate("Online Manual"),
             },
         "s_distribution" : { 
             "text": translate("In order to scatter anything we need to distribute points on your designated surface(s) first! Below you will be able to choose between a variety of distribution algorithm.\n\nPlease, hover on the distribution method of your choice to read their full description."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution",
             "url_title":translate("Online Manual"),
             },
         "s_mask" : { 
             "text": translate("In the culling-mask category you are able to remove the scattered points non-destructively with the help of various masking features.")+"\n\n"+translate("Note that masks based on the topology of your surface(s) will be faster to compute.")+"\n\n"+txt_block_feature_hover,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/culling-masks",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureCullingmask",
             "url_title":translate("Online Manual"),
             },
         "s_scale" : { 
             "text": translate("Have complete control over the scale of your instances.")+"\n\n"+txt_block_feature_hover,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/scale",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScale",
             "url_title":translate("Online Manual"),
             },
         "s_rot" : { 
             "text": translate("Have complete control over your instances orientations.")+"\n\n"+txt_block_feature_hover,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/rotation",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureRotation",
             "url_title":translate("Online Manual"),
             },
         "s_pattern" : { 
             "text": translate("Influence your instances density and scale from a chosen texture-data. Scatter texture-data are re-usable datablocks similar to the now obsolete blender texture data."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/pattern",
+            "url" : "https://www.geoscatter.com/documentation.html#FeaturePattern",
             "url_title":translate("Online Manual"),
             },
         "s_abiotic" : { 
             "text": translate("The abiotic factors are all factors related to your surface(s) topology that can have an influence your distribution density or scale.")+"\n\n"+txt_block_feature_hover, 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/abiotic",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureAbiotic",
             "url_title":translate("Online Manual"),
             },
         "s_proximity" : { 
             "text": translate("Influence your distribution density, orientation or scale by proximity of given elements.")+"\n\n"+txt_block_feature_hover, 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/proximity",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureProximity",
             "url_title":translate("Online Manual"),
             },
         "s_ecosystem" : { 
             "text": translate("Ecosystem(s) gives you the ability of defining relationship rules in-between your scatter-system(s)."),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/ecosystems",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureEcosystem",
             "url_title":translate("Online Manual"),
             },
         "s_push" : { 
-            "text": translate("Offset your instances location.")+"\n\n"+txt_block_feature_hover, 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/offset",
+            "text": translate("Offset your instances locations.")+"\n\n"+txt_block_feature_hover, 
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureOffset",
             "url_title":translate("Online Manual"),
             },
         "s_wind" : { 
-            "text": translate("Create the illusion of a wind-simulation by tilting your instances")+"\n\n"+txt_block_feature_hover,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/wind",
+            "text": translate("Create the illusion of a wind-simulation by tilting your instances.")+"\n\n"+txt_block_feature_hover,
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureWind",
             "url_title":translate("Online Manual"),
             },
         "s_visibility" : {
             "text": translate("Control how many instances are visible during the various rendering states, for optimizing your work-time performance.")+"\n\n"+txt_block_feature_hover,
-            "url" : "https://sites.google.com/view/scatter5docs/manual/optimization",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureOptimization",
             "url_title":translate("Online Manual"),
             },
         "s_instances" : { 
             "text": translate("Control how your instances are assigned to the scattered points. Here you are able to add or remove objects to the instance list.")+"\n\n"+translate("You are able to directly select object(s) from this list, press the ALT key while doing so to re-center the view."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/instancing",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureInstancing",
             "url_title":translate("Online Manual"),
             },
         "s_display" : { 
             "text": translate("Change how your instances are displayed in the viewport, for optimizing your work-time performance."),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/optimization",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureOptimization&section_display_as",
             "url_title":translate("Online Manual"),
             },
         #Extra Panel
         "ui_extra_displace" : { 
             "text": translate("Quickly add displacement effects to the active object"), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/extra",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureOptimization&section_display_as",
             "url_title":translate("Online Manual"),
             },
         "ui_extra_vgs" : { 
             "text": translate("Generate useful vertex-data masks, either to influence your scatter, your shaders, or else.."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/procedural-vertex-data",
+            "url" : "https://www.geoscatter.com/documentation",
             "url_title":translate("Online Manual"),
             },
         "ui_extra_masterseed" : { 
             "text": translate("The master seed influence every other Geo-Scatter seeds in this .blend, increment this seed to iterate between various scattering possibilities non-destructively."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/extra",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureExtra&article_master_seed",
             "url_title":translate("Online Manual"),
             },
         "ui_extra_synch" : { 
             "text": translate("Synchronize scattering settings of the chosen scatter-system(s) together.")+"\n\n"+translate("How to use: create a synchronization channel, add system(s) to the channel, define which settings categories are affected.")+"\n\n"+translate("Changing the values of one system will also apply the value to all system(s) in the channel."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/extra",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureExtra&article_synchronization",
             "url_title":translate("Online Manual"),
             },
         "ui_extra_update" : { 
             "text": translate("Few controls update behavior controls."+"\n\n"+txt_block_feature_hover), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/optimization",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureOptimization&section_slider_reactivity",
             "url_title":translate("Online Manual"),
             },
         "ui_extra_export" : { 
             "text": translate("Export/convert the selected-system(s) to various object types or scatter format."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/extra",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureExtra&article_export_to_json",
             "url_title":translate("Online Manual"),
             },
         #Addon prefs popover
         "ui_add_packs" : { 
             "text": translate("ScatPacks are premade libraries containing biomes, presets or assets ready to be used within our plugin. A scatpack format should end with the extension '.scatpack'. Please note that some asset-makers might store their assets outside of our plugin scatter-library, if it is the case, please add the path to the context asset library folder in the environment path panel.\n\nAnyone is free to create his own biome pack! You can make your own '.scatpack' by renaming a compressed .zip extension. The content of the zip should respect the '_presets_'/'_biomes_' folder hierarchy. Be careful to only zip what is yours & respect assets licenses!"),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/installation?authuser=0#h.tup08shyl1n8",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureInstallation",
             "url_title":translate("Online Manual"),
             },
         "ui_add_environment" : { 
-            "text": translate("Some biomes packs makers might store their assets outside of our plugin scatter-library, in such event their scatpacks will not contain any .blend files! If so, please add the path of the asset library to the list hereby"), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/extra",
+            "text": translate("Some biomes packs makers might store their assets outside of our plugin, their scatpacks will not contain any .blend files! If it is the case, you will need to make sure that the .blend files related to the biomes can be found in the list(s) below"), 
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureInstallation&article_define_environment_paths",
             "url_title":translate("Online Manual"),
             },
         "ui_add_paths" : { 
             "text": translate("Change the location of your scatter-library. The scatter-library contains all your biomes, presets & more."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/installation?authuser=0#h.s0g61xupfvnt",
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureInstallation&section_manage_your_scatter_library",
             "url_title":translate("Online Manual"),
             },
         "ui_add_browser" : { 
-            "text": translate("The Geo-Scatter plugin works flawlessly with the blender asset browser, as you can directly Scatter the selected Assets. It might be worth it to also install your assets as an asset-browser library. This is done in the blender preferences editor ‘File Paths’.\n\nIf your pack does not support blender asset browser, you are able to automatically convert many blends of a given folder to asset-ready ready blends Hereby. This process will save the blends to the current version you are running, be aware of this please!\n\nNested folders are not supported. Please do not run this operator from a blend file located in the folder you want to process. Please use this operator carefully, the result cannot be undone. Do not use this operator from an unsaved blend file.`\n\nOpen the console window to see progress."), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/installation?authuser=0#h.s0g61xupfvnt",
+            "text": translate("Our scattering plugin works flawlessly with the blender asset browser, as you can directly Scatter the selected Assets. It might be worth it to also install your assets as an asset-browser library. This is done in the blender preferences editor ‘File Paths’.\n\nIf your pack does not support blender asset browser, you are able to automatically convert many blends of a given folder to asset-ready ready blends Hereby. This process will save the blends to the current version you are running, be aware of this please!\n\nNested folders are not supported. Please do not run this operator from a blend file located in the folder you want to process. Please use this operator carefully, the result cannot be undone. Do not use this operator from an unsaved blend file.`\n\nOpen the console window to see progress."), 
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureInstallation&section_don_t_have_the_time_to_read_",
             "url_title":translate("Online Manual"),
             },
         "ui_add_workflow" : { 
-            "text": translate("By default you will need to change your emitter by quitting the Geo-Scatter active panels and going back to the Geo-Scatter emitter panel. However there are alternative workflow available"), 
-            "url" : "https://sites.google.com/view/scatter5docs/manual/installation?authuser=0#h.s0g61xupfvnt",
+            "text": translate("By default you will need to change your emitter by quitting the active panel and going back to the emitter panel. However there are alternative workflow available"), 
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&article_switching_emitter_s",
             "url_title":translate("Online Manual"),
             },
         #Get flowmap painter info
@@ -724,40 +800,62 @@ class SCATTER5_PT_docs(bpy.types.Panel):
             },
         #Features based on camera 
         "nocamera_info" : { 
-            "text": translate("This functionality relies on the active camera, but no active camera can be found in the scene.\n\nPlease add a camera, or disable this feature"), 
+            "text": translate("This functionality relies on the active camera, but an active camera can't be found in this scene.\n\nPlease add a camera, or disable this feature"), 
             "url" : "",
             "url_title":"",
             },
         #distribution availability
         "distinfos_clumping" : {
-            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n\u2022 Clump Scale Influence\n\u2022 Clump Normal Influence"),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n• Clump Scale Influence\n• Clump Normal Influence"),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution&section_clump_distribution",
             "url_title":translate("About Distribution"),
             },
         "distinfos_faces" : {
-            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n\u2022 Face Scale Influence"),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n• Face Scale Influence"),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution&section_mesh_element_distribution",
             "url_title":translate("About Distribution"),
             },
         "distinfos_edges" : {
-            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n\u2022 Edge Scale Influence"),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "text": txt_block_disinfo+"\n\n"+translate("Exclusive feature(s) Available:\n• Edge Scale Influence"),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution&section_mesh_element_distribution",
             "url_title":translate("About Distribution"),
             },
         "distinfos_volume" : {
-            "text": txt_block_disinfo+"\n\n"+translate("Some feature(s) are not Available:\n\u2022 Mask>Vertex Group\n\u2022 Mask>Color-Attribute\n\u2022 Mask>Image\n\u2022 Mask>Material\n\u2022 Abiotic>Slope\n\u2022 Abiotic>Orientation\n\u2022 Abiotic>Curvature\n\u2022 Abiotic>Border\n\u2022Visibility>Area-Preview\n\nAdditional Information:\n\u2022Features relying on UV space or vertex-colors will be inconsistent"),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "text": txt_block_disinfo+"\n\n"+translate("Some feature(s) are not Available:\n• Mask>Vertex Group\n• Mask>Color-Attribute\n• Mask>Image\n• Mask>Material\n• Abiotic>Slope\n• Abiotic>Orientation\n• Abiotic>Curvature\n• Abiotic>Border\n•Visibility>Area-Preview\n\nAdditional Information:\n•Features relying on UV space or vertex-colors will be inconsistent"),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution&section_volume_distribution",
             "url_title":translate("About Distribution"),
             },
         "distinfos_manual" : {
-            "text": txt_block_disinfo+"\n\n"+translate("Please be aware that all the features from the procedural workflow still applies on the points generated by manual-mode. Disable the procedural features for a clear experience."),
-            "url" : "https://sites.google.com/view/scatter5docs/manual/distribution",
+            "text": txt_block_disinfo+"\n\n"+translate("Please be aware that all the features from the procedural workflow still applies on the points generated by manual-mode. The procedural features can impact your manual-distribution on their rotation/scale and can actually mask some areas of your distribution as well."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureDistribution&section_manual_distribution",
             "url_title":translate("About Distribution"),
             },
+        #Beginner interface explanations
         "s_beginners_remove" : {
-            "text": translate("Our Geo-Scatter Engine have a lot of features! And some are much more advanced than others! The Biome-Reader interface is designed for beginners, access to these advanced features can be achieved with our Geo-Scatter plugin. In the meanwhile you are able to disable these Features in this panel."),
+            "text": translate("The Geo-Scatter Engine has a lot of features! And some are much more advanced than others! The Biome-Reader interface is designed for beginners, access to these advanced features can be achieved with our Geo-Scatter plugin. In the meanwhile you are able to disable these Features in this panel."),
             "url" : "",
             "url_title":"",
+            },
+        #group category features Explanations
+        "s_gr_distribution" : {
+            "text": txt_block_grinfo+"\n\n"+translate("This category of features is dedicated to influencing the distribution of the scatter-system(s) member of this group."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_scatter_groups",
+            "url_title":translate("About Group Features"),
+            },
+        "s_gr_mask" : {
+            "text": txt_block_grinfo+"\n\n"+translate("This category of features is dedicated to masking the density of all scatter-system(s) member of this group."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_scatter_groups",
+            "url_title":translate("About Group Features"),
+            },
+        "s_gr_scale" : {
+            "text": txt_block_grinfo+"\n\n"+translate("This category of features is dedicated to influencing the scale attribute of the scatter-system(s) member of this group."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_scatter_groups",
+            "url_title":translate("About Group Features"),
+            },
+        "s_gr_pattern" : {
+            "text": txt_block_grinfo+"\n\n"+translate("This category of features is dedicated to masking the density via a scatter-texture data-block of all scatter-system(s) member of this group."),
+            "url" : "https://www.geoscatter.com/documentation.html#FeatureScattering&section_scatter_groups",
+            "url_title":translate("About Group Features"),
             },
         }
 
@@ -765,7 +863,7 @@ class SCATTER5_PT_docs(bpy.types.Panel):
         layout = self.layout
 
         #get UILayout arg
-        doc_key = context.s5_ctxt_ptr_popover.path_from_id().split(".")[-1]
+        doc_key = context.pass_ui_arg_popover.path_from_id().split(".")[-1]
         doc = self.panel_docs[doc_key]
 
         word_wrap(layout=layout, active=True, max_char=36, scale_y=0.875, string=doc["text"], alignment="LEFT")
@@ -794,7 +892,7 @@ class SCATTER5_UL_list_collection_utility(bpy.types.UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
             
-        coll = bpy.context.s5_ctxt_ptr_collection
+        coll = bpy.context.pass_ui_arg_collection
 
         row  = layout.row(align=True)
         
@@ -837,7 +935,7 @@ class SCATTER5_PT_collection_popover(bpy.types.Panel):
 
     def __init__(self):
 
-        self.coll = bpy.context.s5_ctxt_ptr_collection
+        self.coll = bpy.context.pass_ui_arg_collection
 
         #get breadcrumbs information 
 
@@ -916,7 +1014,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
         ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_visibility_hide_viewport", 
-            label=translate("Hide Viewport"), 
+            label=translate("Set “Hide Viewport”"), 
             left_space=True,
             )
 
@@ -927,7 +1025,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
         tocol, is_toggled = ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_visibility_view_allow", 
-            label=translate("Reduce Density"), 
+            label=translate("Set “Reduce Density”"), 
             left_space=True,
             return_layout=True,
             )
@@ -946,7 +1044,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
         tocol, is_toggled = ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_visibility_maxload_allow", 
-            label=translate("Max Visibility"),
+            label=translate("Set “Max Amount”"),
             return_layout=True,
             )
         if is_toggled:
@@ -964,7 +1062,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
         tocol, is_toggled = ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_visibility_facepreview_allow", 
-            label=translate("Preview Area"), 
+            label=translate("Set “Preview Area”"), 
             left_space=True,
             return_layout=True,
             )
@@ -985,7 +1083,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
         tocol, is_toggled = ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_visibility_cam_allow", 
-            label=translate("Camera Optimization"), 
+            label=translate("Set “Camera Optimization”"), 
             enabled=(bpy.context.scene.camera is not None),
             return_layout=True,
             )
@@ -996,7 +1094,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
             tocol2, is_toggled2 = ui_templates.bool_toggle(tocol, 
                 prop_api=scat_op,
                 prop_str="f_visibility_camclip_allow", 
-                label=translate("Frustum Culling"), 
+                label=translate("Set “Frustum Culling”"), 
                 enabled=(bpy.context.scene.camera is not None),
                 left_space=False,
                 return_layout=True,
@@ -1011,7 +1109,7 @@ def creation_operators_draw_visibility(layout, hide_viewport=True, facepreview_a
             tocol2, is_toggled2 = ui_templates.bool_toggle(tocol, 
                 prop_api=scat_op,
                 prop_str="f_visibility_camdist_allow", 
-                label=translate("Distance Culling"), 
+                label=translate("Set “Distance Culling”"), 
                 enabled=(bpy.context.scene.camera is not None),
                 left_space=False,
                 return_layout=True,
@@ -1033,7 +1131,7 @@ def creation_operators_draw_display(layout,ctxt_operator,):
     ui_templates.bool_toggle(layout, 
         prop_api=scat_op,
         prop_str="f_display_bounding_box", 
-        label=translate("Set Object Bounding-Box"), 
+        label=translate("Set object(s) “Bounds”"),
         left_space=True,
         )
 
@@ -1042,7 +1140,7 @@ def creation_operators_draw_display(layout,ctxt_operator,):
         ui_templates.bool_toggle(layout, 
             prop_api=scat_scene.operators.load_biome,
             prop_str="f_display_biome_allow", 
-            label=translate("Use Biomes Display Settings"), 
+            label=translate("Set biome(s) “Display As”"),
             left_space=True,
             )
 
@@ -1051,7 +1149,7 @@ def creation_operators_draw_display(layout,ctxt_operator,):
         tocol, is_toggled = ui_templates.bool_toggle(layout, 
             prop_api=scat_op,
             prop_str="f_display_allow", 
-            label=translate("Display As"), 
+            label=translate("Set scatte(s) “Display As”"),
             left_space=True,
             return_layout=True,
             )
@@ -1085,6 +1183,7 @@ def creation_operators_draw_surfaces(layout, ctxt_operator,):
         col.enabled = not is_toggled 
 
     col.prop(scat_op_crea,"f_surface_method", text="")
+    col.separator(factor=0.3)
 
     if (scat_op_crea.f_surface_method=="emitter"):
         pass
@@ -1099,22 +1198,27 @@ def creation_operators_draw_surfaces(layout, ctxt_operator,):
 
     elif (scat_op_crea.f_surface_method=="collection"):
         
-        if (len(scat_op_crea.f_surfaces)!=0):
-            lis = col.box().column(align=True)
-            lis.scale_y = 0.85
-            
-            for i,o in enumerate(scat_op_crea.f_surfaces): 
-                if (o.name!=""):
-                    lisr = lis.row()
-                    lisr.label(text=o.name)
+        surfcol = col.column(align=True)
 
-                    #remove given object
-                    op = lisr.operator("scatter5.exec_line", text="", icon="TRASH", emboss=False,)
-                    op.api = f"scat_ops.create_operators.f_surfaces[{i}].object = None ; scat_ops.create_operators.f_surfaces.remove({i})"
-                    op.undo = translate("Remove Predefined Surface(s)")
+        lis = surfcol.box().column(align=True)
+        lis.scale_y = 0.85
         
+        for i,o in enumerate(scat_op_crea.f_surfaces): 
+            if (o.name!=""):
+                lisr = lis.row()
+                lisr.label(text=o.name)
+
+                #remove given object
+                op = lisr.operator("scatter5.exec_line", text="", icon="TRASH", emboss=False,)
+                op.api = f"scat_ops.create_operators.f_surfaces[{i}].object = None ; scat_ops.create_operators.f_surfaces.remove({i})"
+                op.undo = translate("Remove Predefined Surface(s)")
+        
+        if ("lisr" not in locals()):
+            lisr = lis.row()
+            lisr.label(text=translate("No Surface(s) Assigned"))
+
         #add selected objects & refresh their square area
-        op = col.operator("scatter5.exec_line", text=translate("Add Selection"), icon="RESTRICT_SELECT_OFF",)
+        op = surfcol.operator("scatter5.exec_line", text=translate("Add Selection"), icon="ADD",)
         op.api = f"bpy.context.scene.scatter5.operators.create_operators.add_selection()"
         op.undo = translate("Add Predefined Surface(s)")
 
@@ -1134,7 +1238,7 @@ def creation_operators_draw_security(layout, sec_count=True, sec_verts=True):
         col2.prop(scat_op,"f_sec_count_allow",text="")
         col3.enabled = scat_op.f_sec_count_allow
         col3.scale_y = 0.87
-        col3.prop(scat_op,"f_sec_count",text=translate("Auto-Hide"),)
+        col3.prop(scat_op,"f_sec_count",text=translate("Heavy Scatter's"),)
 
     if (sec_verts):
 
@@ -1146,7 +1250,7 @@ def creation_operators_draw_security(layout, sec_count=True, sec_verts=True):
         col2.prop(scat_op,"f_sec_verts_allow",text="")
         col3.enabled = scat_op.f_sec_verts_allow
         col3.scale_y = 0.87
-        col3.prop(scat_op,"f_sec_verts",text=translate("Auto-Bounding-Box"),)
+        col3.prop(scat_op,"f_sec_verts",text=translate("Heavy Object's"),)
 
     return None 
 
@@ -1186,7 +1290,7 @@ def creation_operators_draw_mask(layout,ctxt_operator):
 
             elif (f_mask_action_type=="curve"):
                 slotcol = row2.row(align=True)
-                slotcol.prop( scat_op, "f_mask_assign_curve_area", text="",)
+                slotcol.prop( scat_op, "f_mask_assign_curve_area", text="", icon="CURVE_BEZCIRCLE",)
 
             slotcol.prop( scat_op, "f_mask_assign_reverse", text="", icon="ARROW_LEFTRIGHT")
 
@@ -1222,7 +1326,7 @@ class SCATTER5_PT_creation_operator_add_psy_density(bpy.types.Panel):
         col = layout.column()
         col.scale_y = 0.85
 
-        col.label(text=translate("Future Visibility")+":",)
+        col.label(text=translate("Future Scatter's Visibility")+":",)
         creation_operators_draw_visibility(col)
 
         col.separator(factor=0.85)
@@ -1231,8 +1335,8 @@ class SCATTER5_PT_creation_operator_add_psy_density(bpy.types.Panel):
         creation_operators_draw_display(col,"add_psy_density")
 
         col.separator(factor=0.85)
-
-        col.label(text=translate("Security Actions")+":",)
+        
+        col.label(text=translate("Security Threshold")+":",)
         creation_operators_draw_security(col)
 
         col.separator(factor=0.85)
@@ -1246,13 +1350,13 @@ class SCATTER5_PT_creation_operator_add_psy_density(bpy.types.Panel):
         row2.prop(scat_scene, "objects_import_method", text="")
 
         col.separator(factor=0.85)
-
-        col.label(text=translate("Future Mask")+":",)
+        
+        col.label(text=translate("Future Scatter's Mask")+":",)
         creation_operators_draw_mask(col,"add_psy_density")
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Surface(s)")+":",)
+        col.label(text=translate("Future Scatter's Surface(s)")+":",)
         creation_operators_draw_surfaces(col,"add_psy_density")
 
         return None
@@ -1275,7 +1379,7 @@ class SCATTER5_PT_creation_operator_add_psy_preset(bpy.types.Panel):
         col = layout.column()
         col.scale_y = 0.85
 
-        col.label(text=translate("Future Visibility")+":",)
+        col.label(text=translate("Future Scatter's Visibility")+":",)
         creation_operators_draw_visibility(col)
 
         col.separator(factor=0.85)
@@ -1285,7 +1389,7 @@ class SCATTER5_PT_creation_operator_add_psy_preset(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Security Actions")+":",)
+        col.label(text=translate("Security Threshold")+":",)
         creation_operators_draw_security(col)
 
         col.separator(factor=0.85)
@@ -1300,12 +1404,12 @@ class SCATTER5_PT_creation_operator_add_psy_preset(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Mask")+":",)
+        col.label(text=translate("Future Scatter's Mask")+":",)
         creation_operators_draw_mask(col,"add_psy_preset")
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Surface(s)")+":",)
+        col.label(text=translate("Future Scatter's Surface(s)")+":",)
         creation_operators_draw_surfaces(col,"add_psy_preset")
 
         return None
@@ -1330,11 +1434,6 @@ class SCATTER5_PT_creation_operator_add_psy_manual(bpy.types.Panel):
 
         col.label(text=translate("Future Display")+":",)
         creation_operators_draw_display(col,"add_psy_manual")
-
-        col.separator(factor=0.85)
-
-        col.label(text=translate("Security Actions")+":",)
-        creation_operators_draw_security(col, sec_count=False, sec_verts=True,)
 
         col.separator(factor=0.85)
 
@@ -1366,7 +1465,7 @@ class SCATTER5_PT_creation_operator_add_psy_manual(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Surface(s)")+":",)
+        col.label(text=translate("Future Scatter's Surface(s)")+":",)
         creation_operators_draw_surfaces(col,"add_psy_manual")
 
         return None
@@ -1409,7 +1508,7 @@ class SCATTER5_PT_creation_operator_add_psy_modal(bpy.types.Panel):
         kmi = get_hotkey_entry_item(km,"scatter5.define_add_psy")
         if (kmi):
             button = row2.row(align=True)
-            button.scale_y = 1.1
+            button.scale_y = 1.2
             button.context_pointer_set("keymap", km)
             button.prop(kmi, "type", text="", full_event=True)
 
@@ -1427,18 +1526,13 @@ class SCATTER5_PT_creation_operator_add_psy_modal(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Visibility")+":",)
+        col.label(text=translate("Future Scatter's Visibility")+":",)
         creation_operators_draw_visibility(col, hide_viewport=False, view_allow=False,)
 
         col.separator(factor=0.85)
 
         col.label(text=translate("Future Display")+":",)
         creation_operators_draw_display(col,"add_psy_modal")
-
-        col.separator(factor=0.85)
-
-        col.label(text=translate("Security Actions")+":",)
-        creation_operators_draw_security(col, sec_count=False, sec_verts=True,)
 
         col.separator(factor=0.85)
 
@@ -1453,7 +1547,7 @@ class SCATTER5_PT_creation_operator_add_psy_modal(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Surface(s)")+":",)
+        col.label(text=translate("Future Scatter's Surface(s)")+":",)
         creation_operators_draw_surfaces(col,"add_psy_modal")
 
         return None
@@ -1477,7 +1571,7 @@ class SCATTER5_PT_creation_operator_load_biome(bpy.types.Panel):
         col = layout.column()
         col.scale_y = 0.85
 
-        col.label(text=translate("Future Visibility")+":",)
+        col.label(text=translate("Future Scatter's Visibility")+":",)
         creation_operators_draw_visibility(col)
 
         col.separator(factor=0.85)
@@ -1487,7 +1581,7 @@ class SCATTER5_PT_creation_operator_load_biome(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Security Actions")+":",)
+        col.label(text=translate("Security Threshold")+":",)
         creation_operators_draw_security(col)
 
         col.separator(factor=0.85)
@@ -1502,12 +1596,12 @@ class SCATTER5_PT_creation_operator_load_biome(bpy.types.Panel):
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Mask")+":",)
+        col.label(text=translate("Future Scatter's Mask")+":",)
         creation_operators_draw_mask(col,"load_biome")
 
         col.separator(factor=0.85)
 
-        col.label(text=translate("Future Surface(s)")+":",)
+        col.label(text=translate("Future Scatter's Surface(s)")+":",)
         creation_operators_draw_surfaces(col,"load_biome")
 
         return None
@@ -1537,31 +1631,40 @@ class SCATTER5_MT_manager_header_menu_scatter(bpy.types.Menu):
 
         layout.separator()
 
-        layout.operator("wm.url_open",text=translate("Documentation"),icon="URL").url = "https://sites.google.com/view/scatter5docs/manual"
-        layout.operator("wm.url_open",text=translate("Need Help?"),icon="URL").url = "https://www.blendermarket.com/creators/bd3d-store"
-        layout.operator("wm.url_open",text=translate("Blender Artist Forum"),icon="URL").url = "https://blenderartists.org/t/scatter4/1177672"
+        layout.operator("wm.url_open",text=translate("Official Website"),icon="URL").url = "https://geoscatter.com"
+        layout.operator("wm.url_open",text=translate("Documentation"),icon="URL").url = "https://geoscatter.com/documentation"
+        layout.operator("wm.url_open",text=translate("Discord Community"),icon="URL").url = "https://discord.com/invite/F7ZyjP6VKB"
+        layout.operator("wm.url_open",text=translate("Personal Assistance"),icon="URL").url = "https://www.blendermarket.com/products/scatter"
         layout.operator("wm.url_open",text=translate("Leave a Nice Review?"),icon="SOLO_ON").url = "https://www.blendermarket.com/products/scatter/ratings"
+        
 
         return None
 
 
-class SCATTER5_MT_manager_header_menu_biome_interface(bpy.types.Menu):
+class SCATTER5_MT_manager_header_menu_interface(bpy.types.Menu):
 
-    bl_idname = "SCATTER5_MT_manager_header_menu_biome_interface"
+    bl_idname = "SCATTER5_MT_manager_header_menu_interface"
     bl_label  = ""
 
     def draw(self, context):
 
         layout = self.layout
 
-        scat_scene = context.scene.scatter5
+        addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
+        scat_win = context.window_manager.scatter5
 
-        layout.prop(scat_scene,"library_adaptive_columns") 
-        layout.prop(scat_scene,"library_item_size",icon="ARROW_LEFTRIGHT") 
-        #layout.prop(scat_scene,"library_typo_limit",icon="OUTLINER_DATA_FONT")  #seem that this is no longer required
-        
-        if (not scat_scene.library_adaptive_columns):
-            layout.prop(scat_scene,"library_columns") 
+        if (scat_win.category_manager in ("library","market",)):
+
+            layout.prop(addon_prefs,"ui_library_adaptive_columns") 
+            layout.prop(addon_prefs,"ui_library_item_size",icon="ARROW_LEFTRIGHT") 
+            #layout.prop(addon_prefs,"ui_library_typo_limit",icon="OUTLINER_DATA_FONT")  #seem that this is no longer required
+            
+            if (not addon_prefs.ui_library_adaptive_columns):
+                layout.prop(addon_prefs,"ui_library_columns") 
+
+        elif (scat_win.category_manager in ("lister_large","lister_stats",)):
+
+            layout.prop(addon_prefs,"ui_lister_scale_y") 
 
         return None 
 
@@ -1582,12 +1685,11 @@ class SCATTER5_MT_manager_header_menu_open(bpy.types.Menu):
             row = layout.row()
             row.operator_context = "INVOKE_DEFAULT"
             row.operator("scatter5.save_biome_to_disk_dialog", text=translate("Create New Biome"),icon="FILE_NEW")
-
             layout.separator()
 
             layout.operator("scatter5.reload_biome_library", text=translate("Reload Library"), icon="FILE_REFRESH")
             layout.operator("scatter5.open_directory", text=translate("Open Library"), icon="FOLDER_REDIRECT").folder = directories.lib_biomes
-            layout.operator("scatter5.install_package", text=translate("Install a .Scatpack"), icon="NEWFOLDER")
+            layout.operator("scatter5.install_package", text=translate("Install a Package"), icon="NEWFOLDER")
                         
         elif (scat_win.category_manager=="market"):
 
@@ -1597,86 +1699,10 @@ class SCATTER5_MT_manager_header_menu_open(bpy.types.Menu):
 
             layout.operator("scatter5.manual_fetch_from_git",text=translate("Refresh Online Previews"), icon="FILE_REFRESH")
             layout.operator("scatter5.open_directory",text=translate("Open Library"), icon="FOLDER_REDIRECT").folder = directories.lib_biomes
-            layout.operator("scatter5.install_package", text=translate("Install a .Scatpack"), icon="NEWFOLDER")
+            layout.operator("scatter5.install_package", text=translate("Install a Package"), icon="NEWFOLDER")
 
         return None 
 
-
-class SCATTER5_MT_manager_header_menu_operations(bpy.types.Menu):
-
-    bl_idname = "SCATTER5_MT_manager_header_menu_operations"
-    bl_label  = ""
-
-    def draw(self, context):
-
-        layout = self.layout
-
-        scat_scene = context.scene.scatter5
-        scat_win = context.window_manager.scatter5
-
-        if (scat_win.category_manager=="stats"):
-
-            #refresh instances stats
-            op = layout.operator("scatter5.exec_line",text=translate("Estimate Instances"),icon="SORTSIZE",)
-            op.api = f"[ ( p.get_scatter_count(state='render',) , p.get_scatter_count(state='viewport') ) for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems ]"
-            op.description = translate("Re-compute the instance-count statistics of every single scatter-system in your scene. Note that you are able to show these stats in this lister interface! To do so, please enable the statistics in the header menu")
-
-            #refresh surfaces square area? 
-            op = layout.operator("scatter5.exec_line",text=translate("Estimate Surface(s) Area"),icon="SURFACE_NSURFACE",)
-            op.api = f"[ p.get_surfaces_square_area(evaluate='recalculate', eval_modifiers=True, get_selection=False,) for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems]"
-            op.description = translate("Re-compute the square area statistics of every single scatter-surface in your scene. Note that you are able to show these stats in this lister interface! To do so, please enable the statistics in the header menu")
-
-            layout.separator()
-
-            #hide absolutely all psys    
-            op = layout.operator("scatter5.exec_line",text=translate("Hide All"),icon="RESTRICT_VIEW_ON",)
-            op.api = f"[ exec('p.hide_viewport=True') for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems ]"
-
-            #sel absolutely all psys
-            if (scat_scene.lister_show_selection):
-
-                op = layout.operator("scatter5.exec_line",text=translate("Select All"),icon="RESTRICT_SELECT_OFF",)
-                op.api = f"[ exec('p.sel=True') for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems ]"
-            
-            #remove selected across all emit
-            op = layout.operator("scatter5.exec_line",text=translate("Remove Selected"),icon="TRASH",)
-            op.api = f"[ bpy.ops.scatter5.remove_system(undo_push=False, emitter_name=name, method='selection') for name in [o.name for o in bpy.context.scene.objects if len(o.scatter5.particle_systems)] ]"
-            op.undo = translate("Remove Selected")
-
-        elif (scat_win.category_manager=="library"):
-            pass
-        
-        elif (scat_win.category_manager=="market"):
-            pass
-
-        return None 
-
-
-class SCATTER5_PT_manager_header_menu_stats_filter(bpy.types.Panel):
-
-    bl_idname      = "SCATTER5_PT_manager_header_menu_stats_filter"
-    bl_label       = ""
-    bl_category    = ""
-    bl_space_type  = "VIEW_3D"
-    bl_region_type = "HEADER" #Hide this panel? not sure how to hide them...
-    #bl_options     = {"DRAW_BOX"}
-
-    def draw(self, context):
-
-        layout = self.layout
-
-        scat_scene = bpy.context.scene.scatter5
-
-        layout.prop(scat_scene, "lister_show_color",)
-        layout.prop(scat_scene, "lister_show_stats_count",)
-        layout.prop(scat_scene, "lister_show_stats_surface",)
-        layout.prop(scat_scene, "lister_show_selection",)
-        layout.prop(scat_scene, "lister_show_render_state",)
-        layout.prop(scat_scene, "lister_show_lock",)
-        layout.prop(scat_scene, "lister_show_visibility",)
-        layout.prop(scat_scene, "lister_show_display",)
-
-        return None 
 
 class SCATTER5_MT_per_biome_main_menu(bpy.types.Menu):
 
@@ -1686,7 +1712,7 @@ class SCATTER5_MT_per_biome_main_menu(bpy.types.Menu):
     def __init__(self):
 
         #get context element 
-        self.path_arg = bpy.context.s5_ctxt_ptr_lib_obj.name
+        self.path_arg = bpy.context.pass_ui_arg_lib_obj.name
 
         return None 
 
@@ -1734,7 +1760,7 @@ class SCATTER5_MT_per_biome_sub_menu_single_layer(bpy.types.Menu):
     def __init__(self):
 
         #get context element 
-        self.path_arg = bpy.context.s5_ctxt_ptr_lib_obj.name
+        self.path_arg = bpy.context.pass_ui_arg_lib_obj.name
 
         #get json dict 
         with open(self.path_arg) as f:
@@ -1769,7 +1795,7 @@ class SCATTER5_MT_per_biome_sub_menu_overwrite(bpy.types.Menu):
     def __init__(self):
 
         #get context element 
-        self.path_arg = bpy.context.s5_ctxt_ptr_lib_obj.name
+        self.path_arg = bpy.context.pass_ui_arg_lib_obj.name
         lib_element = bpy.context.window_manager.scatter5.library[self.path_arg]
 
         #get json dict 
@@ -1840,7 +1866,7 @@ class SCATTER5_MT_per_biome_sub_menu_open_files(bpy.types.Menu):
     def __init__(self):
 
         #get context element 
-        self.path_arg = bpy.context.s5_ctxt_ptr_lib_obj.name
+        self.path_arg = bpy.context.pass_ui_arg_lib_obj.name
 
         #get layer 
         with open(self.path_arg) as f:

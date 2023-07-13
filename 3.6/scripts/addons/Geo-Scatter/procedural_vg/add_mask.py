@@ -114,7 +114,7 @@ class SCATTER5_OT_add_mask(bpy.types.Operator):
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Bezier Area") ,icon="CURVE_BEZCIRCLE")
-            ope.description = translate("Project the inside area of a closed bezier-curve on a vertex-group")
+            ope.description = translate("Project the inside area of a closed bezier-curve onto a vertex-group")
             ope.type = "bezier_area"
             #
             add = col.row()
@@ -136,47 +136,47 @@ class SCATTER5_OT_add_mask(bpy.types.Operator):
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Elevation") ,icon_value=cust_icon("W_ALTITUDE"))
-            ope.description = translate("Mask from your terrain Elevation Information")
+            ope.description = translate("Mask based on your terrain Elevation Information")
             ope.type = "height"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Slope") ,icon_value=cust_icon("W_SLOPE"))
-            ope.description = translate("Mask from your terrain Slope Information")
+            ope.description = translate("Mask based on your terrain Slope Information")
             ope.type = "slope"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Curvature") ,icon_value=cust_icon("W_CURVATURE"))
-            ope.description = translate("Mask from your terrain Curvature Information (concave and convex angles)")
+            ope.description = translate("Mask based on your terrain Curvature Information (concave and convex angles)")
             ope.type = "curvature"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Border") ,icon_value=cust_icon("W_BORDER"))
-            ope.description = translate("Create weight around your emitter mesh boundary loop, useful to add or remove particles near your emitter surface borders")
+            ope.description = translate("Create weights around your emitter mesh boundary loop, useful for adding or removing points distributed near your emitter borders")
             ope.type = "border"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Aspect") ,icon_value=cust_icon("W_ASPECT"))
-            ope.description = translate("Mask from your terrain slopes orientations (called 'Aspect map' in GIS).")
+            ope.description = translate("Mask based on your terrain slopes orientations (called 'Aspect map' in GIS)")
             ope.type = "aspect"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Normal") ,icon="NORMALS_FACE")
-            ope.description = translate("Use your emitter vertices normal information to generate weight data")
+            ope.description = translate("Use the normal information of your emitter's vertices to generate weight data")
             ope.type = "normal"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Position") ,icon="EMPTY_ARROWS")
-            ope.description = translate("Use your emitter vertices location information to generate weight data")
+            ope.description = translate("Use the position information of your emitter's vertices to generate weight data")
             ope.type = "position"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Watershed") ,icon="MATFLUID")
-            ope.description = translate("Mask from your terrain areas susceptible to host water-streams")
+            ope.description = translate("Mask based on your terrain areas that are susceptible to hosting water-streams")
             ope.type = "watershed"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Mesh-Data") ,icon="MOD_DATA_TRANSFER")
-            ope.description = translate("Use your emitter mesh data to generate weight (marked edges, marked faces, indices, material ID, ect..")
+            ope.description = translate("Use your emitter mesh data to generate weight (marked edges, marked faces, indices, material ID, ect..)")
             ope.type = "mesh_data"
 
             ## Scene
@@ -188,17 +188,17 @@ class SCATTER5_OT_add_mask(bpy.types.Operator):
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Camera Ray") ,icon="CAMERA_DATA")
-            ope.description = translate("Create a vertex-group mask that will mask out areas not visible by camera(s)")
+            ope.description = translate("Create a vertex-group mask that will mask out areas not visible to camera(s)")
             ope.type = "camera_visibility"
             #
             add = col.row()
             ope = add.operator("scatter5.add_mask" ,text=translate("Ambient Occlusion") ,icon="RENDER_STILL")
-            ope.description = translate("Bake Cycles Ambient occlusion as weight data")
+            ope.description = translate("Bake Cycles ambient occlusion as weight data")
             ope.type = "ao"
             #
             add = col.row()
-            ope = add.operator("scatter5.add_mask" ,text=translate("Lightning") ,icon="RENDER_STILL")
-            ope.description = translate("Bake Cycles Lightning as weight data")
+            ope = add.operator("scatter5.add_mask" ,text=translate("Lighting") ,icon="RENDER_STILL")
+            ope.description = translate("Bake Cycles lighting as weight data")
             ope.type = "light"
 
             return
@@ -261,8 +261,8 @@ class SCATTER5_OT_assign_mask(bpy.types.Operator):
             def draw(self, context):
                 layout = self.layout
 
-                layout.label(text=translate("Couldn't find a VertexGroup to Assign."),)
-                layout.label(text=translate("Perhaps your Mask have Multiple Output?"),)
+                layout.label(text=translate("Couldn't find any VertexGroup to assign."),)
+                layout.label(text=translate("Perhaps your mask has multiple output?"),)
 
                 return None
 

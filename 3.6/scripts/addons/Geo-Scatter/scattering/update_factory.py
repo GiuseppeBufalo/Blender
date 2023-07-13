@@ -18,19 +18,19 @@ from .. resources.translate import translate
 
 from .. utils.extra_utils import dprint
 from .. utils.extra_utils import is_rendered_view
-from .. utils.event_utils import get_event 
+from .. utils.event_utils import get_event
 
 #####################################################################################################
 
 #All interactions with Scatter engine nodetree are located in this module
 
-#What's heppening in here?
-# 1 Settings in particle_settings.py, need update fcts
-#  2 We generate the update fct with a fct factory
-#   3 That way we can optionally add delay to update fct with wrapper
-#    4 Then function goes in Dispatcher 
-#     4.1 We gather & exec adequate update fct, all stored in UpdatesRegistry
-#      4.2 Optional add effects == send update signals to other properties (alt/sync)
+#What's happening in here?
+# 1 Settings in particle_settings.py, need update fcts! (for psys or psygroups)
+# 2 We generate the update fct with a fct factory
+#   That way we can optionally add delay to update fct with wrapper
+# 4 Then function goes in Dispatcher 
+#   4.1 We gather & exec adequate update fct, all stored in UpdatesRegistry
+#   4.2 Optional add effects == send update signals to other properties (alt/sync)
 
 # oooooo   oooooo     oooo
 #  `888.    `888.     .8'
@@ -90,7 +90,6 @@ def factory(prop_name, delay_support=False, alt_support=True, sync_support=True,
 
     return update_fct
 
-
 def function_exec_delay(interval=0, function=None, arg=[], kwarg={},):
     """add delay to function execution, 
     Note update delay can by avoid by turning the global switch 
@@ -102,7 +101,7 @@ def function_exec_delay(interval=0, function=None, arg=[], kwarg={},):
         _f.is_running = False
 
     #if timer already launched, quit
-    if _f.is_running:
+    if (_f.is_running):
         return None 
 
     def delay_call():
@@ -123,7 +122,6 @@ def function_exec_delay(interval=0, function=None, arg=[], kwarg={},):
     
     return None 
 
-
 def function_exec_event_release(function=None, arg=[], kwarg={},):
     """if "LEFTMOUSE PRESS" loop until no more pressed"""
 
@@ -133,7 +131,7 @@ def function_exec_event_release(function=None, arg=[], kwarg={},):
         _f.is_waiting = False
 
     #if timer fct is waiting for an exec already, skip
-    if _f.is_waiting:
+    if (_f.is_waiting):
         return None 
 
     event = get_event()
@@ -183,14 +181,14 @@ def function_exec_event_release(function=None, arg=[], kwarg={},):
 #                              o888o
 #
 
-# Normally all nodegraph tweaking is done here
+# Normally all interaction through nodegraph is done via this function, for all psys and groups properties
 # except for texture related data (transforms) as this is considered per texture data block
 # see the scattering.texture_datablock module
 
 def update_dispatcher(self, prop_name, alt_support=True, sync_support=True,):
-    """update nodegroup dispatch, will """
+    """update nodegroup dispatch, this function is not meant to be used directly, use factory() instead"""
 
-    #self is 'psy', self.id_name is 'emitter'
+    #NOTE: self is 'psy' or `group` / psy.id_name is 'emitter'
     
     dprint(f"PROP_FCT: tweaking update : {self.name} -> {prop_name}")
     
@@ -203,16 +201,20 @@ def update_dispatcher(self, prop_name, alt_support=True, sync_support=True,):
     #get update function we need from the procedurally generated dict and execute the correct funtion depending on prop_name
     UpdatesRegistry.run_update(self, prop_name, value, event=event)
 
-    #Extra property behavior:
+    #Special ALT & SYNC behaviors for particle systems properties
+    if (type(self).__name__=="SCATTER5_PR_particle_systems"):
+        
+        #Alt Feature
+        if ( (alt_support) and (bpy.context.scene.scatter5.factory_alt_allow) and (event.alt) ):
+            update_alt(self, prop_name, value,)
 
-    #Alt Feature
-    if ( (alt_support) and (bpy.context.scene.scatter5.factory_alt_allow) and (event.alt) ):
-        update_alt(self, prop_name, value,)
-
-    #Synchronize Feature
-    if ( (sync_support) and (bpy.context.scene.scatter5.factory_synchronization_allow) ):
-        update_sync(self, prop_name, value,)
-
+        #Synchronize Feature
+        if ( (sync_support) and (bpy.context.scene.scatter5.factory_synchronization_allow) ):
+            update_sync(self, prop_name, value,)
+            
+    elif (type(self).__name__=="SCATTER5_PR_particle_groups"):
+        pass
+    
     return None
 
 def update_alt(psy, prop_name, value,):
@@ -282,8 +284,8 @@ def update_sync(psy, prop_name, value,):
                 continue
                 
             continue
-    return 
-
+        
+    return None
 
 
 #   .oooooo.                                              o8o                 oooooooooooo               .
@@ -297,28 +299,30 @@ def update_sync(psy, prop_name, value,):
 #various function interacting with properties or nodetrees, used in UpdatesRegistry
 
 
-def get_enum_idx(psy, prop_name, value,):
+def get_enum_idx(item, prop_name, value,):
     """retrieve index of an item from an enum property
     WARNING will not work on dynamic items fct...""" 
 
-    prop = psy.bl_rna.properties[prop_name]
+    prop = item.bl_rna.properties[prop_name]
     element = prop.enum_items.get(value)
+    
     if (element is None):
-        print(f"S5 get_enum_idx(): '{value}' element not found in '{prop_name}' enum")
+        print(f"ERROR get_enum_idx(): '{value}' element not found in '{prop_name}' enum")
         return 0
+    
     return element.value
-
 
 def color_convert(value):
     """Avoid Error when setting colors"""
 
     return (*value,1) if (len(value)==3) else tuple(value) 
 
-
 def get_node(psy, node_name):
     """get node from psy nodetree"""
 
     mod = psy.get_scatter_mod()
+    assert mod is not None, "Geo-Scatter Engine not Found"
+    
     nodes = mod.node_group.nodes
     inner_name = None
 
@@ -327,17 +331,16 @@ def get_node(psy, node_name):
 
     node = nodes.get(node_name)
     if (node is None):
-        print("S5: '",node_name,"' not found")
+        print("ERROR: '",node_name,"' not found")
         return None 
 
     if (inner_name and node.type=="GROUP"):
         node = node.node_tree.nodes.get(inner_name)
         if (node is None):
-            print("S5: '",node_name,">",inner_name,"' not found")
+            print("ERROR: '",node_name,">",inner_name,"' not found")
             return None 
 
     return node
-
 
 def node_value(psy, node_name, value=None, entry="output", i=0,):
     """set value in psy nodetree from node name, depending on node entry type"""
@@ -378,8 +381,7 @@ def node_value(psy, node_name, value=None, entry="output", i=0,):
         if (node.inputs[1].default_value!=value):
             node.inputs[1].default_value = value
 
-    return None
-
+    return None  
 
 def mute_color(psy, node_name, mute=True,):
     """mute a color of a node in psy nodetree"""
@@ -388,10 +390,11 @@ def mute_color(psy, node_name, mute=True,):
     if (node is None): 
         return None 
 
-    node.use_custom_color = not mute
+    mute = not mute
+    if (node.use_custom_color!=mute): 
+        node.use_custom_color = mute
 
     return None 
-
 
 def mute_node(psy, node_name, mute=True,):
     """mute a node in psy nodetree"""
@@ -405,32 +408,35 @@ def mute_node(psy, node_name, mute=True,):
 
     return None
 
-
-def node_link(psy, receptor_node_name, emetor_node_name, receptor_socket_idx=0, emetor_socket_idx=0, create=True,):
+def node_link(psy, receptor_node_name, emetor_node_name, receptor_socket_idx=0, emetor_socket_idx=0,):
     """link two nodes together in psy nodetree"""
 
     mod = psy.get_scatter_mod()
+    assert mod is not None, "Geo-Scatter Engine not Found"
+    
     nodes = mod.node_group.nodes
 
     #WARNING currently this fct does not support indented node_name
 
     if (receptor_node_name not in nodes):
-        print("S5: '",receptor_node_name,"' not found")
+        print("ERROR: '",receptor_node_name,"' not found")
         return None 
 
     if (emetor_node_name not in nodes):
-        print("S5: '",emetor_node_name,"' not found")
+        print("ERROR: '",emetor_node_name,"' not found")
         return None 
 
     node_in  = nodes[receptor_node_name].inputs[receptor_socket_idx]
     node_out = nodes[emetor_node_name].outputs[emetor_socket_idx]
 
-    #Could perhaps gain perfs by checking if linked alread?
-    if (create):
-        mod.node_group.links.new(node_in, node_out)
+    # Check if node_out is already linked to node_in
+    if any(link.to_socket==node_in for link in node_out.links):
+        return None
 
+    #link the two inputs
+    mod.node_group.links.new(node_in, node_out)
+    
     return None
-
 
 def set_texture_ptr(psy, prop_name, value,):
     """changing a texture ptr == assigning texture nodetree to a psy texture nodegroup"""
@@ -442,18 +448,17 @@ def set_texture_ptr(psy, prop_name, value,):
     #make sure texture type, should startwith prefix
     ng_name = value if value.startswith(".TEXTURE ") else f".TEXTURE {value}"
     if (ng_name==f".TEXTURE "):
-        ng_name = ".TEXTURE *DEFAULT* MKIII"
+        ng_name = ".TEXTURE *DEFAULT* MKIV"
 
     ng = bpy.data.node_groups.get(ng_name)
     if (ng is None):
-        print("S5: '",ng_name,"' not found")
+        print("ERROR: '",ng_name,"' not found")
         return None
 
     if (node.node_tree!=ng):
         node.node_tree = ng
 
     return None 
-
 
 def set_keyword(psy, value, element=None, kw="info_keyword",):
     """update keword node in psy nodetree"""
@@ -472,7 +477,6 @@ def get_keyword(psy, kw="info_keyword"):
     """get keyword value from psy node"""
 
     return get_node(psy, kw).string
-
 
 def random_seed(psy, event, api_is_random="", api_seed="",):
     """random psy function of a nodetree, will assign property"""
@@ -532,181 +536,228 @@ def fallremap_setter(prop_name):
         
     return setter
 
-
-def get_cam_tramsforms(camera):
-    """get cam transform in global space!"""
-    
-    location = camera.matrix_world.translation
-    rotation_euler = camera.matrix_world.to_euler()
-    
-    return location, rotation_euler
-
-
-def update_active_camera_nodegroup(force_refresh=False, force_update=False, self_call=False, depsgraph=False,):
+def update_active_camera_nodegroup(scene=None, render=False, force_update=False, self_call=False,):
     """update camera pointer information, this function is runned on depsgraph handlers
     we need to be extra carreful about feedback loop in this fct"""
 
-    #Get active camera
+    #TODO: we are taking a lot of risk in this function. 
+    #      Any error could mess up the users camera optimization
+    #TODO: we had report on some users "AttributeError: "
+    #       Writing to ID classes in this context is not allowed: .Scatter5 Geonode Engine MKIII.003, NodeTree datablock, error setting FunctionNodeInputVector.vector"
+    #      it seems that interacting with nodes from a depsgraph update is not recommanded?
+    #      Very strange that it is only happening to some users. Only had one report so far, maybe a blender bug.
 
-    scene = bpy.context.scene
-    active_cam = scene.camera 
-    
-    if (depsgraph):
-        active_cam = bpy.context.evaluated_depsgraph_get().scene.camera 
-
-    if (active_cam is None): 
-        dprint("HANDLER->CAM_UPD: canceled no cam found",depsgraph=True,)
-        return None
-
+    #find scene context, we might pass scene via depsgraph handler
+    if (scene is None):
+        scene = bpy.context.scene
+        
     #static vars initialization
     _f = update_active_camera_nodegroup
-    
     #initialize static attr
     if (not hasattr(_f,"is_updating")):
         _f.is_updating = False
-
-    #cancel if function is currently running updates
-    #TODO: this is unstable.. very dangerous, can break everything.. i believe it is used to avoid a depsgraph feedback loop?
-    if (not force_update):
-        if (_f.is_updating):
-            dprint("HANDLER->CAM_UPD: canceled is currently running",depsgraph=True,)
-            return None 
-
+    #a force update will reset the updating delay system, to avoid delay system freezing indefinitely, user can kick it. WARNING this also means that it is strictly forbidden to call a force update from a depsgraph loop
+    if (force_update):
+        _f.is_updating = False
+        
+    dprint(f"HANDLER->CAM_UPD: - force_update={force_update} - is_updating={_f.is_updating} - self_call={self_call} - render={render}", depsgraph=True,)
+        
+    #get cam information
+    if (render):
+          deps = bpy.context.evaluated_depsgraph_get()
+          cam = scene.camera.evaluated_get(deps)
+          dprint("HANDLER->CAM_UPD: confirm depsgraph evaluation", depsgraph=True,)
+    else: cam = scene.camera 
+    
+    #skip if cam is None
+    if (cam is None): 
+        dprint("HANDLER->CAM_UPD: canceled - no cam found",depsgraph=True,)
+        return None
+    
+    #skip if function is currently running updates 
+    #Dangerous.., if  singleton is not updated properly, will lead to updates dependencies issues
+    if (_f.is_updating and not force_update): 
+        dprint("HANDLER->CAM_UPD: canceled - In order to avoid depsgraph feedback loop, we had to cancel this update",depsgraph=True,)
+        return None 
+    
     #get camera transforms
-    active_loc, active_rot = get_cam_tramsforms(active_cam)
+    cam_loc, cam_rot = cam.matrix_world.translation, cam.matrix_world.to_euler()
 
-    #special delayed update methods
-    if ((not force_refresh) and (not self_call)):
+    #special delayed update methods, we don't want constant update triggers
+    if ((not force_update) and (not self_call)):
 
+        #delay update depending on ms. if ms is set to 0, then, constant update flow
         if (scene.scatter5.factory_cam_update_method=="update_delayed"):
             if (scene.scatter5.factory_cam_update_ms!=0):
-
                 function_exec_delay( #using same is_running singleton could create conflict?
                     interval=scene.scatter5.factory_cam_update_ms,
                     function=update_active_camera_nodegroup,
                     arg=[], 
                     kwarg={"self_call":True},
                     )
-
                 return None
 
+        #update apply == will run force update signal
         elif (scene.scatter5.factory_cam_update_method=="update_apply"): 
-            return None #if apply method, then will run update operator exect that will send force_refresh signal
+            return None
 
+        #update when the camera has stopped moving, for this we track camera movement
         elif (scene.scatter5.factory_cam_update_method=="update_on_release"): 
 
             #initialize static attr
             if (not hasattr(_f,"camera_sum")):
                 _f.camera_sum = None
-            if (not hasattr(_f,"release_run")):
-                _f.release_run = False
+            if (not hasattr(_f,"waiting_for_halt")):
+                _f.waiting_for_halt = False
 
-            #if function is waiting stop
-            if (_f.release_run):
+            #don't launch a new instance of the function if already running..
+            if (_f.waiting_for_halt):
+                dprint("HANDLER->CAM_UPD: canceled - halt loop currently running",depsgraph=True,)
                 return None 
 
             def cam_still_delay():
                 """timer used to add delay until cam has stopped moving"""
 
-                cam_tramsforms = get_cam_tramsforms(active_cam)
-                new_sum = sum(cam_tramsforms[0]) + sum(cam_tramsforms[1])
-                
+                cam_loc, cam_rot = cam.matrix_world.translation, cam.matrix_world.to_euler()
+                new_sum = sum(cam_loc) + sum(cam_rot)
+                    
+                #if value change every x ms, it means users is Still moving
+                #then we need to continue the timer function..
                 if (new_sum!=_f.camera_sum): 
                     _f.camera_sum = new_sum
                     return 0.45
 
-                _f.release_run = False 
+                dprint("HANDLER->CAM_UPD: halt loop finished",depsgraph=True,)
+                
+                _f.waiting_for_halt = False 
                 update_active_camera_nodegroup(self_call=True)
+                
                 return None
 
+            dprint("HANDLER->CAM_UPD: launching halt loop..",depsgraph=True,)
+
+            #launch an instance of the function
             bpy.app.timers.register(cam_still_delay)
-            _f.release_run = True 
+            _f.waiting_for_halt = True 
 
             return None 
     
     #update psys
 
+    #Needed in order to avoid feedback loop. Changing values below will send an update trigger, and this function react upon update triggers..
     _f.is_updating = True 
 
-    for p in [ p for p in bpy.context.scene.scatter5.get_all_psys() \
-               if (p.s_visibility_cam_allow or p.s_scale_fading_allow or (p.s_display_allow and p.s_display_camdist_allow))
-             ]:
-        #Note that master_allow not taken into consideration here
+    try:
 
-        #change psy node value(s)
-    
-        nodes = p.get_scatter_mod().node_group.nodes
+        dprint(f"HANDLER->CAM_UPD: looping all scene.scatter5.get_all_psys():",depsgraph=True,)
+
+        for p in [ p for p in scene.scatter5.get_all_psys() \
+                   if (p.s_visibility_cam_allow or p.s_scale_fading_allow or (p.s_display_allow and p.s_display_camdist_allow)) #NOTE: that master_allow not taken into consideration here, todo?
+                 ]:
+
+            #change psy node value(s)
         
-        if ( (force_refresh) or (nodes["s_cam_location"].vector[:] != active_loc[:]) ):
-            # print("DEBUG -- s_cam_location")
-            nodes["s_cam_location"].vector = active_loc
-            dprint(f"HANDLER->CAM_UPD: 's_cam_location' (force_refresh={force_refresh})",depsgraph=True,)
-        
-        if ( (force_refresh) or (nodes["s_cam_rotation_euler"].vector[:] != active_rot[:]) ):
-            # print("DEBUG -- s_cam_rotation_euler")
-            nodes["s_cam_rotation_euler"].vector = active_rot
-            dprint(f"HANDLER->CAM_UPD: 's_cam_rotation_euler' (force_refresh={force_refresh})",depsgraph=True,)
+            #NOTE: FALSE input index value will lead to constant update, need to be extra careful with setting and reading the values below
+
+            mod = p.get_scatter_mod(raise_exception=False)
+            if (mod is None): 
+                dprint(f"HANDLER->CAM_UPD: skipping a system, couldn't get the mod:",depsgraph=True,)
+                continue
             
-        #WARNING, false input index value will lead to dependency loop & badly hit performance!
+            nodes = mod.node_group.nodes
 
-        #per camera cam clipping properties
+            # NOTE: "or (force_update and render)" is needed because of an issue,
+            # cam_loc/cam_rot refuse to give us accurate values if evaluated from depsgraph, read give us different value if it is read and written.. quantum bug..
 
-        if (p.s_visibility_camclip_allow and p.s_visibility_camclip_cam_autofill):
+            if ( nodes["s_cam_location"].vector[:] != cam_loc[:]) or (force_update and render):
+                # print(nodes["s_cam_location"].vector[:],"=?=",cam_loc[:],"=>",'nodes["s_cam_location"',)
+                # print("DEBUG -- s_cam_location -- ",cam_loc)
+                nodes["s_cam_location"].vector = cam_loc
+                dprint(f"HANDLER->CAM_UPD: 's_cam_location' (force_update={force_update})",depsgraph=True,)
+            
+            if ( nodes["s_cam_rotation_euler"].vector[:] != cam_rot[:]) or (force_update and render):
+                # print(nodes["s_cam_rotation_euler"].vector[:],"=?=",cam_rot[:],"=>",'nodes["s_cam_rotation_euler"',)
+                # print("DEBUG -- s_cam_rotation_euler -- ",cam_rot)
+                nodes["s_cam_rotation_euler"].vector = cam_rot
+                dprint(f"HANDLER->CAM_UPD: 's_cam_rotation_euler' (force_update={force_update})",depsgraph=True,)    
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[7].default_value != active_cam.data.lens) ):
-                # print("DEBUG -- camclip_autofill.lens")
-                UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_lens", active_cam.data.lens,)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_lens' (force_refresh={force_refresh})",depsgraph=True,)
+            #per camera cam clipping properties
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[6].default_value != active_cam.data.sensor_width) ):
-                # print("DEBUG -- camclip_autofill.sensor_width")
-                UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_sensor_width", active_cam.data.sensor_width,)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_sensor_width' (force_refresh={force_refresh})",depsgraph=True,)
+            if (p.s_visibility_camclip_allow and p.s_visibility_camclip_cam_autofill):
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[8].default_value[:] != (scene.render.resolution_x,scene.render.resolution_y,0)) ):
-                # print("DEBUG -- camclip_autofill.res_xy")
-                UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_res_xy", (scene.render.resolution_x,scene.render.resolution_y),)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_res_xy' (force_refresh={force_refresh})",depsgraph=True,)
+                if ( nodes["s_visibility_cam"].inputs[7].default_value != cam.data.lens):
+                    # print(nodes["s_visibility_cam"].inputs[7].default_value,"=?=",active_cam.data.lens,"=>",'nodes["s_visibility_cam"].inputs[7',)
+                    # print("DEBUG -- camclip_autofill.lens")
+                    UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_lens", cam.data.lens,)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_lens' (force_update={force_update})",depsgraph=True,)
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[9].default_value[:] != (active_cam.data.shift_x,active_cam.data.shift_y,0)) ):
-                # print("DEBUG -- camclip_autofill.shift_xy")
-                UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_shift_xy", (active_cam.data.shift_x,active_cam.data.shift_y),)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_shift_xy' (force_refresh={force_refresh})",depsgraph=True,)
+                if ( nodes["s_visibility_cam"].inputs[6].default_value != cam.data.sensor_width):
+                    # print(nodes["s_visibility_cam"].inputs[6].default_value,"=?=",active_cam.data.sensor_width,"=>",'nodes["s_visibility_cam"].inputs[6',)
+                    # print("DEBUG -- camclip_autofill.sensor_width")
+                    UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_sensor_width", cam.data.sensor_width,)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_sensor_width' (force_update={force_update})",depsgraph=True,)
 
-        #per camera culling distance properties
+                if ( nodes["s_visibility_cam"].inputs[8].default_value[:] != (scene.render.resolution_x,scene.render.resolution_y,0)):
+                    # print(nodes["s_visibility_cam"].inputs[8].default_value[:],"=?=",(scene.render.resolution_x,scene.render.resolution_y,0),"=>",'nodes["s_visibility_cam"].inputs[8',)
+                    # print("DEBUG -- camclip_autofill.res_xy")
+                    UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_res_xy", (scene.render.resolution_x,scene.render.resolution_y),)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_res_xy' (force_update={force_update})",depsgraph=True,)
 
-        if (p.s_visibility_camdist_allow and p.s_visibility_camdist_per_cam_data):
+                if ( nodes["s_visibility_cam"].inputs[9].default_value[:] != (cam.data.shift_x,cam.data.shift_y,0)):
+                    # print(nodes["s_visibility_cam"].inputs[9].default_value[:],"=?=",(active_cam.data.shift_x,active_cam.data.shift_y,0),"=>",'nodes["s_visibility_cam"].inputs[9',)
+                    # print("DEBUG -- camclip_autofill.shift_xy")
+                    UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_shift_xy", (cam.data.shift_x,cam.data.shift_y),)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_shift_xy' (force_update={force_update})",depsgraph=True,)
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[14].default_value != active_cam.scatter5.s_visibility_camdist_per_cam_min) ):
-                # print("DEBUG -- vis_camdist_per_cam.min")
-                UpdatesRegistry.run_update(p,"s_visibility_camdist_min", active_cam.scatter5.s_visibility_camdist_per_cam_min,)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camdist_per_cam_min' (force_refresh={force_refresh})",depsgraph=True,)
+                if ( nodes["s_visibility_cam"].inputs[10].default_value[:-1] != cam.scatter5.s_visibility_camclip_per_cam_boost_xy[:] ):
+                    # print(nodes["s_visibility_cam"].inputs[10].default_value[:-1],"=?=",active_cam.scatter5.s_visibility_camclip_per_cam_boost_xy[:],"=>",'nodes["s_visibility_cam"].inputs[10',)
+                    # print("DEBUG -- camclip_autofill.s_visibility_camclip_per_cam_boost_xy")
+                    UpdatesRegistry.run_update(p,"s_visibility_camclip_cam_boost_xy", (cam.scatter5.s_visibility_camclip_per_cam_boost_xy),)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camclip_cam_boost_xy' (force_update={force_update})",depsgraph=True,)
 
-            if ( (force_refresh) or (nodes["s_visibility_cam"].inputs[15].default_value != active_cam.scatter5.s_visibility_camdist_per_cam_max) ):
-                # print("DEBUG -- vis_camdist_per_cam.max")
-                UpdatesRegistry.run_update(p,"s_visibility_camdist_max", active_cam.scatter5.s_visibility_camdist_per_cam_max,)
-                dprint(f"HANDLER->CAM_UPD: 's_visibility_camdist_per_cam_max' (force_refresh={force_refresh})",depsgraph=True,)
 
-        #per camera scale fading distance properties 
+            #per camera culling distance properties
 
-        if (p.s_scale_fading_allow and p.s_scale_fading_per_cam_data):
+            if (p.s_visibility_camdist_allow and p.s_visibility_camdist_per_cam_data):
 
-            if ( (force_refresh) or (nodes["s_scale_fading"].inputs[3].default_value != active_cam.scatter5.s_scale_fading_distance_per_cam_min) ):
-                # print("DEBUG -- per_cam_fading.min")
-                UpdatesRegistry.run_update(p,"s_scale_fading_distance_min", active_cam.scatter5.s_scale_fading_distance_per_cam_min,)
-                dprint(f"HANDLER->CAM_UPD: 's_scale_fading_distance_per_cam_min' (force_refresh={force_refresh})",depsgraph=True,)
+                if ( nodes["s_visibility_cam"].inputs[14].default_value != cam.scatter5.s_visibility_camdist_per_cam_min):
+                    # print(nodes["s_visibility_cam"].inputs[14].default_value,"=?=",active_cam.scatter5.s_visibility_camdist_per_cam_min,"=>",'nodes["s_visibility_cam"].inputs[14',)
+                    # print("DEBUG -- vis_camdist_per_cam.min")
+                    UpdatesRegistry.run_update(p,"s_visibility_camdist_min", cam.scatter5.s_visibility_camdist_per_cam_min,)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camdist_per_cam_min' (force_update={force_update})",depsgraph=True,)
 
-            if ( (force_refresh) or (nodes["s_scale_fading"].inputs[4].default_value != active_cam.scatter5.s_scale_fading_distance_per_cam_max) ):
-                # print("DEBUG -- per_cam_fading.max")
-                UpdatesRegistry.run_update(p,"s_scale_fading_distance_max", active_cam.scatter5.s_scale_fading_distance_per_cam_max,)
-                dprint(f"HANDLER->CAM_UPD: 's_scale_fading_distance_per_cam_max' (force_refresh={force_refresh})",depsgraph=True,)
+                if ( nodes["s_visibility_cam"].inputs[15].default_value != cam.scatter5.s_visibility_camdist_per_cam_max):
+                    # print(nodes["s_visibility_cam"].inputs[15].default_value,"=?=",active_cam.scatter5.s_visibility_camdist_per_cam_max,"=>",'nodes["s_visibility_cam"].inputs[15',)
+                    # print("DEBUG -- vis_camdist_per_cam.max")
+                    UpdatesRegistry.run_update(p,"s_visibility_camdist_max", cam.scatter5.s_visibility_camdist_per_cam_max,)
+                    dprint(f"HANDLER->CAM_UPD: 's_visibility_camdist_per_cam_max' (force_update={force_update})",depsgraph=True,)
 
-        continue 
+            #per camera scale fading distance properties 
+
+            if (p.s_scale_fading_allow and p.s_scale_fading_per_cam_data):
+
+                if ( nodes["s_scale_fading"].inputs[3].default_value != cam.scatter5.s_scale_fading_distance_per_cam_min):
+                    # print(nodes["s_scale_fading"].inputs[3].default_value,"=?=",active_cam.scatter5.s_scale_fading_distance_per_cam_min,"=>",'nodes["s_scale_fading"].inputs[3',)
+                    # print("DEBUG -- per_cam_fading.min")
+                    UpdatesRegistry.run_update(p,"s_scale_fading_distance_min", cam.scatter5.s_scale_fading_distance_per_cam_min,)
+                    dprint(f"HANDLER->CAM_UPD: 's_scale_fading_distance_per_cam_min' (force_update={force_update})",depsgraph=True,)
+
+                if ( nodes["s_scale_fading"].inputs[4].default_value != cam.scatter5.s_scale_fading_distance_per_cam_max):
+                    # print(nodes["s_scale_fading"].inputs[4].default_value,"=?=",active_cam.scatter5.s_scale_fading_distance_per_cam_max,"=>",'nodes["s_scale_fading"].inputs[4',)
+                    # print("DEBUG -- per_cam_fading.max")
+                    UpdatesRegistry.run_update(p,"s_scale_fading_distance_max", cam.scatter5.s_scale_fading_distance_per_cam_max,)
+                    dprint(f"HANDLER->CAM_UPD: 's_scale_fading_distance_per_cam_max' (force_update={force_update})",depsgraph=True,)
+
+            continue 
+
+    except Exception as e:
+
+        print("WARNING: An error occured while we tried to update your camera optimization settings:")    
+        print(e)
 
     _f.is_updating = False
 
     return None
-
 
 def update_is_rendered_view_nodegroup(value=None,):
     """update nodegroup"""
@@ -720,16 +771,19 @@ def update_is_rendered_view_nodegroup(value=None,):
     #change value in nodegroup
     for ng in [ng for ng in bpy.data.node_groups if (ng.name.startswith(".S Handler is rendered")) and (ng.nodes["boolean"].boolean != value) ]:
         ng.nodes["boolean"].boolean = value
+        
+        dprint("HANDLER: 'update_is_rendered_view_nodegroup'-> Changed value",depsgraph=True)
+        
+        continue
 
     return None
 
-
-def update_manual_uuid_surfaces(force_update=False):
+def update_manual_uuid_surfaces(force_update=False, flush_uuid_cache:int=None, flush_entire_cache=False,):
     """run uuid update when user is adding/removing objects in collections, run on depsgraph update"""
 
     #init static variables
     _f = update_manual_uuid_surfaces
-    if (not hasattr(_f,"cache")):
+    if (not hasattr(_f,"cache") or flush_entire_cache):
         _f.cache = {}
     if (not hasattr(_f,"pause")):
         _f.pause = False
@@ -738,22 +792,19 @@ def update_manual_uuid_surfaces(force_update=False):
     if (_f.pause) and (not force_update):
         return None
 
+    #flush cache of specific psy if needed
+    if (flush_uuid_cache is not None): 
+        if (flush_uuid_cache in _f.cache):
+            del _f.cache[flush_uuid_cache]
+
     #find all psys with manual mode & multi-surface
 
     for p in [ p for p in bpy.context.scene.scatter5.get_all_psys() if (not p.hide_viewport) and (p.s_distribution_method=="manual_all") ]:
 
         #check if cache changed? if so, send update & sample new cache
         cvalue = set(s.name for s in p.get_surfaces())
+
         if ((p.uuid not in _f.cache) or (_f.cache[p.uuid]!=cvalue)):
-            #automatic points deletion? hmmm, engine will handle non-found value by itself
-            #if user removed objects, we need to clean points
-            """
-            from .. manual.ops import orphans_points_removal
-            mark = orphans_points_removal(p)
-            if (mark==True):
-                dprint("HANDLER: 'orphans_points_removal()' marking history",)
-                mark_history = translate("Manual-Mode Oprhan Points Removal")
-            """
             
             #update nodetree uuid equivalence
             dprint("HANDLER: 'update_factory.update_manual_uuid_equivalence()'",)
@@ -762,12 +813,7 @@ def update_manual_uuid_surfaces(force_update=False):
 
             continue
 
-    #mark history needed for CTRL-Z?
-    if ("mark_history" in locals()):
-        bpy.ops.ed.undo_push(message=mark_history,)
-
     return None 
-
 
 def update_manual_uuid_equivalence(psy):
     """set equivalence id from uuid in nodetree, only for multi-surface + manual distribution"""
@@ -795,7 +841,9 @@ def update_manual_uuid_equivalence(psy):
                 ]: #we get the surfaces by interacting with the geonode engine
         equivalence[ins.name] = (i, ins.scatter5.uuid,)
         i+=1
-    dprint(f"UPDFCT: equivalence:{equivalence}",)
+        continue
+
+    dprint(f"UPDFCT: equivalence '{psy.name}' : {equivalence}",)
 
     #restore depsgraph evalto old
     nodes["s_surface_evaluator"].inputs[4].default_value = False #set as realize again
@@ -822,7 +870,7 @@ def update_manual_uuid_equivalence(psy):
         
         if (n is None): 
             n = ng_equi.nodes.new("GeometryNodeGroup")
-            n.node_tree = bpy.data.node_groups[".S Replace UUID MKIII"] #need to be correct mk version!!!
+            n.node_tree = bpy.data.node_groups[".S Replace UUID MKIV"] #need to be correct mk version!!!
             n.name = n.label = name 
         
         n.location.x = (idx+1)*175
@@ -860,7 +908,6 @@ def update_manual_uuid_equivalence(psy):
 
     return None 
 
-
 def update_frame_start_end_nodegroup():
     """update start/end frame nodegroup"""
 
@@ -887,7 +934,6 @@ def update_frame_start_end_nodegroup():
         dprint("HANDLER: 'update_frame_start_end_nodegroup'", depsgraph=True,)
 
     return None
-
 
 def factory_viewport_method_proxy(api, bool_api):
     """special case update fct generator for viewport_method enum ui, we created BoolProperty proxy for interface
@@ -973,7 +1019,6 @@ def ensure_viewport_method_interface(psy, api, value,):
 #                        "Y88888P'                                  `Y8P'
 
 
-
 #this class is never instanced
 class UpdatesRegistry():
     """most of our scatter-systems properties update fct are centralized in this class
@@ -1057,13 +1102,40 @@ class UpdatesRegistry():
 
     ################ list of all our updatefunction, can be generator:
 
-    ################ Color 
+    # .dP"Y8 88  88  dP"Yb  Yb        dP   88  88 88 8888b.  888888
+    # `Ybo." 88  88 dP   Yb  Yb  db  dP    88  88 88  8I  Yb 88__
+    # o.`Y8b 888888 Yb   dP   YbdPYbdP     888888 88  8I  dY 88""
+    # 8bodP' 88  88  YbodP     YP  YP      88  88 88 8888Y"  888888
+
+    @tag_register()
+    def hide_viewport(p, prop_name, value, event=None, bypass=False,):
+        p.scatter_obj.hide_viewport = value
+        #also update geonode mod!
+        mod = p.get_scatter_mod()
+        if (mod is not None):
+            mod.show_viewport = not p.hide_viewport
+
+    @tag_register()
+    def hide_render(p, prop_name, value, event=None, bypass=False,):
+        p.scatter_obj.hide_render = p.hide_render
+        #also update geonode mod!
+        mod = p.get_scatter_mod()
+        if (mod is not None):
+            mod.show_render = not p.hide_render
+
+    #  dP""b8  dP"Yb  88      dP"Yb  88""Yb
+    # dP   `" dP   Yb 88     dP   Yb 88__dP
+    # Yb      Yb   dP 88  .o Yb   dP 88"Yb
+    #  YboodP  YbodP  88ood8  YbodP  88  Yb 
 
     @tag_register()
     def s_color(p, prop_name, value, event=None, bypass=False,):
         p.scatter_obj.color = list(value)+[1]
 
-    ################ Surfaces
+    # .dP"Y8 88   88 88""Yb 888888    db     dP""b8 888888
+    # `Ybo." 88   88 88__dP 88__     dPYb   dP   `" 88__
+    # o.`Y8b Y8   8P 88"Yb  88""    dP__Yb  Yb      88""
+    # 8bodP' `YbodP' 88  Yb 88     dP""""Yb  YboodP 888888
 
     @tag_register()
     def s_surface_method(p, prop_name, value, event=None, bypass=False,):
@@ -1092,7 +1164,10 @@ class UpdatesRegistry():
         if (p.s_distribution_method=="manual_all"):
             update_manual_uuid_equivalence(p)
 
-    ################ Distribution
+    # 8888b.  88 .dP"Y8 888888 88""Yb 88 88""Yb 88   88 888888 88  dP"Yb  88b 88
+    #  8I  Yb 88 `Ybo."   88   88__dP 88 88__dP 88   88   88   88 dP   Yb 88Yb88
+    #  8I  dY 88 o.`Y8b   88   88"Yb  88 88""Yb Y8   8P   88   88 Yb   dP 88 Y88
+    # 8888Y"  88 8bodP'   88   88  Yb 88 88oodP `YbodP'   88   88  YbodP  88  Y8
 
     @tag_register()
     def s_distribution_method(p, prop_name, value, event=None, bypass=False,):
@@ -1315,7 +1390,10 @@ class UpdatesRegistry():
     def s_distribution_clump_fallnoisy_is_random_seed(p, prop_name, value, event=None, bypass=False,):
         random_seed(p, event, api_is_random=prop_name, api_seed="s_distribution_clump_fallnoisy_seed")
 
-    ################ Density Mask
+    # 8888b.  888888 88b 88 .dP"Y8 88 888888 Yb  dP     8b    d8    db    .dP"Y8 88  dP .dP"Y8
+    #  8I  Yb 88__   88Yb88 `Ybo." 88   88    YbdP      88b  d88   dPYb   `Ybo." 88odP  `Ybo."
+    #  8I  dY 88""   88 Y88 o.`Y8b 88   88     8P       88YbdP88  dP__Yb  o.`Y8b 88"Yb  o.`Y8b
+    # 8888Y"  888888 88  Y8 8bodP' 88   88    dP        88 YY 88 dP""""Yb 8bodP' 88  Yb 8bodP'
     
     @tag_register()
     def s_mask_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -1326,7 +1404,7 @@ class UpdatesRegistry():
     
     @tag_register()
     def s_mask_vg_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Vgroup Mask", mute=not value,)
+        mute_color(p, "Vg Mask", mute=not value,)
         node_link(p, f"RR_FLOAT s_mask_vg Receptor", f"RR_FLOAT s_mask_vg {value}",)
     
     @tag_register()
@@ -1364,7 +1442,7 @@ class UpdatesRegistry():
     
     @tag_register()
     def s_mask_bitmap_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Bitmap Mask", mute=not value,)
+        mute_color(p, "Img Mask", mute=not value,)
         node_link(p, f"RR_GEO s_mask_bitmap Receptor", f"RR_GEO s_mask_bitmap {value}",)
         p.s_mask_bitmap_uv_ptr = p.s_mask_bitmap_uv_ptr
     
@@ -1388,11 +1466,26 @@ class UpdatesRegistry():
     def s_mask_bitmap_id_color_ptr(p, prop_name, value, event=None, bypass=False,):
         node_value(p, "s_mask_bitmap", value=color_convert(value), entry="input", i=6)
 
+    #Materials
+    
+    @tag_register()
+    def s_mask_material_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Mat Mask", mute=not value,)
+        node_link(p, f"RR_FLOAT s_mask_material Receptor", f"RR_FLOAT s_mask_material {value}",)
+    
+    @tag_register()
+    def s_mask_material_ptr(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_mask_material", value=bpy.data.materials.get(value), entry="input", i=2)
+    
+    @tag_register()
+    def s_mask_material_revert(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_mask_material", value=value, entry="input", i=3)
+        
     #Curves
 
     @tag_register()
     def s_mask_curve_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Curve Mask", mute=not value,)
+        mute_color(p, "Cur Mask", mute=not value,)
         node_link(p, f"RR_GEO s_mask_curve Receptor", f"RR_GEO s_mask_curve {value}",)    
     
     @tag_register()
@@ -1407,7 +1500,7 @@ class UpdatesRegistry():
     
     @tag_register()
     def s_mask_boolvol_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Boolean Mask", mute=not value,)
+        mute_color(p, "Bool Mask", mute=not value,)
         node_link(p, f"RR_GEO s_mask_boolvol Receptor", f"RR_GEO s_mask_boolvol {value}",)
     
     @tag_register()
@@ -1422,7 +1515,7 @@ class UpdatesRegistry():
 
     @tag_register()
     def s_mask_upward_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Upward Mask", mute=not value,)
+        mute_color(p, "Up Mask", mute=not value,)
         node_link(p, f"RR_GEO s_mask_upward Receptor", f"RR_GEO s_mask_upward {value}",)
     
     @tag_register()
@@ -1433,23 +1526,213 @@ class UpdatesRegistry():
     def s_mask_upward_revert(p, prop_name, value, event=None, bypass=False,):
         node_value(p, "s_mask_upward", value=value, entry="input", i=2)
 
-    #Materials
+    # .dP"Y8  dP""b8    db    88     888888
+    # `Ybo." dP   `"   dPYb   88     88__
+    # o.`Y8b Yb       dP__Yb  88  .o 88""
+    # 8bodP'  YboodP dP""""Yb 88ood8 888888
     
     @tag_register()
-    def s_mask_material_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Material Mask", mute=not value,)
-        node_link(p, f"RR_FLOAT s_mask_material Receptor", f"RR_FLOAT s_mask_material {value}",)
-    
-    @tag_register()
-    def s_mask_material_ptr(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_mask_material", value=bpy.data.materials.get(value), entry="input", i=2)
-    
-    @tag_register()
-    def s_mask_material_revert(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_mask_material", value=value, entry="input", i=3)
+    def s_scale_master_allow(p, prop_name, value, event=None, bypass=False,):
+        for prop in p.get_s_scale_main_features(availability_conditions=False,):
+            mute_node(p, prop.replace("_allow",""), mute=not value,)
 
-    ################ Rotation
+    #Default 
     
+    @tag_register()
+    def s_scale_default_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Default Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_default Receptor", f"RR_VEC s_scale_default {value}",)
+    
+    @tag_register()
+    def s_scale_default_space(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_default", value=value=="local_scale", entry="input", i=2)
+    
+    @tag_register()
+    def s_scale_default_value(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_default", value=value, entry="input", i=3)
+    
+    @tag_register()
+    def s_scale_default_multiplier(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_default", value=value, entry="input", i=4)
+
+    #Random
+
+    @tag_register()
+    def s_scale_random_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Random Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_random Receptor", f"RR_VEC s_scale_random {value}",)
+    
+    @tag_register()
+    def s_scale_random_method(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_random", value=value=="random_uniform", entry="input", i=1)
+    
+    @tag_register()
+    def s_scale_random_factor(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_random", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_scale_random_probability(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_random", value=value/100, entry="input", i=3)
+    
+    @tag_register()
+    def s_scale_random_seed(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_random", value=value, entry="input", i=4)
+    
+    @tag_register()
+    def s_scale_random_is_random_seed(p, prop_name, value, event=None, bypass=False,):
+        random_seed(p, event, api_is_random=prop_name, api_seed="s_scale_random_seed")
+
+    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_random",)
+
+    #Shrink 
+    
+    @tag_register()
+    def s_scale_shrink_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Shrink", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_shrink Receptor", f"RR_VEC s_scale_shrink {value}",)
+    
+    @tag_register()
+    def s_scale_shrink_factor(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_shrink", value=value, entry="input", i=1)
+
+    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_shrink",)
+
+    #Grow
+
+    @tag_register()
+    def s_scale_grow_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Grow", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_grow Receptor", f"RR_VEC s_scale_grow {value}",)
+    
+    @tag_register()
+    def s_scale_grow_factor(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_grow", value=value, entry="input", i=1)
+
+    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_grow",)
+
+    #Fading 
+    
+    @tag_register()
+    def s_scale_fading_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Scale Fading", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_fading Receptor", f"RR_VEC s_scale_fading {value}",)
+        if (value==True):
+            update_active_camera_nodegroup(force_update=True)
+    
+    @tag_register()
+    def s_scale_fading_factor(p, prop_name, value, event=None, bypass=False,):
+            node_value(p, "s_scale_fading", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_scale_fading_per_cam_data(p, prop_name, value, event=None, bypass=False,):
+        if (value==True):
+            active_cam = bpy.context.scene.camera
+            if (active_cam is not None):
+                active_cam.scatter5.s_scale_fading_distance_per_cam_min = active_cam.scatter5.s_scale_fading_distance_per_cam_min 
+                active_cam.scatter5.s_scale_fading_distance_per_cam_max = active_cam.scatter5.s_scale_fading_distance_per_cam_max 
+        else: 
+            node_value(p, "s_scale_fading", value=p.s_scale_fading_distance_min, entry="input", i=3)
+            node_value(p, "s_scale_fading", value=p.s_scale_fading_distance_max, entry="input", i=4)
+    
+    @tag_register()
+    def s_scale_fading_distance_min(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_fading", value=value, entry="input", i=3)
+    
+    @tag_register()
+    def s_scale_fading_distance_max(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_fading", value=value, entry="input", i=4)
+    
+    @tag_register()
+    def s_scale_fading_fallremap_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_node(p, "s_scale_fading.fallremap", mute=not value)
+
+    @tag_register()
+    def s_scale_fading_fallremap_revert(p, prop_name, value, event=None, bypass=False,):
+        mute_node(p, "s_scale_fading.fallremap_revert",mute=not value)
+
+    #Mirror
+    
+    @tag_register()
+    def s_scale_mirror_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Random Mirror", mute=not value,)
+        node_link(p, f"RR_GEO s_scale_mirror Receptor", f"RR_GEO s_scale_mirror {value}",)
+    
+    @tag_register()
+    def s_scale_mirror_is_x(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_mirror", value=value, entry="input", i=1)
+    
+    @tag_register()
+    def s_scale_mirror_is_y(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_mirror", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_scale_mirror_is_z(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_mirror", value=value, entry="input", i=3)
+    
+    @tag_register()
+    def s_scale_mirror_seed(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_mirror", value=value, entry="input", i=4)
+    
+    @tag_register()
+    def s_scale_mirror_is_random_seed(p, prop_name, value, event=None, bypass=False,):
+        random_seed(p, event, api_is_random=prop_name, api_seed="s_scale_mirror_seed")
+
+    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_mirror",)
+
+    #Minimum 
+    
+    @tag_register()
+    def s_scale_min_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Min Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_min Receptor", f"RR_VEC s_scale_min {value}",)
+        node_link(p, f"RR_GEO s_scale_min Receptor", f"RR_GEO s_scale_min {value}",)
+    
+    @tag_register()
+    def s_scale_min_method(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_min", value=(value=="s_scale_min_remove"), entry="input", i=2)
+    
+    @tag_register()
+    def s_scale_min_value(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_min", value=value, entry="input", i=3)
+
+    #Clump Distribution Exlusive 
+
+    @tag_register()
+    def s_scale_clump_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Clump Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_clump Receptor", f"RR_VEC s_scale_clump {value}",)
+    
+    @tag_register()
+    def s_scale_clump_value(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_clump", value=value, entry="input", i=2)
+
+    #Faces Distribution Exlusive 
+    
+    @tag_register()
+    def s_scale_faces_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Face Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_faces Receptor", f"RR_VEC s_scale_faces {value}",)
+    
+    @tag_register()
+    def s_scale_faces_value(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_faces", value=value, entry="input", i=2)
+
+    #Edges Distribution Exlusive 
+
+    @tag_register()
+    def s_scale_edges_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Edge Scale", mute=not value,)
+        node_link(p, f"RR_VEC s_scale_edges Receptor", f"RR_VEC s_scale_edges {value}",)
+    
+    @tag_register()
+    def s_scale_edges_vec_factor(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_scale_edges", value=value, entry="input", i=2)
+
+    # 88""Yb  dP"Yb  888888    db    888888 88  dP"Yb  88b 88
+    # 88__dP dP   Yb   88     dPYb     88   88 dP   Yb 88Yb88
+    # 88"Yb  Yb   dP   88    dP__Yb    88   88 Yb   dP 88 Y88
+    # 88  Yb  YbodP    88   dP""""Yb   88   88  YbodP  88  Y8
+        
     @tag_register()
     def s_rot_master_allow(p, prop_name, value, event=None, bypass=False,):
         for prop in p.get_s_rot_main_features(availability_conditions=False,):
@@ -1643,206 +1926,10 @@ class UpdatesRegistry():
 
     codegen_umask_updatefct(scope_ref=locals(), name="s_rot_add",)
 
-    ################ Scale
-
-    @tag_register()
-    def s_scale_master_allow(p, prop_name, value, event=None, bypass=False,):
-        for prop in p.get_s_scale_main_features(availability_conditions=False,):
-            mute_node(p, prop.replace("_allow",""), mute=not value,)
-
-    #Default 
-    
-    @tag_register()
-    def s_scale_default_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Default Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_default Receptor", f"RR_VEC s_scale_default {value}",)
-    
-    @tag_register()
-    def s_scale_default_space(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_default", value=value=="local_scale", entry="input", i=2)
-    
-    @tag_register()
-    def s_scale_default_value(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_default", value=value, entry="input", i=3)
-    
-    @tag_register()
-    def s_scale_default_multiplier(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_default", value=value, entry="input", i=4)
-
-    #Random
-
-    @tag_register()
-    def s_scale_random_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Random Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_random Receptor", f"RR_VEC s_scale_random {value}",)
-    
-    @tag_register()
-    def s_scale_random_method(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_random", value=value=="random_uniform", entry="input", i=1)
-    
-    @tag_register()
-    def s_scale_random_factor(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_random", value=value, entry="input", i=2)
-    
-    @tag_register()
-    def s_scale_random_probability(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_random", value=value/100, entry="input", i=3)
-    
-    @tag_register()
-    def s_scale_random_seed(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_random", value=value, entry="input", i=4)
-    
-    @tag_register()
-    def s_scale_random_is_random_seed(p, prop_name, value, event=None, bypass=False,):
-        random_seed(p, event, api_is_random=prop_name, api_seed="s_scale_random_seed")
-
-    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_random",)
-
-    #Shrink 
-    
-    @tag_register()
-    def s_scale_shrink_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Shrink", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_shrink Receptor", f"RR_VEC s_scale_shrink {value}",)
-    
-    @tag_register()
-    def s_scale_shrink_factor(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_shrink", value=value, entry="input", i=1)
-
-    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_shrink",)
-
-    #Grow
-
-    @tag_register()
-    def s_scale_grow_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Grow", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_grow Receptor", f"RR_VEC s_scale_grow {value}",)
-    
-    @tag_register()
-    def s_scale_grow_factor(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_grow", value=value, entry="input", i=1)
-
-    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_grow",)
-
-    #Fading 
-    
-    @tag_register()
-    def s_scale_fading_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Scale Fading", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_fading Receptor", f"RR_VEC s_scale_fading {value}",)
-        if (value==True):
-            update_active_camera_nodegroup(force_refresh=True)
-    
-    @tag_register()
-    def s_scale_fading_factor(p, prop_name, value, event=None, bypass=False,):
-            node_value(p, "s_scale_fading", value=value, entry="input", i=2)
-    
-    @tag_register()
-    def s_scale_fading_per_cam_data(p, prop_name, value, event=None, bypass=False,):
-        if (value==True):
-            active_cam = bpy.context.scene.camera
-            if (active_cam is not None):
-                active_cam.scatter5.s_scale_fading_distance_per_cam_min = active_cam.scatter5.s_scale_fading_distance_per_cam_min 
-                active_cam.scatter5.s_scale_fading_distance_per_cam_max = active_cam.scatter5.s_scale_fading_distance_per_cam_max 
-        else: 
-            node_value(p, "s_scale_fading", value=p.s_scale_fading_distance_min, entry="input", i=3)
-            node_value(p, "s_scale_fading", value=p.s_scale_fading_distance_max, entry="input", i=4)
-    
-    @tag_register()
-    def s_scale_fading_distance_min(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_fading", value=value, entry="input", i=3)
-    
-    @tag_register()
-    def s_scale_fading_distance_max(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_fading", value=value, entry="input", i=4)
-    
-    @tag_register()
-    def s_scale_fading_fallremap_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_node(p, "s_scale_fading.fallremap", mute=not value)
-
-    @tag_register()
-    def s_scale_fading_fallremap_revert(p, prop_name, value, event=None, bypass=False,):
-        mute_node(p, "s_scale_fading.fallremap_revert",mute=not value)
-
-    #Mirror
-    
-    @tag_register()
-    def s_scale_mirror_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Random Mirror", mute=not value,)
-        node_link(p, f"RR_GEO s_scale_mirror Receptor", f"RR_GEO s_scale_mirror {value}",)
-    
-    @tag_register()
-    def s_scale_mirror_is_x(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_mirror", value=value, entry="input", i=1)
-    
-    @tag_register()
-    def s_scale_mirror_is_y(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_mirror", value=value, entry="input", i=2)
-    
-    @tag_register()
-    def s_scale_mirror_is_z(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_mirror", value=value, entry="input", i=3)
-    
-    @tag_register()
-    def s_scale_mirror_seed(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_mirror", value=value, entry="input", i=4)
-    
-    @tag_register()
-    def s_scale_mirror_is_random_seed(p, prop_name, value, event=None, bypass=False,):
-        random_seed(p, event, api_is_random=prop_name, api_seed="s_scale_mirror_seed")
-
-    codegen_umask_updatefct(scope_ref=locals(), name="s_scale_mirror",)
-
-    #Minimum 
-    
-    @tag_register()
-    def s_scale_min_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Min Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_min Receptor", f"RR_VEC s_scale_min {value}",)
-        node_link(p, f"RR_GEO s_scale_min Receptor", f"RR_GEO s_scale_min {value}",)
-    
-    @tag_register()
-    def s_scale_min_method(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_min", value=(value=="s_scale_min_remove"), entry="input", i=2)
-    
-    @tag_register()
-    def s_scale_min_value(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_min", value=value, entry="input", i=3)
-
-    #Clump Distribution Exlusive 
-
-    @tag_register()
-    def s_scale_clump_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Clump Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_clump Receptor", f"RR_VEC s_scale_clump {value}",)
-    
-    @tag_register()
-    def s_scale_clump_value(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_clump", value=value, entry="input", i=2)
-
-    #Faces Distribution Exlusive 
-    
-    @tag_register()
-    def s_scale_faces_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Face Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_faces Receptor", f"RR_VEC s_scale_faces {value}",)
-    
-    @tag_register()
-    def s_scale_faces_value(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_faces", value=value, entry="input", i=2)
-
-    #Edges Distribution Exlusive 
-
-    @tag_register()
-    def s_scale_edges_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Edge Scale", mute=not value,)
-        node_link(p, f"RR_VEC s_scale_edges Receptor", f"RR_VEC s_scale_edges {value}",)
-    
-    @tag_register()
-    def s_scale_edges_vec_factor(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_scale_edges", value=value, entry="input", i=2)
-
-    ################ Pattern
+    # 88""Yb    db    888888 888888 888888 88""Yb 88b 88 .dP"Y8
+    # 88__dP   dPYb     88     88   88__   88__dP 88Yb88 `Ybo."
+    # 88"""   dP__Yb    88     88   88""   88"Yb  88 Y88 o.`Y8b
+    # 88     dP""""Yb   88     88   888888 88  Yb 88  Y8 8bodP'
 
     @tag_register()
     def s_pattern_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -1912,7 +1999,10 @@ class UpdatesRegistry():
     codegen_umask_updatefct(scope_ref=locals(), name="s_pattern2",)
     codegen_umask_updatefct(scope_ref=locals(), name="s_pattern3",)
     
-    ################ Abiotic
+    #    db    88""Yb 88  dP"Yb  888888 88  dP""b8
+    #   dPYb   88__dP 88 dP   Yb   88   88 dP   `"
+    #  dP__Yb  88""Yb 88 Yb   dP   88   88 Yb
+    # dP""""Yb 88oodP 88  YbodP    88   88  YboodP
 
     @tag_register()
     def s_abiotic_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -2333,7 +2423,10 @@ class UpdatesRegistry():
 
     codegen_umask_updatefct(scope_ref=locals(), name="s_abiotic_border",)
 
-    ################ Proximity
+    # 88""Yb 88""Yb  dP"Yb  Yb  dP 88 8b    d8 88 888888 Yb  dP
+    # 88__dP 88__dP dP   Yb  YbdP  88 88b  d88 88   88    YbdP
+    # 88"""  88"Yb  Yb   dP  dPYb  88 88YbdP88 88   88     8P
+    # 88     88  Yb  YbodP  dP  Yb 88 88 YY 88 88   88    dP
 
     @tag_register()
     def s_proximity_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -2575,7 +2668,10 @@ class UpdatesRegistry():
 
     codegen_umask_updatefct(scope_ref=locals(), name="s_proximity_outskirt",)
 
-    ################ Ecosystem
+    # 888888  dP""b8  dP"Yb  .dP"Y8 Yb  dP .dP"Y8 888888 888888 8b    d8
+    # 88__   dP   `" dP   Yb `Ybo."  YbdP  `Ybo."   88   88__   88b  d88
+    # 88""   Yb      Yb   dP o.`Y8b   8P   o.`Y8b   88   88""   88YbdP88
+    # 888888  YboodP  YbodP  8bodP'  dP    8bodP'   88   888888 88 YY 88
 
     @tag_register()
     def s_ecosystem_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -2759,7 +2855,10 @@ class UpdatesRegistry():
 
     codegen_umask_updatefct(scope_ref=locals(), name="s_ecosystem_repulsion",)
 
-    ################ Push
+    # 88""Yb 88   88 .dP"Y8 88  88
+    # 88__dP 88   88 `Ybo." 88  88
+    # 88"""  Y8   8P o.`Y8b 888888
+    # 88     `YbodP' 8bodP' 88  88
 
     @tag_register()
     def s_push_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -2902,7 +3001,10 @@ class UpdatesRegistry():
         for prop in p.get_s_wind_main_features(availability_conditions=False,):
             mute_node(p, prop.replace("_allow",""), mute=not value,)
 
-    #Wind Wave
+    # Yb        dP 88 88b 88 8888b.  
+    #  Yb  db  dP  88 88Yb88  8I  Yb 
+    #   YbdPYbdP   88 88 Y88  8I  dY 
+    #    YP  YP    88 88  Y8 8888Y" 
 
     @tag_register()
     def s_wind_wave_allow(p, prop_name, value, event=None, bypass=False,):
@@ -3022,12 +3124,182 @@ class UpdatesRegistry():
 
     codegen_umask_updatefct(scope_ref=locals(), name="s_wind_noise",)
 
-    ################ Instancing
+
+    # Yb    dP 88 .dP"Y8 88 88""Yb 88 88     88 888888 Yb  dP
+    #  Yb  dP  88 `Ybo." 88 88__dP 88 88     88   88    YbdP
+    #   YbdP   88 o.`Y8b 88 88""Yb 88 88  .o 88   88     8P
+    #    YP    88 8bodP' 88 88oodP 88 88ood8 88   88    dP
+    
+    @tag_register()
+    def s_visibility_master_allow(p, prop_name, value, event=None, bypass=False,):
+        for prop in p.get_s_visibility_main_features(availability_conditions=False,):
+            mute_node(p, prop.replace("_allow",""), mute=not value,)
+
+    #Face Preview
+
+    @tag_register()
+    def s_visibility_facepreview_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, "Face Preview", mute=not value,)
+        node_link(p, f"RR_FLOAT s_visibility_facepreview Receptor", f"RR_FLOAT s_visibility_facepreview {value}",)
+
+    @tag_register()
+    def s_visibility_facepreview_viewport_method(p, prop_name, value, event=None, bypass=False,):
+        ensure_viewport_method_interface(p, "s_visibility_facepreview", value,)
+        node_value(p, "s_visibility_facepreview", value=get_enum_idx(p, prop_name, value), entry="input", i=4)
+
+    #Viewport %
+
+    @tag_register()
+    def s_visibility_view_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p,"% Optimization", mute=not value,) 
+        node_link(p, f"RR_FLOAT s_visibility_view Receptor", f"RR_FLOAT s_visibility_view {value}",)
+
+    @tag_register()
+    def s_visibility_view_percentage(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_view", value=value/100, entry="input", i=1)
+
+    @tag_register()
+    def s_visibility_view_viewport_method(p, prop_name, value, event=None, bypass=False,):
+        ensure_viewport_method_interface(p, "s_visibility_view", value,)
+        node_value(p, "s_visibility_view", value=get_enum_idx(p, prop_name, value), entry="input", i=2)
+
+    #Camera Optimization 
+
+    @tag_register()
+    def s_visibility_cam_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p,"Camera Optimization", mute=not value,) 
+        node_link(p, f"RR_GEO s_visibility_cam Receptor", f"RR_GEO s_visibility_cam {value}",)
+        if (value==True):
+            update_active_camera_nodegroup(force_update=True)
+
+    @tag_register()
+    def s_visibility_camclip_allow(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=5)
+
+    @tag_register()
+    def s_visibility_camclip_cam_autofill(p, prop_name, value, event=None, bypass=False,):
+        if (value==True):
+            update_active_camera_nodegroup(force_update=True)
+        else:
+            p.s_visibility_camclip_cam_res_xy = p.s_visibility_camclip_cam_res_xy
+            p.s_visibility_camclip_cam_shift_xy = p.s_visibility_camclip_cam_shift_xy
+            p.s_visibility_camclip_cam_lens = p.s_visibility_camclip_cam_lens
+            p.s_visibility_camclip_cam_sensor_width = p.s_visibility_camclip_cam_sensor_width
+            p.s_visibility_camclip_cam_boost_xy = p.s_visibility_camclip_cam_boost_xy
+
+    @tag_register()
+    def s_visibility_camclip_cam_lens(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=7)
+
+    @tag_register()
+    def s_visibility_camclip_cam_sensor_width(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=6)
+
+    @tag_register()
+    def s_visibility_camclip_cam_res_xy(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=8)
+
+    @tag_register()
+    def s_visibility_camclip_cam_shift_xy(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=9)
+
+    @tag_register()
+    def s_visibility_camclip_cam_boost_xy(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=10)
+
+    @tag_register()
+    def s_visibility_camclip_proximity_allow(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=11)
+
+    @tag_register()
+    def s_visibility_camclip_proximity_distance(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=12)
+
+    @tag_register()
+    def s_visibility_camdist_allow(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=13)
+        if (value==True):
+            update_active_camera_nodegroup(force_update=True)
+
+    @tag_register()
+    def s_visibility_camdist_min(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=14)
+
+    @tag_register()
+    def s_visibility_camdist_max(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=15)
+
+    @tag_register()
+    def s_visibility_camdist_fallremap_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_node(p, "s_visibility_cam.fallremap",mute=not value)
+
+    @tag_register()
+    def s_visibility_camdist_fallremap_revert(p, prop_name, value, event=None, bypass=False,):
+        mute_node(p, "s_visibility_cam.fallremap_revert",mute=not value)
+
+    @tag_register()
+    def s_visibility_camdist_per_cam_data(p, prop_name, value, event=None, bypass=False,):
+        if (value==True):
+            active_cam = bpy.context.scene.camera
+            if (active_cam is not None):
+                active_cam.scatter5.s_visibility_camdist_per_cam_min = active_cam.scatter5.s_visibility_camdist_per_cam_min 
+                active_cam.scatter5.s_visibility_camdist_per_cam_max = active_cam.scatter5.s_visibility_camdist_per_cam_max 
+        else: 
+            node_value(p, "s_visibility_cam", value=p.s_visibility_camdist_min, entry="input", i=14)
+            node_value(p, "s_visibility_cam", value=p.s_visibility_camdist_max, entry="input", i=15)
+
+    @tag_register()
+    def s_visibility_camoccl_allow(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=16)
+
+    @tag_register()
+    def s_visibility_camoccl_threshold(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=value, entry="input", i=17)
+
+    @tag_register()
+    def s_visibility_camoccl_method(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=get_enum_idx(p, prop_name, value), entry="input", i=18)
+
+    @tag_register()
+    def s_visibility_camoccl_coll_ptr(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_cam", value=bpy.data.collections.get(value), entry="input", i=19)
+
+    @tag_register()
+    def s_visibility_cam_viewport_method(p, prop_name, value, event=None, bypass=False,):
+        ensure_viewport_method_interface(p, "s_visibility_cam", value,)
+        node_value(p, "s_visibility_cam", value=get_enum_idx(p, prop_name, value), entry="input", i=20)
+
+    #Maximum Load
+
+    @tag_register()
+    def s_visibility_maxload_allow(p, prop_name, value, event=None, bypass=False,):
+        mute_color(p, f"Max Load", mute=not value,)
+        node_link(p, f"RR_GEO s_visibility_maxload Receptor", f"RR_GEO s_visibility_maxload {value}",)
+
+    @tag_register()
+    def s_visibility_maxload_cull_method(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_maxload", value=value=="maxload_limit", entry="input", i=1)
+
+    @tag_register()
+    def s_visibility_maxload_treshold(p, prop_name, value, event=None, bypass=False,):
+        node_value(p, "s_visibility_maxload", value=value, entry="input", i=2)
+
+    @tag_register()
+    def s_visibility_maxload_viewport_method(p, prop_name, value, event=None, bypass=False,):
+        ensure_viewport_method_interface(p, "s_visibility_maxload", value,)
+        node_value(p, "s_visibility_maxload", value=get_enum_idx(p, prop_name, value), entry="input", i=3)
+
+    # 88 88b 88 .dP"Y8 888888    db    88b 88  dP""b8 88 88b 88  dP""b8
+    # 88 88Yb88 `Ybo."   88     dPYb   88Yb88 dP   `" 88 88Yb88 dP   `"
+    # 88 88 Y88 o.`Y8b   88    dP__Yb  88 Y88 Yb      88 88 Y88 Yb  "88
+    # 88 88  Y8 8bodP'   88   dP""""Yb 88  Y8  YboodP 88 88  Y8  YboodP
 
     @tag_register()
     def s_instances_method(p, prop_name, value, event=None, bypass=False,):
-        pass #not in use anymore, maybe for later
-
+        ins_points = p.s_instances_method=="ins_points"
+        mute_color(p, "Raw Points", mute=not ins_points,)
+        node_link(p, f"RR_GEO output_points Receptor", f"RR_GEO output_points {ins_points}",)
+        
     @tag_register()
     def s_instances_coll_ptr(p, prop_name, value, event=None, bypass=False,):
         node_value(p, prop_name, value=value, entry="input")
@@ -3105,167 +3377,10 @@ class UpdatesRegistry():
     def s_instances_vcol_ptr(p, prop_name, value, event=None, bypass=False,):
         node_value(p, prop_name, value=value, entry="attr",)
 
-    ################ Visibility
-
-    @tag_register()
-    def s_visibility_master_allow(p, prop_name, value, event=None, bypass=False,):
-        for prop in p.get_s_visibility_main_features(availability_conditions=False,):
-            mute_node(p, prop.replace("_allow",""), mute=not value,)
-
-    #Face Preview
-
-    @tag_register()
-    def s_visibility_facepreview_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, "Face Preview", mute=not value,)
-        node_link(p, f"RR_FLOAT s_visibility_facepreview Receptor", f"RR_FLOAT s_visibility_facepreview {value}",)
-
-    @tag_register()
-    def s_visibility_facepreview_viewport_method(p, prop_name, value, event=None, bypass=False,):
-        ensure_viewport_method_interface(p, "s_visibility_facepreview", value,)
-        node_value(p, "s_visibility_facepreview", value=get_enum_idx(p, prop_name, value), entry="input", i=4)
-
-    #Viewport %
-
-    @tag_register()
-    def s_visibility_view_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p,"% Optimization", mute=not value,) 
-        node_link(p, f"RR_FLOAT s_visibility_view Receptor", f"RR_FLOAT s_visibility_view {value}",)
-
-    @tag_register()
-    def s_visibility_view_percentage(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_view", value=value/100, entry="input", i=1)
-
-    @tag_register()
-    def s_visibility_view_viewport_method(p, prop_name, value, event=None, bypass=False,):
-        ensure_viewport_method_interface(p, "s_visibility_view", value,)
-        node_value(p, "s_visibility_view", value=get_enum_idx(p, prop_name, value), entry="input", i=2)
-
-    #Camera Optimization 
-
-    @tag_register()
-    def s_visibility_cam_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p,"Camera Optimization", mute=not value,) 
-        node_link(p, f"RR_GEO s_visibility_cam Receptor", f"RR_GEO s_visibility_cam {value}",)
-        if (value==True):
-            update_active_camera_nodegroup(force_refresh=True)
-
-    @tag_register()
-    def s_visibility_camclip_allow(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=5)
-
-    @tag_register()
-    def s_visibility_camclip_cam_autofill(p, prop_name, value, event=None, bypass=False,):
-        if (value==True):
-            update_active_camera_nodegroup(force_refresh=True)
-        else:
-            p.s_visibility_camclip_cam_res_xy = p.s_visibility_camclip_cam_res_xy
-            p.s_visibility_camclip_cam_shift_xy = p.s_visibility_camclip_cam_shift_xy
-            p.s_visibility_camclip_cam_lens = p.s_visibility_camclip_cam_lens
-            p.s_visibility_camclip_cam_sensor_width = p.s_visibility_camclip_cam_sensor_width
-
-    @tag_register()
-    def s_visibility_camclip_cam_lens(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=7)
-
-    @tag_register()
-    def s_visibility_camclip_cam_sensor_width(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=6)
-
-    @tag_register()
-    def s_visibility_camclip_cam_res_xy(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=8)
-
-    @tag_register()
-    def s_visibility_camclip_cam_shift_xy(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=9)
-
-    @tag_register()
-    def s_visibility_camclip_cam_boost_xy(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=Vector((value[0],value[1],0)), entry="input", i=10)
-
-    @tag_register()
-    def s_visibility_camclip_proximity_allow(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=11)
-
-    @tag_register()
-    def s_visibility_camclip_proximity_distance(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=12)
-
-    @tag_register()
-    def s_visibility_camdist_allow(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=13)
-        if (value==True):
-            update_active_camera_nodegroup(force_refresh=True)
-
-    @tag_register()
-    def s_visibility_camdist_min(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=14)
-
-    @tag_register()
-    def s_visibility_camdist_max(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=15)
-
-    @tag_register()
-    def s_visibility_camdist_fallremap_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_node(p, "s_visibility_cam.fallremap",mute=not value)
-
-    @tag_register()
-    def s_visibility_camdist_fallremap_revert(p, prop_name, value, event=None, bypass=False,):
-        mute_node(p, "s_visibility_cam.fallremap_revert",mute=not value)
-
-    @tag_register()
-    def s_visibility_camdist_per_cam_data(p, prop_name, value, event=None, bypass=False,):
-        if (value==True):
-            active_cam = bpy.context.scene.camera
-            if (active_cam is not None):
-                active_cam.scatter5.s_visibility_camdist_per_cam_min = active_cam.scatter5.s_visibility_camdist_per_cam_min 
-                active_cam.scatter5.s_visibility_camdist_per_cam_max = active_cam.scatter5.s_visibility_camdist_per_cam_max 
-        else: 
-            node_value(p, "s_visibility_cam", value=p.s_visibility_camdist_min, entry="input", i=14)
-            node_value(p, "s_visibility_cam", value=p.s_visibility_camdist_max, entry="input", i=15)
-
-    @tag_register()
-    def s_visibility_camoccl_allow(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=16)
-
-    @tag_register()
-    def s_visibility_camoccl_threshold(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=value, entry="input", i=17)
-
-    @tag_register()
-    def s_visibility_camoccl_method(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=get_enum_idx(p, prop_name, value), entry="input", i=18)
-
-    @tag_register()
-    def s_visibility_camoccl_coll_ptr(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_cam", value=bpy.data.collections.get(value), entry="input", i=19)
-
-    @tag_register()
-    def s_visibility_cam_viewport_method(p, prop_name, value, event=None, bypass=False,):
-        ensure_viewport_method_interface(p, "s_visibility_cam", value,)
-        node_value(p, "s_visibility_cam", value=get_enum_idx(p, prop_name, value), entry="input", i=20)
-
-    #Maximum Load
-
-    @tag_register()
-    def s_visibility_maxload_allow(p, prop_name, value, event=None, bypass=False,):
-        mute_color(p, f"Max Load", mute=not value,)
-        node_link(p, f"RR_GEO s_visibility_maxload Receptor", f"RR_GEO s_visibility_maxload {value}",)
-
-    @tag_register()
-    def s_visibility_maxload_cull_method(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_maxload", value=value=="maxload_limit", entry="input", i=1)
-
-    @tag_register()
-    def s_visibility_maxload_treshold(p, prop_name, value, event=None, bypass=False,):
-        node_value(p, "s_visibility_maxload", value=value, entry="input", i=2)
-
-    @tag_register()
-    def s_visibility_maxload_viewport_method(p, prop_name, value, event=None, bypass=False,):
-        ensure_viewport_method_interface(p, "s_visibility_maxload", value,)
-        node_value(p, "s_visibility_maxload", value=get_enum_idx(p, prop_name, value), entry="input", i=3)
-
-    ################ Display
+    # 8888b.  88 .dP"Y8 88""Yb 88        db    Yb  dP
+    #  8I  Yb 88 `Ybo." 88__dP 88       dPYb    YbdP
+    #  8I  dY 88 o.`Y8b 88"""  88  .o  dP__Yb    8P
+    # 8888Y"  88 8bodP' 88     88ood8 dP""""Yb  dP
 
     @tag_register()
     def s_display_master_allow(p, prop_name, value, event=None, bypass=False,):
@@ -3327,7 +3442,7 @@ class UpdatesRegistry():
         mute_color(p, "Closeby Optimization2", mute=not value)
         mute_node(p, "s_display_camdist", mute=not value)
         if (value==True):
-            update_active_camera_nodegroup(force_refresh=True)
+            update_active_camera_nodegroup(force_update=True)
 
     @tag_register()
     def s_display_camdist_distance(p, prop_name, value, event=None, bypass=False,):
@@ -3338,7 +3453,10 @@ class UpdatesRegistry():
         ensure_viewport_method_interface(p, "s_display", value,)
         node_value(p, "s_display_viewport_method", value=get_enum_idx(p, prop_name, value), entry="input", i=0)
 
-    ################ Beginner shortcut for the biome reader interface
+    # 88""Yb 888888  dP""b8 88 88b 88 88b 88 888888 88""Yb  
+    # 88__dP 88__   dP   `" 88 88Yb88 88Yb88 88__   88__dP  
+    # 88""Yb 88""   Yb  "88 88 88 Y88 88 Y88 88""   88"Yb   
+    # 88oodP 888888  YboodP 88 88  Y8 88  Y8 888888 88  Yb  
 
     @tag_register()
     def s_beginner_default_scale(p, prop_name, value, event=None, bypass=False,):
@@ -3358,8 +3476,308 @@ class UpdatesRegistry():
             p.s_rot_random_allow = True
         p.s_rot_random_tilt_value = value * 2.50437
         p.s_rot_random_yaw_value = value * 6.28319
+        
+    #  dP""b8 88""Yb  dP"Yb  88   88 88""Yb     888888 888888    db    888888 88   88 88""Yb 888888 .dP"Y8 
+    # dP   `" 88__dP dP   Yb 88   88 88__dP     88__   88__     dPYb     88   88   88 88__dP 88__   `Ybo." 
+    # Yb  "88 88"Yb  Yb   dP Y8   8P 88"""      88""   88""    dP__Yb    88   Y8   8P 88"Yb  88""   o.`Y8b 
+    #  YboodP 88  Yb  YbodP  `YbodP' 88         88     888888 dP""""Yb   88   `YbodP' 88  Yb 888888 8bodP' 
 
-    ################ Internal use only, ex: psy.property_run_update() or class.fct() or class.run_update()
+    #TODO OPTIMIZATION! 
+    # will need to optimize functions to make sure execution is not useless!!
+    # Need to check if nodegraph != already equal what we want! 
+
+    @tag_register()
+    def s_disable_all_group_features(p, prop_name, value, event=None, bypass=False,):
+        """undo all group features (if a psy is not assigned to any groups anymore)"""
+        #... keep this function up to date with main group features..
+        #if ungroup a group:
+        # - mute all mask feature 
+        mute_node(p, "s_gr_mask_vg", mute=True,)
+        mute_node(p, "s_gr_mask_vcol", mute=True,)
+        mute_node(p, "s_gr_mask_bitmap", mute=True,)
+        mute_node(p, "s_gr_mask_material", mute=True,)
+        mute_node(p, "s_gr_mask_curve", mute=True,)
+        mute_node(p, "s_gr_mask_boolvol", mute=True,)
+        mute_node(p, "s_gr_mask_upward", mute=True,)
+        # - mute all scale features 
+        mute_node(p, "s_gr_scale_boost", mute=True,)
+        # - mute all pattern feature, and reset texture pointer to avoid virtual users
+        mute_node(p, "s_gr_pattern1", mute=True,)
+        set_texture_ptr(p, "s_gr_pattern1.texture", "")
+        
+    ### Distribution
+    
+    # @tag_register()
+    # def s_gr_distribution_master_allow(g, prop_name, value, event=None, bypass=False,):
+    #     pass
+        
+    # @tag_register()
+    # def s_gr_distribution_density_boost_allow(g, prop_name, value, event=None, bypass=False,):
+    #     pass
+
+    # @tag_register()
+    # def s_gr_distribution_density_boost_factor(g, prop_name, value, event=None, bypass=False,):
+    #     pass
+    
+    ### Masks
+
+    @tag_register()
+    def s_gr_mask_master_allow(g, prop_name, value, event=None, bypass=False,):
+        for prop in g.get_s_gr_mask_main_features(availability_conditions=False,):
+            for p in g.get_psy_members():
+                mute_node(p, prop.replace("_allow",""), mute=not value,)
+    #Vgroup
+    
+    @tag_register()
+    def s_gr_mask_vg_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Vg Gr Mask", mute=not value,)
+            node_link(p, f"RR_FLOAT s_gr_mask_vg Receptor", f"RR_FLOAT s_gr_mask_vg {value}",)
+    
+    @tag_register()
+    def s_gr_mask_vg_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vg", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_gr_mask_vg_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vg", value=value, entry="input", i=3)
+
+    #VColor
+    
+    @tag_register()
+    def s_gr_mask_vcol_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Vcol Gr Mask", mute=not value,)
+            node_link(p, f"RR_FLOAT s_gr_mask_vcol Receptor", f"RR_FLOAT s_gr_mask_vcol {value}",)
+    
+    @tag_register()
+    def s_gr_mask_vcol_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vcol", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_gr_mask_vcol_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vcol", value=value, entry="input", i=3)
+    
+    @tag_register()
+    def s_gr_mask_vcol_color_sample_method(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vcol", value=get_enum_idx(g, prop_name, value,), entry="input", i=4)
+    
+    @tag_register()
+    def s_gr_mask_vcol_id_color_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_vcol", value=color_convert(value), entry="input", i=5)
+    
+    #Bitmap 
+    
+    @tag_register()
+    def s_gr_mask_bitmap_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Img Gr Mask", mute=not value,)
+            node_link(p, f"RR_GEO s_gr_mask_bitmap Receptor", f"RR_GEO s_gr_mask_bitmap {value}",)
+        g.s_gr_mask_bitmap_uv_ptr = g.s_gr_mask_bitmap_uv_ptr
+    
+    @tag_register()
+    def s_gr_mask_bitmap_uv_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_bitmap", value=value, entry="input", i=2)
+    
+    @tag_register()
+    def s_gr_mask_bitmap_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_bitmap", value=bpy.data.images.get(value), entry="input", i=3)
+    
+    @tag_register()
+    def s_gr_mask_bitmap_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_bitmap", value=not value, entry="input", i=4)
+    
+    @tag_register()
+    def s_gr_mask_bitmap_color_sample_method(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_bitmap", value=get_enum_idx(g, prop_name, value,), entry="input", i=5)
+    
+    @tag_register()
+    def s_gr_mask_bitmap_id_color_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_bitmap", value=color_convert(value), entry="input", i=6)
+        
+    #Materials
+    
+    @tag_register()
+    def s_gr_mask_material_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Mat Gr Mask", mute=not value,)
+            node_link(p, f"RR_FLOAT s_gr_mask_material Receptor", f"RR_FLOAT s_gr_mask_material {value}",)
+    
+    @tag_register()
+    def s_gr_mask_material_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_material", value=bpy.data.materials.get(value), entry="input", i=2)
+    
+    @tag_register()
+    def s_gr_mask_material_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_material", value=value, entry="input", i=3)
+        
+    #Curves
+
+    @tag_register()
+    def s_gr_mask_curve_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Cur Gr Mask", mute=not value,)
+            node_link(p, f"RR_GEO s_gr_mask_curve Receptor", f"RR_GEO s_gr_mask_curve {value}",)    
+    
+    @tag_register()
+    def s_gr_mask_curve_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_curve", value=value, entry="input", i=1)
+    
+    @tag_register()
+    def s_gr_mask_curve_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_curve", value=value, entry="input", i=2)
+
+    #Boolean
+    
+    @tag_register()
+    def s_gr_mask_boolvol_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Bool Gr Mask", mute=not value,)
+            node_link(p, f"RR_GEO s_gr_mask_boolvol Receptor", f"RR_GEO s_gr_mask_boolvol {value}",)
+    
+    @tag_register()
+    def s_gr_mask_boolvol_coll_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_boolvol", value=bpy.data.collections.get(value), entry="input", i=1)
+    
+    @tag_register()
+    def s_gr_mask_boolvol_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_boolvol", value=value, entry="input", i=2)
+
+    #Upward Obstruction
+
+    @tag_register()
+    def s_gr_mask_upward_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Up Gr Mask", mute=not value,)
+            node_link(p, f"RR_GEO s_gr_mask_upward Receptor", f"RR_GEO s_gr_mask_upward {value}",)
+    
+    @tag_register()
+    def s_gr_mask_upward_coll_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_upward", value=bpy.data.collections.get(value), entry="input", i=1)
+    
+    @tag_register()
+    def s_gr_mask_upward_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_mask_upward", value=value, entry="input", i=2)
+        
+    ### Scale
+    
+    @tag_register()
+    def s_gr_scale_master_allow(g, prop_name, value, event=None, bypass=False,):
+        for prop in g.get_s_gr_scale_main_features(availability_conditions=False,):
+            for p in g.get_psy_members():
+                mute_node(p, prop.replace("_allow",""), mute=not value,)
+                
+    @tag_register()
+    def s_gr_scale_boost_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, "Group Scale", mute=not value,)
+            node_link(p, f"RR_VEC s_gr_scale_boost Receptor", f"RR_VEC s_gr_scale_boost {value}",)
+    
+    @tag_register()
+    def s_gr_scale_boost_value(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_scale_boost", value=value, entry="input", i=1)
+            
+    @tag_register()
+    def s_gr_scale_boost_multiplier(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_scale_boost", value=value, entry="input", i=2)
+    
+    ### Pattern
+    
+    @tag_register()
+    def s_gr_pattern_master_allow(g, prop_name, value, event=None, bypass=False,):        
+        for prop in g.get_s_gr_pattern_main_features(availability_conditions=False,):
+            for p in g.get_psy_members():
+                mute_node(p, prop.replace("_allow",""), mute=not value,)
+                
+    #Pattern
+    
+    @tag_register()
+    def s_gr_pattern1_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            mute_color(p, f"Pattern1 Gr", mute=not value,)
+            node_link(p, f"RR_VEC s_gr_pattern1 Receptor", f"RR_VEC s_gr_pattern1 {value}",)
+            node_link(p, f"RR_GEO s_gr_pattern1 Receptor", f"RR_GEO s_gr_pattern1 {value}",)
+    
+    @tag_register()
+    def s_gr_pattern1_texture_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            set_texture_ptr(p, "s_gr_pattern1.texture", value)
+    
+    @tag_register()
+    def s_gr_pattern1_color_sample_method(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=get_enum_idx(g, prop_name, value,), entry="input", i=2)
+    
+    @tag_register()
+    def s_gr_pattern1_id_color_ptr(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=color_convert(value), entry="input", i=3)
+    
+    @tag_register()
+    def s_gr_pattern1_id_color_tolerence(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value, entry="input", i=4)
+    
+    @tag_register()
+    def s_gr_pattern1_dist_infl_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value, entry="input", i=5)
+    
+    @tag_register()
+    def s_gr_pattern1_dist_influence(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value/100, entry="input", i=6)
+    
+    @tag_register()
+    def s_gr_pattern1_dist_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value, entry="input", i=7)
+    
+    @tag_register()
+    def s_gr_pattern1_scale_infl_allow(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value, entry="input", i=8)
+    
+    @tag_register()
+    def s_gr_pattern1_scale_influence(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value/100, entry="input", i=9)
+    
+    @tag_register()
+    def s_gr_pattern1_scale_revert(g, prop_name, value, event=None, bypass=False,):
+        for p in g.get_psy_members():
+            node_value(p, "s_gr_pattern1", value=value, entry="input", i=10)
+
+    # codegen_umask_updatefct(scope_ref=locals(), name="s_pattern1",)
+    
+    # 88 88b 88 888888 888888 88""Yb 88b 88    db    88
+    # 88 88Yb88   88   88__   88__dP 88Yb88   dPYb   88
+    # 88 88 Y88   88   88""   88"Yb  88 Y88  dP__Yb  88  .o
+    # 88 88  Y8   88   888888 88  Yb 88  Y8 dP""""Yb 88ood8
+
+    #Internal use only, ex: psy.property_run_update() or class.fct() or class.run_update()
+    #NOTE: Hum this has nothing to do here? rigth? Should be in particle_systems property class directly
 
     @tag_register()
     def s_eval_depsgraph(p, prop_name, value, event=None, bypass=False,):
@@ -3374,8 +3792,12 @@ class UpdatesRegistry():
             if (ng.name.startswith(".S Viewport Method MK")):
                 ng.nodes["Boolean Math.008"].mute = value
 
-    ################ Generate Dict at parsetime
+    #  dP""b8 888888 88b 88 888888 88""Yb    db    888888 888888
+    # dP   `" 88__   88Yb88 88__   88__dP   dPYb     88   88__
+    # Yb  "88 88""   88 Y88 88""   88"Yb   dP__Yb    88   88""
+    #  YboodP 888888 88  Y8 888888 88  Yb dP""""Yb   88   888888
 
+    #Generate Dict at parsetime
 
     #list all update functions of this class, by looking at tag
     UpdateFcts = { k:v for k,v in locals().items() if (callable(v) and hasattr(v,"register_tag")) }
@@ -3411,10 +3833,15 @@ class UpdatesRegistry():
     if False:
         print(UpdateProperties)
 
-    ################ access to UpdateProperties from outer modules:
+    #    db     dP""b8  dP""b8 888888 .dP"Y8 .dP"Y8
+    #   dPYb   dP   `" dP   `" 88__   `Ybo." `Ybo."
+    #  dP__Yb  Yb      Yb      88""   o.`Y8b o.`Y8b
+    # dP""""Yb  YboodP  YboodP 888888 8bodP' 8bodP'
+
+    #access to UpdateProperties from outer modules:
 
     @classmethod
-    def run_update(cls, p, prop_name, value, event=None, bypass=False,):
+    def run_update(cls, self, prop_name, value, event=None, bypass=False,):
         """run update function equivalence from given propname, return True if propname found else False"""
 
         fct = cls.UpdateProperties.get(prop_name)
@@ -3422,7 +3849,7 @@ class UpdatesRegistry():
         if (fct is None):
             return False
 
-        fct(p, prop_name, value, event=event, bypass=bypass)
+        fct(self, prop_name, value, event=event, bypass=bypass,)
 
         return True
 

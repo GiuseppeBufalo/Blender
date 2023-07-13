@@ -140,7 +140,7 @@ def get_aspect_map_data(o, axis='z', normalize=False, start_angle=0, division=1,
 
     ob = o.data
 
-    arr_normal = np.zeros((len(ob.vertices) * 3), dtype=np.float, )
+    arr_normal = np.zeros((len(ob.vertices) * 3), dtype=np.float64, )
     ob.vertices.foreach_get("normal", arr_normal, )
     arr_normal.shape = (-1, 3)
      

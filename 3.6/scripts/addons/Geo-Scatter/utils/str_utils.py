@@ -2,17 +2,21 @@
 
 alien_chars = ['/', '<', '>', ':', '"', '/', '\\', '|', '?', '*']
 
+
 def is_illegal_string(string):
     """check if string has illegal char"""
 
     return any( (char in alien_chars) for char in string )
+
 
 def legal(string):
     """make string legal"""
 
     if is_illegal_string(string):
         return ''.join(char for char in string if (not char in alien_chars) )
+    
     return string 
+
 
 def find_suffix(basename, collection_api, zeros=3,): 
     """find suffix with name that do not exists yet"""
@@ -26,17 +30,18 @@ def find_suffix(basename, collection_api, zeros=3,):
 
     return new 
 
-def no_names_in_double( string, list_strings, startswith00=False, n=3,):
+
+def no_names_in_double(string, list_strings, startswith00=False, n=3,):
     """return a correct string with suffix to avoid doubles"""
     #used heavily in masks creation, to get correct names 
     #I Guess that this fct is a clone of find_suffix() ? 
 
-    if startswith00: 
+    if (startswith00):
         #Always have suffix, startswith .00
 
         x=string
         i=0
-        if (string + ".00" not in list_strings):
+        if (string+".00" not in list_strings):
             return string + ".00"
 
         while (f"{x}.{i:02d}" in list_strings):
@@ -51,12 +56,13 @@ def no_names_in_double( string, list_strings, startswith00=False, n=3,):
         x = string + f".{i:03d}" if n==3 else string + f".{i:02d}"
         i +=1
 
-    if string != x:
+    if (string!=x):
         return x
 
     return string 
 
-def word_wrap( string="", layout=None, alignment="CENTER", max_char=70, active=False, alert=False, icon=None, scale_y=1.0,):
+
+def word_wrap(string="", layout=None, alignment="CENTER", max_char=70, active=False, alert=False, icon=None, scale_y=1.0,):
     """word wrap a piece of string""" 
     
     import bpy
@@ -124,6 +130,7 @@ def word_wrap( string="", layout=None, alignment="CENTER", max_char=70, active=F
         
     return wrapped
 
+
 def smart_round(f):
     """return float value with rounding appropriate depending on decimal value"""
     if (f<0.0001):
@@ -140,41 +147,48 @@ def smart_round(f):
         return round(f,1)
     return int(f)
 
+
 def square_area_repr(f):
     """stringify squarearea to cm²/m²/ha/km²"""
+    
     if (f<0.1):
         return f"{int(f*10_000)} cm²"
+    
     if (f<5_000):
         return f"{f:.1f} m²"
+    
     if (f<1_000_000):
         return f"{f/10_000:.1f} ha"
+    
     else: #above 100ha == km²
         return f"{f/1_000_000:.1f} km²"
+
 
 def count_repr(f, unit="",):
     """get string version of scatter count"""
 
     return "..." if (f==-1) else f'{f:,} {unit}'
 
-def version_to_float(s):
-    """version is always '3.1.1' ect.. annoying to compare, converting to float"""
 
-    s = s.replace("Beta","")
-    s = s.replace("Alpha","")
-    s = s.replace("Release","")
-    s = s.replace("Candidate","")
-    s = s.replace(" ","")
+def version_to_float(s, truncated=False):
+    """versioning is very dumb in this plugin, it sometimes use string format, sometimes blender use a list format ect.. ultimately in order to """
+        
+    if isinstance(s, (list, tuple, set)):
+        s = '.'.join(map(str, s))
+        
+    # remove unwanted substrings
+    for sub in ["Beta", "Alpha", "Release", "Candidate", " "]:
+        s = s.replace(sub, "")
+    
+    # split on dot and rejoin the first two parts with a dot, concatenate the rest
+    parts = s.split('.')
+    s = '.'.join(parts[:2]) + ''.join(parts[2:])
+    
+    # convert to float
+    s = float(s)
+    
+    # truncate to only essential version?
+    if (truncated):
+        s = int(s*10)/10
 
-    slist = list(s)
-    dotcount = 0
-    for i,char in enumerate(slist.copy()): 
-        if (char=='.'): 
-            dotcount+=1
-            if (dotcount>1):
-                del slist[i]
-        continue
-
-    s = "".join(slist)
-    f = float(s)
-
-    return f
+    return s

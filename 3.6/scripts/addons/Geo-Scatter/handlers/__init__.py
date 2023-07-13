@@ -25,7 +25,7 @@ from mathutils import Vector
 from .. utils.extra_utils import dprint
 from .. utils.extra_utils import is_rendered_view, all_3d_viewports
 
-from .. scattering.emitter import handler_emitter_check_if_deleted, handler_emitter_pin_mode_sync, handler_scene_emitter_cleanup
+from .. scattering.emitter import handler_emitter_check_if_deleted, handler_emitter_pin_mode_sync, handler_scene_emitter_cleanup, handler_f_surfaces_cleanup
 from .. scattering.update_factory import update_active_camera_nodegroup, update_is_rendered_view_nodegroup, update_frame_start_end_nodegroup, update_manual_uuid_surfaces
 
 
@@ -41,14 +41,18 @@ from .. scattering.update_factory import update_active_camera_nodegroup, update_
 
 #lauch function on each depsgraph interaction
 
+
 @persistent
 def scatter5_depsgraph(scene,desp):
 
     #debug print
-    dprint("HANDLER: 'scatter5_depsgraph'",depsgraph=True)
+    dprint("HANDLER: 'scatter5_depsgraph'", depsgraph=True)
 
     #check on emitter prop
     handler_emitter_check_if_deleted() #ideally should be after each deletion operation??
+
+    #check if f_surface has been deleted 
+    handler_f_surfaces_cleanup() #ideally should be after each deletion operation??
 
     #update emitter pointer if in pin mode
     handler_emitter_pin_mode_sync()
@@ -66,10 +70,12 @@ def scatter5_depsgraph(scene,desp):
     shading_type_callback()
 
     #update active camera nodegroup
-    update_active_camera_nodegroup()
+    update_active_camera_nodegroup() #force_update strictly forbidden, could create a feedback loop
 
     return None
 
+
+#NOTE: update render/frame pre+post are needed in order to avoid "laggy/delayed" effect
 
 # ooooooooo.                               .o8                     
 # `888   `Y88.                            "888                     
@@ -81,15 +87,23 @@ def scatter5_depsgraph(scene,desp):
 
 #lauch function on pre/post final render operation
 
+
 def assert_visibility_states():
     """values of the visibility states might be buggy, need a refresh signal"""
 
+    #for all psys, we ensure that some problematic properties are up to date.. 
+    #ugly fix, we don't understand why, sometimes the values of the properties below are not synchronized with their nodetrees
     for p in bpy.context.scene.scatter5.get_all_psys():
-        p.property_nodetree_refresh("s_visibility_view_viewport_method",)
-        p.property_nodetree_refresh("s_visibility_maxload_viewport_method",)
-        p.property_nodetree_refresh("s_visibility_facepreview_viewport_method",)
-        p.property_nodetree_refresh("s_visibility_cam_viewport_method",)
-        p.property_nodetree_refresh("s_display_viewport_method",)
+        
+        #of valid systems only, as we might encounter some psys that needs their full nodetree to be updated
+        if p.addon_version_is_valid():
+            
+            p.property_nodetree_refresh("s_visibility_view_viewport_method",)
+            p.property_nodetree_refresh("s_visibility_maxload_viewport_method",)
+            p.property_nodetree_refresh("s_visibility_facepreview_viewport_method",)
+            p.property_nodetree_refresh("s_visibility_cam_viewport_method",)
+            p.property_nodetree_refresh("s_display_viewport_method",)
+            
         continue
 
     return None
@@ -97,40 +111,74 @@ def assert_visibility_states():
 
 IS_FINAL_RENDER = False
 
-@persistent
-def scatter5_render_pre(scene,desp):
 
+@persistent
+def scatter5_render_init(scene,desp):
+    # print("DEBUG-render_init")
+    
     global IS_FINAL_RENDER
     IS_FINAL_RENDER = True
 
-    #make sure rendered view is disa
     #debug print
-    dprint("HANDLER: 'scatter5_render_pre'",depsgraph=True)
+    dprint("HANDLER: 'scatter5_render_init'", depsgraph=True)
+    
+    #headless mode?
+    if (bpy.app.background or (bpy.context.window_manager is None)): 
+        print("WARNING: we advise `scene.render.use_lock_interface` to be `True` while running blender headlessly, as it might create inaccurate result otherwise. We enabled the settings for you.")
+        scene.render.use_lock_interface = True
 
+    #make sure visibility states are ok
     assert_visibility_states()
-
-    return None
-
-@persistent
-def scatter5_render_post(scene,desp): 
-
-    global IS_FINAL_RENDER
-    IS_FINAL_RENDER = False
-
-    #debug print
-    dprint("HANDLER: 'scatter5_render_post'",depsgraph=True)
     
     return None
+
+
+@persistent
+def scatter5_render_pre(scene,desp):
+    # print("DEBUG-render_pre")
+    
+    global IS_FINAL_RENDER
+    IS_FINAL_RENDER = True
+
+    #debug print
+    dprint("HANDLER: 'scatter5_render_pre'", depsgraph=True)
+        
+    return None
+
+
+@persistent
+def scatter5_render_post(scene,desp):
+    # print("DEBUG-render_post")
+
+    #debug print
+    dprint("HANDLER: 'scatter5_render_post'", depsgraph=True)
+    
+    return None
+
 
 @persistent
 def scatter5_render_cancel(scene,desp): 
+    # print("DEBUG-render_cancel")
 
     global IS_FINAL_RENDER
     IS_FINAL_RENDER = False
 
     #debug print
-    dprint("HANDLER: 'scatter5_render_cancel'",depsgraph=True)
+    dprint("HANDLER: 'scatter5_render_cancel'", depsgraph=True)
     
+    return None
+
+
+@persistent
+def scatter5_render_complete(scene,desp):
+    # print("DEBUG-render_complete")
+
+    global IS_FINAL_RENDER
+    IS_FINAL_RENDER = False
+
+    #debug print
+    dprint("HANDLER: 'scatter5_render_init'", depsgraph=True)
+
     return None
 
 
@@ -146,54 +194,58 @@ def scatter5_render_cancel(scene,desp):
 
 @persistent
 def scatter5_frame_pre(scene,desp): #desp always none? why?
-
+    # print("DEBUG-frame_pre")
+    
     global IS_FINAL_RENDER
 
+    #debug print
+    dprint(f"HANDLER: 'scatter5_frame_pre' is_final_render:{IS_FINAL_RENDER}", depsgraph=True)
+ 
     #viewport optimization: slow camera move, even if all are hidden!
     if (not IS_FINAL_RENDER):
         if (all(not p.scatter_obj.visible_get() for p in bpy.context.scene.scatter5.get_all_psys())):
-            dprint(f"HANDLER: 'scatter5_frame_post' optimization denials, all are hidden",depsgraph=True)
+            dprint(f"HANDLER: 'scatter5_frame_post' optimization denials, all are hidden", depsgraph=True)
             return None
+    
+    #update active camera nodegroup, we need to evaluate depsgraph and also send scene evaluation
+    update_active_camera_nodegroup(force_update=True, scene=scene, render=(IS_FINAL_RENDER and scene.render.use_lock_interface),)
 
-    #debug print
-    dprint(f"HANDLER: 'scatter5_frame_pre' is_final_render:{IS_FINAL_RENDER}",depsgraph=True)
-
-    #update active camera nodegroup
-    update_active_camera_nodegroup(force_refresh=True, force_update=True, depsgraph=(IS_FINAL_RENDER and scene.render.use_lock_interface),) #depsgraph condition needed else crash!
-
-    #partial manual keyframe support
+    #partial manual keyframe support 
     keyframe_support()
 
     return None
+
 
 @persistent
 def scatter5_frame_post(scene,desp): 
+    # print("DEBUG-frame_post")
 
     global IS_FINAL_RENDER
+
+    #debug print
+    dprint(f"HANDLER: 'scatter5_frame_post' is_final_render:{IS_FINAL_RENDER}", depsgraph=True)
 
     #viewport optimization: slow camera move, even if all are hidden!
     if (not IS_FINAL_RENDER):
         if (all(not p.scatter_obj.visible_get() for p in bpy.context.scene.scatter5.get_all_psys())):
-            dprint(f"HANDLER: 'scatter5_frame_post' optimization denials, all are hidden",depsgraph=True)
+            dprint(f"HANDLER: 'scatter5_frame_post' optimization denials, all are hidden", depsgraph=True)
             return None
+    
+    #update active camera nodegroup, we need to evaluate depsgraph and also send scene evaluation
+    update_active_camera_nodegroup(force_update=True, scene=scene, render=(IS_FINAL_RENDER and scene.render.use_lock_interface),)
 
-    #debug print
-    dprint(f"HANDLER: 'scatter5_frame_post' is_final_render:{IS_FINAL_RENDER}",depsgraph=True)
-
-    #update active camera nodegroup
-    update_active_camera_nodegroup(force_refresh=True, force_update=True, depsgraph=(IS_FINAL_RENDER and scene.render.use_lock_interface),) #depsgraph condition needed else crash!
-
-    #partial manual keyframe support
+    #partial manual keyframe support 
     keyframe_support()
-
+        
     return None
+
 
 def get_scatter5_animated_props():
     """find scatter5 properties that found in emitter animation data"""
 
-    #make sure keyframe also works when rendering & lock option
     global IS_FINAL_RENDER
 
+    #make sure keyframe also works when rendering & lock option
     if (IS_FINAL_RENDER and bpy.context.scene.render.use_lock_interface):
           scene = bpy.context.evaluated_depsgraph_get().scene
     else: scene = bpy.context.scene
@@ -222,7 +274,6 @@ def get_scatter5_animated_props():
         #find id_data and keyword information depending on data type
 
         if (type(keyable) is bpy.types.Scene):
-
             keyword = "Scene"
             id_data = keyable.scatter5
         
@@ -234,9 +285,11 @@ def get_scatter5_animated_props():
 
             if ("particle_systems" not in data_path):
                 return None 
+            
             idx = int(data_path.split("]")[0].split("[")[-1])
             if (len(keyable.scatter5.particle_systems)<=idx):
                 return None 
+            
             keyword = "ScatterSystem"
             id_data = keyable.scatter5.particle_systems[idx]
 
@@ -282,9 +335,8 @@ def keyframe_support():
         keyword, value = v
 
         if (keyword=="ScatterSystem"):
-            id_data.property_run_update(prop, value,)
-        else:
-            setattr(id_data, prop, value,)
+              id_data.property_run_update(prop, value,)
+        else: setattr(id_data, prop, value,)
         
         dprint(f"HANDLER: 'keyframe_support' pr={prop} kw={keyword}, val={value}",)
 
@@ -330,6 +382,7 @@ def set_overlay(boolean):
 
     return None 
 
+
 SHADING_TYPE_OWNER = object()
 
 def shading_type_callback(*args):
@@ -338,7 +391,7 @@ def shading_type_callback(*args):
     #check for rendered view
     is_rdr = is_rendered_view()
 
-    dprint(f"MSGBUS: 'S5 View3DShading.type' -> is_rdr={is_rdr}",depsgraph=True)
+    dprint(f"MSGBUS: 'S5 View3DShading.type' -> is_rdr={is_rdr}", depsgraph=True)
 
     #set/reset overlay
     if (bpy.context.scene.scatter5.update_auto_overlay_rendered):
@@ -359,7 +412,7 @@ MODE_OWNER = object()
 def mode_callback(*args):
     """message bus rendered view check function""" 
 
-    dprint("MSGBUS: 'S5 EditMode'",depsgraph=True)
+    dprint("MSGBUS: 'S5 EditMode'", depsgraph=True)
 
     #init static variable
     _f = mode_callback
@@ -374,7 +427,7 @@ def mode_callback(*args):
 
     #if recently was in edit mode, and 
     if ((_f.last_mode=="EDIT") and (current_mode=="OBJECT")):
-        dprint("MSGBUS: 'objects.scatter5.estimate_square_area()'",depsgraph=True)
+        dprint("MSGBUS: 'objects.scatter5.estimate_square_area()'", depsgraph=True)
         for o_name in _f.were_editing:
             o = bpy.data.objects.get(o_name)
             if (o is not None):
@@ -397,7 +450,7 @@ CLIP_END_OWNER = object()
 def frame_clip_callback(*args):
     """message bus rendered view check function""" 
 
-    dprint("MSGBUS: 'S5 frame_start/end'",depsgraph=True)
+    dprint("MSGBUS: 'S5 frame_start/end'", depsgraph=True)
 
     update_frame_start_end_nodegroup()
 
@@ -413,6 +466,7 @@ def frame_clip_callback(*args):
 
 #on loading blender files, new file, ect.. used to launch callback, as they won't stick when changing files
 
+
 def add_msgbusses(): 
 
     bpy.msgbus.subscribe_rna(
@@ -422,7 +476,6 @@ def add_msgbusses():
         args=(None,),
         options={"PERSISTENT"},
         )
-
     bpy.msgbus.subscribe_rna(
         key=(bpy.types.Object, "mode"),
         owner=MODE_OWNER,
@@ -447,6 +500,7 @@ def add_msgbusses():
 
     return None 
 
+
 def clear_msgbusses():
 
     bpy.msgbus.clear_by_owner(SHADING_TYPE_OWNER)
@@ -456,6 +510,17 @@ def clear_msgbusses():
 
     return None
 
+
+def ensure_particle_interface_items():
+    """ensure that the particle interface is drawn correctly, it has been implemeted in Geo-Scatter 5.4, and there might be some systems that need the interface to be initiated"""
+    
+    for o in bpy.data.objects:
+        if (o.scatter5.particle_systems and not o.scatter5.particle_interface_items):
+            o.scatter5.particle_interface_refresh()
+            
+    return None 
+
+
 @persistent
 def scatter5_load_post(scene,desp): 
 
@@ -463,10 +528,7 @@ def scatter5_load_post(scene,desp):
     dprint(f"HANDLER: 'scatter5_load_post'", depsgraph=True)
 
     #need to add message bus on each
-    add_msgbusses() #TODO, better msgbus registration, need to check if not added alreadt perhaps???
-        
-    #make sure visibility states are ok
-    assert_visibility_states()
+    add_msgbusses() #TODO, better msgbus registration, need to check if not added already perhaps??? unsure if this can be done, msgbus only has a single owner
 
     #check for warning messages
     from .. ui.ui_notification import notifs_check_1, notifs_check_2
@@ -475,6 +537,12 @@ def scatter5_load_post(scene,desp):
 
     #rebuild library, because biome library is stored in bpy.contewt.window_manager, will need to reload
     bpy.ops.scatter5.reload_biome_library()
+
+    #make sure visibility states are ok
+    assert_visibility_states()
+    
+    #make sure older systems made before Geo-Scatter 5.4 are now drawn
+    ensure_particle_interface_items()
 
     return None
 
@@ -489,12 +557,9 @@ def scatter5_load_post(scene,desp):
 
 #right after saving a .blend
 
-@persistent 
-def scatter5_save_post(scene,desp):
-
-    #debug print
-    dprint(f"HANDLER: 'scatter5_save_post'", depsgraph=True)
-
+def update_systems_versioning():
+    """when saving a .blend, we keep track of a system version. Geo-Scatter use geometry node, and saving in newer blender version will result in forward compatibility issues"""    
+    
     #update blender latest version
     from .. utils.str_utils import version_to_float
         
@@ -507,6 +572,18 @@ def scatter5_save_post(scene,desp):
             p.blender_version = bpy.app.version_string
 
         continue
+    
+    return None 
+
+
+@persistent 
+def scatter5_save_post(scene,desp):
+
+    #debug print
+    dprint(f"HANDLER: 'scatter5_save_post'", depsgraph=True)
+
+    #keep track of systems blender versions
+    update_systems_versioning()
 
     return None 
 
@@ -529,9 +606,6 @@ def wait_for_restrict_state(): #BEWARE: this is a function from a bpy.app timer,
     if (str(bpy.context).startswith("<bpy_restrict_state")): 
         return 0.01
 
-    #make sure visibility states are ok
-    assert_visibility_states()
-
     #check for warning messages
     from .. ui.ui_notification import notifs_check_1, notifs_check_2
     notifs_check_1()
@@ -546,6 +620,12 @@ def wait_for_restrict_state(): #BEWARE: this is a function from a bpy.app timer,
     from ..scattering.update_factory import update_manual_uuid_surfaces
     update_manual_uuid_surfaces(force_update=True)
 
+    #make sure visibility states are ok
+    assert_visibility_states()
+
+    #make sure older systems made before Geo-Scatter 5.4 are now drawn
+    ensure_particle_interface_items()
+
     return None
 
 
@@ -559,14 +639,11 @@ def wait_for_restrict_state(): #BEWARE: this is a function from a bpy.app timer,
 #             .o..P'                                                                888
 #             `Y8P'                                                                o888o
 
-#when user is interacting with system lists
-
-def upd_list_particles():
+def on_particle_interface_interaction_handler():
+    """when user is interacting with system lists"""
     
-    scat_scene = bpy.context.scene.scatter5
-
     #debug print
-    dprint(f"HANDLER: 'upd_list_particles'", depsgraph=True)
+    dprint(f"HANDLER: 'on_particle_interface_interaction_handler'", depsgraph=True)
 
     #make sure inner properties that should update via callback are updated
     frame_clip_callback()
@@ -617,19 +694,23 @@ def register():
     if (scatter5_depsgraph not in handlers):
         bpy.app.handlers.depsgraph_update_post.append(scatter5_depsgraph)
 
-    #frame_change
+    #frame change
     if (scatter5_frame_pre not in handlers):
         bpy.app.handlers.frame_change_pre.append(scatter5_frame_pre)
     if (scatter5_frame_post not in handlers):
         bpy.app.handlers.frame_change_post.append(scatter5_frame_post)
         
     #render
+    if (scatter5_render_init not in handlers):
+        bpy.app.handlers.render_init.append(scatter5_render_init)
     if (scatter5_render_pre not in handlers):
         bpy.app.handlers.render_pre.append(scatter5_render_pre)
     if (scatter5_render_post not in handlers):
         bpy.app.handlers.render_post.append(scatter5_render_post)
     if (scatter5_render_cancel not in handlers):
         bpy.app.handlers.render_cancel.append(scatter5_render_cancel)
+    if (scatter5_render_complete not in handlers):
+        bpy.app.handlers.render_complete.append(scatter5_render_complete)
 
     #on blend open 
     if (scatter5_load_post not in handlers):
@@ -642,7 +723,7 @@ def register():
     #on plugin installation
     bpy.app.timers.register(wait_for_restrict_state)
 
-    return
+    return None
 
 
 def unregister():
@@ -657,26 +738,30 @@ def unregister():
         if (h.__name__=="scatter5_depsgraph"):
             bpy.app.handlers.depsgraph_update_post.remove(h)
 
-        #frame_change
-        if (h.__name__=="scatter5_frame_pre"):
+        #frame change
+        elif (h.__name__=="scatter5_frame_pre"):
             bpy.app.handlers.frame_change_pre.remove(h)
-        if (h.__name__=="scatter5_frame_post"):
+        elif (h.__name__=="scatter5_frame_post"):
             bpy.app.handlers.frame_change_post.remove(h)
 
         #render 
-        if (h.__name__=="scatter5_render_pre"):
+        elif (h.__name__=="scatter5_render_init"):
+            bpy.app.handlers.render_init.remove(h)
+        elif (h.__name__=="scatter5_render_pre"):
             bpy.app.handlers.render_pre.remove(h)
-        if (h.__name__=="scatter5_render_post"):
+        elif (h.__name__=="scatter5_render_post"):
             bpy.app.handlers.render_post.remove(h)
-        if (h.__name__=="scatter5_render_cancel"):
+        elif (h.__name__=="scatter5_render_cancel"):
             bpy.app.handlers.render_cancel.remove(h)
-
+        elif (h.__name__=="scatter5_render_complete"):
+            bpy.app.handlers.render_complete.remove(h)
+            
         #on blend open 
-        if (h.__name__=="scatter5_load_post"):
+        elif (h.__name__=="scatter5_load_post"):
             bpy.app.handlers.load_post.remove(h)
 
         #on blend save 
-        if (h.__name__=="scatter5_save_post"):
+        elif (h.__name__=="scatter5_save_post"):
             bpy.app.handlers.save_post.remove(h)
 
         continue

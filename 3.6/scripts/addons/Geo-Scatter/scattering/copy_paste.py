@@ -53,30 +53,26 @@ def stringify_BufferCategory(buffer_category):
 class SCATTER5_OT_copy_paste_category(bpy.types.Operator): #Old pasteall copyall was overkill and i disable the dialog box, user can simply copy/paste per category now 
 
     bl_idname      = "scatter5.copy_paste_category"
-    bl_label       = translate("Copy/Paste Settings")
-    bl_description = ""
+    bl_label       = translate("Copy/Paste settings")
+    bl_description = translate("Copy/Paste the settings of this category")
     bl_options     = {'REGISTER', 'INTERNAL'}
 
     single_category : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
     copy : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
     paste : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
-    apply_selected : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
 
     @classmethod
     def description(cls, context, properties): 
             
         emitter = bpy.context.scene.scatter5.emitter
 
-        if properties.paste:
+        if (properties.paste):
             if is_BufferCategory_filled(properties.single_category):
                   return translate("Paste buffer content to the settings below") +"\n"+ translate("Content of buffer") +" : \n"+ stringify_BufferCategory(properties.single_category)
             else: return translate("Paste buffer content to the settings below") +"\n"+ translate("The buffer is empty")
         
-        if properties.copy:
+        if (properties.copy):
             return translate("Copy settings below to buffer")
-
-        if properties.apply_selected:
-            return translate("Apply the active settings to the selected scatter-system(s)") + f" : {len([ p for p in emitter.scatter5.get_psys_selected() if not p.active ])} " + translate("System(s) Selected") 
 
         return None 
 
@@ -86,54 +82,113 @@ class SCATTER5_OT_copy_paste_category(bpy.types.Operator): #Old pasteall copyall
         emitter    = scat_scene.emitter
         psy_active = emitter.scatter5.get_psy_active()      
 
-        LocalBuffer = None
         global BufferCategory
 
-        if ( (self.copy==True) or (self.apply_selected==True) ):
+        if (self.copy):
 
-            d = presetting.settings_to_dict(
-                psy_active, 
+            d = presetting.settings_to_dict(psy_active, 
                 use_random_seed=False, 
                 texture_is_unique=False, 
                 texture_random_loc=False, 
-                get_estimated_density=False, 
+                get_scatter_density=False, 
                 s_filter={self.single_category:True},
                 )
 
-            #apply option? then will follow with paste of local buffer
-            if (self.apply_selected==True):
-                self.paste = True
-                LocalBuffer = d
-                
-            else: 
-                clear_BufferCategory(self.single_category)
-                BufferCategory[self.single_category] = d 
-                return {'FINISHED'}
+            clear_BufferCategory(self.single_category)
+            BufferCategory[self.single_category] = d 
 
-        if (self.paste==True):
+        elif (self.paste):
 
-            if ( is_BufferCategory_filled(self.single_category) or (LocalBuffer!={}) ):
+            if (is_BufferCategory_filled(self.single_category)):
 
-                psys_sel = emitter.scatter5.get_psys_selected()
-
-                #apply option? 
-                if (self.apply_selected==True):
-                    psys = [p for p in psys_sel if (p is not psy_active)]
-                    d = LocalBuffer
-
-                #standard paste?
-                else: 
-                    psys = [ psy_active ]
-                    d = BufferCategory[self.single_category]
-
-                for p in psys:
-                    presetting.dict_to_settings(d, p, s_filter={self.single_category:True},)
-                    continue
+                d = BufferCategory[self.single_category]
+                presetting.dict_to_settings(d, psy_active, s_filter={self.single_category:True},)
 
                 bpy.ops.ed.undo_push(message=translate("Pasting Buffer to Settings"))
             
         return {'FINISHED'}
 
+
+class SCATTER5_OT_apply_category(bpy.types.Operator):
+
+    bl_idname      = "scatter5.apply_category"
+    bl_label       = translate("Apply settings")
+    bl_description = translate("Apply the settings of this category to the selected scatter-system(s)\nPlease note: If you wish to batch apply a single setting to the selected system(s) you can do so by pressing ALT while tweaking the value of your setting")
+    bl_options     = {'REGISTER', 'INTERNAL'}
+
+    single_category : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
+    pop_dialog : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
+    apply_influence : bpy.props.EnumProperty(
+        name=translate("Influence"),
+        default="all",
+        items=[ ("sel","","",),
+                ("ase","","",),
+                ("all","","",),
+               ], )
+
+    def invoke(self, context, event):
+
+        if (self.pop_dialog):
+
+            _self = self
+            def draw(self, context):
+                nonlocal _self
+
+                scat_scene = bpy.context.scene.scatter5
+                emitter    = scat_scene.emitter
+
+                layout = self.layout
+                layout.label(text=translate("Apply to"))
+                layout.separator()
+
+                op = layout.operator(_self.bl_idname, text=translate("Selected System(s)")+f" [{len(emitter.scatter5.get_psys_selected(all_emitters=False))}]", )
+                op.single_category = _self.single_category
+                op.apply_influence = "sel"
+
+                op = layout.operator(_self.bl_idname, text=translate("All Selected System(s)")+f" [{len(emitter.scatter5.get_psys_selected(all_emitters=True))}]", )
+                op.single_category = _self.single_category
+                op.apply_influence = "ase"
+
+                op = layout.operator(_self.bl_idname, text=translate("All System(s)")+f" [{len(scat_scene.get_all_psys())}]", )
+                op.single_category = _self.single_category
+                op.apply_influence = "all"
+
+                return None
+
+            bpy.context.window_manager.popup_menu(draw)
+
+            return {'FINISHED'}
+
+        return self.execute(context)
+
+    def execute(self, context):
+
+        scat_scene = bpy.context.scene.scatter5
+        emitter    = scat_scene.emitter
+        psy_active = emitter.scatter5.get_psy_active()      
+
+        d = presetting.settings_to_dict(psy_active,
+            use_random_seed=False, 
+            texture_is_unique=False, 
+            texture_random_loc=False, 
+            get_scatter_density=False, 
+            s_filter={self.single_category:True},
+            )
+
+        if (self.apply_influence=="sel"):
+            psys = emitter.scatter5.get_psys_selected(all_emitters=False)
+        elif (self.apply_influence=="ase"):
+            psys = emitter.scatter5.get_psys_selected(all_emitters=True)
+        elif (self.apply_influence=="all"):
+            psys = scat_scene.get_all_psys()
+
+        for p in psys:
+            presetting.dict_to_settings(d, p, s_filter={self.single_category:True},)
+            continue
+
+        bpy.ops.ed.undo_push(message=translate("Apply Settings to System(s)"))
+            
+        return {'FINISHED'}
 
 #   .oooooo.                                         88 ooooooooo.                          .                  ooooooooo.
 #  d8P'  `Y8b                                       .8' `888   `Y88.                      .o8                  `888   `Y88.
@@ -165,8 +220,8 @@ def clear_BufferSystems():
 class SCATTER5_OT_copy_paste_systems(bpy.types.Operator):
 
     bl_idname      = "scatter5.copy_paste_systems"
-    bl_label       = translate("Copy Selected/Paste scatter-system(s)")
-    bl_description = translate("Copy Selected/Paste scatter-system(s)")
+    bl_label       = translate("Copy/Paste selected scatter-system(s)")
+    bl_description = ""
     bl_options     = {'INTERNAL', 'UNDO'}
 
     emitter_name : bpy.props.StringProperty()
@@ -177,12 +232,14 @@ class SCATTER5_OT_copy_paste_systems(bpy.types.Operator):
     @classmethod
     def description(cls, context, properties): 
         txt =""
-        if properties.copy:
-              txt += translate("Copy the selected scatter-system(s)")
-        else: txt += translate("Paste particle_system(s) from Buffer")
-        if properties.synchronize:
-              txt += " "
-              txt += translate("and Synchronize their settings with the source")
+        if (properties.copy):
+            txt += translate("Copy the selected scatter-system(s)\nIt's an an easy way to create dupplicates of your scatter-system(s) to the same or another emitter.")
+        elif (properties.paste):
+            txt += translate("Paste scatter-systems(s) currently detained in the Buffer.")
+            if (not properties.synchronize):
+                txt += translate("\nPlease note: you might want to change the seed of the distribution after this operation, as the dupplicated scatter's instances might overlap their original instances.")
+        if (properties.synchronize):
+              txt += translate("\nPlease note: The synchronization option is enabled, this option will automatically set up a synchronization channel with the original scatter-settings")
         return txt
 
     def execute(self, context):
@@ -204,7 +261,7 @@ class SCATTER5_OT_copy_paste_systems(bpy.types.Operator):
                     use_random_seed=False,
                     texture_is_unique=False,
                     texture_random_loc=False,
-                    get_estimated_density=False,
+                    get_scatter_density=False,
                     s_filter={ k:True for k in ("s_color","s_surface","s_distribution","s_mask","s_rot","s_scale","s_pattern","s_push","s_abiotic","s_proximity","s_ecosystem","s_wind","s_visibility","s_instances","s_display")}, #all settings cat are True
                     )
 
@@ -283,6 +340,7 @@ class SCATTER5_OT_copy_paste_systems(bpy.types.Operator):
 classes = (
 
     SCATTER5_OT_copy_paste_category,
+    SCATTER5_OT_apply_category,
     SCATTER5_OT_copy_paste_systems,
     
     )

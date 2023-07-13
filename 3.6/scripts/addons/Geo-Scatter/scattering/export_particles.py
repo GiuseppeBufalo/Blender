@@ -17,52 +17,6 @@ from .. resources.translate import translate
 from .. utils.override_utils import mode_override
 
 
-
-def get_instances_data(scatter_obj):
-    """return instance information of parent obj: (instance,instance matrix_world)"""
-
-    return  [ ( i.object.original, i.matrix_world.copy() ) for i in bpy.context.evaluated_depsgraph_get().object_instances 
-              if ( (i.is_instance) and (i.parent.original==scatter_obj) ) ]
-
-def get_instances_loc(scatter_obj):
-    """get yield of instances locations of parent obj"""
-
-    for i, v in enumerate( get_instances_data(scatter_obj) ):
-        _, m = v
-        l, _, _ = m.decompose()
-
-        yield l 
-
-def fill_instances_info(scatter_obj, info={}):
-    """fill dict with information about instances of given parent obj"""
-    
-    psy_name = scatter_obj.name.replace("scatter_obj : ","")
-    info[psy_name] = {}
-
-    for i, v in enumerate( get_instances_data(scatter_obj) ):
-        b, m = v
-        l, r, s = m.decompose()
-        e = r.to_euler('XYZ', )
-
-        info[psy_name][str(i)]= {
-            "instance name":b.name,
-            "location":tuple(l),
-            "rotation_euler":tuple(e[:]),
-            "scale":tuple(s),
-            }
-
-    return None
-
-def exported_psy_dict(psys=[]):
-    """get the export dict information of selected given psys"""
-
-    dic = {}
-    for p in psys:
-        fill_instances_info(p.scatter_obj, info=dic)
-
-    return dic 
-
-
 #   .oooooo.                                               .
 #  d8P'  `Y8b                                            .o8
 # 888      888 oo.ooooo.   .ooooo.  oooo d8b  .oooo.   .o888oo  .ooooo.  oooo d8b
@@ -90,10 +44,8 @@ class SCATTER5_OT_export_to_json(bpy.types.Operator):
         psys_sel   = emitter.scatter5.get_psys_selected()
 
         if (len(psys_sel)==0):
-            
             if (self.popup_menu):
                 bpy.ops.scatter5.popup_menu(title=translate("Export Failed"), msgs=translate("No Scatter-System(s) Selected"), icon="ERROR",)
-
             return {'FINISHED'}
 
         context.window_manager.fileselect_add(self)
@@ -102,6 +54,7 @@ class SCATTER5_OT_export_to_json(bpy.types.Operator):
 
     def execute(self, context):
 
+        
         if (not os.path.isdir(self.filepath)): 
             bpy.ops.scatter5.popup_menu(title=translate("Export Failed"), msgs=translate("Please Select a valid Folder"), icon="ERROR",)
             return {'FINISHED'}
@@ -110,12 +63,24 @@ class SCATTER5_OT_export_to_json(bpy.types.Operator):
         emitter    = scat_scene.emitter
         psys_sel   = emitter.scatter5.get_psys_selected()
 
-        dic = exported_psy_dict(psys=psys_sel)
+        #temporary hide 
+        hidde_displays = {p.name:p.s_display_allow for p in psys_sel}
+        for p in psys_sel:
+            p.s_display_allow = False
+
+        #get large dict of processed psys info by psyname
+        dic = { p.name:p.get_instancing_info(processed_data=True) for p in psys_sel }
 
         #write dict to json in disk
         json_path = os.path.join( self.filepath, "scatter5_export.json" )
         with open(json_path, 'w') as f:
             json.dump(dic, f, indent=4)
+
+        #restore display 
+        for n,v in hidde_displays.items(): 
+            p = emitter.scatter5.particle_systems.get(n)
+            if (p is not None): 
+                p.s_display_allow = v
 
         #Great Success!
         if (self.popup_menu):
@@ -142,10 +107,8 @@ class SCATTER5_OT_export_to_instance(bpy.types.Operator):
         psys_sel   = emitter.scatter5.get_psys_selected()
         
         if (len(psys_sel)==0):
-
             if (self.popup_menu):
                 bpy.ops.scatter5.popup_menu(title=translate("Export Failed"), msgs=translate("No Scatter-System(s) Selected"), icon="ERROR",)
-
             return {'FINISHED'}
 
         def draw(self, context):
@@ -171,7 +134,14 @@ class SCATTER5_OT_export_to_instance(bpy.types.Operator):
         emitter    = scat_scene.emitter
         psys_sel   = emitter.scatter5.get_psys_selected()
 
-        dic = exported_psy_dict(psys=psys_sel)
+        #temporary hide 
+        hidde_displays = {p.name:p.s_display_allow for p in psys_sel}
+        for p in psys_sel:
+            p.s_display_allow = False
+
+        #get large dict of processed psys info by psyname
+        dic = { p.name:p.get_instancing_info(processed_data=True) for p in psys_sel }
+        print(dic)
 
         #Create export collection
         exp_coll = utils.coll_utils.create_new_collection("Geo-Scatter Export",  parent_name="Geo-Scatter")
@@ -185,7 +155,7 @@ class SCATTER5_OT_export_to_instance(bpy.types.Operator):
             d = dic[PsyName]
             for k,v in d.items():
 
-                obj = bpy.data.objects.get(v["instance name"])
+                obj = bpy.data.objects.get(v["name"])
                 mesh = obj.data
 
                 inst = bpy.data.objects.new(name=obj.name+"."+k, object_data=mesh)
@@ -193,6 +163,12 @@ class SCATTER5_OT_export_to_instance(bpy.types.Operator):
                 inst.rotation_euler=v["rotation_euler"] 
                 inst.scale=v["scale"] 
                 psy_exp_coll.objects.link(inst)
+
+        #restore display 
+        for n,v in hidde_displays.items(): 
+            p = emitter.scatter5.particle_systems.get(n)
+            if (p is not None): 
+                p.s_display_allow = v
 
         #hide remove depending on user choice
         
@@ -230,10 +206,8 @@ class SCATTER5_OT_export_to_mesh(bpy.types.Operator):
         psys_sel   = emitter.scatter5.get_psys_selected()
         
         if (len(psys_sel)==0):
-
             if (self.popup_menu):
                 bpy.ops.scatter5.popup_menu(title=translate("Export Failed"), msgs=translate("No Scatter-System(s) Selected"), icon="ERROR",)
-
             return {'FINISHED'}
 
         def draw(self, context):
@@ -253,16 +227,21 @@ class SCATTER5_OT_export_to_mesh(bpy.types.Operator):
         return {'FINISHED'}   
 
     def execute(self, context):
-
+        
         from .. import utils 
         from .. resources import directories
 
-        scat_scene = bpy.context.scene.scatter5 
+        scat_scene = context.scene.scatter5 
         emitter    = scat_scene.emitter
         psys_sel   = emitter.scatter5.get_psys_selected()
 
+        #temporary hide 
+        hidde_displays = {p.name:p.s_display_allow for p in psys_sel}
+        for p in psys_sel:
+            p.s_display_allow = False
+
         #Create export collection
-        exp_coll = utils.coll_utils.create_new_collection("Geo-Scatter Export",  parent_name="Geo-Scatter")
+        exp_coll = utils.coll_utils.create_new_collection("Geo-Scatter Export",  parent_name="Geo-Scatter",)
 
         #create a new temporary collection holding all our scatter_obj
         merge_coll = utils.coll_utils.create_new_collection(".Geo-Scatter merge temp")
@@ -271,24 +250,31 @@ class SCATTER5_OT_export_to_mesh(bpy.types.Operator):
             merge_coll.objects.link(p.scatter_obj)
 
         #Create a new merge modifiers on empty obj
-        p = utils.create_utils.point("Geo-Scatter Merged Export", exp_coll)
-        m = utils.import_utils.import_and_add_geonode( p, mod_name="ScatterMerge", node_name=".ScatterMerge", blend_path=directories.addon_merge_blend, copy=False,)
+        o = utils.create_utils.point("Geo-Scatter Merged Export", exp_coll)
+        m = utils.import_utils.import_and_add_geonode(o, mod_name="ScatterMerge", node_name=".ScatterMerge", blend_path=directories.addon_merge_blend, copy=False,)
         m["Input_4"] = merge_coll
 
         #and apply mod
-        with mode_override(selection=[p], active=p, mode="OBJECT",):
+        with mode_override(selection=[o], active=o, mode="OBJECT",):
             bpy.ops.object.modifier_apply(modifier=m.name)
 
         #need adjust uv, fix devs issues
-        for attribute in p.data.attributes:
+        for attribute in o.data.attributes:
             if ((attribute.domain=='CORNER') and (attribute.data_type=="FLOAT2")):
-                p.data.attributes.active = attribute
-                with mode_override(selection=[p], active=p, mode="OBJECT",):
-                    bpy.ops.geometry.attribute_convert(mode="UV_MAP")
+                o.data.attributes.active = attribute
+                # #No longer needed in 3.5 ??
+                # with mode_override(selection=[o], active=o, mode="OBJECT",):
+                #     bpy.ops.geometry.attribute_convert(mode="UV_MAP")
                 break
                 
         #remove coll
         bpy.data.collections.remove(merge_coll)
+
+        #restore display 
+        for n,v in hidde_displays.items(): 
+            p = emitter.scatter5.particle_systems.get(n)
+            if (p is not None): 
+                p.s_display_allow = v
 
         #hide remove depending on user choice
         if (self.option=="hide"):

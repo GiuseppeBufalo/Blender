@@ -228,7 +228,7 @@ def get_global_pts_from_mesh_verts(o, eval_modifiers=False):#->global_points
 
     # get vertex locations
     l = len(ob.vertices)
-    vs = np.zeros((l * 3), dtype=np.float, )
+    vs = np.zeros((l * 3), dtype=np.float64, )
     ob.vertices.foreach_get("co", vs, )
     vs.shape = (l, 3, )
 

@@ -60,62 +60,54 @@ def blend_in_zip(zip_path):
 class SCATTER5_OT_install_package(bpy.types.Operator):
 
     bl_idname      = "scatter5.install_package"
-    bl_label       = "install_package"
+    bl_label       = translate("Install a .scaptack")
     bl_description = translate("Install a given .scatpack archive file in your scatter library")
     bl_options     = {'INTERNAL'}
 
     filepath : bpy.props.StringProperty(subtype="FILE_PATH",)
     popup_menu : bpy.props.BoolProperty(default=True, options={"SKIP_SAVE","HIDDEN"},)
 
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
     def execute(self, context):
             
-        #check if file is .scatpack
+        #assert if file is .scatpack
         
         if (not self.filepath.endswith(".scatpack")):
-            
-            print("S5 WARNING : Scatpack File Incorrect!")
-
+            print(translate("Selected File is not a “.scatpack” format"))
             if (self.popup_menu):
-
                 bpy.ops.scatter5.popup_dialog(
                     'INVOKE_DEFAULT',
-                    msg=translate("Selected File is not a '.scatpack' format"),
+                    msg=translate("Selected File is not a “.scatpack” format"),
                     header_title=translate("Error!"),
                     header_icon="ERROR",
                     )
-
             return {'FINISHED'}    
             
-        #check if creator of .scatpack is dummy and can't create the zipfile structure properly , or perhaps scatpack relying on external library
-
+        #check if creator of .scatpack is dummy or scatpack relying on external library
+        
         with zipfile.ZipFile( self.filepath , 'r') as z:
-            
             IsBlend = False
             IsCorrect = False
-
             for p in z.namelist():
-
                 if ( p.startswith("_presets_") or p.startswith("_biomes_") or p.startswith("_bitmaps_") ):
                     IsCorrect = True 
-
                 if ( p.endswith(".blend") ):
                     IsBlend = True
-
                 continue
-            
-            if (IsCorrect==False):
-
-                print("S5 WARNING : Unpacking Scatpack Failed!")
-
-                if (self.popup_menu):
-
-                    bpy.ops.scatter5.popup_dialog(
-                        'INVOKE_DEFAULT',
-                        msg=translate("your '.scatpack' structure is wrong, it doesn't contains a '_presets_' nor '_biomes_' folder on first level"),
-                        header_title=translate("Error!"),
-                        header_icon="ERROR",
-                        )
-                return {'FINISHED'} 
+        
+        if (IsCorrect==False):
+            print(translate("your '.scatpack' structure is wrong, it doesn't contains a '_presets_' nor '_biomes_' folder on first level"))
+            if (self.popup_menu):
+                bpy.ops.scatter5.popup_dialog(
+                    'INVOKE_DEFAULT',
+                    msg=translate("your '.scatpack' structure is wrong, it doesn't contains a '_presets_' nor '_biomes_' folder on first level"),
+                    header_title=translate("Error!"),
+                    header_icon="ERROR",
+                    )
+            return {'FINISHED'} 
 
         #install .scatpack
 
@@ -131,29 +123,21 @@ class SCATTER5_OT_install_package(bpy.types.Operator):
         if (self.popup_menu):
 
             if (IsBlend==False):
-
-                print("S5 WARNING : Environmental Path Required?")
-
-                if (self.popup_menu):
-                    bpy.ops.scatter5.popup_dialog(
-                        'INVOKE_DEFAULT',
-                        msg=translate("We did not find any .blend file in this scatpack. You may need to define new environment paths leading to this library so the Geo-Scatter plugin will be able to find your objects! This option is located in our plugin preferences.\n\nWe advise installing your assets as a blender asset-library, the plugin will search there by default."),
-                        header_title=translate("Installation Successful"),
-                        header_icon="CHECKMARK",
-                        )
+                bpy.ops.scatter5.popup_dialog(
+                    'INVOKE_DEFAULT',
+                    msg=translate("Everything installed correctly!\nNote that we did not find any .blend file in this scatpack. The biome-system will search everywhere for the .blend it needs in your biome library, in your blender asset-browser libraries, or in the environement paths that you can define in our plugin settings."),
+                    header_title=translate("Installation Successful"),
+                    header_icon="CHECKMARK",
+                    )
             else:
                 bpy.ops.scatter5.popup_dialog(
                     'INVOKE_DEFAULT',
-                    msg=translate("Everything was installed correctly\n"),
+                    msg=translate("Everything installed correctly! No need to do anything else!"),
                     header_title=translate("Installation Successful"),
                     header_icon="CHECKMARK",
                     )
 
         return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
  
 
 

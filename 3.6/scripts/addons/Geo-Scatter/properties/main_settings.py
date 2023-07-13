@@ -34,9 +34,10 @@ from .. resources import directories
 #
 #####################################################################################################
 
-from . particle_settings import SCATTER5_PR_particle_systems
+from . particle_settings import SCATTER5_PR_particle_systems, SCATTER5_PR_particle_groups
+from .. ui.ui_system_list import SCATTER5_PR_particle_interface_items
 from . mask_settings import SCATTER5_PR_procedural_vg
-from .. scattering.selection import upd_particle_systems_idx
+from .. scattering.selection import on_particle_interface_interaction
 from .. scattering import update_factory
 '''
 from . manual_settings import SCATTER5_manual_physics_brush_object_properties
@@ -50,7 +51,9 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
     # Y8   8P Y8   8P 88  8I  dY
     # `YbodP' `YbodP' 88 8888Y"
 
-    #(sadly blender does not support native uuid)
+    #sadly blender does not support native uuid at an oject leverl, so we needed to re-implemented it.
+    #implementing uuid for objects is as not straigtforward as just  random.randint(-2_147_483_647,2_147_483_647)
+    #why? well because we need to support shift D/alt D behavior. by default blender will copy same uuid, which is problematic
 
     def get_uuid(self):
         """generate uuid once on first read"""
@@ -91,27 +94,35 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
 
     particle_systems : bpy.props.CollectionProperty(type=SCATTER5_PR_particle_systems) #Children Collection
     
-    particle_systems_idx : bpy.props.IntProperty(
-        update=upd_particle_systems_idx,
-        )
-
     def get_psy_active(self):
         """return the active particle system of this emitter, will return bpy.types.Object or None"""
 
         if (len(self.particle_systems)==0):
             return None 
 
-        l = [p for p in self.particle_systems if p.active]
-        if (len(l)==0):
-            return None
+        itm = self.get_interface_active_item()
+        if ((itm is not None) and (itm.interface_item_type=="SCATTER")):
+            return itm.get_interface_item_source()
 
-        #very unlikely to have many psys active simultaneously, in fact, best to raise error i it is the case?
-        return l[0]
+        return None
+
+        # #p.active originating from `emitter.particle_interface_idx` -> `on_particle_interface_interaction()`
+
+        # l = [p for p in self.particle_systems if p.active]
+        # if (len(l)==0):
+        #     return None
+
+        # #warning message
+        # if (len(l)>1):
+        #     print("WARNING: get_psy_active() error, more than one active psys. Should not be possible")
+
+        # #return active psy
+        # return l[0]
 
     def get_psys_selected(self, all_emitters=False,): 
         """return the selected particle systems of this emitter, note that active psy is not considered as selected, will return a list"""
 
-        if all_emitters:
+        if (all_emitters):
               emitters = bpy.context.scene.scatter5.get_all_emitters()
         else: emitters = [self.id_data]
 
@@ -119,7 +130,7 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
 
         return psys_sel
 
-    def add_psy_virgin(self, psy_name="", psy_color=None, psy_hide=True, deselect_all=False, instances=[], surfaces=[],):
+    def add_psy_virgin(self, psy_name="", psy_color=None, psy_hide=True, deselect_all=False, instances=[], surfaces=[], default_group="",):
         """create virgin psy. Set up the collections, assign scatter_obj & geonodes, set addon_version, base name and color, 
         assign surfaces & instances, will always be hidden by defaylt""" 
 
@@ -190,9 +201,6 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
         p.addon_version = f"{version_tuple[0]}.{version_tuple[1]}"
         p.blender_version = bpy.app.version_string
         
-        #update particle list idx 
-        emitter.scatter5.particle_systems_idx = len(emitter.scatter5.particle_systems)-1 #will also set .active & .sel property correctly
-
         #add geonode scatter engine modifier to scatter object, note that some nodegroups need to always be unique
         m = utils.import_utils.import_and_add_geonode(
             p.scatter_obj,
@@ -220,6 +228,7 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
                 "s_pattern1",
                 "s_pattern2",
                 "s_pattern3",
+                "s_gr_pattern1",
                 "s_ecosystem_affinity",
                 "s_ecosystem_repulsion",
                 "s_proximity_repel1",
@@ -232,12 +241,10 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
                 "s_wind_noise",
                 "s_instances_pick_color_textures",
                 "s_visibility_cam",
-                ], #NOTE: also need to update this list in bpy.ops.scatter5.update_nodetrees()
+                ], #NOTE: also need to update this list in bpy.ops.scatter5.fix_nodetrees()
             )
 
-        #assign surfaces:
-
-        #TODO we might need to filter what user add in there?
+        #assign surfaces: #TODO we might need to filter what user add in there?
 
         if (len(surfaces)==0):
             p.s_surface_method = "emitter"
@@ -250,12 +257,16 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
                 p.s_surface_object = surfaces[0]
 
         elif (len(surfaces)>1):
+            
             #create new surface collection
             surfaces_coll = utils.coll_utils.create_new_collection(f"ScatterSurfaces", parent_name="Geo-Scatter Surfaces", prefix=True)
+            
             #add surfaces to collection
             for surf in surfaces: 
                 if (surf.name not in surfaces_coll.objects):
                     surfaces_coll.objects.link(surf)
+                continue
+            
             #assign pointers
             p.s_surface_method = "collection"
             p.s_surface_collection = surfaces_coll.name
@@ -267,14 +278,324 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
        
         #add instances in collection
         if (len(instances)!=0):
-            for inst in instances:                
-                if (inst.name not in instance_coll.objects): 
-                    instance_coll.objects.link(inst)        
+            for inst in instances:
+                if (inst.name not in instance_coll.objects):
+                    instance_coll.objects.link(inst)
+                continue
 
         #assign pointers
         p.s_instances_coll_ptr = instance_coll
 
+        #set in default group?
+        if (default_group!=""):
+            p.group = default_group
+
+        #update interface by setting p as new active itm, always by default
+        self.set_interface_active_item(item=p)
+
         return p
+
+    #  dP""b8 88""Yb  dP"Yb  88   88 88""Yb .dP"Y8
+    # dP   `" 88__dP dP   Yb 88   88 88__dP `Ybo."
+    # Yb  "88 88"Yb  Yb   dP Y8   8P 88"""  o.`Y8b
+    #  YboodP 88  Yb  YbodP  `YbodP' 88     8bodP'
+
+    particle_groups : bpy.props.CollectionProperty(type=SCATTER5_PR_particle_groups) #Children Collection
+
+    def get_group_active(self):
+        """get the group active in the particle_interface_items interface"""
+
+        if (len(self.particle_groups)==0):
+            return None 
+
+        itm = self.get_interface_active_item()
+        if ((itm is not None) and (itm.interface_item_type=="GROUP")):
+            return itm.get_interface_item_source()
+
+        return None
+
+    def cleanse_unused_particle_groups(self):
+        """cleanse unused groups"""
+
+        if (len(self.particle_groups)==0):
+            return None
+
+        groups_used = [ p.group for p in self.particle_systems if (p.group!="") ]
+
+        if (len(groups_used)==0):
+            self.particle_groups.clear()
+            return None
+
+        for i,g in enumerate(self.particle_groups):
+            if (g.name not in groups_used) :
+                self.particle_groups.remove(i)
+            continue
+
+        return None
+
+    # 88""Yb    db    88""Yb 888888 88  dP""b8 88     888888     88     88 .dP"Y8 888888     88 88b 88 888888 888888 88""Yb 888888    db     dP""b8 888888
+    # 88__dP   dPYb   88__dP   88   88 dP   `" 88     88__       88     88 `Ybo."   88       88 88Yb88   88   88__   88__dP 88__     dPYb   dP   `" 88__
+    # 88"""   dP__Yb  88"Yb    88   88 Yb      88  .o 88""       88  .o 88 o.`Y8b   88       88 88 Y88   88   88""   88"Yb  88""    dP__Yb  Yb      88""
+    # 88     dP""""Yb 88  Yb   88   88  YboodP 88ood8 888888     88ood8 88 8bodP'   88       88 88  Y8   88   888888 88  Yb 88     dP""""Yb  YboodP 888888
+    
+    particle_interface_items : bpy.props.CollectionProperty(type=SCATTER5_PR_particle_interface_items) #Children Collection
+
+    particle_interface_idx : bpy.props.IntProperty(
+        update=on_particle_interface_interaction,
+        )
+
+    def get_interface_active_item(self):
+
+        if (len(self.particle_interface_items)==0):
+            return None 
+
+        if (0<=self.particle_interface_idx<len(self.particle_interface_items)): 
+            return self.particle_interface_items[self.particle_interface_idx]
+
+        return None
+
+    def set_interface_active_item(self, item=None, item_type="SCATTER", item_name="MyPsy",):
+        """set interface items, either set by item directly, or set by item_type and item_name"""
+
+        #find original item
+        if (item is None):
+            
+            systems = self.particle_systems[:] if (item_type=="SCATTER") \
+                 else self.particle_groups[:] if (item_type=="GROUP") \
+                 else None
+                 
+            for s in systems:
+                if (s.name==item_name):
+                    item = s
+                    break
+                continue
+                    
+        if (item is None):
+            raise Exception("Couldn't find the item you want to set active")
+
+        #open the group if needed
+        if (type(item).__name__=="SCATTER5_PR_particle_systems"):
+            if (item.group!=""):
+                g = self.particle_groups[item.group]
+                if (not g.open):
+                    g.open = True
+
+        self.id_data.scatter5.particle_interface_refresh()
+
+        #set itm active via setting the indew IntProperty
+        for i,itm in enumerate(self.particle_interface_items):
+            if (itm.get_interface_item_source()==item):
+                self.particle_interface_idx = i
+                break
+            continue
+
+        return None
+
+    def particle_interface_refresh(self):
+        """object.scatter5.particle_interface_items will be constantly rebuild on major user interaction"""
+
+        from .. utils.extra_utils import dprint
+
+        dprint("particle_interface_refresh()")
+
+        #cleanse unused groups first, perhaps some need to be deleted! (exec topstack, important in order for get_interface_item_source() to get an accurate result )
+        self.cleanse_unused_particle_groups()
+
+        #save older interface before cleanse
+        old_interface_active = None
+        old_interface_items = [ ( itm.get_interface_item_source().name, itm.interface_item_type ) if (itm.get_interface_item_source() is not None) else ("","DELETED") for itm in self.particle_interface_items]
+        if (len(old_interface_items)) and (0<=self.particle_interface_idx<len(old_interface_items)):
+            old_interface_active = old_interface_items[self.particle_interface_idx][:]
+
+        #cleanse older interface
+        self.particle_interface_items.clear()
+
+        #if no psys, then no interface
+        if (len(self.particle_systems)==0):
+            return None
+
+        #generate the new interface
+
+        new_interface_items = old_interface_items[:]
+
+        #remove ui items that got deleted, deleted if we cannot get their source!
+
+        idx_before_removal = None #keep track of this, for setting active idx if needed
+        for i,itm in enumerate(new_interface_items.copy()):
+            if (itm[1]=="DELETED"):
+                new_interface_items.remove(itm)
+                if (idx_before_removal is None):
+                    idx_before_removal = max(0,i-1)
+            continue
+
+        #add potential new psys itm + their groups
+
+        new_item = None
+        for p in self.particle_systems: 
+            p_item = (p.name,"SCATTER")
+            
+            #new group?
+            if (p.group!=""):
+                
+                g_item = (p.group,"GROUP")
+                if (g_item not in new_interface_items):
+                    
+                    #if scatter already exists in list (it should!) the we insert element near scatter
+                    if (p_item in new_interface_items):
+                          new_interface_items.insert(new_interface_items.index(p_item),g_item)
+                    else: new_interface_items.append(g_item) #else we consider the group as a new item (very improbable)
+
+            #new scatters always added at the end
+            if (p_item not in new_interface_items):
+                new_item = p_item
+                new_interface_items.append(p_item)
+                
+            continue 
+
+        #ignore psy itms with group closed
+
+        def get_psy_group(psy_itm):
+            """get group tuple from psy tuple"""
+            return (self.particle_systems[psy_itm[0]].group,"GROUP") if (self.particle_systems[psy_itm[0]].group!="") else None
+
+        vanish_index = None
+        for itm in new_interface_items.copy():
+            n,t = itm
+            
+            if (t=="SCATTER"):
+                pgroup = get_psy_group(itm)
+
+                #if psy group exists and group is closed, we remove psy itm
+                if (pgroup is not None): 
+                    if (not self.particle_groups[pgroup[0]].open):
+                        
+                        new_interface_items.remove(itm)
+
+                        #if the active item was just hidden, we make the active itm null
+                        if ((old_interface_active==itm) and (vanish_index is None)):
+                            vanish_index = True
+            continue 
+
+        #re-group psys near their groups, following list order
+
+        for itm in reversed(new_interface_items.copy()):
+            n,t = itm
+            
+            if (t=="SCATTER"):
+                
+                pgroup = get_psy_group(itm)
+                if (pgroup is not None):
+                    assert pgroup in new_interface_items
+                    new_interface_items.remove(itm)
+                    new_interface_items.insert(new_interface_items.index(pgroup)+1, itm)
+                    
+            continue
+
+        #python list to blender ui-list
+
+        for n,t in new_interface_items:
+            ui = self.particle_interface_items.add()
+            ui.interface_item_type = t
+            
+            if (t=="SCATTER"):
+                ui.interface_item_psy_uuid = self.particle_systems[n].uuid
+            elif (t=="GROUP"):
+                ui.interface_group_name = n
+                
+            continue
+
+        #overview items indent_icon
+
+        for i,itm in enumerate(self.particle_interface_items):
+            if (itm.interface_item_type=="SCATTER"):
+                if (itm.get_interface_item_source().group!=""):
+                    
+                    if (len(self.particle_interface_items)<=i+1):
+                        itm.interface_ident_icon = "W_INDENT_LAST"
+                        continue
+                    
+                    next_itm = self.particle_interface_items[i+1]
+                    if (next_itm.interface_item_type=="GROUP"):
+                        itm.interface_ident_icon = "W_INDENT_LAST"
+                        continue
+                    
+                    if (next_itm.get_interface_item_source().group!=""):
+                        itm.interface_ident_icon = "W_INDENT_TREE"
+                        continue
+                    
+                    itm.interface_ident_icon = "W_INDENT_LAST"
+                    continue
+
+        #overview items that need a separator
+
+        for i,itm in enumerate(self.particle_interface_items):
+
+            if (itm.interface_item_type=="SCATTER"):
+                
+                #last psy element of group
+                if (itm.interface_ident_icon!=""):
+                    if (itm.interface_ident_icon=="W_INDENT_LAST"):
+                        itm.interface_add_separator = True
+                    continue
+                
+                #non grouped psy with group below
+                if (i+1<len(self.particle_interface_items)):
+                    next_itm = self.particle_interface_items[i+1]
+                    if (next_itm.interface_item_type=="GROUP"):
+                        itm.interface_add_separator = True
+                    continue
+
+            elif (itm.interface_item_type=="GROUP"): 
+                
+                #non grouped psy located right before a group
+                if (i+1<len(self.particle_interface_items)):
+                    next_itm = self.particle_interface_items[i+1]
+                    if (next_itm.interface_ident_icon==""):
+                        itm.interface_add_separator = True
+                        
+            continue
+
+        #now for new active index..
+
+        #if we just created a list, add the first item as active
+        # if (len(old_interface_items)==0):
+        #     self.particle_interface_idx = 0
+
+        #if active item was in a now closed group, no more active item 
+        if (vanish_index is not None):
+            dprint("particle_interface_refresh() -> (vanish_index is not None)")
+            self.particle_interface_idx = -1
+
+        #if there was no active items, simply add to latest
+        # elif (old_interface_active is None):
+        #     print("(old_interface_active is None)")
+        #     self.particle_interface_idx = -1            
+        #     self.particle_interface_idx = len(self.particle_interface_items)-1
+
+        #if we have new items added in the list, select them 
+        elif (new_item is not None) and (new_item in new_interface_items):
+            dprint("particle_interface_refresh() -> (new_item is not None) and (new_item in new_interface_items)")
+            self.particle_interface_idx = new_interface_items.index(new_item)
+
+        #if we have the same item still existing, select them
+        elif (old_interface_active in new_interface_items):
+            dprint("particle_interface_refresh() -> (old_interface_active in new_interface_items)")
+            self.particle_interface_idx = new_interface_items.index(old_interface_active)
+
+        #final case, if we deleted the active item (along with others) choose last items
+        elif (idx_before_removal is not None):
+            dprint("particle_interface_refresh() -> (idx_before_removal is not None)")
+            self.particle_interface_idx = idx_before_removal
+
+        #if there was no active idx to begin with, & we don't need to set something active?
+        elif (old_interface_active is None):
+            dprint("particle_interface_refresh() -> (old_interface_active is None)")
+
+        else: 
+            #should not activate
+            dprint("particle_interface_refresh() -> else")
+
+        return None 
 
     # .dP"Y8  dP"Yb  88   88    db    88""Yb 888888        db    88""Yb 888888    db
     # `Ybo." dP   Yb 88   88   dPYb   88__dP 88__         dPYb   88__dP 88__     dPYb
@@ -311,7 +632,7 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
         import numpy as np 
 
         #get square area value
-        tri_area = np.zeros(len(ob.loop_triangles), dtype=np.float, )
+        tri_area = np.zeros(len(ob.loop_triangles), dtype=np.float64, )
         ob.loop_triangles.foreach_get('area', tri_area, )
 
         #selection influence?
@@ -368,6 +689,19 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
         #update done by depsgraph handler camera loop
         )
 
+    #clipping fov boost 
+
+    s_visibility_camclip_per_cam_boost_xy : bpy.props.FloatVectorProperty(
+        name=translate("FOV Boost"),
+        subtype="XYZ",
+        size=2,
+        default=(0,0),
+        soft_min=-2,
+        soft_max=2, 
+        precision=3,
+        #update done by depsgraph handler camera loop
+        )
+
     #culling distance 
 
     s_visibility_camdist_per_cam_min : bpy.props.FloatProperty(
@@ -414,6 +748,7 @@ class SCATTER5_PR_Object(bpy.types.PropertyGroup):
         for p in self.original_emitter.scatter5.particle_systems:
             if (p.name==psy_name):
                 return p
+            continue
 
         return None 
     
@@ -450,8 +785,9 @@ def upd_emitter(self,context):
 
 def upd_s_master_seed(self,context):
     for ng in bpy.data.node_groups:
-        if (ng.name.startswith(".S Master Seed MKIII")):
+        if (ng.name.startswith(".S Master Seed MKIV")):
             ng.nodes["s_master_seed"].integer = self.s_master_seed
+        continue
     return None
 
 
@@ -497,19 +833,30 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
     # 88"""   dP__Yb  88"Yb    88   88 Yb      88  .o 88""       o.`Y8b   8P   o.`Y8b   88   88""   88YbdP88 o.`Y8b
     # 88     dP""""Yb 88  Yb   88   88  YboodP 88ood8 888888     8bodP'  dP    8bodP'   88   888888 88 YY 88 8bodP'
 
-    def get_all_emitters(self):
-        """return list of all emitters in context scene"""
-        return [e for e in self.id_data.objects if len(e.scatter5.particle_systems)]
+    def get_all_emitters(self, all_scenes=False,):
+        """return list of all emitters"""
+        if (all_scenes):
+              return [o for o in bpy.data.objects if len(o.scatter5.particle_systems)]
+        else: return [o for o in self.id_data.objects if len(o.scatter5.particle_systems)]
 
-    def get_all_psys(self):
-        """return a list of all psys in context scene"""
-        return [p for e in self.get_all_emitters() for p in e.scatter5.particle_systems]
+    def get_all_psys(self, all_scenes=False,):
+        """return a list of all psys"""
+        return [p for e in self.get_all_emitters(all_scenes=all_scenes) for p in e.scatter5.particle_systems]
 
     def get_psy_by_name(self,name):
-        """get a psy by it's given name"""
-        for p in self.get_all_psys():
+        """get a psy by it's unique given name"""
+        for p in self.get_all_psys(all_scenes=True):
             if (p.name==name):
                 return p
+            continue
+        return None
+
+    def get_psy_by_uuid(self,uuid):
+        """get a psy by it's unique uuid value"""
+        for p in self.get_all_psys(all_scenes=True):
+            if (p.uuid==uuid):
+                return p
+            continue
         return None
 
     #  dP""b8 88   88 88
@@ -540,44 +887,6 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
     #  YbodP  88     888888 88  Yb dP""""Yb   88    YbodP  88  Yb
 
     operators : bpy.props.PointerProperty(type=SCATTER5_PR_operators)
-
-    # 88     88 .dP"Y8 888888 888888 88""Yb
-    # 88     88 `Ybo."   88   88__   88__dP
-    # 88  .o 88 o.`Y8b   88   88""   88"Yb
-    # 88ood8 88 8bodP'   88   888888 88  Yb
-
-    lister_show_color : bpy.props.BoolProperty(
-        default=True,
-        name=translate("Display Color"),
-        )
-    lister_show_stats_count : bpy.props.BoolProperty(
-        default=False,
-        name=translate("Instance Count Stats"),
-        )
-    lister_show_stats_surface : bpy.props.BoolProperty(
-        default=False,
-        name=translate("Surfaces Stats"),
-        )
-    lister_show_selection : bpy.props.BoolProperty(
-        default=True,
-        name=translate("Select"),
-        )
-    lister_show_render_state : bpy.props.BoolProperty(
-        default=True,
-        name=translate("Render States"),
-        )
-    lister_show_lock : bpy.props.BoolProperty(
-        default=False,
-        name=translate("Lock"),
-        )
-    lister_show_visibility : bpy.props.BoolProperty(
-        default=False,
-        name=translate("Visibility Features"),
-        )
-    lister_show_display : bpy.props.BoolProperty(
-        default=False,
-        name=translate("Display Features"),
-        )
 
     # 8b    d8    db    .dP"Y8 888888 888888 88""Yb     .dP"Y8 888888 888888 8888b.
     # 88b  d88   dPYb   `Ybo."   88   88__   88__dP     `Ybo." 88__   88__    8I  Yb
@@ -632,7 +941,7 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
         use this 'with' obj to avoid triggering such behavior when changing properties, it will update context.scene globals use the return value to restore"""
 
         def __init__(self, event=False, delay=False, sync=False, ):
-            self._e,self._d,self._s = None,None,None
+            self._e, self._d, self._s = None, None, None
             self.event,self.delay,self.sync = event,delay,sync
             return None 
 
@@ -663,10 +972,10 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
         name=translate("Method"),
         default= "update_on_release",
         description= translate("Change how the active particle system refresh the viewport when you are tweaking the settings"),
-        items= ( ("update_delayed" ,translate("Fixed Interval"), translate("refresh viewport every x miliseconds"), 1),
-                 ("update_on_release" ,translate("On Halt") ,translate("refresh viewport when the mouse button is released"), 2),
-                 #("update_apply" ,translate("Manual") ,translate("refresh viewport when clicking on the refresh button"), 3),
-               ),
+        items=( ("update_delayed" ,translate("Fixed Interval"), translate("refresh viewport every x miliseconds"), 1),
+                ("update_on_release" ,translate("On Halt") ,translate("refresh viewport when the mouse button is released"), 2),
+               #("update_apply" ,translate("Manual") ,translate("refresh viewport when clicking on the refresh button"), 3),
+              ),
         )
     factory_update_delay : bpy.props.FloatProperty(
         name=translate("Refresh Rate"),
@@ -687,10 +996,10 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
         name=translate("Method"),
         default= "update_on_release",
         description= translate("In order to optimize your scatter, a lot of optimization features might be based on the active camera. Unfortunately moving this camera in real time will trigger a constant refresh of all dependent scatter-system(s). Therefore it is a good idea to control the refresh method of the active camera individually")+"\n\n"+translate("Choose the update method below:"),
-        items= ( ("update_delayed", translate("Fixed Interval") ,translate("Send an update signal automatically when the camera move, at given refreshrate. Set the rate to 0 for a real time experience"),0 ),
-                 ("update_on_release", translate("On Halt") ,translate("Send an update signal automatically only when we detected that the camera stopped moving for a brief amount of time"),1 ),
-                 ("update_apply", translate("Manual") ,translate("Send an update signal only when enabling a camera related feature or when clicking on the refresh button"),2 ),
-               ),
+        items=( ("update_delayed", translate("Fixed Interval"), translate("Send an update signal automatically when the camera move, at given refreshrate. Set the rate to 0 for a real time experience"), 0),
+                ("update_on_release", translate("On Halt"), translate("Send an update signal automatically only when we detected that the camera stopped moving for a brief amount of time"), 1),
+                ("update_apply", translate("Manual"), translate("Send an update signal only when enabling a camera related feature or when clicking on the refresh button"), 2),
+              ),
         )
     factory_cam_update_ms : bpy.props.FloatProperty(
         name=translate("Refresh Rate (sec)"),
@@ -705,12 +1014,12 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
         description= translate("When pressing ALT while changing a scatter-system property, Geo-Scatter will automatically apply the value to all selected scatter-system"),
         )
     factory_alt_selection_method : bpy.props.EnumProperty(
-        name=translate("Selection"),
+        name=translate("Consider Selection Upon :"),
         default= "active_emitter",
         description= translate("Change how the active particle system refresh the viewport when you are tweaking the settings"),
-        items= ( ("active_emitter", translate("Active Emitter"), translate("apply value to selected scatter-system from active emitter"), 1),
-                 ("all_emitters", translate("All Emitters"), translate("apply value to all selected scatter-system of this scene"), 2),
-               ),
+        items=( ("active_emitter", translate("Active Emitter"), translate("apply value to selected scatter-system from active emitter"), 1),
+                ("all_emitters", translate("All Emitters"), translate("apply value to all selected scatter-system of this scene"), 2),
+              ),
         )
     # update_draw_outline : bpy.props.BoolProperty( #TODO, this does not make a lot of sense anymore in multi-surface workflow
     #     default=False,
@@ -748,50 +1057,28 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
         name=translate("Space"),
         description=translate("Only Global space is available for this feature when working with many surfaces"),
         default= "global", 
-        items= ( ("global", translate("Global"), translate(""), "WORLD",1 ),
-                 ("global_bis", translate("Global"), translate(""), "WORLD",2 ),
-               ),
+        items=( ("global", translate("Global"), translate(""), "WORLD", 1),
+                ("global_bis", translate("Global"), translate(""), "WORLD", 2),
+              ),
         )
     dummy_local_only_dist : bpy.props.EnumProperty(
         name=translate("Space"),
         description=translate("Only Local space is available for this feature"),
         default= "local", 
-        items= ( ("local", translate("Local"), translate(""), "ORIENTATION_LOCAL",1 ),
-                 ("local_bis", translate("Local"), translate(""), "ORIENTATION_LOCAL",2 ),
-               ),
+        items=( ("local", translate("Local"), translate(""), "ORIENTATION_LOCAL", 1),
+                ("local_bis", translate("Local"), translate(""), "ORIENTATION_LOCAL", 2),
+              ),
         )
-
+    
     # 88     88 88""Yb 88""Yb    db    88""Yb Yb  dP
     # 88     88 88__dP 88__dP   dPYb   88__dP  YbdP
     # 88  .o 88 88""Yb 88"Yb   dP__Yb  88"Yb    8P
     # 88ood8 88 88oodP 88  Yb dP""""Yb 88  Yb  dP
 
-    library_item_size : bpy.props.FloatProperty(
-        default=7.0,
-        min=5,
-        max=15,
-        name=translate("Item Size")
-        )
-    library_typo_limit : bpy.props.IntProperty(
-        default=40,
-        min=4,
-        max=100,
-        name=translate("Typo Limit"),
-        )
-    library_adaptive_columns : bpy.props.BoolProperty(
-        name=translate("Adaptive Columns"),
-        default=True,
-        )
-    library_columns : bpy.props.IntProperty(
-        default=4,
-        min=1,
-        max=40,
-        soft_max=10,
-        name=translate("Number of Columns"),
-        )
     library_search : bpy.props.StringProperty(
         default="",
         )
+
 
 #####################################################################################################
 #
@@ -806,8 +1093,8 @@ class SCATTER5_PR_Scene(bpy.types.PropertyGroup):
 #####################################################################################################
 
 
-from .. ui.biome_library import SCATTER5_PR_library
-from .. ui.biome_library import SCATTER5_PR_folder_navigation
+from .. ui.ui_biome_library import SCATTER5_PR_library
+from .. ui.ui_biome_library import SCATTER5_PR_folder_navigation
 
 from . gui_settings import SCATTER5_PR_ui
 
@@ -822,34 +1109,27 @@ class SCATTER5_PR_Window(bpy.types.PropertyGroup):
     folder_navigation_idx : bpy.props.IntProperty()
 
     #all ui related props, all are registered procedurally
-    ui : bpy.props.PointerProperty(type=SCATTER5_PR_ui) 
+    ui : bpy.props.PointerProperty(type=SCATTER5_PR_ui)
 
     #keep track of our modals ops
     mode : bpy.props.StringProperty(
         default="", 
-        description="mode currently used: DRAW_AREA | MANUAL | PSY_MODAL | FACE_SEL", #TODO, not consistant with this isn't it? 
-        )
+        description="mode currently used: DRAW_AREA | MANUAL | PSY_MODAL | FACE_SEL", #TODO, we are not consistant with this isn't it? 
+        )                                                                             #NOTE, possibly not compatible with headless blender? but well, modal's can't be anyway
 
     #plugin manager category
     category_manager : bpy.props.EnumProperty(
         default = "prefs",
-        items = ( ("library" ,translate("Biomes") ,"",),
-                  ("market" ,translate("Scatpack") ,"",),
-                  None,
-                  ("stats",translate("Lister") ,"",),
-                  ("prefs" ,translate("Preferences") ,"",),
-                ),
+        items = (
+            ("library", translate("Biomes"), translate("This category is where you'll find your biome library"),),    
+            ("market", translate("Scatpack"), translate("This category is where you can see which biome pack is currently available online, this interface fetch informatins from our servers"),),
+            None,
+            ("lister_large", translate("Lister"), translate("This category is where all the scatter system(s) of your scene are displayed, you'll be able to easily control the visibility of your scatter's from this condensed interface"),),
+            ("lister_stats", translate("Statistics"), translate("This category is where all the statistics of your scatter system(s) density are listed, you'll be able to quickly overview which scatter's might detain too many points and thus slow you down!"),),
+            None,
+            ("prefs", translate("Preferences"), translate("This category is where you will be able to tweak your plugin preferences"),),
+            ),
         )
-
-    """
-    #creation operator settings category
-    category_creation_operator : bpy.props.EnumProperty(
-        default="operator",
-        items= ( ("operator" ,translate("Operator") ,translate("List of settings applying uniquely to this operator"),),
-                 ("generic" ,translate("Generic") ,translate("List of settings applying on every single creation operators located in this panel"),),
-                ),
-        )
-    """
 
 
 #####################################################################################################

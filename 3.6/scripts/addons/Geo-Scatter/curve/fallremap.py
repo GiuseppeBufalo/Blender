@@ -681,7 +681,7 @@ class SCATTER5_OT_graph_dialog(bpy.types.Operator):
         emitter = scat_scene.emitter 
 
         box, is_open = ui_templates.box_panel(self, layout,         
-            prop_str = "ui_dialog_graph", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_graph";UI_BOOL_VAL:"1"
+            prop_str = "ui_dialog_graph", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_graph");BOOL_VALUE(1)
             icon = "FCURVE", 
             name = translate("Falloff Graph"), 
             pref_panel = "SCATTER5_PT_graph_subpanel",

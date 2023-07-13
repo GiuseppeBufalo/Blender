@@ -32,7 +32,11 @@ class mode_override(object):
         #set active
         bpy.context.view_layer.objects.active = self.active
         #set mode 
-        bpy.ops.object.mode_set(mode=self.api_convert[self.mode])
+        try: #this is utterly ridiculous, this operator below might throw an error that there's no active object, even if WE DEFINED ONE RIGHT ABOVE.. WTFF
+            bpy.ops.object.mode_set(mode=self.api_convert[self.mode])
+        except Exception as e:
+            print("an error occured")
+            print(e)
         return None 
 
     def __exit__(self,*args):
@@ -45,7 +49,11 @@ class mode_override(object):
         #set active
         bpy.context.view_layer.objects.active = self._active
         #set mode 
-        bpy.ops.object.mode_set(mode=self.api_convert[self._mode])
+        try:
+            bpy.ops.object.mode_set(mode=self.api_convert[self._mode])
+        except Exception as e:
+            print("an error occured")
+            print(e)
         return None 
 
 

@@ -198,19 +198,13 @@ def prepare_and_bake_shadow(o, obstacles, samples=32,):
             
         boolean = (obj in obstacles)
 
-        obj.hide_render                    = not boolean
-        obj.visible_camera       = boolean
-        obj.visible_diffuse      = boolean
-        obj.visible_glossy       = boolean
+        obj.hide_render = not boolean
+        obj.visible_camera = boolean
+        obj.visible_diffuse = boolean
+        obj.visible_glossy = boolean
         obj.visible_transmission = boolean
-        obj.visible_volume_scatter      = boolean
-        obj.visible_shadow       = boolean
-
-    # dynacam special case
-    # dyna_cam = bpy.data.objects.get(f"Scatter5 [{bpy.context.scene.name}] Dynamic Cam Clipping Cone")
-    # if dyna_cam: 
-    #     to_restore[dyna_cam] = {"hide_render":dyna_cam.hide_render}
-    #     dyna_cam.hide_render = True
+        obj.visible_volume_scatter = boolean
+        obj.visible_shadow = boolean
     
     # cycles settings
     to_restore[scene] = {
@@ -225,18 +219,18 @@ def prepare_and_bake_shadow(o, obstacles, samples=32,):
     scene.cycles.device = 'CPU'
     scene.cycles.bake_type = 'SHADOW'
     scene.cycles.samples = samples
-    scene.render.bake.target = 'VERTEX_COLORS'
+    scene.render.bake.target = 'VERTEX_COLORS' #now color attributes
 
     # bake operator
     bpy.ops.object.bake(type='SHADOW')
     
     # get baked values
-    ao = np.zeros(len(o.data.vertices), dtype=np.float, )
+    ao = np.zeros(len(o.data.vertices), dtype=np.float64, )
     for i, l in enumerate(o.data.loops):
         ao[l.vertex_index] = np.sum( np.array(vcol.data[i].color[:3]) ) / 3
     
     # RESTORE bake vcol 
-    o.data.vertex_colors.remove(vcol) 
+    #o.data.vertex_colors.remove(vcol) 
 
     # RESTORE whole dict  
     for obj, d in to_restore.items():
@@ -246,7 +240,6 @@ def prepare_and_bake_shadow(o, obstacles, samples=32,):
             else: exec(f"obj.{k}={v}")
 
     return ao
-
 
 
 def get_shadow(o, samples=1000, obstacles_method="scene", collection=None, hide_particles=True, lights=None,):
@@ -273,7 +266,6 @@ def get_shadow(o, samples=1000, obstacles_method="scene", collection=None, hide_
     return ao 
 
 
-
 def add():
 
     scat_scene = bpy.context.scene.scatter5
@@ -284,14 +276,13 @@ def add():
     m = masks.add()
     m.type = "light"
     m.icon = "RENDER_STILL"                       
-    m.name = m.user_name = no_names_in_double("Lightning", [vg.name for vg  in emitter.vertex_groups], startswith00=True)
+    m.name = m.user_name = no_names_in_double("Lighting", [vg.name for vg  in emitter.vertex_groups], startswith00=True)
 
     #create the vertex group
     vg = utils.vg_utils.create_vg(emitter, m.name, fill=0,)#get_shadow(emitter, samples=m.bake_samples, obstacles_method=m.bake_obstacles, collection=m.mask_p_collection, lights=[ i for i in bpy.context.scene.objects if (i.type=='LIGHT') and (not i.hide_viewport) ], ), )
     vg.lock_weight = True
 
     return 
-
 
 
 # ooooooooo.              .o88o.                             oooo
@@ -301,7 +292,6 @@ def add():
 #  888`88b.    888ooo888  888     888     888ooo888 `"Y88b.   888   888
 #  888  `88b.  888    .o  888     888     888    .o o.  )88b  888   888
 # o888o  o888o `Y8bod8P' o888o   d888b    `Y8bod8P' 8""888P' o888o o888o
-
 
 
 def refresh(i,obj=None):
@@ -341,7 +331,6 @@ def refresh(i,obj=None):
     vg.lock_weight = True
 
     return 
-
 
 
 # ooooooooo.

@@ -29,15 +29,6 @@
 
 import bpy 
 
-from . import main_settings
-from . import addon_settings
-from . import gui_settings
-from . import manual_settings
-from . import mask_settings
-from . import ops_settings
-from . import particle_settings
-
-
 # ooooooooo.
 # `888   `Y88.
 #  888   .d88' oooo d8b  .ooooo.  oo.ooooo.   .oooo.o
@@ -61,6 +52,10 @@ from . addon_settings import SCATTER5_PR_blend_environment_paths
 from . main_settings import SCATTER5_PR_Object
 #bpy.context.object.scatter5.particle_systems
 from . particle_settings import SCATTER5_PR_particle_systems
+#bpy.context.object.scatter5.particle_groups
+from . particle_settings import SCATTER5_PR_particle_groups
+#bpy.context.object.scatter5.particle_interface_items
+from .. ui.ui_system_list import SCATTER5_PR_particle_interface_items
 #bpy.context.object.scatter5.mask_systems
 from . mask_settings import SCATTER5_PR_procedural_vg
 
@@ -96,46 +91,6 @@ from . ops_settings import SCATTER5_PR_creation_operator_load_biome
 from . main_settings import SCATTER5_PR_uuids
 
 #bpy.context.scene.scatter5.manual
-# from . manual_settings import SCATTER5_PR_scene_manual
-#bpy.context.scene.scatter5.manual.lambda_brushes
-# from . manual_settings import (
-#     SCATTER5_manual_default_brush,
-#     SCATTER5_manual_default_brush_2d,
-#     SCATTER5_manual_dot_brush,
-#     SCATTER5_manual_spatter_brush,
-#     SCATTER5_manual_pose_brush,
-#     SCATTER5_manual_path_brush,
-#     SCATTER5_manual_chain_brush,
-#     SCATTER5_manual_spray_brush,
-#     SCATTER5_manual_spray_aligned_brush,
-#     SCATTER5_manual_move_brush,
-#     SCATTER5_manual_smooth_brush,
-#     SCATTER5_manual_eraser_brush,
-#     SCATTER5_manual_dilute_brush,
-#     # SCATTER5_manual_rotation_align_brush,
-#     # SCATTER5_manual_rotation_set_brush,
-#     # SCATTER5_manual_rotation_random_brush,
-#     SCATTER5_manual_rotation_brush,
-#     # SCATTER5_manual_scale_set_brush,
-#     # SCATTER5_manual_scale_random_brush,
-#     SCATTER5_manual_scale_brush,
-#     # SCATTER5_manual_scale_grow_brush,
-#     # SCATTER5_manual_scale_shrink_brush,
-#     SCATTER5_manual_scale_grow_shrink_brush,
-#     SCATTER5_manual_comb_brush,
-#     SCATTER5_manual_spin_brush,
-#     SCATTER5_manual_object_brush,
-#     SCATTER5_manual_random_rotation_brush,
-#     SCATTER5_manual_z_align_brush,
-#     SCATTER5_manual_drop_down_brush,
-#     SCATTER5_manual_manipulator,
-#     SCATTER5_manual_free_move_brush,
-#     SCATTER5_manual_lasso_fill,
-#     SCATTER5_manual_physics_brush,
-#     SCATTER5_manual_physics_brush_object_properties,
-#     # SCATTER5_manual_debug_brush_2d,
-#     )
-# ------------------------------------------------------------------ manual 2.0 >>>
 from .manual_settings import (
     SCATTER5_PR_manual_brush_tool_default,
     SCATTER5_PR_manual_brush_tool_dot,
@@ -162,9 +117,10 @@ from .manual_settings import (
     SCATTER5_PR_manual_brush_tool_drop_down,
     SCATTER5_PR_manual_brush_tool_free_move,
     SCATTER5_PR_manual_brush_tool_manipulator,
+    SCATTER5_PR_manual_brush_tool_heaper,
     SCATTER5_PR_scene_manual,
 )
-# ------------------------------------------------------------------ manual 2.0 <<<
+
 #bpy.context.scene.scatter5.sync_channels
 from .. scattering.synchronize import SCATTER5_PR_sync_channels
 #bpy.context.scene.scatter5.sync_channels[].members
@@ -175,9 +131,9 @@ from .. scattering.synchronize import SCATTER5_PR_channel_members
 #bpy.context.window_manager.scatter5
 from . main_settings import SCATTER5_PR_Window
 #bpy.context.window_manager.scatter5.library
-from .. ui.biome_library import SCATTER5_PR_library
+from .. ui.ui_biome_library import SCATTER5_PR_library
 #bpy.context.window_manager.scatter5.folder_navigation
-from .. ui.biome_library import SCATTER5_PR_folder_navigation
+from .. ui.ui_biome_library import SCATTER5_PR_folder_navigation
 #bpy.context.window_manager.scatter5.ui
 from . gui_settings import SCATTER5_PR_ui
 #bpy.context.window_manager.scatter5.ui.popovers_args
@@ -219,45 +175,6 @@ classes = (
     SCATTER5_PR_node_texture,
     SCATTER5_PR_node_group,
 
-    # SCATTER5_manual_default_brush,
-    # SCATTER5_manual_default_brush_2d,
-    # SCATTER5_manual_dot_brush,
-    # SCATTER5_manual_spatter_brush,
-    # SCATTER5_manual_pose_brush,
-    # SCATTER5_manual_path_brush,
-    # SCATTER5_manual_chain_brush,
-    # SCATTER5_manual_spray_brush,
-    # SCATTER5_manual_spray_aligned_brush,
-    # SCATTER5_manual_move_brush,
-    # SCATTER5_manual_smooth_brush,
-    # SCATTER5_manual_eraser_brush,
-    # SCATTER5_manual_dilute_brush,
-    # # SCATTER5_manual_rotation_align_brush,
-    # # SCATTER5_manual_rotation_set_brush,
-    # # SCATTER5_manual_rotation_random_brush,
-    # SCATTER5_manual_rotation_brush,
-    # # SCATTER5_manual_scale_set_brush,
-    # # SCATTER5_manual_scale_random_brush,
-    # SCATTER5_manual_scale_brush,
-    # # SCATTER5_manual_scale_grow_brush,
-    # # SCATTER5_manual_scale_shrink_brush,
-    # SCATTER5_manual_scale_grow_shrink_brush,
-    # SCATTER5_manual_comb_brush,
-    # SCATTER5_manual_spin_brush,
-    # SCATTER5_manual_object_brush,
-    # SCATTER5_manual_random_rotation_brush,
-    # SCATTER5_manual_z_align_brush,
-    # SCATTER5_manual_drop_down_brush,
-    # SCATTER5_manual_manipulator,
-    # SCATTER5_manual_free_move_brush,
-    # # SCATTER5_manual_debug_brush_2d,
-    # SCATTER5_manual_lasso_fill,
-    # SCATTER5_manual_physics_brush,
-    # SCATTER5_manual_physics_brush_object_properties,
-    #
-    # SCATTER5_PR_scene_manual,
-    
-    # ------------------------------------------------------------------ manual 2.0 >>>
     SCATTER5_PR_manual_brush_tool_default,
     SCATTER5_PR_manual_brush_tool_dot,
     SCATTER5_PR_manual_brush_tool_spatter,
@@ -283,8 +200,8 @@ classes = (
     SCATTER5_PR_manual_brush_tool_drop_down,
     SCATTER5_PR_manual_brush_tool_free_move,
     SCATTER5_PR_manual_brush_tool_manipulator,
+    SCATTER5_PR_manual_brush_tool_heaper,
     SCATTER5_PR_scene_manual,
-    # ------------------------------------------------------------------ manual 2.0 <<<
     
     SCATTER5_PR_save_operator_preset,
     SCATTER5_PR_save_biome_to_disk_dialog,
@@ -307,6 +224,8 @@ classes = (
 
     SCATTER5_PR_procedural_vg,
     SCATTER5_PR_particle_systems,
+    SCATTER5_PR_particle_groups,
+    SCATTER5_PR_particle_interface_items,
 
     SCATTER5_PR_Object,
 
@@ -392,10 +311,10 @@ def register():
 
     #register main props 
 
-    bpy.types.Scene.scatter5          = bpy.props.PointerProperty(type=SCATTER5_PR_Scene)
-    bpy.types.Object.scatter5         = bpy.props.PointerProperty(type=SCATTER5_PR_Object)
-    bpy.types.WindowManager.scatter5  = bpy.props.PointerProperty(type=SCATTER5_PR_Window)
-    bpy.types.NodeTree.scatter5       = bpy.props.PointerProperty(type=SCATTER5_PR_node_group) #TODO: tell me why again we aren't we unregistering nodetrees props?
+    bpy.types.Scene.scatter5 = bpy.props.PointerProperty(type=SCATTER5_PR_Scene)
+    bpy.types.Object.scatter5 = bpy.props.PointerProperty(type=SCATTER5_PR_Object)
+    bpy.types.WindowManager.scatter5 = bpy.props.PointerProperty(type=SCATTER5_PR_Window)
+    bpy.types.NodeTree.scatter5 = bpy.props.PointerProperty(type=SCATTER5_PR_node_group) #TODO: tell me why again we aren't we unregistering nodetrees props?
 
     #update directories globals with new addon_prefs.library_path
     

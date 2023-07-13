@@ -21,6 +21,7 @@
 import time
 import datetime
 import numpy as np
+import ctypes
 
 import bpy
 import mathutils
@@ -99,7 +100,10 @@ class ToolWidgets():
     def rectangle_fill_2d(cls, a, b, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vertices = np.array(((a[0], a[1]), (b[0], a[1]), (a[0], b[1]), (b[0], b[1]), ), dtype=np.float32, )
         indices = np.array(((0, 1, 3), (0, 3, 2)), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -111,7 +115,10 @@ class ToolWidgets():
     def rectangle_outline_2d(cls, a, b, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vertices = np.array(((a[0], a[1]), (b[0], a[1]), (b[0], b[1]), (a[0], b[1]), ), dtype=np.float32, )
         indices = np.array(((0, 1), (1, 2), (2, 3), (3, 0), ), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -124,7 +131,10 @@ class ToolWidgets():
         vertices = np.array(((a[0], a[1], 0.0), (b[0], a[1], 0.0), (b[0], b[1], 0.0), (a[0], b[1], 0.0), ), dtype=np.float32, )
         indices = np.array(((0, 1), (1, 2), (2, 3), (3, 0), ), dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -143,7 +153,10 @@ class ToolWidgets():
     def line_2d(cls, a, b, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vertices = np.array(((a[0], a[1]), (b[0], b[1]), ), dtype=np.float32, )
         indices = np.array(((0, 1), ), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -155,7 +168,10 @@ class ToolWidgets():
     def thick_line_2d(cls, a, b, color=(1.0, 0.0, 0.0, 0.5, ), thickness=2.0, ):
         vertices = np.array(((a[0], a[1], 0.0, ), (b[0], b[1], 0.0, ), ), dtype=np.float32, )
         indices = np.array(((0, 1), ), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -171,7 +187,10 @@ class ToolWidgets():
     def multiple_thick_line_2d(cls, vertices, indices, color=(1.0, 0.0, 0.0, 0.5, ), thickness=2.0, ):
         vertices = np.array(vertices, dtype=np.float32, )
         indices = np.array(indices, dtype=np.int32, )
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -185,7 +204,10 @@ class ToolWidgets():
     
     @classmethod
     def tri_fan_fill_2d(cls, vertices, color=(1.0, 0.0, 0.0, 0.5, ), ):
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vertices, })
         # NOTE: TRI_FAN deprecated in 3.2
         indices = mathutils.geometry.tessellate_polygon((vertices, ))
@@ -202,7 +224,10 @@ class ToolWidgets():
         i = np.arange(len(vertices))
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -218,7 +243,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -235,7 +263,10 @@ class ToolWidgets():
     
     @classmethod
     def tri_fan_tess_fill_2d(cls, vertices, color=(1.0, 0.0, 0.0, 0.5, ), ):
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         indices = mathutils.geometry.tessellate_polygon((vertices, ))
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
@@ -250,7 +281,10 @@ class ToolWidgets():
         i = np.arange(len(vertices))
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -266,7 +300,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -288,7 +325,10 @@ class ToolWidgets():
         a = np.arange(steps, dtype=np.int32, )
         vs[:, 0] = center[0] + (np.sin(a * angstep) * radius)
         vs[:, 1] = center[1] + (np.cos(a * angstep) * radius)
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vs, })
         # NOTE: TRI_FAN deprecated in 3.2
         indices = mathutils.geometry.tessellate_polygon((vs, ))
@@ -309,7 +349,10 @@ class ToolWidgets():
         i = np.arange(steps)
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -328,7 +371,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vs, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -362,7 +408,10 @@ class ToolWidgets():
         indices = np.c_[i[::2], i[1::2], ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -408,7 +457,10 @@ class ToolWidgets():
         vs[:, 1] = center[1] + (np.cos(a * angstep) * 1.0)
         vs[:, 2] = 0.0
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vs, })
         # NOTE: TRI_FAN deprecated in 3.2
         indices = mathutils.geometry.tessellate_polygon((vs, ))
@@ -479,7 +531,10 @@ class ToolWidgets():
         
         indices = np.arange(steps, dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -514,7 +569,10 @@ class ToolWidgets():
         i = np.arange(steps, dtype=np.int32, )
         indices = np.c_[i, np.roll(i, -1), ]
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -531,6 +589,9 @@ class ToolWidgets():
     
     @classmethod
     def dot_shader_2d(cls, center, diameter=6, bias=0.1, snap=True, color=(1.0, 0.0, 0.0, 0.5, ), ):
+        print('`ToolWidgets.dot_shader_3d` is not updated for new style shader creation, do not use. use `ToolWidgets.dot_shader_2_3d` instad')
+        return
+        
         vert = '''
         in vec2 pos;
         in vec2 uv;
@@ -590,6 +651,9 @@ class ToolWidgets():
     
     @classmethod
     def dot_shader_3d(cls, matrix, bias=0.1, color=(1.0, 0.0, 0.0, 0.5, ), ):
+        print('`ToolWidgets.dot_shader_3d` is not updated for new style shader creation, do not use. use `ToolWidgets.dot_shader_2_3d` instad')
+        return
+        
         vert = '''
         in vec2 pos;
         in vec2 uv;
@@ -646,39 +710,35 @@ class ToolWidgets():
     @classmethod
     def dot_shader_2_2d(cls, center, diameter, snap=True, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vert = '''
-        in vec2 pos;
-        in vec2 uv;
-        uniform mat4 ModelViewProjectionMatrix;
-        uniform vec4 u_viewport;
-        uniform mat4 u_projection;
-        uniform float u_factor;
-        out float offset;
-        out vec2 iuv;
-        
+        // in vec2 pos;
+        // in vec2 uv;
+        // uniform mat4 ModelViewProjectionMatrix;
+        // uniform vec4 u_viewport;
+        // uniform mat4 u_projection;
+        // uniform float u_factor;
+        // out float offset;
+        // out vec2 iuv;
         void main()
         {
             iuv = uv;
             gl_Position = ModelViewProjectionMatrix * vec4(pos, 0.0, 1.0);
-            
-            float wr = 2.0 / (u_viewport.z * u_projection[0][0]);
+            float wr = 2.0 / (u_data.u_viewport.z * u_data.u_projection[0][0]);
             float px = gl_Position.w * wr;
-            offset = px / u_factor;
+            offset = px / u_data.u_factor;
         }
         '''
         frag = '''
-        in vec2 iuv;
-        in float offset;
-        uniform vec4 color;
-        uniform float bias = 0.1;
-        out vec4 fragColor;
-        
+        // in vec2 iuv;
+        // in float offset;
+        // uniform vec4 color;
+        // uniform float bias = 0.1;
+        // out vec4 fragColor;
         void main()
         {
             vec4 c = vec4(1.0);
             float d = sqrt(dot(iuv, iuv));
             float s = smoothstep(0.5, 0.5 - offset, d);
-            
-            c = vec4(color.r, color.g, color.b, color.a * s);
+            c = vec4(u_data.color.r, u_data.color.g, u_data.color.b, u_data.color.a * s);
             fragColor = blender_srgb_to_framebuffer_space(c);
         }
         '''
@@ -688,7 +748,50 @@ class ToolWidgets():
             # TODO: and these are coordinates that look good on mac mouse pointer, check windows and linux
             center = [center[0] - 0.5, center[1] + 0.5, ]
         
-        shader = GPUShader(vert, frag, )
+        # shader = GPUShader(vert, frag, )
+        
+        # NOTE: "new style" shader ------------------------------------------- >>>
+        shader_info = gpu.types.GPUShaderCreateInfo()
+        shader_info.typedef_source(
+            "struct UniformData {\n"
+            "    mat4 u_projection;\n"
+            "    vec4 u_viewport;\n"
+            "    vec4 color;\n"
+            "    float u_factor;\n"
+            # "    float bias;\n"
+            "};\n"
+        )
+        shader_info.vertex_in(0, 'VEC2', "pos")
+        shader_info.vertex_in(1, 'VEC2', "uv")
+        shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+        # shader_info.push_constant("VEC4", "u_viewport")
+        # shader_info.push_constant("MAT4", "u_projection")
+        # shader_info.push_constant("FLOAT", "u_factor")
+        # shader_info.push_constant("VEC4", "color")
+        # shader_info.push_constant("FLOAT", "bias")
+        shader_info.uniform_buf(0, "UniformData", "u_data")
+        vert_out = gpu.types.GPUStageInterfaceInfo("vertex_interface")
+        vert_out.smooth('FLOAT', "offset")
+        vert_out.smooth('VEC2', "iuv")
+        shader_info.vertex_out(vert_out)
+        shader_info.fragment_out(0, 'VEC4', "fragColor")
+        shader_info.vertex_source(vert)
+        # NOTE: does not automatically add `blender_srgb_to_framebuffer_space`.. lets provide our own (taken from blender source)
+        colorspace = (
+        "#undef blender_srgb_to_framebuffer_space\n"
+        "vec4 blender_srgb_to_framebuffer_space(vec4 in_color)\n"
+        "{\n"
+        "    vec3 c = max(in_color.rgb, vec3(0.0));\n"
+        "    vec3 c1 = c * (1.0 / 12.92);\n"
+        "    vec3 c2 = pow((c + 0.055) * (1.0 / 1.055), vec3(2.4));\n"
+        "    in_color.rgb = mix(c1, c2, step(vec3(0.04045), c));\n"
+        "    return in_color;\n"
+        "}\n"
+        )
+        shader_info.fragment_source(colorspace + frag)
+        shader = gpu.shader.create_from_info(shader_info)
+        # NOTE: "new style" shader ------------------------------------------- <<<
+        
         coords = np.array(((0, 0), (1, 0), (1, 1), (0, 1), ), dtype=np.float32, )
         indices = np.array(((0, 1, 2), (0, 2, 3), ), dtype=np.int32, )
         coords = coords - 0.5
@@ -702,11 +805,43 @@ class ToolWidgets():
             gpu.matrix.scale((diameter, diameter, ))
             
             shader.bind()
-            shader.uniform_float('color', color, )
             
-            shader.uniform_float("u_factor", diameter, )
-            shader.uniform_float("u_viewport", gpu.state.viewport_get(), )
-            shader.uniform_float("u_projection", gpu.matrix.get_projection_matrix(), )
+            # shader.uniform_float('color', color, )
+            # shader.uniform_float("u_factor", diameter, )
+            # shader.uniform_float("u_viewport", gpu.state.viewport_get(), )
+            # shader.uniform_float("u_projection", gpu.matrix.get_projection_matrix(), )
+            
+            # NOTE: "new style" shader ------------------------------------------- >>>
+            
+            class _UBO_struct(ctypes.Structure):
+                _pack_ = 16
+                _fields_ = [
+                    # ("ModelViewProjectionMatrix", (ctypes.c_float * 4) * 4),
+                    ("u_projection", (ctypes.c_float * 4) * 4),
+                    ("u_viewport", ctypes.c_float * 4),
+                    ("color", ctypes.c_float * 4),
+                    ("u_factor", ctypes.c_float),
+                    # ("bias", ctypes.c_float),
+                    ("_pad", ctypes.c_float * 3),
+                ]
+            
+            UBO_data = _UBO_struct()
+            UBO = gpu.types.GPUUniformBuf(gpu.types.Buffer("UBYTE", ctypes.sizeof(UBO_data), UBO_data))
+            
+            u_projection = gpu.matrix.get_projection_matrix()
+            UBO_data.u_projection[0] = u_projection[0][:]
+            UBO_data.u_projection[1] = u_projection[1][:]
+            UBO_data.u_projection[2] = u_projection[2][:]
+            UBO_data.u_projection[3] = u_projection[3][:]
+            UBO_data.u_viewport = gpu.state.viewport_get()
+            UBO_data.color = color
+            UBO_data.u_factor = diameter
+            # UBO_data.bias = 0.1
+            
+            UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(UBO_data), UBO_data, ))
+            shader.uniform_block("u_data", UBO)
+            
+            # NOTE: "new style" shader ------------------------------------------- <<<
             
             batch.draw(shader)
         
@@ -716,44 +851,85 @@ class ToolWidgets():
     @classmethod
     def dot_shader_2_3d(cls, matrix, scale_factor, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vert = '''
-        in vec2 pos;
-        in vec2 uv;
-        uniform mat4 ModelViewProjectionMatrix;
-        uniform vec4 u_viewport;
-        uniform mat4 u_projection;
-        uniform float u_factor;
-        out float offset;
-        out vec2 iuv;
-        
+        // in vec2 pos;
+        // in vec2 uv;
+        // uniform mat4 ModelViewProjectionMatrix;
+        // uniform vec4 u_viewport;
+        // uniform mat4 u_projection;
+        // uniform float u_factor;
+        // out float offset;
+        // out vec2 iuv;
         void main()
         {
             iuv = uv;
             gl_Position = ModelViewProjectionMatrix * vec4(pos, 0.0, 1.0);
             
-            float wr = 2.0 / (u_viewport.z * u_projection[0][0]);
+            float wr = 2.0 / (u_data.u_viewport.z * u_data.u_projection[0][0]);
             float px = gl_Position.w * wr;
-            offset = px / u_factor;
+            offset = px / u_data.u_factor;
         }
         '''
         frag = '''
-        in vec2 iuv;
-        in float offset;
-        uniform vec4 color;
-        uniform float bias = 0.1;
-        out vec4 fragColor;
-        
+        // in vec2 iuv;
+        // in float offset;
+        // uniform vec4 color;
+        // // uniform float bias = 0.1;
+        // out vec4 fragColor;
         void main()
         {
             vec4 c = vec4(1.0);
             float d = sqrt(dot(iuv, iuv));
             float s = smoothstep(0.5, 0.5 - offset, d);
             
-            c = vec4(color.r, color.g, color.b, color.a * s);
+            c = vec4(u_data.color.r, u_data.color.g, u_data.color.b, u_data.color.a * s);
             fragColor = blender_srgb_to_framebuffer_space(c);
         }
         '''
         
-        shader = GPUShader(vert, frag, )
+        # shader = GPUShader(vert, frag, )
+        
+        # NOTE: "new style" shader ------------------------------------------- >>>
+        shader_info = gpu.types.GPUShaderCreateInfo()
+        shader_info.typedef_source(
+            "struct UniformData {\n"
+            "    mat4 u_projection;\n"
+            "    vec4 u_viewport;\n"
+            "    vec4 color;\n"
+            "    float u_factor;\n"
+            # "    float bias;\n"
+            "};\n"
+        )
+        shader_info.vertex_in(0, 'VEC2', "pos")
+        shader_info.vertex_in(1, 'VEC2', "uv")
+        shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+        # shader_info.push_constant("VEC4", "u_viewport")
+        # shader_info.push_constant("MAT4", "u_projection")
+        # shader_info.push_constant("FLOAT", "u_factor")
+        # shader_info.push_constant("VEC4", "color")
+        # shader_info.push_constant("FLOAT", "bias")
+        shader_info.uniform_buf(0, "UniformData", "u_data")
+        vert_out = gpu.types.GPUStageInterfaceInfo("vertex_interface")
+        vert_out.smooth('FLOAT', "offset")
+        vert_out.smooth('VEC2', "iuv")
+        shader_info.vertex_out(vert_out)
+        shader_info.fragment_out(0, 'VEC4', "fragColor")
+        shader_info.vertex_source(vert)
+        # NOTE: does not automatically add `blender_srgb_to_framebuffer_space`.. lets provide our own (taken from blender source)
+        colorspace = (
+        "#undef blender_srgb_to_framebuffer_space\n"
+        "vec4 blender_srgb_to_framebuffer_space(vec4 in_color)\n"
+        "{\n"
+        "    vec3 c = max(in_color.rgb, vec3(0.0));\n"
+        "    vec3 c1 = c * (1.0 / 12.92);\n"
+        "    vec3 c2 = pow((c + 0.055) * (1.0 / 1.055), vec3(2.4));\n"
+        "    in_color.rgb = mix(c1, c2, step(vec3(0.04045), c));\n"
+        "    return in_color;\n"
+        "}\n"
+        )
+        shader_info.fragment_source(colorspace + frag)
+        shader = gpu.shader.create_from_info(shader_info)
+        # NOTE: "new style" shader ------------------------------------------- <<<
+        
         coords = np.array(((0, 0), (1, 0), (1, 1), (0, 1), ), dtype=np.float32, )
         indices = np.array(((0, 1, 2), (0, 2, 3), ), dtype=np.int32, )
         coords = coords - 0.5
@@ -766,11 +942,43 @@ class ToolWidgets():
             gpu.matrix.multiply_matrix(matrix)
             
             shader.bind()
-            shader.uniform_float('color', color, )
             
-            shader.uniform_float("u_factor", scale_factor)
-            shader.uniform_float("u_viewport", gpu.state.viewport_get())
-            shader.uniform_float("u_projection", gpu.matrix.get_projection_matrix())
+            # shader.uniform_float('color', color, )
+            # shader.uniform_float("u_factor", scale_factor)
+            # shader.uniform_float("u_viewport", gpu.state.viewport_get())
+            # shader.uniform_float("u_projection", gpu.matrix.get_projection_matrix())
+            
+            # NOTE: "new style" shader ------------------------------------------- >>>
+            
+            class _UBO_struct(ctypes.Structure):
+                _pack_ = 16
+                _fields_ = [
+                    # ("ModelViewProjectionMatrix", (ctypes.c_float * 4) * 4),
+                    ("u_projection", (ctypes.c_float * 4) * 4),
+                    ("u_viewport", ctypes.c_float * 4),
+                    ("color", ctypes.c_float * 4),
+                    ("u_factor", ctypes.c_float),
+                    # ("bias", ctypes.c_float),
+                    ("_pad", ctypes.c_float * 3),
+                ]
+            
+            UBO_data = _UBO_struct()
+            UBO = gpu.types.GPUUniformBuf(gpu.types.Buffer("UBYTE", ctypes.sizeof(UBO_data), UBO_data))
+            
+            u_projection = gpu.matrix.get_projection_matrix()
+            UBO_data.u_projection[0] = u_projection[0][:]
+            UBO_data.u_projection[1] = u_projection[1][:]
+            UBO_data.u_projection[2] = u_projection[2][:]
+            UBO_data.u_projection[3] = u_projection[3][:]
+            UBO_data.u_viewport = gpu.state.viewport_get()
+            UBO_data.color = color
+            UBO_data.u_factor = scale_factor
+            # UBO_data.bias = 0.1
+            
+            UBO.update(gpu.types.Buffer("UBYTE", ctypes.sizeof(UBO_data), UBO_data, ))
+            shader.uniform_block("u_data", UBO)
+            
+            # NOTE: "new style" shader ------------------------------------------- <<<
             
             batch.draw(shader)
         
@@ -786,7 +994,10 @@ class ToolWidgets():
             (center[0], center[1] + radius, 0.0, ),
         ), dtype=np.float32, )
         indices = np.array(((0, 1), (2, 3)), dtype=np.int32, )
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -805,7 +1016,11 @@ class ToolWidgets():
         # size = round(size * ui_scale)
         # offset = (offset[0] * ui_scale, offset[1] * ui_scale, )
         
-        blf.size(font_id, size, 72)
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size, 72)
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size)
         blf.color(font_id, *color)
         
         if(shadow):
@@ -824,7 +1039,11 @@ class ToolWidgets():
         # offset = (offset[0] * ui_scale, offset[1] * ui_scale, )
         # padding = padding * ui_scale
         
-        blf.size(font_id, size, 72)
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size, 72)
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size)
         blf.color(font_id, *color)
         
         if(shadow):
@@ -879,7 +1098,10 @@ class ToolWidgets():
         vertices = np.concatenate([trc, brc, blc, tlc, ])
         indices = np.array(mathutils.geometry.tessellate_polygon((vertices, )), dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -917,9 +1139,12 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        # shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        # shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         shader.bind()
@@ -940,7 +1165,11 @@ class ToolWidgets():
         # padding = padding * ui_scale
         # radius = radius * ui_scale
         
-        blf.size(font_id, size, 72)
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size, 72)
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size)
         blf.color(font_id, *color)
         
         if(shadow):
@@ -1030,7 +1259,11 @@ class ToolWidgets():
         
         font_id = 0
         ui_scale = bpy.context.preferences.system.ui_scale
-        blf.size(font_id, size, 72)
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size, 72)
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size)
         blf.color(font_id, *color)
         if(shadow):
             blf.enable(font_id, blf.SHADOW)
@@ -1053,7 +1286,11 @@ class ToolWidgets():
         # offset = (offset[0] * ui_scale, offset[1] * ui_scale, )
         # padding = padding * ui_scale
         
-        blf.size(font_id, size, 72)
+        if(bpy.app.version < (4, 0, 0)):
+            blf.size(font_id, size, 72)
+        else:
+            # 4.0, `dpi` argument is removed
+            blf.size(font_id, size)
         blf.color(font_id, *color)
         
         if(shadow):
@@ -1106,7 +1343,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1147,7 +1387,10 @@ class ToolWidgets():
         indices = np.c_[i[::2], i[1::2], ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1177,7 +1420,10 @@ class ToolWidgets():
         vs[:, 0] = center[0] + (np.sin(a * angstep) * radius)
         vs[:, 1] = center[1] + (np.cos(a * angstep) * radius)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vs, }, )
         # NOTE: TRI_FAN deprecated in 3.2
         indices = mathutils.geometry.tessellate_polygon((vs, ))
@@ -1215,7 +1461,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1250,7 +1499,10 @@ class ToolWidgets():
         vs[:, 1] += offset[1]
         vs[:, 2] += offset[2]
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vs, }, )
         # NOTE: TRI_FAN deprecated in 3.2
         indices = mathutils.geometry.tessellate_polygon((vs, ))
@@ -1293,7 +1545,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1333,7 +1588,10 @@ class ToolWidgets():
         vs[:, 1] += offset[1]
         vs[:, 2] += offset[2]
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         # batch = batch_for_shader(shader, 'TRI_FAN', {"pos": vs, }, )
         # NOTE: TRI_FAN deprecated in 3.2
         # indices = mathutils.geometry.tessellate_polygon((vs, ))
@@ -1358,7 +1616,10 @@ class ToolWidgets():
         vertices = np.array(((a[0], a[1], a[2], ), (b[0], b[1], b[2], ), ), dtype=np.float32, )
         indices = np.array(((0, 1), ), dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1447,7 +1708,10 @@ class ToolWidgets():
         indices = np.concatenate([foot_iis, body_iis, shoulder_iis, head_iis])
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1470,7 +1734,10 @@ class ToolWidgets():
         vertices += offset
         indices = np.array([(1, 2, 0), (3, 6, 2), (7, 4, 6), (5, 0, 4), (6, 0, 2), (3, 5, 7), (1, 3, 2), (3, 7, 6), (7, 5, 4), (5, 1, 0), (6, 4, 0), (3, 1, 5), ], dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1512,7 +1779,10 @@ class ToolWidgets():
         indices = np.array(fs, dtype=np.int32, )
         # vertices += np.array(offset, dtype=np.float32, ) * (1 / radius)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1555,7 +1825,10 @@ class ToolWidgets():
         indices = np.concatenate([ctris, ttris])
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1610,7 +1883,10 @@ class ToolWidgets():
         # indices = np.concatenate([indices1, indices2, ])
         # indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1631,7 +1907,10 @@ class ToolWidgets():
         vertices = np.array(vertices, dtype=np.float32, )
         indices = np.array(indices, dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1656,7 +1935,10 @@ class ToolWidgets():
         vertices = vertices.astype(np.float32)
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1676,7 +1958,10 @@ class ToolWidgets():
         indices = np.array(indices, dtype=np.int32, )
         colors = np.array(colors, dtype=np.float32, )
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_FLAT_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_FLAT_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_FLAT_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, 'color': colors, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1702,7 +1987,10 @@ class ToolWidgets():
         indices = indices.astype(np.int32)
         colors = colors.astype(np.float32)
         
-        shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('FLAT_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, 'color': colors, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1737,7 +2025,10 @@ class ToolWidgets():
             (0, 1, 2),
             (0, 2, 3),
         ]
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {'pos': vertices, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
         
@@ -1775,7 +2066,10 @@ class ToolWidgets():
         vertices = np.array(((a[0], a[1], 0.0), (b[0], a[1], 0.0), (a[0], b[1], 0.0), (b[0], b[1], 0.0), ), dtype=np.float32, )
         indices = np.array(((0, 1, 3), (0, 3, 2), ), dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1796,7 +2090,10 @@ class ToolWidgets():
         vertices = np.array(((a[0], a[1], 0.0), (b[0], a[1], 0.0), (a[0], b[1], 0.0), (b[0], b[1], 0.0), ), dtype=np.float32, )
         indices = np.array(((0, 1), (1, 3), (3, 2), (2, 0), ), dtype=np.int32, )
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vertices, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1838,7 +2135,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {'pos': vs, }, indices=indices, )
         
         gpu.state.blend_set('ALPHA')
@@ -1871,7 +2171,10 @@ class ToolWidgets():
         vs[:, 1] = center[1] + (np.cos(aa) * radius)
         vs = np.concatenate([vs, np.array([center[0], center[1], ], dtype=vs.dtype, ).reshape(-1, 2)])
         
-        shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         indices = mathutils.geometry.tessellate_polygon((vs, ))
         batch = batch_for_shader(shader, 'TRIS', {"pos": vs, }, indices=indices, )
         gpu.state.blend_set('ALPHA')
@@ -1905,7 +2208,10 @@ class ToolWidgets():
         indices = np.c_[i, np.roll(i, -1), ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1946,7 +2252,10 @@ class ToolWidgets():
         vs[:, 1] = center[1] + (np.cos(aa) * radius)
         vs = np.concatenate([vs, np.array([center[0], center[1], 0.0, ], dtype=vs.dtype, ).reshape(-1, 3)])
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         indices = mathutils.geometry.tessellate_polygon((vs, ))
         batch = batch_for_shader(shader, 'TRIS', {"pos": vs, }, indices=indices, )
         
@@ -1967,7 +2276,10 @@ class ToolWidgets():
     def points_px_3d(cls, vertices, matrix, color=(1.0, 0.0, 0.0, 0.5, ), ):
         vertices = np.array(vertices, dtype=np.float32, )
         
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'POINTS', {"pos": vertices, }, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -1989,8 +2301,11 @@ class ToolWidgets():
         vertices = np.array(vertices, dtype=np.float32, )
         colors = np.array(colors, dtype=np.float32, )
         
-        shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
-        # shader = gpu.shader.from_builtin('3D_SMOOTH_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('FLAT_COLOR')
+        # shader = gpu.shader.from_builtin('SMOOTH_COLOR')
         batch = batch_for_shader(shader, 'POINTS', {"pos": vertices, "color": colors, }, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -2011,10 +2326,9 @@ class ToolWidgets():
         vertices = np.array(vertices, dtype=np.float32, )
         
         vert = '''
-        in vec3 pos;
-        uniform mat4 ModelViewProjectionMatrix;
-        uniform float size;
-        
+        // in vec3 pos;
+        // uniform mat4 ModelViewProjectionMatrix;
+        // uniform float size;
         void main()
         {
             gl_Position = ModelViewProjectionMatrix * vec4(pos, 1.0);
@@ -2023,9 +2337,8 @@ class ToolWidgets():
         '''
         # NOTE: for some reason it was jumping between color spaces.. i redefined `blender_srgb_to_framebuffer_space` so there is no condition
         frag = '''
-        uniform vec4 color;
-        out vec4 fragColor;
-        
+        // uniform vec4 color;
+        // out vec4 fragColor;
         vec4 blender_srgb_to_framebuffer_space_always(vec4 in_color)
         {
             vec3 c = max(in_color.rgb, vec3(0.0));
@@ -2034,7 +2347,6 @@ class ToolWidgets():
             in_color.rgb = mix(c1, c2, step(vec3(0.04045), c));
             return in_color;
         }
-        
         void main()
         {
             float radius = 1.0;
@@ -2050,7 +2362,20 @@ class ToolWidgets():
             // fragColor = color;
         }
         '''
-        shader = GPUShader(vert, frag, )
+        # shader = GPUShader(vert, frag, )
+        
+        # NOTE: "new style" shader ------------------------------------------- >>>
+        shader_info = gpu.types.GPUShaderCreateInfo()
+        shader_info.vertex_in(0, 'VEC3', "pos")
+        shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+        shader_info.push_constant("FLOAT", "size")
+        shader_info.push_constant("VEC4", "color")
+        shader_info.fragment_out(0, 'VEC4', "fragColor")
+        shader_info.vertex_source(vert)
+        shader_info.fragment_source(frag)
+        shader = gpu.shader.create_from_info(shader_info)
+        # NOTE: "new style" shader ------------------------------------------- <<<
+        
         batch = batch_for_shader(shader, 'POINTS', {"pos": vertices, }, )
         
         gpu.state.program_point_size_set(True)
@@ -2072,16 +2397,17 @@ class ToolWidgets():
     
     @classmethod
     def round_points_px_colors_3d(cls, vertices, colors, matrix, size=6, color=(1.0, 0.0, 0.0, 0.5, ), ):
+        # NOTE: currently not used, new style shader setup is not tested if correct
+        
         vertices = np.array(vertices, dtype=np.float32, )
         colors = np.array(colors, dtype=np.float32, )
         
         vert = '''
-        in vec3 pos;
-        in vec4 color;
-        uniform mat4 ModelViewProjectionMatrix;
-        uniform float size;
-        out vec4 v_color;
-        
+        // in vec3 pos;
+        // in vec4 color;
+        // uniform mat4 ModelViewProjectionMatrix;
+        // uniform float size;
+        // out vec4 v_color;
         void main()
         {
             gl_Position = ModelViewProjectionMatrix * vec4(pos, 1.0);
@@ -2090,9 +2416,8 @@ class ToolWidgets():
         }
         '''
         frag = '''
-        in vec4 v_color;
-        out vec4 fragColor;
-        
+        // in vec4 v_color;
+        // out vec4 fragColor;
         void main()
         {
             float radius = 1.0;
@@ -2106,7 +2431,35 @@ class ToolWidgets():
             fragColor = blender_srgb_to_framebuffer_space(v_color);
         }
         '''
-        shader = GPUShader(vert, frag, )
+        # shader = GPUShader(vert, frag, )
+        
+        # NOTE: "new style" shader ------------------------------------------- >>>
+        shader_info = gpu.types.GPUShaderCreateInfo()
+        shader_info.vertex_in(0, 'VEC3', "pos")
+        shader_info.vertex_in(1, 'VEC4', "color")
+        shader_info.push_constant("MAT4", "ModelViewProjectionMatrix")
+        shader_info.push_constant("FLOAT", "size")
+        vert_out = gpu.types.GPUStageInterfaceInfo("vertex_interface")
+        vert_out.flat('VEC4', "v_color")
+        shader_info.vertex_out(vert_out)
+        shader_info.fragment_out(0, 'VEC4', "fragColor")
+        shader_info.vertex_source(vert)
+        # NOTE: does not automatically add `blender_srgb_to_framebuffer_space`.. lets provide our own (taken from blender source)
+        colorspace = (
+        "#undef blender_srgb_to_framebuffer_space\n"
+        "vec4 blender_srgb_to_framebuffer_space(vec4 in_color)\n"
+        "{\n"
+        "    vec3 c = max(in_color.rgb, vec3(0.0));\n"
+        "    vec3 c1 = c * (1.0 / 12.92);\n"
+        "    vec3 c2 = pow((c + 0.055) * (1.0 / 1.055), vec3(2.4));\n"
+        "    in_color.rgb = mix(c1, c2, step(vec3(0.04045), c));\n"
+        "    return in_color;\n"
+        "}\n"
+        )
+        shader_info.fragment_source(colorspace + frag)
+        shader = gpu.shader.create_from_info(shader_info)
+        # NOTE: "new style" shader ------------------------------------------- <<<
+        
         batch = batch_for_shader(shader, 'POINTS', {"pos": vertices, "color": colors, }, )
         
         gpu.state.program_point_size_set(True)
@@ -2139,7 +2492,10 @@ class ToolWidgets():
         indices = np.c_[i[::2], i[1::2], ]
         indices = indices.astype(np.int32)
         
-        shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        if(bpy.app.version < (3, 4, 0)):
+            shader = gpu.shader.from_builtin('3D_POLYLINE_UNIFORM_COLOR')
+        else:
+            shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
         batch = batch_for_shader(shader, 'LINES', {"pos": vs, }, indices=indices, )
         
         # gpu.state.depth_test_set('LESS_EQUAL')
@@ -2286,110 +2642,6 @@ class ToolWidgets():
                     area.tag_redraw()
     
     # ------------------------------------------------------------------ draw >>>
-
-
-"""
-class ToolOverlay():
-    _darken = 0.25
-    _shader = None
-    _batch = None
-    _handlers = []
-    _initialized = False
-    _visible = False
-    
-    @classmethod
-    def init(cls, ):
-        if(cls._initialized):
-            return
-        
-        v, f, _ = load_shader_code('UI_OVERLAY')
-        cls._shader = gpu.types.GPUShader(v, f, )
-        cls._batch = batch_for_shader(cls._shader, 'TRIS', {'position': [(-1, -1), (3, -1), (-1, 3), ], })
-        
-        cls._handlers = []
-        cls._initialized = True
-        cls._tag_redraw()
-    
-    @classmethod
-    def deinit(cls, ):
-        if(not cls._initialized):
-            return
-        
-        cls.hide()
-        
-        cls._handlers = []
-        cls._shader = None
-        cls._batch = None
-        
-        cls._visible = False
-        cls._initialized = False
-        cls._tag_redraw()
-    
-    @classmethod
-    def _draw(cls, self, context, region_type, ):
-        if(not cls._initialized):
-            return
-        
-        # TODO: is it good idea having try...except in draw handler?
-        try:
-            if(self._invoke_area == context.area and region_type == 'WINDOW'):
-                return
-            # if(self._invoke_area == context.area and region_type == 'UI'):
-            #     return
-        except Exception as e:
-            # NOTE: panic!
-            from .tools import panic
-            panic('ToolOverlay._draw', )
-            return
-        
-        gpu.state.depth_test_set('NONE')
-        gpu.state.blend_set('ALPHA')
-        
-        cls._shader.bind()
-        cls._shader.uniform_float('darken', cls._darken, )
-        cls._batch.draw(cls._shader, )
-        # NOTE: do i need that?
-        gpu.shader.unbind()
-        
-        gpu.state.depth_test_set('NONE')
-        gpu.state.blend_set('NONE')
-    
-    @classmethod
-    def show(cls, self, context, ):
-        if(not cls._initialized):
-            cls.init()
-        if(cls._visible):
-            return
-        
-        for a in context.screen.areas:
-            s = a.spaces[0]
-            for r in a.regions:
-                h = s.draw_handler_add(cls._draw, (self, context, r.type, ), r.type, 'POST_PIXEL', )
-                cls._handlers.append((s, r.type, h, ))
-        
-        cls._visible = True
-        cls._tag_redraw()
-    
-    @classmethod
-    def hide(cls, ):
-        if(not cls._visible):
-            return
-        
-        for s, a, h in cls._handlers:
-            s.draw_handler_remove(h, a, )
-        cls._handlers = []
-        
-        cls._visible = False
-        cls._tag_redraw()
-    
-    @classmethod
-    def _tag_redraw(cls, ):
-        for window in bpy.context.window_manager.windows:
-            for area in window.screen.areas:
-                # if(area.type == 'VIEW_3D'):
-                #     area.tag_redraw()
-                area.tag_redraw()
-"""
 
 
 classes = ()

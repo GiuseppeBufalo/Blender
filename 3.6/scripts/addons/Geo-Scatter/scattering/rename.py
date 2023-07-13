@@ -86,7 +86,6 @@ def rename_particle(self,context):
             name = getattr(ps,f"s_ecosystem_affinity_{i:02}_ptr")
             if ( (name!="") and (name==self.name_bis) ):
                 setattr(ps,f"s_ecosystem_affinity_{i:02}_ptr", self.name)
-                print("update")
             
             #repulsion
             name = getattr(ps,f"s_ecosystem_repulsion_{i:02}_ptr")

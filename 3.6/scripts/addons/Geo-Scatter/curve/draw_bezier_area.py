@@ -865,10 +865,10 @@ class SCATTER5_OT_bezier_area_base(SCATTER5_OT_tool_base, ):
             bm.to_mesh(me)
             bm.free()
             me.calc_loop_triangles()
-            vs = np.zeros((len(me.vertices) * 3), dtype=np.float, )
+            vs = np.zeros((len(me.vertices) * 3), dtype=np.float64, )
             me.vertices.foreach_get('co', vs, )
             vs.shape = (-1, 3, )
-            tris = np.zeros((len(me.loop_triangles) * 3), dtype=np.int, )
+            tris = np.zeros((len(me.loop_triangles) * 3), dtype=np.int64, )
             me.loop_triangles.foreach_get('vertices', tris, )
             tris.shape = (-1, 3, )
             
@@ -887,8 +887,8 @@ class SCATTER5_OT_bezier_area_base(SCATTER5_OT_tool_base, ):
         
         vi = 0
         ti = 0
-        avs = np.zeros((vl, 3), dtype=np.float, )
-        atris = np.zeros((tl, 3), dtype=np.int, )
+        avs = np.zeros((vl, 3), dtype=np.float64, )
+        atris = np.zeros((tl, 3), dtype=np.int64, )
         asmooth = np.zeros(tl, dtype=bool, )
         for i, d in enumerate(dt):
             vs, tris, smooth = d
@@ -905,13 +905,15 @@ class SCATTER5_OT_bezier_area_base(SCATTER5_OT_tool_base, ):
         
         me.loops.add(len(atris) * 3)
         me.polygons.add(len(atris))
-        lt = np.full(len(atris), 3, dtype=np.int, )
-        ls = np.arange(0, len(atris) * 3, 3, dtype=np.int, )
+        lt = np.full(len(atris), 3, dtype=np.int64, )
+        ls = np.arange(0, len(atris) * 3, 3, dtype=np.int64, )
         me.polygons.foreach_set('loop_total', lt.flatten(), )
         me.polygons.foreach_set('loop_start', ls.flatten(), )
         me.polygons.foreach_set('vertices', atris.flatten(), )
         me.polygons.foreach_set('use_smooth', asmooth.flatten(), )
-        me.calc_normals()
+        if(bpy.app.version < (4, 0, 0)):
+            # NOTE: useful in 3.4, deprecated and doing nothing in 3.5/3.6, removed in 4.0
+            me.calc_normals()
         me.validate()
         
         # # DEBUG
@@ -934,8 +936,8 @@ class SCATTER5_OT_bezier_area_base(SCATTER5_OT_tool_base, ):
         
         # # get surface bounding box, apply world matrix, get max z
         # o = self.surface
-        # bbox = np.array(o.bound_box, dtype=float, )
-        # ones = np.ones(len(bbox), dtype=float, )
+        # bbox = np.array(o.bound_box, dtype=np.float64, )
+        # ones = np.ones(len(bbox), dtype=np.float64, )
         # vs = np.c_[bbox[:, 0], bbox[:, 1], bbox[:, 2], ones]
         # model = np.array(o.matrix_world)
         # vs = np.dot(model, vs.T)[0:4].T.reshape((-1, 4))
@@ -1152,7 +1154,7 @@ class SCATTER5_OT_draw_bezier_area(SCATTER5_OT_bezier_area_base, ):
             else:
                 # mouse was not yet above surface, use surface location. not great, but what else we can do?
                 # depth = self.surface.location
-                depth = Vector(np.array([s.location for s in self._surfaces], dtype=float, ).mean(axis=0, ))
+                depth = Vector(np.array([s.location for s in self._surfaces], dtype=np.float64, ).mean(axis=0, ))
             # get closest location on surface
             origin = view3d_utils.region_2d_to_location_3d(region, rv3d, self._path[-1], depth, )
             l, n, i, d = self._bvh.find_nearest(origin)
@@ -1233,8 +1235,13 @@ class SCATTER5_OT_draw_bezier_area(SCATTER5_OT_bezier_area_base, ):
         #     return {'CANCELLED'}
         
         self._emitter = bpy.context.scene.scatter5.emitter
-        psys = self._emitter.scatter5.get_psy_active()
-        surfaces = psys.get_surfaces()
+        
+        #get active psy, or group
+        itm = self._emitter.scatter5.get_psy_active()
+        if (itm is None):
+            itm = self._emitter.scatter5.get_group_active()
+        surfaces = itm.get_surfaces()
+        
         self._surfaces = surfaces
         self._surfaces_names = [o.name for o in surfaces]
         self._target = bpy.data.objects.get(self.edit_existing)
@@ -1250,8 +1257,8 @@ class SCATTER5_OT_draw_bezier_area(SCATTER5_OT_bezier_area_base, ):
         '''
         # get surface bounding box, apply world matrix, get max z
         o = self.surface
-        bbox = np.array(o.bound_box, dtype=float, )
-        ones = np.ones(len(bbox), dtype=float, )
+        bbox = np.array(o.bound_box, dtype=np.float64, )
+        ones = np.ones(len(bbox), dtype=np.float64, )
         vs = np.c_[bbox[:, 0], bbox[:, 1], bbox[:, 2], ones]
         model = np.array(o.matrix_world)
         vs = np.dot(model, vs.T)[0:4].T.reshape((-1, 4))
@@ -1465,7 +1472,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
             else:
                 # mouse was not yet above surface, use surface location. not great, but what else we can do?
                 # depth = self.surface.location
-                depth = Vector(np.array([s.location for s in self._surfaces], dtype=float, ).mean(axis=0, ))
+                depth = Vector(np.array([s.location for s in self._surfaces], dtype=np.float64, ).mean(axis=0, ))
             # get closest location on surface
             origin = view3d_utils.region_2d_to_location_3d(region, rv3d, self._path[-1], depth, )
             l, n, i, d = self._bvh.find_nearest(origin)
@@ -1536,7 +1543,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
                 depth = self._last_valid_loc
             else:
                 # mouse was not yet above surface, use surface location. not great, but what else we can do?
-                depth = Vector(np.array([s.location for s in self._surfaces], dtype=float, ).mean(axis=0, ))
+                depth = Vector(np.array([s.location for s in self._surfaces], dtype=np.float64, ).mean(axis=0, ))
             # get closest location on surface
             origin = view3d_utils.region_2d_to_location_3d(region, rv3d, self._path[-1], depth, )
             l, n, i, d = self._bvh.find_nearest(origin)
@@ -1590,7 +1597,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
                 radii.append(r)
         
         steps = 16
-        c = np.zeros((steps, 3), dtype=float, )
+        c = np.zeros((steps, 3), dtype=np.float64, )
         angstep = 2 * np.pi / steps
         a = np.arange(steps, dtype=int, )
         # c[:, 0] = center[0] + (np.sin(a * angstep) * radius)
@@ -1599,14 +1606,14 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
         c[:, 1] = np.cos(a * angstep)
         
         # tris = mathutils.geometry.tessellate_polygon((c, ))
-        c = np.concatenate([np.zeros((1, 3), dtype=float, ), c])
+        c = np.concatenate([np.zeros((1, 3), dtype=np.float64, ), c])
         i = np.arange(steps, dtype=int, )
-        tris = np.c_[np.zeros(steps, dtype=float, ), i + 1, np.roll(i, -1) + 1, ]
+        tris = np.c_[np.zeros(steps, dtype=np.float64, ), i + 1, np.roll(i, -1) + 1, ]
         
         l = len(path)
         lt = len(tris)
         lv = len(c)
-        vs = np.zeros((l * (steps + 1), 3), dtype=float, )
+        vs = np.zeros((l * (steps + 1), 3), dtype=np.float64, )
         triangles = np.zeros((l * len(tris), 3), dtype=int, )
         for i, p in enumerate(path):
             cc = c.copy()
@@ -1622,7 +1629,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
         '''
         hull = np.array(mathutils.geometry.convex_hull_2d(vs2d), dtype=int, )
         hull_vs2d = vs2d[hull]
-        # hvs = np.c_[hull_vs[:, 0], hull_vs[:, 1], np.zeros(len(hull_vs), dtype=float, )]
+        # hvs = np.c_[hull_vs[:, 0], hull_vs[:, 1], np.zeros(len(hull_vs), dtype=np.float64, )]
         hull_indices = np.arange(len(hull_vs2d), dtype=int, ) + len(vs2d)
         
         vs = np.concatenate([vs2d, hull_vs2d, ])
@@ -1633,7 +1640,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
         hvs = hvs * f
         vs[hull_indices] = hvs + c
         
-        # vs = np.c_[vs[:, 0], vs[:, 1], np.zeros(len(vs), dtype=float, )]
+        # vs = np.c_[vs[:, 0], vs[:, 1], np.zeros(len(vs), dtype=np.float64, )]
         
         i = np.arange(len(hull_indices), dtype=int, )
         es = np.c_[hull_indices[i], np.roll(hull_indices[i], -1), ]
@@ -1676,7 +1683,7 @@ class SCATTER5_OT_brush_bezier_area(SCATTER5_OT_bezier_area_base, ):
         self._del_es = es
         
         # steps = 16
-        # vs = np.zeros((steps, 2), dtype=float, )
+        # vs = np.zeros((steps, 2), dtype=np.float64, )
         # angstep = 2 * np.pi / steps
         # a = np.arange(steps, dtype=int, )
         # vs[:, 0] = center[0] + (np.sin(a * angstep) * radius)

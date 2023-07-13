@@ -43,58 +43,98 @@ def draw_addon(self,layout):
         
     #Enter Manager 
 
-    col.label(text=translate("Enter Geo-Scatter Manager."),)
+    col.label(text=translate("Enter The Plugin Manager."),)
 
     enter = col.row()
     enter.scale_y = 1.5
-    enter.operator("scatter5.impost_addonprefs",text=translate("Enter Manager"),icon_value=cust_icon('W_SCATTER')).state = True
+    enter.operator("scatter5.impost_addonprefs", text=translate("Enter Manager"), icon_value=cust_icon("W_SCATTER"),).state = True
 
     col.separator(factor=1.5)
 
     #Write license block 
 
+    license_layout = col
+
+    from .. __init__ import bl_info
+    plugin_name = bl_info["name"]
     license_path = directories.addon_license_type
 
-    col.label(text=translate("Geo-Scatter Product: License Agreement."),)
+    license_layout.label(text=f"{plugin_name} Product: License Agreement.",)
     
-    box = col.box()
-    word_wrap(layout=box, max_char=81, alert=False, active=False, string="Geo-Scatter is comprised of two programs working together: a python script released under the GNU GPL and a geometry-node algorithm called the “GEO-SCATTER ENGINE” with a license similar to Royalty free licensing. By using Geo-Scatter, users agree to the terms and conditions of both licenses. Only licenses downloaded from the official source listed on “www.geoscatter.com/download” are legitimate. Compared to the Royalty Free license, the “GEO-SCATTER ENGINE” end user license agreement provides an additional advantage by allowing users to share Blender scenes using the algorithm, while also placing restrictions on how users may interact with the algorithm through the usage of scripts or plugins.",)
-    box.operator("wm.url_open", text="Both licenses can be found on “www.geoscatter.com/legal”", emboss=True, )
+    boxcol = license_layout.column(align=True)
+    box = boxcol.box() #WARNING: Modifying this text does not in any shape or form change our legal conditions, find the conditions on www.geoscatter.com/legal 
+    word_wrap(layout=box, max_char=81, alert=False, active=False, string=f"the “{plugin_name}” product is comprised of two licenses: a python script released under the GNU-GPL used for drawing an user interface, and a non-software geometry-node nodetree called the “GEO-SCATTER ENGINE” with a license similar to Royalty free licensing. By using {plugin_name}, users agree to the terms and conditions of both licenses. Only “GEO-SCATTER ENGINE” licenses downloaded from the official source listed on “www.geoscatter.com/download” are legitimate. Compared to the Royalty Free license, the “GEO-SCATTER ENGINE” end user license agreement provides an additional advantage by allowing users to freely share Blender scenes containing the nodetree, while also placing restrictions on how users may interact with our engine nodetree through the usage of scripts or plugins.",)
+    boxl = boxcol.box()
+    boxllbl = boxl.row()
+    boxllbl.alignment = "CENTER"
+    boxllbl.active = False
+    boxllbl.operator("wm.url_open", text="Both licenses can be found on “www.geoscatter.com/legal”", emboss=False, ).url = "www.geoscatter.com/legal"
 
     is_individual = os.path.exists(os.path.join(license_path,"1.txt"))
     if (is_individual):
-        col.separator(factor=1.5)
-        col.label(text=translate("Geo-Scatter Engine: Individual License."),)
-        box = col.box()
-        word_wrap(layout=box, max_char=81, alert=False, active=False, string="The “Individual” license for “GEO-SCATTER ENGINE” is a non-transferable license that grants a single user the right to use the “GEO-SCATTER ENGINE” on any computer they own for either personal or professional use. This license requires a one-time fee and is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants the licensee the permission to interact with our engine through the use of the “Geo-Scatter” plugin.",)
-        box.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=True, )
-    
+        license_layout.separator(factor=1.5)
+        license_layout.label(text=f"{plugin_name} Engine: Individual License.",)
+        boxcol = license_layout.column(align=True)
+        box = boxcol.box() #WARNING: Modifying this text does not in any shape or form change our legal conditions, find the conditions on www.geoscatter.com/legal 
+        word_wrap(layout=box, max_char=81, alert=False, active=False, string=f"The “Individual” license for “GEO-SCATTER ENGINE” is a non-transferable license that grants a single user the right to use the “GEO-SCATTER ENGINE” on any computer they own for either personal or professional use. This license legally requires a one-time fee and is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants the licensee the permission to interact with our engine through the use of the “{plugin_name}” plugin.",)
+        boxl = boxcol.box()
+        boxllbl = boxl.row()
+        boxllbl.alignment = "CENTER"
+        boxllbl.active = False
+        boxllbl.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=False, ).url = "www.geoscatter.com/legal"
+
     is_team = os.path.exists(os.path.join(license_path,"2.txt"))
     if (is_team):
-        col.separator(factor=1.5)
-        col.label(text=translate("Geo-Scatter Engine: Team License."),)
-        box = col.box()
-        word_wrap(layout=box, max_char=81, alert=False, active=False, string="The “Team” license for “GEO-SCATTER ENGINE” permits up to six users who belong to the same team or organization to use the “GEO-SCATTER ENGINE” on up to six computers. This license is transferable within the same organization but not to other organizations or individuals. A one-time fee is required for this license, and it is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants licensee(s) the permission to interact with our engine through the use of the “Geo-Scatter” plugin.",)
-        box.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=True, )
+        license_layout.separator(factor=1.5)
+        license_layout.label(text=f"{plugin_name} Engine: Team License.",)
+        boxcol = license_layout.column(align=True)
+        box = boxcol.box() #WARNING: Modifying this text does not in any shape or form change our legal conditions, find the conditions on www.geoscatter.com/legal 
+        word_wrap(layout=box, max_char=81, alert=False, active=False, string=f"The “Team” license for “GEO-SCATTER ENGINE” permits up to six users who belong to the same team or organization to use the “GEO-SCATTER ENGINE” on up to six computers. This license is transferable within the same organization but not to other organizations or individuals. A one-time fee is legally required for this license, and it is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants licensee(s) the permission to interact with our engine through the use of the “{plugin_name}” plugin.",)
+        boxl = boxcol.box()
+        boxllbl = boxl.row()
+        boxllbl.alignment = "CENTER"
+        boxllbl.active = False
+        boxllbl.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=False, ).url = "www.geoscatter.com/legal"
     
     is_studio = os.path.exists(os.path.join(license_path,"3.txt"))
     if (is_studio):
-        col.separator(factor=1.5)
-        col.label(text=translate("Geo-Scatter Engine: Studio License."),)
-        box = col.box()
-        word_wrap(layout=box, max_char=81, alert=False, active=False, string="The “Studio” license for “GEO-SCATTER ENGINE” allows every employee of a business to use the “GEO-SCATTER ENGINE” on an unlimited number of computers. Like the “Team” license, this license is transferable within the same organization but not to other organizations or individuals. A one-time fee is required for this license, and it is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants licensee(s) permission to interact with our engine using official or custom scripts/plugins.",)
-        box.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=True, )
+        license_layout.separator(factor=1.5)
+        license_layout.label(text=f"{plugin_name} Engine: Studio License.",)
+        boxcol = license_layout.column(align=True)
+        box = boxcol.box() #WARNING: Modifying this text does not in any shape or form change our legal conditions, find the conditions on www.geoscatter.com/legal 
+        word_wrap(layout=box, max_char=81, alert=False, active=False, string=f"The “Studio” license for “GEO-SCATTER ENGINE” allows every employee of a business to use the “GEO-SCATTER ENGINE” on an unlimited number of computers. Like the “Team” license, this license is transferable within the same organization but not to other organizations or individuals. A one-time fee is legally required for this license, and it is subject to the terms and conditions outlined in the agreement found on “www.geoscatter.com/legal”. This license grants licensee(s) permission to interact with our engine using our official “{plugin_name}” script, or custom scripts/plugins as well.",)
+        boxl = boxcol.box()
+        boxllbl = boxl.row()
+        boxllbl.alignment = "CENTER"
+        boxllbl.active = False
+        boxllbl.operator("wm.url_open", text="This agreement is available on “www.geoscatter.com/legal”", emboss=False, ).url = "www.geoscatter.com/legal"
     
-    col.separator(factor=1.5)
-    col.label(text=translate("Contact Information:"),)
-    box = col.box()
+    license_layout.separator(factor=1.5)
+    license_layout.label(text="Contact Information:",)
+    boxcol = license_layout.column(align=True)
+    box = boxcol.box()
     word_wrap(layout=box, max_char=81, alert=False, active=False, string="If you have any inquiries or any questions, you may contact us via “contact@geoscatter.com” or through our diverse social medial lised on “www.geoscatter.com” or within this very plugin.",)
-    box.operator("wm.url_open", text="Visit “www.geoscatter.com", emboss=True, )
+    boxl = boxcol.box()
+    boxllbl = boxl.row()
+    boxllbl.alignment = "CENTER"
+    boxllbl.active = False
+    boxllbl.operator("wm.url_open", text="Visit “www.geoscatter.com”", emboss=False, ).url = "www.geoscatter.com"
+
+    license_layout.label(text=f"Trademark.",)
+
+    boxcol = license_layout.column(align=True)
+    box = boxcol.box() #WARNING: Modifying this text does not in any shape or form change our legal conditions, find the conditions on www.geoscatter.com/legal 
+    word_wrap(layout=box, max_char=81, alert=False, active=False, string=f"Please note that the “GEO-SCATTER” name & logo is a trademark or registered trademark of “BD3D DIGITAL DESIGN, SLU” in the U.S. and/or other countries. We reserve all rights over this trademark.",)
+    boxl = boxcol.box()
+    boxllbl = boxl.row()
+    boxllbl.alignment = "CENTER"
+    boxllbl.active = False
+    boxllbl.operator("wm.url_open", text="Visit “www.geoscatter.com/legal”", emboss=False, ).url = "www.geoscatter.com/legal"
 
     disclaimer = col.column()
     disclaimer.separator(factor=0.7)
     disclaimer.active = True
-    disclaimer.label(text="*Extend this interface if the texts are not readable.",)
+    disclaimer.label(text="*Extend this interface if texts are not readable.",)
 
     col.separator(factor=2)
 
@@ -123,17 +163,20 @@ def addonpanel_overridedraw(self,context):
     #Prefs
     if (scat_win.category_manager=="prefs"):
         draw_add_prefs(self, layout)
-
+        
     elif (scat_win.category_manager=="library"):
-        from . biome_library import draw_library_grid
+        from . ui_biome_library import draw_library_grid
         draw_library_grid(self, layout)
 
     elif (scat_win.category_manager=="market"):
-        from . biome_library import draw_online_grid
+        from . ui_biome_library import draw_online_grid
         draw_online_grid(self, layout)
+        
+    elif (scat_win.category_manager=="lister_large"):
+        draw_addon_prefs_lister(self, layout, lister_large=True,)
 
-    elif (scat_win.category_manager=="stats"):
-        draw_stats(self, layout)
+    elif (scat_win.category_manager=="lister_stats"):
+        draw_addon_prefs_lister(self, layout, lister_stats=True,)
 
     return None
 
@@ -143,38 +186,50 @@ def addonheader_overridedraw(self, context):
 
     layout = self.layout
 
+    scat_scene = context.scene.scatter5
     scat_win = bpy.context.window_manager.scatter5
 
+    from .. __init__ import bl_info
+    plugin_name = bl_info["name"]
+    
     row = layout.row()
     row.template_header()
 
     scat = row.row(align=True)
     scat.scale_x = 1.1
-    scat.menu("SCATTER5_MT_manager_header_menu_scatter", text="Geo-Scatter",icon_value=cust_icon('W_SCATTER'))
+    scat.menu("SCATTER5_MT_manager_header_menu_scatter", text=plugin_name, icon_value=cust_icon("W_SCATTER"),)
 
     if (scat_win.category_manager=="library"):
+        row.menu("SCATTER5_MT_manager_header_menu_interface", text=translate("Interface"),)
         row.menu("SCATTER5_MT_manager_header_menu_open", text=translate("File"),)
-        row.menu("SCATTER5_MT_manager_header_menu_biome_interface", text=translate("Interface"),)
         popover = row.row(align=True)
         popover.emboss = "NONE"
-        popover.popover(panel="SCATTER5_PT_creation_operator_load_biome",text="Settings" ,)
+        popover.popover(panel="SCATTER5_PT_creation_operator_load_biome", text="Settings",)
 
     elif (scat_win.category_manager=="market"):
+        row.menu("SCATTER5_MT_manager_header_menu_interface", text=translate("Interface"),)
         row.menu("SCATTER5_MT_manager_header_menu_open", text=translate("File"),)
-        row.menu("SCATTER5_MT_manager_header_menu_biome_interface", text=translate("Interface"),)
+
+    elif (scat_win.category_manager=="lister_large"):
+        row.menu("SCATTER5_MT_manager_header_menu_interface", text=translate("Interface"),)
+
+    elif (scat_win.category_manager=="lister_stats"):
+        row.menu("SCATTER5_MT_manager_header_menu_interface", text=translate("Interface"),)
 
     elif (scat_win.category_manager=="prefs"):
         row.menu("USERPREF_MT_save_load", text=translate("Preferences"),)
 
-    elif (scat_win.category_manager=="stats"):
-        row.menu("SCATTER5_MT_manager_header_menu_operations", text=translate("Operations"),)
-
     layout.separator_spacer()
 
-    if (scat_win.category_manager=="stats"):
-        layout.popover(panel="SCATTER5_PT_manager_header_menu_stats_filter",text=translate("Filter"),icon='FILTER',)
+    if (scat_win.category_manager!="prefs"):
+        
+        emit = layout.row()
+        # if (scat_scene.emitter is None):
+        #     emitlbl = emit.row()
+        #     emitlbl.label(text="   "+translate("Choose an emitter →"),)
+        emit.prop(scat_scene,"emitter",text="", icon_value=cust_icon("W_EMITTER"),)
 
-    exit = layout.column()
+    exit = layout.row()
     exit.alert = True
     exit.operator("scatter5.impost_addonprefs",text=translate("Exit"),icon='PANEL_CLOSE').state = False
 
@@ -186,8 +241,9 @@ def addonnavbar_overridedraw(self, context):
 
     layout = self.layout
 
-    scat_scene = bpy.context.scene.scatter5
-    scat_win = bpy.context.window_manager.scatter5
+    scat_win = context.window_manager.scatter5
+    scat_scene = context.scene.scatter5
+    emitter = scat_scene.emitter
 
     #Close if user is dummy 
 
@@ -204,47 +260,135 @@ def addonnavbar_overridedraw(self, context):
     enum.scale_y = 1.3
     enum.prop(scat_win,"category_manager",expand=True)
 
-    layout.separator(factor=5)
+    layout.separator(factor=4)
 
     #Per category T panel
 
     if (scat_win.category_manager=="library"):
 
-        #layout.label(text=translate("Search")+" :")
+        lbl = layout.row()
+        lbl.active = False
+        lbl.label(text=translate("Navigation"),)
 
         row = layout.row(align=True)
-        row.scale_y = 1.2
+        row.scale_y = 1.0
         row.prop(scat_scene,"library_search",icon="VIEWZOOM",text="") 
 
         layout.separator(factor=0.33)
 
-        #layout.label(text=translate("Navigate")+" :")
-
         wm = bpy.context.window_manager
-        navigate = layout.column()
-        navigate.scale_y = 1
+        navigate = layout.column(align=True)
+        navigate.scale_y = 1.0
         navigate.template_list("SCATTER5_UL_folder_navigation", "", wm.scatter5, "folder_navigation", wm.scatter5, "folder_navigation_idx",rows=20,)
-
-        lbl = navigate.column()
-        lbl.scale_y = 0.8
-        lbl.active = False
-        lbl.separator()
 
         elements_count = 0 
         if (len(scat_win.folder_navigation)!=0):
             elements_count = scat_win.folder_navigation[scat_win.folder_navigation_idx].elements_count
 
-        lbl.label(text=f'{elements_count} {translate("Elements in Folder")}')
+        indic = navigate.box()
+        indic.scale_y = 1.0
+        indic.label(text=f'{elements_count} {translate("Elements in Folder")}')
         
-        #lbl.separator(factor=2)
-        #lbl.label(text=translate("Need more?"))
-        #lbl.operator("scatter5.exec_line",text=translate("Check out what's available"),emboss=False).api = 'scat_win.category_manager = "market" ; bpy.context.area.tag_redraw()'
+        # layout.separator()
+
+        # lbl = layout.row()
+        # lbl.active = False
+        # lbl.label(text=translate("Need More?"),)
+
+        # row = layout.row(align=True)
+        # row.scale_y = 1.0
+        # row.operator("scatter5.exec_line",text=translate("Get Biomes"), icon="URL",).api = 'scat_win.category_manager = "market" ; bpy.context.area.tag_redraw()'
+
+        # lbl = layout.row()
+        # lbl.active = False
+        # lbl.label(text=translate("Install a Scatpack?"),)
+
+        # row = layout.row(align=True)
+        # row.scale_y = 1.0
+        # row.operator("scatter5.install_package", text=translate("Install a Pack"), icon="NEWFOLDER")
 
     elif (scat_win.category_manager=="market"):
-        pass
 
-    elif (scat_win.category_manager=="stats"):
-        pass
+        lbl = layout.row()
+        lbl.active = False
+        lbl.label(text=translate("All Biomes"),)
+
+        row = layout.row(align=True)
+        row.scale_y = 1.0
+        row.operator("wm.url_open",text=translate("Visit Website"),icon="URL").url="https://geoscatter.com/biomes"
+
+        lbl = layout.row()
+        lbl.active = False
+        lbl.label(text=translate("Share your Pack"),)
+
+        row = layout.row(align=True)
+        row.scale_y = 1.0
+        row.operator("wm.url_open",text=translate("Contact Us"),icon="URL").url="https://discord.com/invite/F7ZyjP6VKB"
+
+        lbl = layout.row()
+        lbl.active = False
+        lbl.label(text=translate("Refresh Page"),)
+
+        row = layout.row(align=True)
+        row.scale_y = 1.0
+        row.operator("scatter5.manual_fetch_from_git",text=translate("Re-Fetch"), icon="FILE_REFRESH")
+
+    elif (scat_win.category_manager=="lister_large"):
+
+        if (emitter is not None):
+
+            nbr = len(emitter.scatter5.get_psys_selected(all_emitters=scat_scene.factory_alt_selection_method=="all_emitters"))
+
+            # lbl = layout.row()
+            # lbl.active = False
+            # lbl.label(text=translate("Batch Optimize"),)
+            #
+            # row = layout.row(align=True)
+            # row.scale_y = 1.00
+            # row.operator("scatter5.batch_optimization",text=translate("Set Optimizations"),icon="MEMORY")
+
+            lbl = layout.row()
+            lbl.active = False
+            lbl.label(text=translate("Bounding-Box"),)
+
+            row = layout.row(align=True)
+            row.scale_y = 1.0
+            row.operator("scatter5.batch_bounding_box",text=translate("Set Bounds"),icon="CUBE").pop_dialog = True
+
+            lbl = layout.row()
+            lbl.active = False
+            lbl.label(text=translate("Alt Behavior")+f" [{nbr}]",)
+            
+            row = layout.row(align=True)
+            if (scat_scene.factory_alt_allow):
+                  row.scale_y = 1.1
+                  row.prop(scat_scene,"factory_alt_selection_method",text="",)
+            else: row.prop(scat_scene,"factory_alt_allow",text=translate("Enable Alt"), icon="BLANK1",)
+
+
+    elif (scat_win.category_manager=="lister_stats"):
+
+        if (emitter is not None):
+
+            lbl = layout.row()
+            lbl.active = False
+            lbl.label(text=translate("Estimate Count"),)
+
+            row = layout.row()
+            row.scale_y = 1.0
+            op = row.operator("scatter5.exec_line",text=translate("Refresh"),icon="FILE_REFRESH",)
+            op.api = f"[ ( p.get_scatter_count(state='render',) , p.get_scatter_count(state='viewport') ) for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems ] ; [a.tag_redraw() for a in bpy.context.screen.areas]"
+            op.description = translate("Re-compute the instance-count statistics of every single scatter-system in your scene. Note that you are able to show these stats in this lister interface! To do so, please enable the statistics in the header menu")
+
+            lbl = layout.row()
+            lbl.active = False
+            lbl.label(text=translate("Estimate Area"),)
+
+            row = layout.row()
+            row.scale_y = 1.0
+            op = row.operator("scatter5.exec_line",text=translate("Refresh"),icon="FILE_REFRESH",)
+            op.api = f"[ p.get_surfaces_square_area(evaluate='recalculate', eval_modifiers=True, get_selection=False,) for o in bpy.context.scene.objects if len(o.scatter5.particle_systems) for p in o.scatter5.particle_systems] ; [a.tag_redraw() for a in bpy.context.screen.areas]"
+            op.description = translate("Re-compute the square area statistics of every single scatter-surface in your scene. Note that you are able to show these stats in this lister interface! To do so, please enable the statistics in the header menu")
 
     elif (scat_win.category_manager=="prefs"):
         pass
@@ -283,9 +427,9 @@ class SCATTER5_OT_impost_addonprefs(bpy.types.Operator):
 
         for window in bpy.context.window_manager.windows:
             for area in window.screen.areas:
-                if (area.type == 'PREFERENCES'):
+                if (area.type=='PREFERENCES'):
                     for space in area.spaces:
-                        if (space.type == 'PREFERENCES'):
+                        if (space.type=='PREFERENCES'):
                             space.show_region_header = True
 
         #Save Original Class Drawing Function in global , and replace their function with one of my own 
@@ -372,12 +516,15 @@ def draw_add_prefs(self, layout):
     draw_add_fetch(self,main)
     ui_templates.separator_box_out(main)
 
-    draw_add_browser(self,main)
-    ui_templates.separator_box_out(main)
-
     #draw_add_lang(self,main)
     #ui_templates.separator_box_out(main)
     
+    draw_add_browser(self,main)
+    ui_templates.separator_box_out(main)
+
+    draw_clean_data(self,main)
+    ui_templates.separator_box_out(main)
+
     draw_add_npanl(self,main)
     ui_templates.separator_box_out(main)
 
@@ -402,11 +549,11 @@ def draw_add_prefs(self, layout):
 def draw_add_packs(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_packs", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_packs";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_packs", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_packs");BOOL_VALUE(1)
         icon = "NEWFOLDER", 
         name = translate("Install a Package"),
-        doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_add_packs", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_add_packs"
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "ui_add_packs", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_add_packs")
         )
     if is_open:
 
@@ -430,7 +577,7 @@ def draw_add_fetch(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_fetch", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_fetch";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_fetch", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_fetch");BOOL_VALUE(1)
         icon = "URL", 
         name = translate("Scatpack Previews Fetch"),
         )
@@ -444,7 +591,7 @@ def draw_add_fetch(self,layout):
             ui_templates.bool_toggle(col, 
                 prop_api=addon_prefs,
                 prop_str="fetch_automatic_allow", 
-                label=translate("Automatically Fetch Biome Previews from Web."), 
+                label=translate("Automatically Fetch Packs Previews from Web."), 
                 icon="FILE_REFRESH", 
                 left_space=False,
                 )
@@ -469,11 +616,11 @@ def draw_add_browser(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_browser", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_browser";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_browser", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_browser");BOOL_VALUE(1)
         icon = "ASSET_MANAGER", 
         name = translate("Asset Browser Convert"),
         doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_add_browser", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_add_browser"
+        popover_argument = "ui_add_browser", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_add_browser")
         )
     if is_open:
 
@@ -492,10 +639,40 @@ def draw_add_browser(self,layout):
     return None
 
 
+def draw_clean_data(self,layout):
+
+    addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "clean_data", #INSTRUCTION:REGISTER:UI:BOOL_NAME("clean_data");BOOL_VALUE(1)
+        icon = "MESH_DATA", 
+        name = translate("Clanse Data"),
+        #doc_panel = "SCATTER5_PT_docs", 
+        #popover_argument = "clean_data", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("clean_data")
+        )
+    if is_open:
+
+            row = box.row()
+            row.separator(factor=0.3)
+            col = row.column()
+            row.separator(factor=0.3)
+            
+            col.operator("scatter5.clean_unused_import_data", text=translate("Delete Unused Imports"), icon="TRASH",)
+                
+            col.separator(factor=0.5)
+
+            op = col.operator("outliner.orphans_purge", text=translate("Purge Orphans Data"), icon="ORPHAN_DATA",)
+            op.do_recursive = True
+            
+            ui_templates.separator_box_in(box)
+    
+    return None
+
+
 def draw_add_lang(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_lang", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_lang";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_lang", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_lang");BOOL_VALUE(1)
         icon = "WORLD_DATA", 
         name = translate("Languages"),
         )
@@ -522,7 +699,7 @@ def draw_add_npanl(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_npanl", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_npanl";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_npanl", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_npanl");BOOL_VALUE(1)
         icon = "MENU_PANEL", 
         name = translate("N Panel Name"),
         )
@@ -547,11 +724,11 @@ def draw_add_paths(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_paths", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_paths";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_paths", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_paths");BOOL_VALUE(1)
         icon = "FILEBROWSER", 
         name = translate("Scatter-Library Location"),
         doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_add_paths", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_add_paths"
+        popover_argument = "ui_add_paths", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_add_paths")
         )
     if is_open:
 
@@ -589,7 +766,7 @@ def draw_add_paths(self,layout):
                 if (not is_bitmaps):
                     warn.label(text=" "*10 + translate("-'_bitmaps_' Directory not Found"))
 
-                warn.label(text=translate("Geo-Scatter will use the default library location instead"),icon="BLANK1")
+                warn.label(text=translate("We will use the default library location instead"),icon="BLANK1")
 
             if all([ is_library, is_biomes, is_presets, is_bitmaps]) and (directories.lib_library!=addon_prefs.library_path):
                 colc.separator(factor=0.7)
@@ -621,11 +798,11 @@ def draw_add_environment(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_environment", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_environment";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_environment", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_environment");BOOL_VALUE(1)
         icon = "LONGDISPLAY", 
         name = translate("Biomes Environment Paths"),
         doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_add_environment", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_add_environment"
+        popover_argument = "ui_add_environment", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_add_environment")
         )
     if is_open:
 
@@ -637,7 +814,7 @@ def draw_add_environment(self,layout):
             ui_templates.bool_toggle(col,
                 prop_api=addon_prefs,
                 prop_str="blend_environment_path_asset_browser_allow", 
-                label=translate("Search for .blend in asset-library paths"),
+                label=translate("Search for blend(s) in your asset-library"),
                 icon="ASSET_MANAGER",
                 left_space=False,
                 )
@@ -666,7 +843,7 @@ def draw_add_environment(self,layout):
             ui_templates.bool_toggle(col,
                 prop_api=addon_prefs,
                 prop_str="blend_environment_path_allow",
-                label=translate("Search for .blend in given paths"),
+                label=translate("Search for blend(s) in custom paths"),
                 icon="FILE_BLEND",
                 left_space=False,
                 )
@@ -704,7 +881,6 @@ def draw_add_environment(self,layout):
                     row = alcol.row(align=True)
                     row.active = False
                     row.label(text=translate("No Path(s) Found"))
-
                     
                 #add button 
 
@@ -738,11 +914,11 @@ def draw_add_workflow(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_workflow", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_workflow";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_workflow", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_workflow");BOOL_VALUE(1)
         icon = "W_SCATTER", 
         name = translate("Workflow"),
         doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_add_workflow", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_add_workflow"
+        popover_argument = "ui_add_workflow", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_add_workflow")
         )
     if is_open:
 
@@ -765,7 +941,7 @@ def draw_add_workflow(self,layout):
 def draw_add_shortcut(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_shortcut", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_shortcut";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_shortcut", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_shortcut");BOOL_VALUE(1)
         icon = "EVENT_TAB", 
         name = translate("Shortcuts"),
         )
@@ -880,7 +1056,7 @@ def draw_add_customui(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_customui", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_customui";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_customui", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_customui");BOOL_VALUE(1)
         icon = "COLOR", 
         name = translate("Interface"),
         )
@@ -894,7 +1070,7 @@ def draw_add_customui(self,layout):
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
                 prop_str="ui_use_dark_box", 
-                label=translate("Box-Panel: Use Dark Header"), 
+                label=translate("Panels: Use Dark Header"), 
                 icon="ALIGN_MIDDLE", 
                 left_space=True,
                 )
@@ -902,25 +1078,25 @@ def draw_add_customui(self,layout):
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
                 prop_str="ui_show_boxpanel_icon", 
-                label=translate("Box-Panel: Use Icons"), 
+                label=translate("Panels: Use Icons"), 
                 icon="MONKEY", 
                 left_space=True,
                 )
 
             row = box.row()
             row.separator(factor=0.3)
-            row.prop(addon_prefs,"ui_boxpanel_separator", text=translate("Box-Panel: Spacing Between Panels"))
+            row.prop(addon_prefs,"ui_boxpanel_separator", text=translate("Panels: Spacing Between Panels"))
             row.separator(factor=0.3)
 
             row = box.row()
             row.separator(factor=0.3)
-            row.prop(addon_prefs,"ui_boxpanel_height", text=translate("Box-Panel: Title Height"))
+            row.prop(addon_prefs,"ui_boxpanel_height", text=translate("Panels: Title Height"))
             row.separator(factor=0.3)
 
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
                 prop_str="ui_bool_use_standard", 
-                label=translate("Toggle: Use Icons"), 
+                label=translate("Toggles: Use Icons"), 
                 icon="CHECKBOX_HLT", 
                 invert_checkbox=True,
                 left_space=True,
@@ -929,7 +1105,7 @@ def draw_add_customui(self,layout):
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
                 prop_str="ui_bool_use_openclose", 
-                label=translate("Toggle: Use Open/Close"), 
+                label=translate("Toggles: Use Open/Close"), 
                 icon="DOWNARROW_HLT", 
                 invert_checkbox=False,
                 left_space=True,
@@ -938,7 +1114,7 @@ def draw_add_customui(self,layout):
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
                 prop_str="ui_bool_use_iconcross", 
-                label=translate("Toggle: Use Crosses Toggled Off"), 
+                label=translate("Toggles: Use Crosses Toggled Off"), 
                 icon="CANCEL", 
                 left_space=True,
                 enabled=not addon_prefs.ui_bool_use_standard
@@ -946,30 +1122,29 @@ def draw_add_customui(self,layout):
 
             row = box.row()
             row.separator(factor=0.3)
-            row.prop(addon_prefs,"ui_bool_indentation", text=translate("Toggle: Indentation"))
-            row.separator(factor=0.3)
-
-            # # NOTE: no longer active, multiplier moved to theme. will be part of manual mode theme ui.
-            # row = box.row()
-            # row.separator(factor=0.3)
-            # row.prop(addon_prefs,"ui_scale_viewport", text=translate("Viewport: Scatter5 Infobox Scale"))
-            # row.separator(factor=0.3)
-
-            row = box.row()
-            row.separator(factor=0.3)
-            row.prop(addon_prefs,"ui_word_wrap_max_char_factor", text=translate("Info-Text: Max Character per Lines"))
+            row.prop(addon_prefs,"ui_bool_indentation", text=translate("Toggles: Indentation"))
             row.separator(factor=0.3)
 
             row = box.row()
             row.separator(factor=0.3)
-            row.prop(addon_prefs,"ui_word_wrap_y", text=translate("Info-Text: Paragraph Height"))
+            row.prop(addon_prefs,"ui_word_wrap_max_char_factor", text=translate("Texts: Max Character per Lines"))
+            row.separator(factor=0.3)
+
+            row = box.row()
+            row.separator(factor=0.3)
+            row.prop(addon_prefs,"ui_word_wrap_y", text=translate("Texts: Paragraph Height"))
+            row.separator(factor=0.3)
+            
+            row = box.row()
+            row.separator(factor=0.3)
+            row.prop(addon_prefs,"ui_apply_scale_warn", text=translate("Texts: Apply Scale Warning"))
             row.separator(factor=0.3)
             
             # ------------------------------------------------------------------ manual mode options >>>
             
             row = box.row()
             row.separator(factor=0.3)
-            row.prop(addon_prefs, "manual_use_overlay", text=translate("Manual Mode: Use Overlay"))
+            row.prop(addon_prefs, "manual_use_overlay", text=translate("ManualMode: Use Overlay"))
             row.separator(factor=0.3)
             
             # ------------------------------------------------------------------ manual mode options <<<
@@ -979,7 +1154,7 @@ def draw_add_customui(self,layout):
             ui_templates.bool_toggle(box,
                 prop_api=theme,
                 prop_str="show_ui", 
-                label=translate("Show Manual Mode Theme"), 
+                label=translate("ManualMode: Tools Theme"), 
                 icon="W_DISTMANUAL",
                 invert_checkbox=False,
                 left_space=True,
@@ -1045,7 +1220,7 @@ def draw_add_dev(self,layout):
     addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_add_dev", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_add_dev";UI_BOOL_VAL:"1"
+        prop_str = "ui_add_dev", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_add_dev");BOOL_VALUE(1)
         icon = "CONSOLE", 
         name = translate("Debugging"),
         )
@@ -1053,8 +1228,16 @@ def draw_add_dev(self,layout):
 
             ui_templates.bool_toggle(box, 
                 prop_api=addon_prefs,
+                prop_str="debug_interface", 
+                label=translate("Debug Interface."), 
+                icon="GHOST_DISABLED", 
+                left_space=True,
+                )
+
+            ui_templates.bool_toggle(box, 
+                prop_api=addon_prefs,
                 prop_str="debug", 
-                label=translate("Debug Mode."), 
+                label=translate("Debug Prints."),
                 icon="CONSOLE", 
                 left_space=True,
                 )
@@ -1064,7 +1247,7 @@ def draw_add_dev(self,layout):
             ui_templates.bool_toggle(d, 
                 prop_api=addon_prefs,
                 prop_str="debug_depsgraph", 
-                label=translate("Depsgraph console prints."), 
+                label=translate("Debug Prints (Depsgraph)."),
                 icon="CONSOLE", 
                 left_space=True,
                 )
@@ -1074,12 +1257,13 @@ def draw_add_dev(self,layout):
             col = row.column()
             row.separator(factor=0.3)
 
-            op = col.operator("scatter5.update_nodetrees", text=translate("Force-Update All Nodetrees"),)
+            op = col.operator("scatter5.fix_nodetrees", text=translate("Repair All Nodetrees"), icon="TOOL_SETTINGS",)
             op.force_update = True
 
             ui_templates.separator_box_in(box)
 
     return None
+
 
 
 # oooooooooo.                                            ooooo         o8o               .
@@ -1092,317 +1276,449 @@ def draw_add_dev(self,layout):
 
 
 
-class SCATTER5_UL_list_scatter_large(bpy.types.UIList):
-    """selection area"""
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        
-        if not item:
-            return 
-
-        p = item
-        scat_scene = bpy.context.scene.scatter5
-        row = layout.row(align=True)            
-
-        #Color 
-        if (scat_scene.lister_show_color):
-
-            color = row.row()
-            color.scale_x = 0.2
-            color.prop(p,"s_color",text="")
-
-        #Name 
-        name = row.row(align=True)
-        name.prop(p,"name", text="", emboss=False, )
-
-        #Stats
-        if (scat_scene.lister_show_stats_surface):
-
-            #spacer
-            row.separator()
-
-            info = row.row()
-            info.active = False            
-            info.label(text= square_area_repr( p.get_surfaces_square_area(evaluate="gather") ), icon="SURFACE_NSURFACE",)
-
-        #Stats
-        if (scat_scene.lister_show_stats_count):
-
-            #spacer
-            row.separator()
-
-            info = row.row()
-            info.active = False
-            info.label(text=count_repr(p.scatter_count_viewport_consider_hidden, unit="Pts"), icon="RESTRICT_VIEW_ON" if p.hide_viewport else "RESTRICT_VIEW_OFF")
-            info.label(text=count_repr(p.scatter_count_render, unit="Pts"), icon="RESTRICT_RENDER_ON" if p.hide_render else "RESTRICT_RENDER_OFF")
-
-        #Render/Lock 
-
-        if (scat_scene.lister_show_selection or scat_scene.lister_show_render_state or scat_scene.lister_show_lock):
-
-            row.separator()
-
-            sub = row.box().row(align=True)
-            sub.scale_x = 0.9
-            sub.scale_y = 0.55
-
-            #Selection
-            if (scat_scene.lister_show_selection):
-
-                sel = sub.row(align=True)
-                sel.scale_x = 0.95
-                sel.prop(p,"sel", text="", icon="RESTRICT_SELECT_OFF"if p.sel else "RESTRICT_SELECT_ON", emboss=False,)
-
-            #Render Status
-            if (scat_scene.lister_show_render_state):
-        
-                sub.prop(p, "hide_viewport", text="", icon="RESTRICT_VIEW_ON" if p.hide_viewport else "RESTRICT_VIEW_OFF", invert_checkbox=True, emboss=False,)
-                sub.prop(p, "hide_render", text="", icon="RESTRICT_RENDER_ON" if p.hide_render else "RESTRICT_RENDER_OFF", invert_checkbox=True, emboss=False,)
-
-            #Lock 
-            if (scat_scene.lister_show_lock):
-
-                loc = sub.row(align=True)
-                loc.scale_x = 1.02
-                loc.prop(p,"lock",text="",icon="LOCKED" if p.is_all_locked() else "UNLOCKED", emboss=False, invert_checkbox=p.is_all_locked())
-
-            row.separator()
-
-        #Visibility Row
-        if (scat_scene.lister_show_visibility):
-
-            sub = row.box().row(align=True)
-            sub.scale_x = 0.95
-            sub.scale_y = 0.55
-
-            #Visibility Preview 
-            vis = sub.row(align=True)
-            vis.scale_x = 1.07
-            vis.active = p.s_visibility_facepreview_allow
-            vis.prop(p,"s_visibility_facepreview_allow", text="", emboss=False, icon="SELECT_INTERSECT" if p.s_visibility_facepreview_allow else "SELECT_EXTEND",)
-
-            #Visibility %
-            vis = sub.row(align=True)
-            vis.scale_x = 1.07
-            vis.prop(p,"s_visibility_view_allow", text="", emboss=False, icon_value=cust_icon(f"W_PERCENTAGE_{str(p.s_visibility_view_allow).upper()}"),)
-
-            #Visibility Cam 
-            vis = sub.row(align=True)
-            vis.active = p.s_visibility_cam_allow
-            vis.prop(p,"s_visibility_cam_allow", text="", emboss=False, icon= "OUTLINER_OB_CAMERA" if p.s_visibility_cam_allow else "CAMERA_DATA",)
-
-            #Visibility Maxload
-            sub.prop(p,"s_visibility_maxload_allow", text="", emboss=False, icon_value= cust_icon("W_FIRE") if p.s_visibility_maxload_allow else cust_icon("W_FIRE_FALSE"),)
-
-            row.separator()
-
-        #Display Features
-        if (scat_scene.lister_show_display):
-
-            sub = row.box().row(align=True)
-            sub.scale_x = 0.95
-            sub.scale_y = 0.55
-
-            #Allow Display
-            dis = sub.row(align=True)
-            dis.scale_x = 1.1
-            dis.active = p.s_display_allow
-            dis.prop(p,"s_display_allow", text="", emboss=False, icon_value=cust_icon(f"W_DISPLAY_{str(p.s_display_allow).upper()}"),)
-
-            #Display method 
-            method = sub.row(align=True)
-            method.active = p.s_display_allow
-            method.prop(p,"s_display_method", text="", emboss=False, icon_only=True,)
-        
-        return None
-
-
-def draw_stats(self, layout):
+def draw_addon_prefs_lister(self, layout, lister_large=False, lister_stats=False,):
 
     col = layout.column()
 
+    #defined later on
+    scene_col = col.column()
+
+    addon_prefs = bpy.context.preferences.addons["Geo-Scatter"].preferences
     scat_scene = bpy.context.scene.scatter5
     emitter = scat_scene.emitter
-    emitters = scat_scene.get_all_emitters()
+
+    all_scene_psys = scat_scene.get_all_psys()
+    scene_emitters = scat_scene.get_all_emitters()
+    if (emitter is not None) and (emitter not in scene_emitters):
+        scene_emitters.append(emitter)
 
     #gather some data while in the loop  
     
-    global_scatter_system_len = 0
-    global_count_viewport_consider_hidden = -1
-    global_count_render = -1
+    total_psys_len = 0
+    total_area_len = -1 
+    total_viewport_len = -1
+    total_render_len = -1 
 
-    for e in emitters:
+    for e in scene_emitters:
+
+        epsys = e.scatter5.particle_systems[:]
+        epsys_len =  len(epsys)
 
         psy_active = e.scatter5.get_psy_active()
-        local_scatter_system_len =  len(e.scatter5.particle_systems)
+        group_active = e.scatter5.get_group_active()
 
-        # Emitter name and set new emitter operator 
+        template = col.row()
+        ui_list = template.column(align=True)
 
-        erow = col.row()
-        erow.scale_y = 1.5
+        #Emitter name and set new emitter operator 
+
+        ui_list_emitterbox = ui_list.box()
+        erow = ui_list_emitterbox.row(align=True)
+        erow.scale_y = addon_prefs.ui_lister_scale_y
 
         sub = erow.row(align=True)
         sub.alignment="LEFT"
-        op = sub.operator("scatter5.set_new_emitter",text=e.name, emboss=False, icon_value=cust_icon("W_EMITTER" if (e==emitter) else "W_EMITTER_EMPTY"),)
+        op = sub.operator("scatter5.set_new_emitter",text=f'{e.name} → {epsys_len} {translate("System(s)")}', emboss=False, icon_value=cust_icon("W_EMITTER" if (e==emitter) else "W_EMITTER_EMPTY"),)
         op.obj_name = e.name
         op.select = True
 
-        sub = erow.row(align=True)
-        sub.alignment="LEFT"
-        sub.label(text=f'{local_scatter_system_len} {translate("System(s)")}', icon="PARTICLE_DATA")
+        #rightside
 
-        # Emitter Information
+        if (lister_stats and epsys_len):
 
-        if (scat_scene.lister_show_stats_count):
+            rightactions = erow.row()
+            rightactions.alignment = "RIGHT"
 
-            erow.separator(factor=4)
-            erow.separator_spacer()
+            infoactions = rightactions.split()
+            infoactions.active = False
+            infoactions.scale_x = 0.75
 
-            inforow = erow.row(align=True)
-            inforow.alignment="RIGHT"
-            inforow.active = False
+            #emitter total surfaces square area
 
-            #Instance Count Information
+            all_count = [p.get_surfaces_square_area(evaluate="gather") for p in e.scatter5.particle_systems]
+            total = sum([c for c in all_count if c>=0])
+            skip = all([c<0 for c in all_count])
 
-            if (scat_scene.lister_show_stats_count):
+            infoactions.label(text= square_area_repr(total), icon="SURFACE_NSURFACE",)
 
-                all_count = [p.scatter_count_viewport_consider_hidden for p in e.scatter5.particle_systems]
-                total = sum([c for c in all_count if c>=0])
-                skip = all([c<0 for c in all_count])
-                inforow.label(text="..." if (total<0 or skip) else f'{total:,} {"Pts"}', icon="RESTRICT_VIEW_OFF")
+            if (total>=0) and (not skip):
+                if (total_area_len==-1): #default ==-1, trigger to 0 when valid
+                    total_area_len=0
+                total_area_len += total
 
-                if (total>=0) and not skip:
-                    if (global_count_viewport_consider_hidden==-1): #default ==-1, trigger to 0 when valid
-                        global_count_viewport_consider_hidden=0
-                    global_count_viewport_consider_hidden += total
+            #emitter total visible viewport  
 
+            all_count = [p.scatter_count_viewport_consider_hidden for p in e.scatter5.particle_systems]
+            total = sum([c for c in all_count if c>=0])
+            skip = all([c<0 for c in all_count])
 
-                all_count = [p.scatter_count_render for p in e.scatter5.particle_systems]
-                total = sum([c for c in all_count if c>=0])
-                skip = all([c<0 for c in all_count])
-                inforow.label(text="..." if (total<0 or skip) else f'{total:,} {"Pts"}', icon="RESTRICT_RENDER_OFF")
+            infoactions.label(text=count_repr(total, unit="Pts"), icon="RESTRICT_VIEW_OFF")
 
-                if (total>=0) and not skip:
-                    if (global_count_render==-1): #default ==-1, trigger to 0 when valid
-                        global_count_render=0
-                    global_count_render += total
+            if (total>=0) and (not skip):
+                if (total_viewport_len==-1): #default ==-1, trigger to 0 when valid
+                    total_viewport_len=0
+                total_viewport_len += total
 
-        erow.separator(factor=4)
+            #gather total visble render 
 
-        col.separator(factor=1) 
+            all_count = [p.scatter_count_render for p in e.scatter5.particle_systems]
+            total = sum([c for c in all_count if c>=0])
+            skip = all([c<0 for c in all_count])
 
-        #Per emitter Scatter List Templates 
+            infoactions.label(text=count_repr(total, unit="Pts"), icon="RESTRICT_RENDER_OFF")
 
-        template = col.row()
+            if (total>=0) and (not skip):
+                if (total_render_len==-1): #default ==-1, trigger to 0 when valid
+                    total_render_len=0
+                total_render_len += total
 
-        ui_list = template.column(align=True)
-        ui_list.scale_y = 1.1
-        ui_list.template_list("SCATTER5_UL_list_scatter_large", "", e.scatter5, "particle_systems", e.scatter5, "particle_systems_idx", type="DEFAULT", rows=local_scatter_system_len,)
+        if (lister_large and epsys_len):
+             
+            rightactions = erow.row(align=True)
+            rightactions.alignment = "RIGHT"
+            rightactions.scale_x = 0.95
 
+            #select
+            ractions = rightactions.row(align=True)
+            ractions.scale_x = 0.90
+            toggle_status = [p.sel for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_SEL_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_SEL_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_SEL_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "sel"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
 
-        #Operators side menu
-        
-        ope = template.column(align=True)
+            #hide viewport
+            ractions = rightactions.row(align=True)
+            toggle_status = [not p.hide_viewport for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_VIEW_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_VIEW_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_VIEW_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "hide_viewport"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(any(toggle_status))
 
-        #add
-        
-        add = ope.column(align=True)
-        op = add.operator("scatter5.add_psy_simple",text="",icon="ADD",)
-        op.emitter_name = e.name
-        op.surfaces_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects if (o.type=="MESH")] )
-        op.instances_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects] )
-        op.psy_color_random = True 
+            #hide render
+            ractions = rightactions.row(align=True)
+            toggle_status = [not p.hide_render for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_RENDER_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_RENDER_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_RENDER_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "hide_render"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(any(toggle_status))
 
-        #remove
-        
-        rem = ope.column(align=True)
-        rem.enabled = psy_active is not None
-        op = rem.operator("scatter5.remove_system",text="",icon="REMOVE",)
-        op.emitter_name = e.name
-        op.method = "alt"
-        op.undo_push = True
+            #lock
+            ractions = rightactions.row(align=True)
+            ractions.scale_x = 0.90
+            toggle_status = [p.is_all_locked() for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_LOCK_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_LOCK_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_LOCK_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "lock"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = "lock_special"
 
-        ope.separator()
+            #separator
+            rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
 
-        #selection menu
+            #dice
+            ractions = rightactions.row(align=True)
+            op = ractions.operator("scatter5.batch_randomize", text="", icon_value=cust_icon("W_GROUP_TOGGLE_DICE"), emboss=False,)
+            op.emitter_name = e.name
+            op.group_name = ""
 
-        menu = ope.row()
-        menu.context_pointer_set("s5_ctxt_ptr_emitter", e)
-        menu.menu("SCATTER5_MT_selection_menu", icon='DOWNARROW_HLT', text="",)
+            #separator
+            rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
 
-        #move up & down
+            #percentage
+            ractions = rightactions.row(align=True)
+            toggle_status = [p.s_visibility_view_allow for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_PERC_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_PERC_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_PERC_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "s_visibility_view_allow"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
 
-        if (local_scatter_system_len>1):
+            #maxload
+            ractions = rightactions.row(align=True)
+            toggle_status = [p.s_visibility_maxload_allow for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_MAXLOAD_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_MAXLOAD_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_MAXLOAD_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "s_visibility_maxload_allow"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
+
+            #preview area
+            ractions = rightactions.row(align=True)
+            toggle_status = [p.s_visibility_facepreview_allow for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_PREV_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_PREV_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_PREV_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "s_visibility_facepreview_allow"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
+
+            #cam opti
+            ractions = rightactions.row(align=True)
+            toggle_status = [p.s_visibility_cam_allow for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_CLIP_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_CLIP_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_CLIP_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "s_visibility_cam_allow"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
+
+            #separator
+            rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
+
+            #display as
+            ractions = rightactions.row(align=True)
+            toggle_status = [p.s_display_allow for p in epsys]
+            icon = cust_icon("W_GROUP_TOGGLE_DISP_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_DISP_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_DISP_NONE")
+            op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+            op.propname = "s_display_allow"
+            op.emitter_name = e.name
+            op.group_name = ""
+            op.setvalue = str(not any(toggle_status))
+
+            rightactions.separator(factor=0.991111)
+
+        #Scatter List Templates 
+
+        ui_list.scale_y = addon_prefs.ui_selection_y
+        UL_type = "SCATTER5_UL_list_scatter_large" if lister_large else "SCATTER5_UL_list_scatter_stats" if lister_stats else None
+        ui_list.template_list(UL_type, "", e.scatter5, "particle_interface_items", e.scatter5, "particle_interface_idx", type="DEFAULT", rows=max(len(e.scatter5.particle_interface_items),6),)
+
+        if (lister_large):
+
+            #Operators side menu
+            
+            ope = template.column(align=True)
+
+            #add
+            
+            add = ope.column(align=True)
+            op = add.operator("scatter5.add_psy_simple",text="",icon="ADD",)
+            op.emitter_name = e.name
+            op.surfaces_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects if (o.type=="MESH")] )
+            op.instances_names = "_!#!_".join( [o.name for o in bpy.context.selected_objects] )
+            op.psy_color_random = True 
+
+            #remove
+            
+            rem = ope.column(align=True)
+            rem.enabled = not ((psy_active is None) and (group_active is None))
+            op = rem.operator("scatter5.remove_system",text="",icon="REMOVE",)
+            op.emitter_name = e.name
+            op.method = "dynamic_uilist"
+            op.undo_push = True
+
+            ope.separator()
+
+            #selection menu
+
+            menu = ope.row()
+            menu.context_pointer_set("pass_ui_arg_emitter", e)
+            menu.menu("SCATTER5_MT_selection_menu", icon='DOWNARROW_HLT', text="",)
+
+            #move up & down
 
             ope.separator()        
 
             updo = ope.column(align=True)
-            updo.enabled = local_scatter_system_len!=0
-            op = updo.operator("scatter5.list_move",text="",icon="TRIA_UP")
-            op.target_idx = e.scatter5.particle_systems_idx 
-            op.direction = "UP"    
-            op.api_propgroup = f"bpy.data.objects['{e.name}'].scatter5.particle_systems"
-            op.api_propgroup_idx = f"bpy.data.objects['{e.name}'].scatter5.particle_systems_idx"
-            op = updo.operator("scatter5.list_move",text="",icon="TRIA_DOWN")
-            op.target_idx = e.scatter5.particle_systems_idx       
+            updo.enabled = epsys_len>0
+            
+            op = updo.operator("scatter5.move_interface_items",text="",icon="TRIA_UP")
+            op.emitter_name = e.name
+            op.direction = "UP"
+            
+            op = updo.operator("scatter5.move_interface_items",text="",icon="TRIA_DOWN")
+            op.emitter_name = e.name
             op.direction = "DOWN"   
-            op.api_propgroup = f"bpy.data.objects['{e.name}'].scatter5.particle_systems"
-            op.api_propgroup_idx = f"bpy.data.objects['{e.name}'].scatter5.particle_systems_idx"
 
-        #right spacers
-        
-        template.separator(factor=0.1)
+            ope.separator()
+
+            #clear emitter
+
+            trash = ope.row()
+            op = trash.operator("scatter5.remove_system",text="", icon="TRASH")
+            op.emitter_name = e.name
+            op.method  = "clear"
+            op.undo_push = True
 
         #Update global len 
 
-        global_scatter_system_len+= local_scatter_system_len
+        total_psys_len+= epsys_len
 
-        col.separator(factor=1)
+        ui_list.separator(factor=2.501)
 
         continue
 
-    #global len not found anything? 
+    #emitter loop over
+        
+    ####################### draw grand total scene Recap?
 
-    if (global_scatter_system_len==0):
+    scene_row = scene_col.row()
+    scene_box = scene_row.box()
 
-        text = layout.column()
-        text.active = False
-        text.alignment="CENTER"
-        text.label(text=translate("No Scatter-System(s) Added Yet?"))
+    trow = scene_box.row(align=True)
+    trow.scale_y = addon_prefs.ui_lister_scale_y
 
-    #Grand Tota Recap 
+    sub = trow.row()
+    sub.label(text=f'{bpy.context.scene.name} → {len(scene_emitters)} {translate("Emitter(s)")} → {total_psys_len} {translate("System(s)")}', icon="SCENE_DATA",)
 
-    col = layout.column()
-    col.scale_y = 0.85
+    #rightside
 
-    erow = col.row()
-    erow.scale_y = 1.5
-    erow.active = False
+    if (lister_stats and total_psys_len):
 
-    sub = erow.row(align=True)
-    sub.alignment="LEFT"
-    sub.label(text=f'{len(emitters)} {translate("Emitter(s)")}', icon_value=cust_icon("W_EMITTER"),)
+        rightactions = trow.row()
+        rightactions.alignment = "RIGHT"
 
-    sub = erow.row(align=True)
-    sub.alignment="LEFT"
-    sub.label(text=f'{global_scatter_system_len} {translate("System(s)")}', icon="PARTICLE_DATA")
+        infoactions = rightactions.split()
+        infoactions.active = False
+        infoactions.scale_x = 0.75
+        
+        infoactions.label(text= square_area_repr(total_area_len), icon="SURFACE_NSURFACE",)
+        infoactions.label(text=count_repr(total_viewport_len, unit="Pts"), icon="RESTRICT_VIEW_OFF")
+        infoactions.label(text=count_repr(total_render_len, unit="Pts"), icon="RESTRICT_RENDER_OFF")
 
-    erow.separator(factor=4)
-    erow.separator_spacer()
+    if (lister_large and total_psys_len):
 
-    inforow = erow.row(align=True)
-    inforow.alignment="RIGHT"
+        trow.separator_spacer()
 
-    #Total Stats
+        rightactions = trow.row(align=True)
+        rightactions.scale_x = 0.95
 
-    if (scat_scene.lister_show_stats_count):
+        #select
+        ractions = rightactions.row(align=True)
+        ractions.scale_x = 0.90
+        toggle_status = [p.sel for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_SEL_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_SEL_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_SEL_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "sel"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
 
-        inforow.label(text=count_repr(global_count_viewport_consider_hidden, unit="Pts"), icon="RESTRICT_VIEW_OFF")
-        inforow.label(text=count_repr(global_count_render, unit="Pts"), icon="RESTRICT_RENDER_OFF")
+        #hide viewport
+        ractions = rightactions.row(align=True)
+        toggle_status = [not p.hide_viewport for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_VIEW_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_VIEW_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_VIEW_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "hide_viewport"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(any(toggle_status))
 
-    erow.separator(factor=4)
+        #hide render
+        ractions = rightactions.row(align=True)
+        toggle_status = [not p.hide_render for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_RENDER_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_RENDER_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_RENDER_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "hide_render"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(any(toggle_status))
+
+        #lock
+        ractions = rightactions.row(align=True)
+        ractions.scale_x = 0.90
+        toggle_status = [p.is_all_locked() for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_LOCK_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_LOCK_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_LOCK_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "lock"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = "lock_special"
+
+        #separator
+        rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
+
+        #dice
+        ractions = rightactions.row(align=True)
+        op = ractions.operator("scatter5.batch_randomize", text="", icon_value=cust_icon("W_GROUP_TOGGLE_DICE"), emboss=False,)
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        
+        #separator
+        rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
+
+        #percentage
+        ractions = rightactions.row(align=True)
+        toggle_status = [p.s_visibility_view_allow for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_PERC_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_PERC_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_PERC_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "s_visibility_view_allow"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
+
+        #maxload
+        ractions = rightactions.row(align=True)
+        toggle_status = [p.s_visibility_maxload_allow for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_MAXLOAD_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_MAXLOAD_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_MAXLOAD_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "s_visibility_maxload_allow"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
+
+        #preview area
+        ractions = rightactions.row(align=True)
+        toggle_status = [p.s_visibility_facepreview_allow for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_PREV_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_PREV_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_PREV_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "s_visibility_facepreview_allow"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
+
+        #cam opti
+        ractions = rightactions.row(align=True)
+        toggle_status = [p.s_visibility_cam_allow for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_CLIP_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_CLIP_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_CLIP_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "s_visibility_cam_allow"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
+
+        #separator
+        rightactions.separator(factor=0.5) ; rightactions.label(text="",icon_value=cust_icon("W_BAR_VERTICAL")) ; rightactions.separator(factor=0.5)
+
+        #display as
+        ractions = rightactions.row(align=True)
+        toggle_status = [p.s_display_allow for p in all_scene_psys]
+        icon = cust_icon("W_GROUP_TOGGLE_DISP_ALL") if all(toggle_status) else cust_icon("W_GROUP_TOGGLE_DISP_SOME") if any(toggle_status) else cust_icon("W_GROUP_TOGGLE_DISP_NONE")
+        op = ractions.operator("scatter5.batch_toggle", text="", icon_value=icon, emboss=False,)
+        op.propname = "s_display_allow"
+        op.scene_name = bpy.context.scene.name
+        op.group_name = ""
+        op.setvalue = str(not any(toggle_status))
+
+        rightactions.separator(factor=0.991111)
+
+    #Operators side menu
+    
+    if (lister_large):
+
+        ope = scene_row.row()
+
+        trash = ope.row()
+        op = trash.operator("scatter5.remove_system",text="", icon="TRASH")
+        op.scene_name = bpy.context.scene.name
+        op.method  = "clear"
+        op.undo_push = True
+
+    #separator right below scene col
+    scene_col.separator(factor=1.001)
 
     return 
+
 
 
 #    .oooooo.   oooo
@@ -1417,7 +1733,6 @@ def draw_stats(self, layout):
 classes = (
     
     SCATTER5_OT_impost_addonprefs,
-    SCATTER5_UL_list_scatter_large,
 
     )
 

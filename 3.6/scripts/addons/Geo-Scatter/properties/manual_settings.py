@@ -22,7 +22,7 @@ import numpy as np
 import bpy
 from bpy.props import PointerProperty, BoolProperty, StringProperty, FloatProperty, IntProperty, FloatVectorProperty, EnumProperty, CollectionProperty, IntVectorProperty
 from bpy.types import PropertyGroup
-from ..resources.translate import translate
+from .. resources.translate import translate
 
 
 # TODO: all prop groups to: `SCATTER5_PR_...` naming scheme
@@ -88,6 +88,7 @@ class SCATTER5_PR_manual_brush_tool_common(PropertyGroup, ):
         ('LOCAL_Z_AXIS', translate("Toward Local Z"), "", "ORIENTATION_LOCAL", 32),
         ('GLOBAL_Z_AXIS', translate("Toward Global Z"), "", "WORLD", 3),
     ], description=translate("Instance Z axis direction"), )
+    use_rotation_align_tilt_override: BoolProperty(name=translate("Use Stylus Tilt"), default=False, description=translate("Use stylus tilt to override Align Z property. Z axis is tilted in screen space accoring to stylus tilt, then transformed back to world space. Will not work if no tablet is present or tablet does not support stylus tilt info"), )
     rotation_up: EnumProperty(name=translate("Align Y"), default='GLOBAL_Y_AXIS', items=[
         ('GLOBAL_Y_AXIS', translate("Toward Global Y"), "", "WORLD", 2),
         ('LOCAL_Y_AXIS', translate("Toward Local Y"), "", "ORIENTATION_LOCAL", 1),
@@ -152,11 +153,11 @@ class SCATTER5_PR_manual_brush_tool_default(SCATTER5_PR_manual_brush_tool_common
 
 class SCATTER5_PR_manual_brush_tool_dot(SCATTER5_PR_manual_brush_tool_common, ):
     # NOTE: ui:
-    _rotation = ['rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_up', 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ), ]
     _scale = ['scale_default', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
-    _sync = ('rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+    _sync = ('rotation_align', 'use_rotation_align_tilt_override', 'rotation_up', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'scale_default', 'scale_random_factor', 'scale_random_type', )
     # NOTE: overrides:
@@ -167,13 +168,13 @@ class SCATTER5_PR_manual_brush_tool_spatter(SCATTER5_PR_manual_brush_tool_common
     # NOTE: ui:
     _tool = ['interval', 'draw_on', ]
     _location = [('divergence', 'divergence_pressure', ), ]
-    _rotation = ['rotation_align', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ),
                  ('use_direction_interpolation', 'direction_interpolation_steps', ), ]
     _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
     _sync = ('divergence', 'divergence_pressure',
-             'rotation_align', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
+             'rotation_align', 'use_rotation_align_tilt_override', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'use_direction_interpolation', 'direction_interpolation_steps',
              'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
@@ -203,13 +204,13 @@ class SCATTER5_PR_manual_brush_tool_pose(SCATTER5_PR_manual_brush_tool_common, )
 class SCATTER5_PR_manual_brush_tool_path(SCATTER5_PR_manual_brush_tool_common, ):
     # NOTE: ui:
     _location = [('distance', 'distance_pressure', ), ('divergence', 'divergence_pressure', ), ]
-    _rotation = ['rotation_align', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ),
                  ('use_direction_interpolation', 'direction_interpolation_steps', ), ]
     _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
     _sync = ('distance', 'distance_pressure', 'divergence', 'divergence_pressure',
-             'rotation_align', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
+             'rotation_align', 'use_rotation_align_tilt_override', 'rotation_up', 'use_align_y_to_stroke', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'use_direction_interpolation', 'direction_interpolation_steps',
              'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
@@ -220,13 +221,13 @@ class SCATTER5_PR_manual_brush_tool_path(SCATTER5_PR_manual_brush_tool_common, )
 class SCATTER5_PR_manual_brush_tool_chain(SCATTER5_PR_manual_brush_tool_common, ):
     # NOTE: ui:
     _location = [('distance', 'distance_pressure', ), ('divergence', 'divergence_pressure', ), ]
-    _rotation = ['rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_up', 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ),
                  ('use_direction_interpolation', 'direction_interpolation_steps', ), ]
     _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
     _sync = ('distance', 'distance_pressure', 'divergence', 'divergence_pressure',
-             'rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+             'rotation_align', 'use_rotation_align_tilt_override', 'rotation_up', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'use_direction_interpolation', 'direction_interpolation_steps',
              'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
@@ -238,13 +239,13 @@ class SCATTER5_PR_manual_brush_tool_spray(SCATTER5_PR_manual_brush_tool_common, 
     # NOTE: ui:
     _tool = [{'RADIUS': (('radius', 'radius_px', ), 'radius_pressure', 'radius_units', ), }, 'interval', ('num_dots', 'num_dots_pressure', ), 'uniform', 'jet', 'reach', ]
     _location = [('use_minimal_distance', 'minimal_distance', 'minimal_distance_pressure', ), ]
-    _rotation = ['rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_up', 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ), ]
     _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
     _sync = ('radius', 'radius_px', 'radius_pressure', 'radius_units', 'interval',
              'use_minimal_distance', 'minimal_distance', 'minimal_distance_pressure',
-             'rotation_align', 'rotation_up', 'rotation_base', 'rotation_random',
+             'rotation_align', 'use_rotation_align_tilt_override', 'rotation_up', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
     # NOTE: overrides:
@@ -266,14 +267,14 @@ class SCATTER5_PR_manual_brush_tool_spray_aligned(SCATTER5_PR_manual_brush_tool_
     # NOTE: ui:
     _tool = [{'RADIUS': (('radius', 'radius_px', ), 'radius_pressure', 'radius_units', ), }, 'interval', ('num_dots', 'num_dots_pressure', ), 'uniform', 'jet', 'reach', ]
     _location = [('use_minimal_distance', 'minimal_distance', 'minimal_distance_pressure', ), ]
-    _rotation = ['rotation_align', 'rotation_base', 'rotation_random',
+    _rotation = [{'OVERRIDE': ('rotation_align', 'use_rotation_align_tilt_override', ), }, 'rotation_base', 'rotation_random',
                  ('use_normal_interpolation', 'normal_interpolation_radius_factor', ),
                  ('use_direction_interpolation', 'direction_interpolation_steps', ), ]
     _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
     # NOTE: sync:
     _sync = ('radius', 'radius_px', 'radius_pressure', 'radius_units', 'interval',
              'use_minimal_distance', 'minimal_distance', 'minimal_distance_pressure',
-             'rotation_align', 'rotation_base', 'rotation_random',
+             'rotation_align', 'use_rotation_align_tilt_override', 'rotation_base', 'rotation_random',
              'use_normal_interpolation', 'normal_interpolation_radius_factor',
              'use_direction_interpolation', 'direction_interpolation_steps',
              'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
@@ -415,7 +416,7 @@ class SCATTER5_PR_manual_brush_tool_random_rotation(SCATTER5_PR_manual_brush_too
     # NOTE: unique:
     speed: FloatProperty(name=translate("Speed"), default=0.015, min=-1.0, max=1.0, precision=3, subtype='NONE', description=translate("Angle change per action step"), )
     speed_pressure: BoolProperty(name=translate("Use Pressure"), default=False, description=translate("Use stylus pressure"), )
-    angle: FloatProperty(name=translate("Max Angle"), default=np.radians(30), min=np.radians(1), max=np.radians(179), precision=3, subtype='ANGLE', description=translate("Maximal divergence angle"), )
+    angle: FloatProperty(name=translate("Max Angle"), default=np.radians(30), min=np.radians(1), max=np.radians(179), precision=3, subtype='ANGLE', description=translate("Maximum divergence angle"), )
 
 
 class SCATTER5_PR_manual_brush_tool_comb(SCATTER5_PR_manual_brush_tool_common, ):
@@ -589,6 +590,45 @@ class SCATTER5_PR_manual_brush_tool_manipulator(SCATTER5_PR_manual_brush_tool_co
     scale: bpy.props.BoolProperty(name=translate("Scale"), default=False, description=translate("Show scale gizmo"), )
 
 
+class SCATTER5_PR_manual_brush_tool_heaper(SCATTER5_PR_manual_brush_tool_common, ):
+    # NOTE: ui:
+    _tool = ['interval', 'draw_on', 'drop_height', 'max_alive', 'frames_alive', ]
+    _location = []
+    _rotation = ['rotation_base', 'rotation_random', ]
+    _scale = ['scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', ]
+    # NOTE: sync:
+    _sync = ('rotation_base', 'rotation_random',
+             'scale_default', 'scale_default_use_pressure', 'scale_random_factor', 'scale_random_type', )
+    # NOTE: overrides:
+    interval: FloatProperty(name=translate("Interval"), default=0.2, min=0.001, max=1.0, precision=3, subtype='FACTOR', description=translate("Tool action interval in seconds"), )
+    draw_on: EnumProperty(name=translate("Draw On"), default='TIMER', items=[
+        ('TIMER', translate("Timer"), "Action on time interval", ),
+        ('MOUSEMOVE', translate("Move"), "Action on mouse pointer movement", ),
+        ('BOTH', translate("Both"), "Action on both time interval or mouse pointer movement", ),
+    ], description=translate("Tool action method"), )
+    # NOTE: unique:
+    # private ---------------------------------------------- >>>
+    # matrices of simulation objects with values within this limit are considered stable
+    # np_allclose_atol: FloatProperty(default=1e-04, precision=6, )
+    np_allclose_atol: FloatProperty(default=1e-03, precision=6, )
+    # simulation scene setup
+    scene_render_fps: IntProperty(default=30, )
+    scene_frame_start: IntProperty(default=1, )
+    scene_frame_end: IntProperty(default=1048574, )
+    scene_frame_step: IntProperty(default=1, )
+    scene_render_frame_map_old: IntProperty(default=100, )
+    scene_render_frame_map_new: IntProperty(default=100, )
+    
+    # include_existing: BoolProperty(name=translate("Include Existing"), default=True, description=translate("Include existing instances as obstacles"), )
+    drop_height: FloatProperty(name=translate("Drop Height"), default=5.0, min=0.0, subtype='DISTANCE', description=translate("Height above surface from where objects will be dropped down"), )
+    frames_alive: IntProperty(name=translate("Frames Alive"), default=200, min=1, description=translate("Maximal simulation object life in frames, if object is not stable after its lifespan, will be removed without effect"), )
+    max_alive: IntProperty(name=translate("Max Alive"), default=10, min=1, max=100, description=translate("Maximum of alive simulation objects at the same time"), )
+    # other private bits..
+    batch_multiplier: FloatProperty(default=10.0, )
+    simulation_collection_name: StringProperty(default="simulation-collection", )
+    # private ---------------------------------------------- <<<
+
+
 class SCATTER5_PR_scene_manual(PropertyGroup, ):
     tool_default: PointerProperty(type=SCATTER5_PR_manual_brush_tool_default, )
     
@@ -616,6 +656,7 @@ class SCATTER5_PR_scene_manual(PropertyGroup, ):
     tool_drop_down: PointerProperty(type=SCATTER5_PR_manual_brush_tool_drop_down, )
     tool_free_move: PointerProperty(type=SCATTER5_PR_manual_brush_tool_free_move, )
     tool_manipulator: PointerProperty(type=SCATTER5_PR_manual_brush_tool_manipulator, )
+    tool_heaper: PointerProperty(type=SCATTER5_PR_manual_brush_tool_heaper, )
     
     # `tool_id`
     active_tool: StringProperty(default="scatter5.manual_brush_tool_spray", )
@@ -623,41 +664,3 @@ class SCATTER5_PR_scene_manual(PropertyGroup, ):
     use_sync: BoolProperty(name=translate("Unified Tool Settings"), default=False, description=translate("Keep select general tool properties in sync"), )
     # exp scale
     use_radius_exp_scale: BoolProperty(name=translate("Radius Gesture Exponential Scale"), default=False, description=translate("Use exponential scale for 3D radius gestures"), )
-
-
-# ------------------------------------------------------------------------------------------------------------------------------
-
-
-"""
-class SCATTER5_manual_physics_brush(SCATTER5_manual_common, SCATTER5_manual_create, ):
-    cursor: StringProperty(default='NONE', )
-    max_active: IntProperty(name=translate("Max Active"), default=20, min=1, max=100, subtype='FACTOR', description=translate(""), )
-    timeout: IntProperty(name=translate("Simulation Timeout"), default=200, min=100, max=500, subtype='FACTOR', description=translate(""), )
-    # spread: FloatVectorProperty(name=translate("Spread"), default=(-0.5, 0.5, ), precision=3, subtype='TRANSLATION', size=2, description=translate(""), )
-    radius: FloatProperty(name=translate("Radius"), default=1.0, min=0.001, max=5.0, precision=3, subtype='FACTOR', description=translate(""), )
-    height: FloatProperty(name=translate("Height"), default=5.0, min=0.1, max=50.0, precision=3, subtype='DISTANCE', description=translate(""), )
-    
-    # private ---------------------------------------------- >>>
-    # matrices of simulation objects with values within this limit are considered stable
-    # np_allclose_atol: FloatProperty(default=1e-04, precision=6, )
-    np_allclose_atol: FloatProperty(default=1e-03, precision=6, )
-    # simulation scene setup
-    scene_render_fps: IntProperty(default=30, )
-    scene_frame_start: IntProperty(default=1, )
-    scene_frame_end: IntProperty(default=500 + 1, )
-    scene_frame_step: IntProperty(default=1, )
-    scene_render_frame_map_old: IntProperty(default=100, )
-    scene_render_frame_map_new: IntProperty(default=100, )
-    # other
-    # simulation_collection_name: StringProperty(default=".simulation-collection", )
-    simulation_collection_name: StringProperty(default="simulation-collection", )
-    # private ---------------------------------------------- <<<
-
-
-class SCATTER5_manual_physics_brush_object_properties(PropertyGroup, ):
-    point_id: IntProperty(default=-1, )
-    vertex_index: IntProperty(default=-1, )
-    object_name: StringProperty(default="", )
-    active: BoolProperty(default=False, )
-    frozen: BoolProperty(default=False, )
-"""

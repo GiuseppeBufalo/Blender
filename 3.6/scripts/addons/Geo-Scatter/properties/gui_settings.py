@@ -29,7 +29,7 @@ import pathlib
 
 from time import process_time
 
-from .. resources.directories import addon_scatter
+from .. resources.directories import addon_dir
 from .. resources.translate import translate
 from .. utils.path_utils import get_subpaths
 
@@ -45,52 +45,67 @@ from .. utils.path_utils import get_subpaths
 def codegen_reg_context_pointer_args(scope_ref={},):
     """codegen for registering popovers args"""
 
+    #example:
+    #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("my_pointer")
+    
     d,keywords = {},[]
 
     #search everywhere in the main tweaking modules 
-    files = [os.path.join(addon_scatter,"ui",module+".py") for module in ("ui_creation","ui_tweaking","ui_extra","ui_addon",)] 
+    
+    files = [os.path.join(addon_dir,"ui",module+".py") for module in ("ui_creation","ui_tweaking","ui_extra","ui_addon",)] 
     for py in files:
         with open(py,'r') as f:
             txt = f.read()
-            #gather name of the property
-            keywords += re.findall(r'REGTIME_INSTRUCTION:POPOVER_PROP:"(.*?)"', txt,)
+            keywords += re.findall(r'INSTRUCTION:REGISTER:UI:ARGS_POINTERS\("(.*?)"\)', txt,)
         continue
 
+    #register the properties
     for prop_name in keywords:
-        if prop_name not in d.keys():
+        if (prop_name not in d.keys()):
             d[prop_name] = bpy.props.PointerProperty(type=SCATTER5_PR_popovers_dummy_class,)
         continue
 
     #define objects in dict
     scope_ref.update(d)
-    return d 
+    return d
 
 def codegen_reg_ui_booleans(scope_ref={},):
     """codegen for registering all ui open/close properties"""
 
+    #example: 
+    #INSTRUCTION:REGISTER:UI:BOOL_NAME("my_ui_property");BOOL_VALUE(0)
+
     d,keywords,defaults = {},[],[]
 
     #search everywhere except here
-    files = get_subpaths(addon_scatter, file_type=".py", excluded_files=["gui_settings.py",])
+    
+    files = get_subpaths(addon_dir, file_type=".py", excluded_files=["gui_settings.py",])
     for py in files:
-        with open(py,'r') as f:
-            txt = f.read()
-            #gather name of the property
-            keywords += re.findall(r'REGTIME_INSTRUCTION:UI_BOOL_KEY:"(.*?)"', txt,) #name of the property
-            #gather default values 
-            defaults += re.findall(r'UI_BOOL_VAL:"(.*?)"', txt,) 
-            #example: 
-            #REGTIME_INSTRUCTION:UI_BOOL_KEY:"my_ui_property";UI_BOOL_VAL:"0"
+        
+        with open(py, "r", encoding="utf-8") as file:
+            for line in file.readlines():
+                
+                pattern = r'INSTRUCTION:REGISTER:UI:BOOL_NAME\("(.*?)"\);BOOL_VALUE\((.*?)\)'
+                matches = re.findall(pattern, line)
+                
+                for match in matches:
+                    propname, propvalstr = match
+                    keywords.append(propname)
+                    defaults.append(int(propvalstr))
+                    continue
         continue
 
-    for (prop_name,default) in zip(keywords,defaults):
-        if prop_name not in d.keys():
-            d[prop_name] = bpy.props.BoolProperty(default=int(default), description=translate("Open/Close this interface layout"),)
+    assert len(keywords)==len(defaults)
+    
+    #register the properties
+    for (propname,propval) in zip(keywords,defaults):
+        if (propname not in d.keys()):
+            d[propname] = bpy.props.BoolProperty(default=bool(propval), description=translate("Open/Close this interface layout"),)
         continue
 
     #define objects in dict
     scope_ref.update(d)
-    return d 
+    return d
 
 
 #   .oooooo.   oooo
@@ -101,6 +116,9 @@ def codegen_reg_ui_booleans(scope_ref={},):
 # `88b    ooo   888  d8(  888  o.  )88b o.  )88b 888    .o o.  )88b
 #  `Y8bood8P'  o888o `Y888""8o 8""888P' 8""888P' `Y8bod8P' 8""888P'
 
+
+#NOTE: popover args are only used to pass more complex arguments from one interface to another
+# it is exceedingly difficult in blender to pass some operations context (such as a string) from one UI context to another via the pass context method, we use PointerProperty to do so
 
 class SCATTER5_PR_popovers_dummy_class(bpy.types.PropertyGroup):
     """dummy class used just to create pointers"""

@@ -57,18 +57,18 @@ class ToolTheme():
     # NOTE: main colors for types
     # NOTE: blender color picker values are in linear, but i need srgb for display, so do approximate correction..
     # green
-    _base_color_create = tuple((np.array((0.215861, 0.679543, 0.386429, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    _base_color_create = tuple((np.array((0.215861, 0.679543, 0.386429, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     # red
-    _base_color_destroy = tuple((np.array((0.64448, 0.187821, 0.147027, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    _base_color_destroy = tuple((np.array((0.64448, 0.187821, 0.147027, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     # grey
-    # _base_color_translate = tuple((np.array((0.40724, 0.40724, 0.40724, ), dtype=float, ) ** (1 / 2.2)).tolist())
-    _base_color_translate = tuple((np.array((0.6, 0.6, 0.6, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    # _base_color_translate = tuple((np.array((0.40724, 0.40724, 0.40724, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
+    _base_color_translate = tuple((np.array((0.6, 0.6, 0.6, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     # blue
-    _base_color_rotate = tuple((np.array((0.274677, 0.48515, 0.679543, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    _base_color_rotate = tuple((np.array((0.274677, 0.48515, 0.679543, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     # yellow
-    _base_color_scale = tuple((np.array((0.679543, 0.564712, 0.168269, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    _base_color_scale = tuple((np.array((0.679543, 0.564712, 0.168269, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     # violet
-    _base_color_special = tuple((np.array((0.533277, 0.391573, 0.64448, ), dtype=float, ) ** (1 / 2.2)).tolist())
+    _base_color_special = tuple((np.array((0.533277, 0.391573, 0.64448, ), dtype=np.float64, ) ** (1 / 2.2)).tolist())
     
     a = 1.0
     # NOTE: default colors, replaced by getter
@@ -256,7 +256,7 @@ class ToolTheme():
         if(not self.USE_ADJUST_COLOR_PRESS_STATE):
             return rgb
         
-        a = np.array(rgb, dtype=float, )
+        a = np.array(rgb, dtype=np.float64, )
         a = (a - 0.5) * self.__color_press_contrast + 0.5 + self.__color_press_brightness
         a = np.clip(a, 0.0, 1.0, )
         a = tuple(a.tolist())
@@ -294,7 +294,7 @@ class ToolTheme():
             return d
         a = d[3]
         
-        rgb = np.array(d[:3], dtype=float, )
+        rgb = np.array(d[:3], dtype=np.float64, )
         rgb = (rgb - 0.5) * self.__color_press_contrast + 0.5 + self.__color_press_brightness
         rgb = np.clip(rgb, 0.0, 1.0, )
         d = tuple(rgb.tolist())

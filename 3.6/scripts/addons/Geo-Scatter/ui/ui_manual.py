@@ -21,8 +21,6 @@ from .. resources.translate import translate
 
 from . import ui_templates
 
-from .. manual.debug import debug_mode
-
 
 #   .oooooo.    ooooo     ooo ooooo      ooooo   ooooo  o8o      o8o                     oooo         o8o
 #  d8P'  `Y8b   `888'     `8' `888'      `888'   `888'  `"'      `"'                     `888         `"'
@@ -41,7 +39,7 @@ from .. manual.debug import debug_mode
 # 88  88 88 "bodP' dP""""Yb  YboodP 88  Yb     dP""""Yb  YboodP   88   88    YP    888888       88    YbodP   YbodP  88ood8 8bodP'
 
 
-OldTools = {}
+OLT_TOOLBAR = {}
 
 #Proceeding to hijack the '_tools' dict of 'VIEW3D_PT_tools_active' class. 
 #when i use the term "Hijacking" in this addon, i mean TEMPORARILY changing native python code with our own
@@ -99,72 +97,8 @@ def hijack_tools_dict():
             "draw_cursor": None,
             })
 
-    global OldTools
-    OldTools = VIEW3D_PT_tools_active._tools
-    
-    '''
-    toolbar = [
-        generate_tool(brushes.SCATTER5_OT_manual_dot_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_pose_brush),
-
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_path_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_chain_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_spatter_brush),
-
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_spray_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_spray_aligned_brush),
-
-        None,
-        
-        generate_tool(brushes.SCATTER5_OT_manual_lasso_fill),
-        # NOTE: disable physics brush for 5.1
-        # generate_tool(brushes.SCATTER5_OT_manual_physics_brush),
-
-        None,
-        
-        generate_tool(brushes.SCATTER5_OT_manual_move_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_free_move_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_smooth_brush),
-        # (
-        ToolDef.from_dict({
-                "idname": brushes.SCATTER5_OT_manual_manipulator.brush_type,
-                "label": translate("Manipulator"),
-                "description": brushes.SCATTER5_OT_manual_manipulator.bl_description,
-                "icon": brushes.SCATTER5_OT_manual_manipulator.dat_icon,
-                "widget": brushes.SCATTER5_OT_manual_manipulator.brush_widget,
-                "cursor": None, "keymap": None, "data_block": None, "operator": None, "draw_settings": None, "draw_cursor": None,
-            }),
-        generate_tool(brushes.SCATTER5_OT_manual_drop_down_brush),
-        
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_eraser_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_dilute_brush),
-
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_rotation_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_random_rotation_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_spin_brush),
-
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_comb_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_z_align_brush),
-
-        None,
-
-        generate_tool(brushes.SCATTER5_OT_manual_scale_brush),
-        generate_tool(brushes.SCATTER5_OT_manual_scale_grow_shrink_brush),
-
-        None,
-
-    ]
-    '''
+    global OLT_TOOLBAR
+    OLT_TOOLBAR = VIEW3D_PT_tools_active._tools
     
     toolbar = [
         generate_tool(brushes.SCATTER5_OT_manual_brush_tool_dot),
@@ -187,7 +121,6 @@ def hijack_tools_dict():
         ToolDef.from_dict({
                 "idname": brushes.SCATTER5_OT_manual_brush_tool_manipulator.tool_id,
                 "label": translate("Manipulator"),
-                # "description": brushes.SCATTER5_OT_manual_brush_tool_manipulator.bl_description,
                 "description": "Shortcut [{}]".format(brushes.ToolKeyConfigurator.get_fancy_string_shortcut_for_tool(brushes.SCATTER5_OT_manual_brush_tool_manipulator.tool_id)),
                 "icon": brushes.SCATTER5_OT_manual_brush_tool_manipulator.dat_icon,
                 "widget": brushes.SCATTER5_OT_manual_brush_tool_manipulator.tool_widget,
@@ -211,26 +144,28 @@ def hijack_tools_dict():
     ]
     
     #Add instance index painting tool if instance method is by index
-    emitter = bpy.context.scene.scatter5.emitter
-    psy_active = emitter.scatter5.get_psy_active()
-    
-    if(psy_active.s_instances_method=="ins_collection" and psy_active.s_instances_pick_method=="pick_idx"):
+    psy_active = bpy.context.scene.scatter5.emitter.scatter5.get_psy_active()
+    if (psy_active.s_instances_method=="ins_collection" and psy_active.s_instances_pick_method=="pick_idx"):
         toolbar += [
             None,
             generate_tool(brushes.SCATTER5_OT_manual_brush_tool_object_set),
         ]
     
-    # if(debug_mode()):
-    #     toolbar += [
-    #         None,
-    #         generate_tool(brushes.SCATTER5_OT_manual_brush_tool_debug_3d),
-    #         generate_tool(brushes.SCATTER5_OT_manual_brush_tool_debug_errors),
-    #     ]
-    
+    #Currently private testing Physic tool
+    if (bpy.context.preferences.addons["Geo-Scatter"].preferences.debug_interface):
+        toolbar += [
+            None,
+            generate_tool(brushes.SCATTER5_OT_manual_brush_tool_heaper),
+            # generate_tool(brushes.SCATTER5_OT_manual_brush_tool_debug_3d),
+            # generate_tool(brushes.SCATTER5_OT_manual_brush_tool_debug_errors),
+        ]
+
+    #add the tools to the toolbar
     VIEW3D_PT_tools_active._tools = {
         None: [ ],
         'OBJECT': toolbar
         }
+    
     return 
 
 
@@ -238,8 +173,8 @@ def hijack_tools_dict():
 def restore_tools_dict():
 
     from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active
-    global OldTools
-    VIEW3D_PT_tools_active._tools = OldTools
+    global OLT_TOOLBAR
+    VIEW3D_PT_tools_active._tools = OLT_TOOLBAR
     return 
 
 
@@ -854,6 +789,16 @@ class SCATTER5_PT_tool_generic_menu(bpy.types.Panel, ):
                         else:
                             r.prop(self._get_group(context, g, n), n, )
                         r.active = e
+                    elif(k == 'OVERRIDE'):
+                        # first property
+                        n = v[0]
+                        r = l.row()
+                        r.prop(self._get_group(context, g, n), n, )
+                        # overrided with second property, if second is true, then first is disabled..
+                        n = v[1]
+                        l.prop(self._get_group(context, g, n), n, )
+                        if(getattr(self._get_group(context, g, n), n)):
+                            r.enabled = False
                     else:
                         l.label(text="unknown: {}:{}".format(k, v))
             else:
@@ -938,13 +883,16 @@ class SCATTER5_MT_brush_point_menu(bpy.types.Menu):
 
         layout.operator("scatter5.disable_main_settings")
         layout.operator("scatter5.manual_apply_brush")
+        layout.operator("scatter5.manual_drop_to_ground",)
+        layout.operator("scatter5.manual_reassign_surface",)
         # layout.operator("scatter5.manual_drop",)
         # layout.operator("scatter5.manual_edit",)
         layout.separator()
         layout.operator("scatter5.manual_clear_orphan_data")
         layout.operator("scatter5.manual_clear")
         
-        # if(debug_mode()):
+        # from .. manual import debug
+        # if(debug.debug_mode()):
         #     layout.separator()
         #     layout.operator("scatter5.manual_debug_regen_from_attrs")
         
@@ -973,16 +921,15 @@ class SCATTER5_MT_systems_menu(bpy.types.Menu):
 
         #wait, what if system is hidden? no way to hide/unhide? Hmmm
 
-        emitter = bpy.context.scene.scatter5.emitter
+        emitter = context.scene.scatter5.emitter
         for p in emitter.scatter5.particle_systems:
-            if (p.s_distribution_method == 'manual_all'): #what if user want to convert procedural to manual from here? maybe 
-                row = layout.row()
-                row.operator('scatter5.manual_switch', text=p.name, icon="DOT" if p.active else "BLANK1",).name = p.name
+            if (p.s_distribution_method=='manual_all'): #what if user want to convert procedural to manual from here? maybe 
+                layout.row().operator('scatter5.manual_switch', text=p.name, icon="DOT" if p.active else "BLANK1",).name = p.name
+            continue
 
         layout.separator()
 
-        row = layout.row()
-        row.operator('scatter5.manual_scatter_switch', icon="ADD",)
+        layout.row().operator('scatter5.manual_scatter_add_new', icon="ADD",)
 
         return None
 

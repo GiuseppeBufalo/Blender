@@ -75,7 +75,6 @@ def register():
 
     #register shotcuts
     add_psy.register_quickscatter_shortcuts()
-    ops.register_quicklister_shortcuts()
 
     return 
 
@@ -96,7 +95,6 @@ def unregister():
 
     #unregister shotcuts
     add_psy.unregister_quickscatter_shortcuts()
-    ops.unregister_quicklister_shortcuts()
 
     return
 

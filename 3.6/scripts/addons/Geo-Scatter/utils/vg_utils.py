@@ -32,7 +32,6 @@ def get_weight(o, vg_name, eval_modifiers=True):
                 w[v.index] = g.weight
     return w
 
-
 def fill_vg(o, vg, fill, method="REPLACE", ):
     """fill vg from given values (can be int,float,list,np array,dict)"""
 
@@ -62,7 +61,6 @@ def fill_vg(o, vg, fill, method="REPLACE", ):
 
     return None 
 
-
 def create_vg(o, vg_name, fill=None, method="REPLACE", set_active=True):
     """create or refresh vg with given value(s) if not None"""
 
@@ -70,14 +68,24 @@ def create_vg(o, vg_name, fill=None, method="REPLACE", set_active=True):
     if (not vg):
         vg = o.vertex_groups.new(name=vg_name)
 
-    fill_vg(o, vg, fill, method=method)
+    fill_vg(o, vg, fill, method=method,)
 
     if (set_active):
         o.vertex_groups.active_index = vg.index
 
     return vg 
 
-
+def create_vcol(o, vcol_name, fill=(0,0,0,1,), set_active=True):
+    """create or refresh vcol with given value if not None"""
+    
+    #not ideal...
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.geometry.color_attribute_add(domain='CORNER', color=fill, name=vcol_name,)
+    
+    vcol = o.data.color_attributes[o.data.color_attributes.active_color_index]
+    
+    return vcol
+        
 def set_vg_active_by_name(o, group_name, mode="vg"):
     """Set vg active if exist"""
 
@@ -88,7 +96,7 @@ def set_vg_active_by_name(o, group_name, mode="vg"):
         
         vgs = o.vertex_groups
         if ( (len(vgs)==0) or (group_name not in vgs)):
-            return None
+            return "ERROR_NOT_FOUND"
 
         old = vgs[vgs.active_index].name
 
@@ -101,7 +109,7 @@ def set_vg_active_by_name(o, group_name, mode="vg"):
 
         vcols = o.data.color_attributes 
         if ( (len(vcols)==0) or (group_name not in vcols)):
-            return None
+            return "ERROR_NOT_FOUND"
 
         old = vcols[vcols.active_color_index].name
 
@@ -111,7 +119,6 @@ def set_vg_active_by_name(o, group_name, mode="vg"):
 
     #return old active for overrides
     return old
-
 
 def reverse_vg(o,vg):
     """reverse vg with ops.vertex_group_invert()"""
@@ -306,46 +313,58 @@ class SCATTER5_OT_vg_transfer(bpy.types.Operator):
 
 
 class SCATTER5_OT_vg_quick_paint(bpy.types.Operator):
-    """operator used to quickly create or paint vg or vcol with mutli-surface support"""
+    """operator used to quickly create or paint vg or vcol, with mutli-surface support, for the active psy or active group context or else
+    due to the nature of the geoscatter multi-surface workflow, this tool will set up a painting mode on many objects simultaneously"""
 
     bl_idname  = "scatter5.vg_quick_paint"
     bl_label   = translate("Create a New Vertex-Data")
     bl_options = {'REGISTER', 'INTERNAL'}
 
-    use_surfaces : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
     group_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},) #just enter paint mode on a group name? if create new leave empty
     mode : bpy.props.StringProperty(default="vg", options={"SKIP_SAVE",},) #create or enter in vg/vcol
     api : bpy.props.StringProperty() #if create new, set given api string
 
+    context_surfaces : bpy.props.StringProperty(default="*PSY_CONTEXT*", options={"SKIP_SAVE",},)
+    
     new_name : bpy.props.StringProperty(name="Name", options={"SKIP_SAVE",},) #if creation of a new data, user can choose name
     base_color : bpy.props.FloatVectorProperty(default=(0,0,0,1,), size=4, options={"SKIP_SAVE",},) #canvas color if user create vcol
     set_color : bpy.props.FloatVectorProperty(default=(-1,-1,-1), size=3, options={"SKIP_SAVE",},) #set brush color if user enter vcol mode
+
 
     @classmethod
     def description(cls, context, properties): 
         p = properties
         des = ""
         if (p.group_name==""):
-            des += translate("Create a new vertex data")
-            if (p.use_surfaces): 
-                des += " " + translate("shared across all surfaces") 
+            des += translate("Create a new vertex data shared across all surfaces")
         else:
-            des += translate("Set this data active")
-            if p.use_surfaces: 
-                des += " " + translate("across all surfaces (if found)") 
-            des += " " + translate("and enter the context paint mode") 
-            if (p.use_surfaces): 
-                des += " " + translate("on the first surface found") 
+            des += translate("Set this data active across all surfaces, if found") 
+            des += " " + translate("and enter the context paint mode")  
         return des
 
     def __init__(self):
         """store surfaces target"""
-
-        emitter = bpy.context.scene.scatter5.emitter
-        if (self.use_surfaces==True):
-              self.surfaces = emitter.scatter5.get_psy_active().get_surfaces()
-        else: self.surfaces = [ emitter ]
-
+        
+        #find surfaces automatically depending on group/psy interface context
+        if (self.context_surfaces=="*PSY_CONTEXT*"):
+            
+            #get active psy, or group
+            emitter = bpy.context.scene.scatter5.emitter
+            itm = emitter.scatter5.get_psy_active()
+            if (itm is None):
+                itm = emitter.scatter5.get_group_active()
+            
+            #get their surfaces
+            self.surfaces = itm.get_surfaces()
+            
+        #find surfaces simply using the active emitter
+        elif (self.context_surfaces=="*EMITTER_CONTEXT*"):
+            self.surfaces = [bpy.context.scene.scatter5.emitter]
+            
+        #custom surface context
+        else: 
+            self.surfaces = [ bpy.data.objects[sn] for sn in self.context_surfaces.split("_!#!_") ]
+        
         return None 
 
     def invoke(self, context, event):
@@ -375,9 +394,17 @@ class SCATTER5_OT_vg_quick_paint(bpy.types.Operator):
 
     def enter_paint_mode(self, context):
 
-        #set active attr over all surfaces 
+        #set the attr active over all surfaces 
         for o in self.surfaces:
-            set_vg_active_by_name(o, self.group_name, mode=self.mode)
+            r = set_vg_active_by_name(o, self.group_name, mode=self.mode)
+            
+            #handle error, if group don't exist, then create the missing one!
+            if (r=="ERROR_NOT_FOUND"):
+                
+                if (self.mode=="vcol"):
+                    create_vcol(o, self.group_name,)
+                elif (self.mode=="vg"):
+                    create_vg(o, self.group_name,)
 
         #need to enter paint mode? perhaps already in
         if ((self.mode=="vcol") and (context.mode!="PAINT_VERTEX")) or ((self.mode=="vg") and (context.mode!="PAINT_WEIGHT")):
@@ -426,12 +453,9 @@ class SCATTER5_OT_vg_quick_paint(bpy.types.Operator):
         for o in self.surfaces: 
 
             if (self.mode=="vcol"):
-                context.view_layer.objects.active = o
-                bpy.ops.geometry.color_attribute_add(domain='CORNER', color=self.base_color, name=self.new_name)
-                new = o.data.color_attributes[o.data.color_attributes.active_color_index]
-
+                new = create_vcol(o, self.new_name,)
             elif (self.mode=="vg"):
-                new = o.vertex_groups.new(name=self.new_name)
+                new = create_vg(o, self.new_name,)
 
         #set scatter api 
         if (self.api!=""):

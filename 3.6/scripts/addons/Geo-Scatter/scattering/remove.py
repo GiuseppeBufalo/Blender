@@ -27,31 +27,61 @@ class SCATTER5_OT_remove_system(bpy.types.Operator):
     """Remove the selected particle system(s)"""
     
     bl_idname      = "scatter5.remove_system" #this operator is stupid, prefer to use `p.remove_psy()`
-    bl_label       = ""
-    bl_description = translate("Remove Scatter-System(s), will remove the active system by default, hold ALT for removing the selection")
+    bl_label       = translate("Remove System(s)")
+    bl_description = ""
 
     emitter_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},) #mandatory argument
-    method : bpy.props.StringProperty(default="selection", options={"SKIP_SAVE",},)  #mandatory argument in: selection|active|name|alt|clear
-    name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},) #only if method is: name
+    scene_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},) #facultative, will override emitter
+
+    method : bpy.props.StringProperty(default="selection", options={"SKIP_SAVE",},)  #mandatory argument in: selection|active|name|clear|group|dynamic_uilist
+    name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},) #only if method is name or group
     undo_push : bpy.props.BoolProperty(default=True, options={"SKIP_SAVE",},) 
+
+    @classmethod
+    def description(cls, context, properties): 
+        if (properties.method=="dynamic_uilist"):
+            return translate("Remove the active scatter-system or group. Press ALT to remove the selection.")
+        elif (properties.scene_name!=""):
+            if (properties.method=="clear"):
+                translate("Clear all scatter-system(s) from this scene.")
+            return translate("Remove the scatter-system(s) from this scene.")
+        elif (properties.method=="selection"):
+            return translate("Remove the selected scatter-system(s).")
+        elif (properties.method=="clear"):
+            return translate("Clear all scatter-system(s) from this emitter.")
+        return ""
 
     def invoke(self, context, event):
         """only used if alt behavior == automatic selection|active"""
 
-        if (self.method=="alt"):
-            self.method = "selection" if (event.alt) else "active"
+        if (self.method=="dynamic_uilist"):
+
+            emitter      = bpy.data.objects[self.emitter_name]
+            psy_active   = emitter.scatter5.get_psy_active()
+            group_active = emitter.scatter5.get_group_active()
+            
+            if (event.alt):
+                self.method = "selection"
+
+            elif (group_active is not None):
+                self.method = "group"
+                self.name = group_active.name
+
+            elif (psy_active is not None):
+                self.method = "active"
 
         return self.execute(context)
 
     def execute(self, context):
+            
+        scat_scene = context.scene.scatter5
 
-        if (self.emitter_name==""):
-            return {'FINISHED'}
-        if (self.emitter_name not in context.scene.objects):
-            return {'FINISHED'}
-        
-        emitter = bpy.data.objects[self.emitter_name]
-        psys = emitter.scatter5.particle_systems
+        if (self.scene_name!=""):
+              psys = scat_scene.get_all_psys()
+        else: psys = bpy.data.objects[self.emitter_name].scatter5.particle_systems
+
+        # #save selection, this operation might f up sel
+        # save_sel = [p.name for p in emitter.scatter5.get_psys_selected() if p.sel]
 
         #define what to del
         #need to remove by name as memory adress will keep changing, else might create crash
@@ -66,6 +96,9 @@ class SCATTER5_OT_remove_system(bpy.types.Operator):
         #remove by name?
         elif (self.method=="name"):
             to_del = [ p.name for p in psys if (p.name==self.name) ]
+        #remove whole group members?
+        elif (self.method=="group"):
+            to_del = [ p.name for p in psys if (p.group==self.name) ]
         #remove everything?
         elif (self.method=="clear"):
             to_del = [ p.name for p in psys ]
@@ -74,20 +107,31 @@ class SCATTER5_OT_remove_system(bpy.types.Operator):
         if (len(to_del)==0): 
             return {'FINISHED'}
 
-        #remove each psy
+        #remove each psy, pause user keyboard event listenting
         with context.scene.scatter5.factory_update_pause(event=True):
-            #save old active, restore if needed, deletion operator will reset idx... (perhaps best to integrate this bit in remove_psy() fct directly)
-            old_active = emitter.scatter5.get_psy_active().name
-            #remove!
+            
+            #keep track of the emitters, in order to refresh their interfaces
+            affected_emitters = set()
+            
             for x in to_del:
-                emitter.scatter5.particle_systems[x].remove_psy()
+                
+                #we remove psys by name, otherwise will cause issues
+                psy = scat_scene.get_psy_by_name(x)
+                psy.remove_psy()
+                
+                #retain emitter, we need to refresh their interfaces
+                emitter = psy.id_data
+                affected_emitters.add(emitter)
+                    
                 continue
-            #restore active?
-            if (old_active in emitter.scatter5.particle_systems):
-                for i,p in enumerate(emitter.scatter5.particle_systems):
-                    if (p.name==old_active):
-                        emitter.scatter5.particle_systems_idx = i
-                        break
+
+            #rebuild system-list interface, will take care of active index
+            for e in affected_emitters:
+                e.scatter5.particle_interface_refresh()
+                continue
+        
+        # #restore selection ?
+        # [setattr(p,"sel",p.name in save_sel) for p in emitter.scatter5.particle_systems]
 
         #UNDO_PUSH
         if (self.undo_push):

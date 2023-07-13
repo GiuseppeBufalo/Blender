@@ -180,7 +180,7 @@ class SCATTER5_PT_sync_cat_menu(bpy.types.Panel):
 
         col.label(text=translate("Synchronization by Category")+" :")
 
-        active_channel = context.s5_ctxt_ptr_channel
+        active_channel = context.pass_ui_arg_channel
 
         ui_templates.bool_toggle(col, 
             prop_api=active_channel,
@@ -318,7 +318,7 @@ class SCATTER5_PT_sync_cat_members(bpy.types.Panel):
         col = layout.column()
 
         scat_scene   = context.scene.scatter5
-        active_channel = context.s5_ctxt_ptr_channel
+        active_channel = context.pass_ui_arg_channel
         active_channel_idx = [i for i,c in enumerate(scat_scene.sync_channels) if c==active_channel][0]
 
         if (len(active_channel.members)==0):
@@ -406,7 +406,7 @@ class SCATTER5_UL_sync_channels(bpy.types.UIList):
         menu.scale_y = 0.8
         menu.emboss = "NONE"
         menu.alignment = "RIGHT"
-        menu.context_pointer_set("s5_ctxt_ptr_channel", item)
+        menu.context_pointer_set("pass_ui_arg_channel", item)
         menu.popover(panel="SCATTER5_PT_sync_cat_menu",text="",icon="PREFERENCES")
 
         menu = row.row()
@@ -414,7 +414,7 @@ class SCATTER5_UL_sync_channels(bpy.types.UIList):
         menu.emboss = "NONE"
         menu.alignment = "RIGHT"
         menu.active = bool(len(item.members))
-        menu.context_pointer_set("s5_ctxt_ptr_channel", item)
+        menu.context_pointer_set("pass_ui_arg_channel", item)
         txt = f"{len(item.members):02}"
         menu.popover(panel="SCATTER5_PT_sync_cat_members",text=txt,icon="COMMUNITY")
 

@@ -48,6 +48,9 @@ def draw_extra_panel(self,layout):
     draw_masterseed(self,main)
     ui_templates.separator_box_out(main)
 
+    draw_export(self,main)
+    ui_templates.separator_box_out(main)
+
     draw_sync(self,main)
     ui_templates.separator_box_out(main)
 
@@ -60,15 +63,181 @@ def draw_extra_panel(self,layout):
     draw_terrain_displace(self,main)
     ui_templates.separator_box_out(main)
 
-    draw_export(self,main)
-    ui_templates.separator_box_out(main)
-
     draw_social(self,main)
     ui_templates.separator_box_out(main)
             
     main.separator(factor=50)
     
     return None 
+
+
+
+# ooo        ooooo                        .                            .oooooo..o                           .o8
+# `88.       .888'                      .o8                           d8P'    `Y8                          "888
+#  888b     d'888   .oooo.    .oooo.o .o888oo  .ooooo.  oooo d8b      Y88bo.       .ooooo.   .ooooo.   .oooo888
+#  8 Y88. .P  888  `P  )88b  d88(  "8   888   d88' `88b `888""8P       `"Y8888o.  d88' `88b d88' `88b d88' `888
+#  8  `888'   888   .oP"888  `"Y88b.    888   888ooo888  888               `"Y88b 888ooo888 888ooo888 888   888
+#  8    Y     888  d8(  888  o.  )88b   888 . 888    .o  888          oo     .d8P 888    .o 888    .o 888   888
+# o8o        o888o `Y888""8o 8""888P'   "888" `Y8bod8P' d888b         8""88888P'  `Y8bod8P' `Y8bod8P' `Y8bod88P"
+
+
+def draw_masterseed(self,layout):
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_extra_masterseed", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_masterseed");BOOL_VALUE(0)
+        icon = "W_DICE", 
+        name = translate("Master Seed"), 
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "ui_extra_masterseed", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_masterseed")
+        )
+    if is_open:
+
+        scat_scene = bpy.context.scene.scatter5
+
+        row = box.row()
+        row.separator(factor=0.5)
+        col = row.column(align=True)
+
+        sed = col.row(align=True)
+        sed.prop(scat_scene,"s_master_seed")
+        sedbutton = sed.row(align=True)
+        sedbutton.scale_x = 1.2
+        op = sedbutton.operator("scatter5.exec_line", icon_value=cust_icon("W_DICE"), text="",)
+        op.api = f"scat_scene.s_master_seed = random.randint(0,9999)"
+        op.description = translate("Randomize Seed Value")
+        op.undo = translate("Randomizing Master Seed Value")
+
+        #Right Spacer
+        row.separator(factor=0.1)
+
+        ui_templates.separator_box_in(box)
+        
+    return None
+
+
+# oooooooooooo                                               .
+# `888'     `8                                             .o8
+#  888         oooo    ooo oo.ooooo.   .ooooo.  oooo d8b .o888oo
+#  888oooo8     `88b..8P'   888' `88b d88' `88b `888""8P   888
+#  888    "       Y888'     888   888 888   888  888       888
+#  888       o  .o8"'88b    888   888 888   888  888       888 .
+# o888ooooood8 o88'   888o  888bod8P' `Y8bod8P' d888b      "888"
+#                           888
+#                          o888o
+
+
+def draw_export(self,layout):
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_extra_export", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_export");BOOL_VALUE(0)
+        icon = "W_EXPORT_FILE", 
+        name = translate("Export"),
+        doc_panel = "SCATTER5_PT_docs", 
+        popover_argument = "ui_extra_export", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_export")
+        )
+    if is_open:
+
+            emitter = bpy.context.scene.scatter5.emitter
+            psys_sel = emitter.scatter5.get_psys_selected()
+
+            row  = box.row()
+            row1 = row.row() ; row1.scale_x = 0.17
+            row2 = row.row()
+            row3 = row.row() ; row3.scale_x = 0.17
+            col = row2.column()
+
+            exp = col.row()
+            exp.scale_y = 1.2
+            exp.operator("scatter5.export_to_instance", text=translate("Selected to Instances"), )
+
+            col.separator()
+
+            exp = col.row()
+            exp.scale_y = 1.2
+            exp.operator("scatter5.export_to_mesh", text=translate("Selected to Mesh"), )
+
+            col.separator()
+            
+            exp = col.row()
+            exp.scale_y = 1.2 
+            exp.operator("scatter5.export_to_json", text=translate("Selected to .Json"), )
+
+            col.separator()
+                        
+            exp = col.row()
+            exp.scale_y = 1.2 
+            exp.operator("scatter5.save_operator_preset", text=translate("Selected to Preset(s)"), )
+
+            col.separator()
+            
+            exp = col.row()
+            exp.scale_y = 1.2 
+            exp.operator("scatter5.save_biome_to_disk_dialog", text=translate("Selected to Biome"), )
+
+            col.separator()
+
+            ui_templates.separator_box_in(col)
+    
+    return None
+
+
+#  .oooooo..o                                   oooo                                        o8o
+# d8P'    `Y8                                   `888                                        `"'
+# Y88bo.      oooo    ooo ooo. .oo.    .ooooo.   888 .oo.   oooo d8b  .ooooo.  ooo. .oo.   oooo    oooooooo  .ooooo.
+#  `"Y8888o.   `88.  .8'  `888P"Y88b  d88' `"Y8  888P"Y88b  `888""8P d88' `88b `888P"Y88b  `888   d'""7d8P  d88' `88b
+#      `"Y88b   `88..8'    888   888  888        888   888   888     888   888  888   888   888     .d8P'   888ooo888
+# oo     .d8P    `888'     888   888  888   .o8  888   888   888     888   888  888   888   888   .d8P'  .P 888    .o
+# 8""88888P'      .8'     o888o o888o `Y8bod8P' o888o o888o d888b    `Y8bod8P' o888o o888o o888o d8888888P  `Y8bod8P'
+#             .o..P'
+#             `Y8P'
+
+
+def draw_sync(self,layout):
+
+    box, is_open = ui_templates.box_panel(self, layout, 
+        prop_str = "ui_extra_synch", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_synch");BOOL_VALUE(0)
+        icon = "W_ARROW_SYNC", 
+        name = translate("Synchronize Scatter"), 
+        doc_panel = "SCATTER5_PT_docs",
+        popover_argument = "ui_extra_synch", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_synch")
+        )
+    if is_open:
+
+        scat_scene = bpy.context.scene.scatter5
+
+        _, is_toggled = ui_templates.bool_toggle(box, 
+            prop_api=scat_scene,
+            prop_str="factory_synchronization_allow", 
+            label=translate("Synchronize Settings"),
+            icon="W_ARROW_SYNC", 
+            open_close_api="ui_openclose_synch", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_openclose_synch");BOOL_VALUE(0)
+            return_layout=False,
+            )
+        if bpy.context.window_manager.scatter5.ui.ui_openclose_synch:
+
+            row = box.row()
+            row.active = scat_scene.factory_synchronization_allow
+
+            row.separator(factor=0.5)
+
+            row.template_list("SCATTER5_UL_sync_channels", "", scat_scene, "sync_channels", scat_scene, "sync_channels_idx", rows=3)
+
+            col = row.column(align=True)
+
+            add = col.row(align=True)
+            add.operator("scatter5.sync_channels_ops", icon="ADD", text="").add = True
+
+            rem = col.row(align=True)
+            rem.enabled = bool(len(scat_scene.sync_channels)) and (scat_scene.sync_channels_idx<len(scat_scene.sync_channels))
+            rem.operator("scatter5.sync_channels_ops", icon="REMOVE", text="").remove = True
+
+            #Right Spacer
+            row.separator(factor=0.1)
+
+        ui_templates.separator_box_in(box)
+        
+    return None
+
 
 
 # ooooooooo.                                                .o8                                 oooo       oooooo     oooo
@@ -81,19 +250,17 @@ def draw_extra_panel(self,layout):
 #                                                                                                                          d"     YD
 #                                                                                                                          "Y88888P'
 
-from .. procedural_vg import mask_type 
-
 
 def draw_parametric_masks(self,layout):
 
     MainCol = layout.column(align=True)
     box, is_open = ui_templates.box_panel(self, MainCol.column(align=True), 
-        prop_str = "ui_extra_vgs", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_vgs";UI_BOOL_VAL:"0"
+        prop_str = "ui_extra_vgs", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_vgs");BOOL_VALUE(0)
         icon = "GROUP_VERTEX", 
         name = translate("Vertex-Data"),
         pref_panel = "SCATTER5_PT_mask_header",
         doc_panel = "SCATTER5_PT_docs",
-        popover_argument = "ui_extra_vgs", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_vgs"
+        popover_argument = "ui_extra_vgs", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_vgs")
         )
     if is_open:
 
@@ -148,12 +315,12 @@ def draw_parametric_masks(self,layout):
             ope.separator()
             updo = ope.column(align=True)
             updo.enabled = len(masks)!=0
-            op = updo.operator("scatter5.list_move",text="",icon="TRIA_UP")
+            op = updo.operator("scatter5.generic_list_move",text="",icon="TRIA_UP")
             op.target_idx = mask_idx       
             op.direction = "UP"    
             op.api_propgroup = "emitter.scatter5.mask_systems"
             op.api_propgroup_idx = "emitter.scatter5.mask_systems_idx"
-            op = updo.operator("scatter5.list_move",text="",icon="TRIA_DOWN")
+            op = updo.operator("scatter5.generic_list_move",text="",icon="TRIA_DOWN")
             op.target_idx = mask_idx       
             op.direction = "DOWN"   
             op.api_propgroup = "emitter.scatter5.mask_systems"
@@ -238,7 +405,8 @@ def draw_parametric_masks(self,layout):
             box = MainCol.box().column(align=True)            
 
             #drawing code of each masks stored within it's own type module. 
-            exec(f"mask_type.{active_mask.type}.draw_settings( box, mask_idx,)")
+            from .. procedural_vg import mask_type 
+            exec(f"mask_type.{active_mask.type}.draw_settings(box, mask_idx,)")
 
             box.separator(factor=1.2)
             return  None
@@ -257,12 +425,12 @@ class SCATTER5_UL_tweaking_masks(bpy.types.UIList):
         
         #user_name
         if (item.icon.startswith("W_")):
-              layout.prop(item,"user_name", text="", emboss=False, icon_value=cust_icon(item.icon) )
-        else: layout.prop(item,"user_name", text="", emboss=False, icon=item.icon )
+              layout.prop(item, "user_name", text="", emboss=False, icon_value=cust_icon(item.icon),)
+        else: layout.prop(item, "user_name", text="", emboss=False, icon=item.icon,)
 
         #mask refresh operation
         ope = layout.row()
-        op = ope.operator("scatter5.refresh_mask",text="",icon="FILE_REFRESH",emboss=False,)
+        op = ope.operator("scatter5.refresh_mask", text="", icon="FILE_REFRESH", emboss=False,)
         op.mask_type = item.type
         op.mask_idx = [i for i,m in enumerate(emitter.scatter5.mask_systems) if m==item][0]
 
@@ -278,119 +446,25 @@ class SCATTER5_UL_tweaking_masks(bpy.types.UIList):
                 vg_name = mod["Output_5_attribute_name"]
                 vg_active = is_vg_active(emitter, vg_name)
                 w.active = (vg_active) and (bpy.context.mode == "PAINT_WEIGHT")
-                op = w.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA", emboss=vg_active, depress=vg_active,) ; op.mode = "vg" ; op.group_name = vg_name
+                op = w.operator("scatter5.vg_quick_paint", text="", icon="BRUSH_DATA", emboss=vg_active, depress=vg_active,)
+                op.group_name = vg_name
+                op.mode = "vg"
+                op.context_surfaces = "*EMITTER_CONTEXT*"
             
             else:
-                w.operator("scatter5.dummy",text="",icon="BLANK1",emboss=False, depress=False,)
+                w.operator("scatter5.dummy", text="", icon="BLANK1", emboss=False, depress=False,)
 
         else:
 
             #set mask active 
             vg_active = is_vg_active(emitter, item.name)
             w.active = (vg_active) and (bpy.context.mode == "PAINT_WEIGHT")
-            op = w.operator("scatter5.vg_quick_paint",text="",icon="BRUSH_DATA", emboss=vg_active, depress=vg_active,) ; op.mode = "vg" ; op.group_name = item.name
+            op = w.operator("scatter5.vg_quick_paint", text="", icon="BRUSH_DATA", emboss=vg_active, depress=vg_active,)
+            op.group_name = item.name
+            op.mode = "vg"
+            op.context_surfaces = "*EMITTER_CONTEXT*"
 
         return None
-
-# ooo        ooooo                        .                            .oooooo..o                           .o8
-# `88.       .888'                      .o8                           d8P'    `Y8                          "888
-#  888b     d'888   .oooo.    .oooo.o .o888oo  .ooooo.  oooo d8b      Y88bo.       .ooooo.   .ooooo.   .oooo888
-#  8 Y88. .P  888  `P  )88b  d88(  "8   888   d88' `88b `888""8P       `"Y8888o.  d88' `88b d88' `88b d88' `888
-#  8  `888'   888   .oP"888  `"Y88b.    888   888ooo888  888               `"Y88b 888ooo888 888ooo888 888   888
-#  8    Y     888  d8(  888  o.  )88b   888 . 888    .o  888          oo     .d8P 888    .o 888    .o 888   888
-# o8o        o888o `Y888""8o 8""888P'   "888" `Y8bod8P' d888b         8""88888P'  `Y8bod8P' `Y8bod8P' `Y8bod88P"
-
-
-def draw_masterseed(self,layout):
-
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_extra_masterseed", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_masterseed";UI_BOOL_VAL:"0"
-        icon = "W_DICE", 
-        name = translate("Master Seed"), 
-        doc_panel = "SCATTER5_PT_docs",
-        popover_argument = "ui_extra_masterseed", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_masterseed"
-        )
-    if is_open:
-
-        scat_scene = bpy.context.scene.scatter5
-
-        row = box.row()
-        row.separator(factor=0.5)
-        col = row.column(align=True)
-
-        sed = col.row(align=True)
-        sed.prop(scat_scene,"s_master_seed")
-        sedbutton = sed.row(align=True)
-        sedbutton.scale_x = 1.2
-        op = sedbutton.operator( "scatter5.exec_line", icon_value=cust_icon("W_DICE"),text="")
-        op.api = f"scat_scene.s_master_seed = random.randint(0,9999)"
-        op.description = translate("Randomize Seed Value")
-        op.undo = translate("Randomizing Master Seed Value")
-
-        #Right Spacer
-        row.separator(factor=0.1)
-
-        ui_templates.separator_box_in(box)
-        
-    return None
-
-
-#  .oooooo..o                                   oooo                                        o8o
-# d8P'    `Y8                                   `888                                        `"'
-# Y88bo.      oooo    ooo ooo. .oo.    .ooooo.   888 .oo.   oooo d8b  .ooooo.  ooo. .oo.   oooo    oooooooo  .ooooo.
-#  `"Y8888o.   `88.  .8'  `888P"Y88b  d88' `"Y8  888P"Y88b  `888""8P d88' `88b `888P"Y88b  `888   d'""7d8P  d88' `88b
-#      `"Y88b   `88..8'    888   888  888        888   888   888     888   888  888   888   888     .d8P'   888ooo888
-# oo     .d8P    `888'     888   888  888   .o8  888   888   888     888   888  888   888   888   .d8P'  .P 888    .o
-# 8""88888P'      .8'     o888o o888o `Y8bod8P' o888o o888o d888b    `Y8bod8P' o888o o888o o888o d8888888P  `Y8bod8P'
-#             .o..P'
-#             `Y8P'
-
-
-def draw_sync(self,layout):
-
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_extra_synch", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_synch";UI_BOOL_VAL:"0"
-        icon = "W_ARROW_SYNC", 
-        name = translate("Synchronize Scatter"), 
-        doc_panel = "SCATTER5_PT_docs",
-        popover_argument = "ui_extra_synch", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_synch"
-        )
-    if is_open:
-
-        scat_scene = bpy.context.scene.scatter5
-
-        _, is_toggled = ui_templates.bool_toggle(box, 
-            prop_api=scat_scene,
-            prop_str="factory_synchronization_allow", 
-            label=translate("Synchronize Settings"),
-            icon="W_ARROW_SYNC", 
-            open_close_api="ui_openclose_synch", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_openclose_synch";UI_BOOL_VAL:"0"
-            return_layout=False,
-            )
-        if bpy.context.window_manager.scatter5.ui.ui_openclose_synch:
-
-            row = box.row()
-            row.active = scat_scene.factory_synchronization_allow
-
-            row.separator(factor=0.5)
-
-            row.template_list("SCATTER5_UL_sync_channels", "", scat_scene, "sync_channels", scat_scene, "sync_channels_idx", rows=3)
-
-            col = row.column(align=True)
-
-            add = col.row(align=True)
-            add.operator("scatter5.sync_channels_ops", icon="ADD", text="").add = True
-
-            rem = col.row(align=True)
-            rem.enabled = bool(len(scat_scene.sync_channels)) and (scat_scene.sync_channels_idx<len(scat_scene.sync_channels))
-            rem.operator("scatter5.sync_channels_ops", icon="REMOVE", text="").remove = True
-
-            #Right Spacer
-            row.separator(factor=0.1)
-
-        ui_templates.separator_box_in(box)
-        
-    return None
 
 
 # ooooo     ooo                  .o8                .
@@ -407,11 +481,11 @@ def draw_sync(self,layout):
 def draw_update(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_extra_update", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_update";UI_BOOL_VAL:"0"
+        prop_str = "ui_extra_update", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_update");BOOL_VALUE(0)
         icon = "FILE_REFRESH", 
         name = translate("Update Behavior"),
         doc_panel = "SCATTER5_PT_docs",
-        popover_argument = "ui_extra_update", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_update"
+        popover_argument = "ui_extra_update", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_update")
         )
     if is_open:
 
@@ -424,7 +498,7 @@ def draw_update(self,layout):
                 prop_str="factory_alt_allow", 
                 label=translate("Alt Key for Batch"), 
                 icon="EVENT_ALT", 
-                open_close_api="ui_openclose_upd_alt", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_openclose_upd_alt";UI_BOOL_VAL:"0"
+                open_close_api="ui_openclose_upd_alt", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_openclose_upd_alt");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -438,7 +512,7 @@ def draw_update(self,layout):
                 prop_str="factory_delay_allow", 
                 label=translate("Settings Update Method"),
                 icon="FILE_REFRESH",
-                open_close_api="ui_openclose_upd_delay", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_openclose_upd_delay";UI_BOOL_VAL:"0"
+                open_close_api="ui_openclose_upd_delay", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_openclose_upd_delay");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -459,7 +533,7 @@ def draw_update(self,layout):
                 prop_str="update_cam_dummy", 
                 label=translate("Camera Update Dependencies"),
                 icon="CAMERA_DATA",
-                open_close_api="ui_openclose_upd_cam", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_openclose_upd_cam";UI_BOOL_VAL:"0"
+                open_close_api="ui_openclose_upd_cam", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_openclose_upd_cam");BOOL_VALUE(0)
                 return_layout=True,
                 )
             if is_toggled:
@@ -520,15 +594,14 @@ def draw_update(self,layout):
 #                                                                                            888
 #                                                                                           o888o
 
-
 def draw_terrain_displace(self,layout):
 
     box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_extra_displace", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_displace";UI_BOOL_VAL:"0"
+        prop_str = "ui_extra_displace", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_displace");BOOL_VALUE(0)
         icon = "MOD_DISPLACE", 
         name = translate("Quick Displace"),
         doc_panel = "SCATTER5_PT_docs",
-        popover_argument = "ui_extra_displace", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_displace"
+        popover_argument = "ui_extra_displace", #INSTRUCTION:REGISTER:UI:ARGS_POINTERS("ui_extra_displace")
         )
     if is_open:
 
@@ -626,77 +699,6 @@ def draw_terrain_displace(self,layout):
     return None
 
 
-# oooooooooooo                                               .
-# `888'     `8                                             .o8
-#  888         oooo    ooo oo.ooooo.   .ooooo.  oooo d8b .o888oo
-#  888oooo8     `88b..8P'   888' `88b d88' `88b `888""8P   888
-#  888    "       Y888'     888   888 888   888  888       888
-#  888       o  .o8"'88b    888   888 888   888  888       888 .
-# o888ooooood8 o88'   888o  888bod8P' `Y8bod8P' d888b      "888"
-#                           888
-#                          o888o
-
-
-def draw_export(self,layout):
-
-    box, is_open = ui_templates.box_panel(self, layout, 
-        prop_str = "ui_extra_export", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_export";UI_BOOL_VAL:"0"
-        icon = "W_EXPORT_FILE", 
-        name = translate("Export"),
-        doc_panel = "SCATTER5_PT_docs", 
-        popover_argument = "ui_extra_export", #REGTIME_INSTRUCTION:POPOVER_PROP:"ui_extra_export"
-        )
-    if is_open:
-
-            emitter = bpy.context.scene.scatter5.emitter
-            psys_sel = emitter.scatter5.get_psys_selected()
-
-            row  = box.row()
-            row1 = row.row() ; row1.scale_x = 0.17
-            row2 = row.row()
-            row3 = row.row() ; row3.scale_x = 0.17
-            col = row2.column()
-
-            exp = col.row()
-            exp.scale_y = 1.2
-            exp.operator("scatter5.export_to_instance", text=translate("Selected to Instances"), )
-
-            col.separator()
-
-            exp = col.row()
-            exp.scale_y = 1.2
-            exp.operator("scatter5.export_to_mesh", text=translate("Selected to Mesh"), )
-
-            col.separator()
-            
-            exp = col.row()
-            exp.scale_y = 1.2 
-            exp.operator("scatter5.export_to_json", text=translate("Selected to .Json"), )
-
-            col.separator()
-                        
-            exp = col.row()
-            exp.scale_y = 1.2 
-            exp.operator("scatter5.save_operator_preset", text=translate("Selected to Preset(s)"), )
-
-            col.separator()
-            
-            exp = col.row()
-            exp.scale_y = 1.2 
-            exp.operator("scatter5.save_biome_to_disk_dialog", text=translate("Selected to Biome"), )
-
-            # enable this for 5.1, way too much stuff in 5.0 already.
-            # exp = col.row()
-            # exp.enabled = False
-            # exp.scale_y = 1.2
-            # exp.operator("scatter5.bake_vertex_groups", text=translate("Bake VertexGroup(s)"), )
-
-            col.separator()
-
-            ui_templates.separator_box_in(col)
-    
-    return None
-
 
 #  .oooooo..o                      o8o            oooo
 # d8P'    `Y8                      `"'            `888
@@ -713,7 +715,7 @@ def draw_social(self,layout): #TODO update links
 
     col = layout.column(align=True)
     box, is_open = ui_templates.box_panel(self, col, 
-        prop_str = "ui_extra_links", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_extra_links";UI_BOOL_VAL:"0"
+        prop_str = "ui_extra_links", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_extra_links");BOOL_VALUE(0)
         icon = "HELP", 
         name = translate("Help and Links"), 
         )
@@ -737,13 +739,13 @@ def draw_social(self,layout): #TODO update links
 
             exp = col.row()
             exp.scale_y = 1.2
-            exp.operator("wm.url_open", text=translate("Available Biomes"),).url = "https://www.geoscatter.com/biomes.html"
+            exp.operator("wm.url_open", text=translate("Discover The Biomes"),).url = "https://www.geoscatter.com/biomes.html"
 
             col.separator()
 
             exp = col.row()
             exp.scale_y = 1.2
-            exp.operator("wm.url_open", text=translate("Documentation"),).url = "https://sites.google.com/view/scatter5docs/"
+            exp.operator("wm.url_open", text=translate("Documentation"),).url = "https://www.geoscatter.com/documentation"
 
             col.separator()
 
@@ -765,23 +767,23 @@ def draw_social(self,layout): #TODO update links
 
             exp = col.row()
             exp.scale_y = 1.2
-            exp.operator("wm.url_open", text=translate("Instagram"),).url = "https://www.instagram.com/scatter.plugin/"
+            exp.operator("wm.url_open", text=translate("Instagram"),).url = "https://www.instagram.com/geoscatter"
 
             col.separator()
 
             #title
             txt=col.row(align=True)
-            txt.label(text=translate("Assistance")+":",)
+            txt.label(text=translate("Customer Service")+":",)
 
             exp = col.row()
             exp.scale_y = 1.2
-            exp.operator("wm.url_open", text=translate("Contact-Us"),).url = "https://www.blendermarket.com/products/scatter"
+            exp.operator("wm.url_open", text=translate("Discord Community"),).url = "https://discord.com/invite/F7ZyjP6VKB"
 
             col.separator()
 
             exp = col.row()
             exp.scale_y = 1.2
-            exp.operator("wm.url_open", text=translate("Discord"),).url = "https://discord.com/invite/F7ZyjP6VKB"
+            exp.operator("wm.url_open", text=translate("Personal Assistance"),).url = "https://www.blendermarket.com/products/scatter"
 
             ui_templates.separator_box_in(box)
 

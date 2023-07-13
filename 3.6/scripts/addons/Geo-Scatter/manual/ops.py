@@ -86,7 +86,9 @@ class SCATTER5_OT_manual_enter(Operator, ):
     bl_label = translate("Enter Manual Mode")
     bl_description = translate("Enter Manual Mode")
     bl_options = set()
-    
+        
+    #this operator only work for the active psy
+
     @classmethod
     def poll(cls, context, ):
         if(context.space_data is None):
@@ -101,13 +103,13 @@ class SCATTER5_OT_manual_enter(Operator, ):
         emitter = bpy.context.scene.scatter5.emitter
         if(emitter is None):
             return False
-        psys = emitter.scatter5.get_psy_active()
-        if(psys is None):
+        psy_active = emitter.scatter5.get_psy_active()
+        if(psy_active is None):
             return False
-        if(psys.s_distribution_method != 'manual_all'):
+        if(psy_active.s_distribution_method != 'manual_all'):
             return False
         
-        surfaces = psys.get_surfaces()
+        surfaces = psy_active.get_surfaces()
         if(not len(surfaces)):
             return False
         for s in surfaces:
@@ -117,12 +119,16 @@ class SCATTER5_OT_manual_enter(Operator, ):
         return True
     
     def execute(self, context, ):
+
+        emitter = bpy.context.scene.scatter5.emitter
+        psy_active = emitter.scatter5.get_psy_active()
+        
         # NOTE: stop animation if it is playing
         bpy.ops.screen.animation_cancel(restore_frame=False, )
         
-        # NOTE: force refresh uuid surfaces (rare bugfix)
+        # NOTE: force refresh uuid surfaces
         from ..scattering.update_factory import update_manual_uuid_surfaces
-        update_manual_uuid_surfaces(force_update=True)
+        update_manual_uuid_surfaces(force_update=True, flush_uuid_cache=psy_active.uuid,)
 
         # run last or default tool
         last = bpy.context.scene.scatter5.manual.active_tool
@@ -132,6 +138,12 @@ class SCATTER5_OT_manual_enter(Operator, ):
             bpy.context.scene.scatter5.manual.active_tool = "scatter5.manual_brush_tool_spray"
             last = "scatter5.manual_brush_tool_spray"
             log("{}: unknown brush type was set in ~manual.active_brush, resetting to default".format(self.__class__.__name__))
+        
+        # if last selected tool was index brush and system no longer uses index for instance picking, index brush cannot start, reset it to default
+        if(last == "scatter5.manual_brush_tool_object_set"):
+            if(psy_active.s_instances_method != "ins_collection" or psy_active.s_instances_pick_method != "pick_idx"):
+                last = "scatter5.manual_brush_tool_spray"
+                log("{}: unavailable brush type was set in ~manual.active_brush, resetting to default".format(self.__class__.__name__))
         
         c = brushes.get_tool_class(last)
         n = c.bl_idname.split('.', 1)
@@ -355,49 +367,46 @@ class SCATTER5_OT_manual_switch(Operator, ):
         
         # find desired system index
         e = bpy.context.scene.scatter5.emitter
-        idx = -1
-        for i, p in enumerate(e.scatter5.particle_systems):
-            if(p.name == self.name):
-                idx = i
-                break
-        if(idx > -1):
-            # set index to switch
-            e.scatter5.particle_systems_idx = idx
-            # re-run active brush operator
-            tool = context.workspace.tools.from_space_view3d_mode(context.mode).idname
+        assert (self.name in e.scatter5.particle_systems)
+
+        # set psy as active
+        e.scatter5.set_interface_active_item(item_type='SCATTER', item_name=self.name)
+
+        # re-run active brush operator
+        tool = context.workspace.tools.from_space_view3d_mode(context.mode).idname
+        
+        from .brushes import get_tool_class
+        brush = get_tool_class(tool)
+        
+        nm = brush.bl_idname.split('.', 1)
+        op = getattr(getattr(bpy.ops, nm[0]), nm[1])
+        if(op.poll()):
+
+            # if(brush.brush_type == "manipulator"):
+            #     # NOTE: extra special care for this one..
+            #     from .gizmos import SC5GizmoManager
+            #     SC5GizmoManager.index = -1
+            #     SC5GizmoManager.group = None
             
-            from .brushes import get_tool_class
-            brush = get_tool_class(tool)
+            from .brushes import ToolBox, panic
+            if(ToolBox.reference is not None):
+                try:
+                    ToolBox.reference._abort(context, None, )
+                except Exception as e:
+                    # NOTE: panic!
+                    panic(deinit.__qualname__)
             
-            nm = brush.bl_idname.split('.', 1)
-            op = getattr(getattr(bpy.ops, nm[0]), nm[1])
-            if(op.poll()):
-                # if(brush.brush_type == "manipulator"):
-                #     # NOTE: extra special care for this one..
-                #     from .gizmos import SC5GizmoManager
-                #     SC5GizmoManager.index = -1
-                #     SC5GizmoManager.group = None
-                
-                from .brushes import ToolBox, panic
-                if(ToolBox.reference is not None):
-                    try:
-                        ToolBox.reference._abort(context, None, )
-                    except Exception as e:
-                        # NOTE: panic!
-                        panic(deinit.__qualname__)
-                
-                # run it again but in different context.. i.e. different target
-                op('INVOKE_DEFAULT', )
-            else:
-                return {'CANCELLED'}
+            # run it again but in different context.. i.e. different target
+            op('INVOKE_DEFAULT', )
+
         else:
             return {'CANCELLED'}
-        
+
         return {'FINISHED'}
 
 
-class SCATTER5_OT_manual_scatter_switch(Operator, ):
-    bl_idname = "scatter5.manual_scatter_switch"
+class SCATTER5_OT_manual_scatter_add_new(Operator, ):
+    bl_idname = "scatter5.manual_scatter_add_new"
     bl_label = translate("Scatter Selected Asset(s)")
     bl_description = translate("Scatter Selected Asset(s)")
     bl_options = {'INTERNAL', 'UNDO'}
@@ -475,7 +484,7 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
     def transfer(self, surfaces, target, ):
         me = target.data
         l = len(me.vertices)
-        vs = np.zeros(l * 3, dtype=float, )
+        vs = np.zeros(l * 3, dtype=np.float64, )
         me.vertices.foreach_get('co', vs)
         vs.shape = (-1, 3)
         
@@ -684,7 +693,7 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
                     attributes['vcol_{}_b'.format(n)],
                     attributes['vcol_{}_a'.format(n)],
                 ]
-                a = np.zeros((l * 4), dtype=float, )
+                a = np.zeros((l * 4), dtype=np.float64, )
                 attrs[n].data.foreach_get('color', a)
                 a.shape = (-1, 4)
                 m = uids == uid
@@ -696,7 +705,7 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
                     attributes['uv_{}_x'.format(n)],
                     attributes['uv_{}_y'.format(n)],
                 ]
-                a = np.zeros((l * 2), dtype=float, )
+                a = np.zeros((l * 2), dtype=np.float64, )
                 attrs[n].data.foreach_get('vector', a)
                 a.shape = (-1, 2)
                 m = uids == uid
@@ -705,7 +714,7 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
             
             for n in vgroups:
                 v = attributes['vgroup_{}'.format(n)]
-                a = np.zeros(l, dtype=float, )
+                a = np.zeros(l, dtype=np.float64, )
                 attrs[n].data.foreach_get('value', a)
                 m = uids == uid
                 a[m] = v[m]
@@ -721,7 +730,7 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
         # DEBUG
         me = target.data
         l = len(me.vertices)
-        vs = np.zeros(l * 3, dtype=float, )
+        vs = np.zeros(l * 3, dtype=np.float64, )
         me.vertices.foreach_get('co', vs)
         vs.shape = (-1, 3)
         uids = np.zeros(l, dtype=int, )
@@ -738,19 +747,19 @@ class SCATTER5_OT_surfaces_data_to_attributes(Operator, ):
         names = []
         values = []
         for n in set(add_vcols):
-            a = np.zeros(l * 4, dtype=float, )
+            a = np.zeros(l * 4, dtype=np.float64, )
             me.attributes[n].data.foreach_get('color', a, )
             a.shape = (-1, 4)
             names.extend(['{}_r'.format(n), '{}_g'.format(n), '{}_b'.format(n), '{}_a'.format(n), ])
             values.extend([a[:, 0], a[:, 1], a[:, 2], a[:, 3], ])
         for n in set(add_uvs):
-            a = np.zeros(l * 2, dtype=float, )
+            a = np.zeros(l * 2, dtype=np.float64, )
             me.attributes[n].data.foreach_get('vector', a, )
             a.shape = (-1, 2)
             names.extend(['{}_x'.format(n), '{}_y'.format(n), ])
             values.extend([a[:, 0], a[:, 1], ])
         for n in set(add_vgroups):
-            a = np.zeros(l, dtype=float, )
+            a = np.zeros(l, dtype=np.float64, )
             me.attributes[n].data.foreach_get('value', a, )
             names.extend(['{}'.format(n), ])
             values.extend([a, ])
@@ -897,11 +906,11 @@ class SCATTER5_OT_manual_convert_from_procedural(Operator, ):
         
         '''
         # DEBUG
-        # vs = np.array([local_loc for _, _, local_loc, _, _, _, _ in instances], dtype=float, )
-        vs = np.array([world_loc for _, world_loc, _, _, _, _, _, _ in instances], dtype=float, )
+        # vs = np.array([local_loc for _, _, local_loc, _, _, _, _ in instances], dtype=np.float64, )
+        vs = np.array([world_loc for _, world_loc, _, _, _, _, _, _ in instances], dtype=np.float64, )
         vs = np.concatenate([vs, vs, ])
-        ys = np.array([y for _, _, _, _, y, _, _, _ in instances], dtype=float, )
-        zs = np.array([z for _, _, _, _, _, z, _, _ in instances], dtype=float, )
+        ys = np.array([y for _, _, _, _, y, _, _, _ in instances], dtype=np.float64, )
+        zs = np.array([z for _, _, _, _, _, z, _, _ in instances], dtype=np.float64, )
         ns = np.concatenate([ys, zs, ])
         uids = np.array([uid for _, _, _, _, _, _, _, uid in instances], dtype=int, )
         uids = np.concatenate([uids, uids, ])
@@ -968,12 +977,12 @@ class SCATTER5_OT_manual_convert_from_procedural(Operator, ):
         me.vertices.add(l)
         
         names = []
-        debug_vs = np.zeros((l, 3), dtype=float, )
-        vs = np.zeros((l, 3), dtype=float, )
-        ns = np.zeros((l, 3), dtype=float, )
-        ys = np.zeros((l, 3), dtype=float, )
-        zs = np.zeros((l, 3), dtype=float, )
-        scas = np.zeros((l, 3), dtype=float, )
+        debug_vs = np.zeros((l, 3), dtype=np.float64, )
+        vs = np.zeros((l, 3), dtype=np.float64, )
+        ns = np.zeros((l, 3), dtype=np.float64, )
+        ys = np.zeros((l, 3), dtype=np.float64, )
+        zs = np.zeros((l, 3), dtype=np.float64, )
+        scas = np.zeros((l, 3), dtype=np.float64, )
         uids = np.zeros(l, dtype=int, )
         for i, (n, wl, wn, ll, y, z, s, uid, ) in enumerate(data):
             names.append(n)
@@ -1028,7 +1037,7 @@ class SCATTER5_OT_manual_convert_from_procedural(Operator, ):
             
             return m.to_quaternion()
         
-        rotation = np.zeros((l, 3), dtype=float, )
+        rotation = np.zeros((l, 3), dtype=np.float64, )
         for i in np.arange(l):
             a = direction_to_rotation(Vector(zs[i]), Vector(ys[i]))
             
@@ -1044,8 +1053,8 @@ class SCATTER5_OT_manual_convert_from_procedural(Operator, ):
         
         me.attributes['{}rotation'.format(prefix)].data.foreach_set('vector', rotation.ravel(), )
         
-        align_z = np.zeros((l, 3), dtype=float, )
-        align_y = np.zeros((l, 3), dtype=float, )
+        align_z = np.zeros((l, 3), dtype=np.float64, )
+        align_y = np.zeros((l, 3), dtype=np.float64, )
         for i in np.arange(l):
             v = Vector((0.0, 0.0, 1.0))
             v.rotate(Euler(rotation[i]))
@@ -1128,6 +1137,98 @@ class SCATTER5_OT_manual_convert_from_procedural(Operator, ):
         l.separator()
 
 
+class SCATTER5_OT_manual_drop_to_ground(Operator, ):
+    bl_idname = "scatter5.manual_drop_to_ground"
+    bl_label = translate("Drop To Ground")
+    bl_description = translate("Drop all points to emitter and ground plane along global Z axis")
+    bl_options = {'INTERNAL', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context, ):
+        try:
+            target = bpy.context.scene.scatter5.emitter.scatter5.get_psy_active().scatter_obj
+            if(len(target.data.vertices)):
+                from .brushes import ToolBox
+                tool = ToolBox.reference
+                if(tool is not None):
+                    return True
+        except Exception as e:
+            pass
+        return False
+    
+    def execute(self, context, ):
+        from .brushes import ToolBox, get_tool_class
+        tool = ToolBox.reference
+        tool_id = tool.tool_id
+        if(tool_id != "scatter5.manual_brush_tool_drop_down"):
+            opc = get_tool_class("scatter5.manual_brush_tool_drop_down")
+            n = opc.bl_idname.split('.', 1)
+            op = getattr(getattr(bpy.ops, n[0]), n[1])
+            op('INVOKE_DEFAULT', )
+        
+        props = bpy.context.scene.scatter5.manual.tool_drop_down
+        u = props.use_ground_plane
+        props.use_ground_plane = True
+        bpy.ops.scatter5.manual_apply_brush()
+        props.use_ground_plane = u
+        
+        if(tool_id != "scatter5.manual_brush_tool_drop_down"):
+            opc = get_tool_class(tool_id)
+            n = opc.bl_idname.split('.', 1)
+            op = getattr(getattr(bpy.ops, n[0]), n[1])
+            op('INVOKE_DEFAULT', )
+        
+        return {'FINISHED'}
+
+
+class SCATTER5_OT_manual_reassign_surface(Operator, ):
+    bl_idname = "scatter5.manual_reassign_surface"
+    bl_label = translate("Re-Assign Surface By Proximity")
+    bl_description = translate("Assign all instances to their closest surface by distance")
+    bl_options = {'INTERNAL', 'UNDO'}
+    
+    @classmethod
+    def poll(cls, context, ):
+        try:
+            target = bpy.context.scene.scatter5.emitter.scatter5.get_psy_active().scatter_obj
+            if(len(target.data.vertices)):
+                from .brushes import ToolBox
+                tool = ToolBox.reference
+                if(tool is not None):
+                    # make sure any tool is running..
+                    return True
+        except Exception as e:
+            pass
+        return False
+    
+    def execute(self, context, ):
+        from .brushes import ToolBox, ToolSessionCache
+        # NOTE: lets pretend this is tool of some sort so i have access to internal utilities
+        self = ToolBox.reference
+        
+        me = self._target.data
+        vs = self._get_target_attribute_masked(me.vertices, 'co', )
+        uids = self._get_target_attribute_masked(me.attributes, 'surface_uuid', )
+        vs, _ = self._surfaces_to_world_space(vs, None, uids, )
+        
+        for i, v in enumerate(vs):
+            v = Vector(v)
+            # this should get something no matter how far (if bvh contains some geometry, but if there is none, manual mode should not start at all)
+            _, _, idx, _ = self._bvh.find_nearest(v)
+            u = int(ToolSessionCache._cache['arrays']['f_surface'][idx])
+            uids[i] = u
+        
+        # NOTE: now, do i need to handle other properties? like scale which depends on surface scale?
+        
+        vs, _ = self._world_to_surfaces_space(vs, nor=None, uid=uids, )
+        self._set_target_attribute_masked(me.vertices, 'co', vs, )
+        self._set_target_attribute_masked(me.attributes, 'surface_uuid', uids, )
+        # NOTE: force it to update, setting stuff with `foreach_set` will not trigger update
+        me.update()
+        
+        return {'FINISHED'}
+
+
 classes = (
     # SCATTER5_OT_manual_tool_gesture,
     SCATTER5_OT_manual_clear,
@@ -1139,8 +1240,10 @@ classes = (
     # SCATTER5_OT_manual_edit,
     # SCATTER5_OT_manual_drop,
     SCATTER5_OT_manual_switch,
-    SCATTER5_OT_manual_scatter_switch,
+    SCATTER5_OT_manual_scatter_add_new,
     SCATTER5_OT_surfaces_data_to_attributes,
     SCATTER5_OT_manual_convert_from_procedural,
     # SCATTER5_OT_manual_sync_tool_properties,
+    SCATTER5_OT_manual_drop_to_ground,
+    SCATTER5_OT_manual_reassign_surface,
 )

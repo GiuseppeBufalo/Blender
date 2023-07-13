@@ -223,7 +223,7 @@ def remove(i):
 class SCATTER5_OT_layer_paint_mode(bpy.types.Operator):
 
     bl_idname      = "scatter5.layer_paint_mode"
-    bl_label       = translate("Enter sPaint Mode")
+    bl_label       = translate("Enter Paint Mode")
     bl_description = ""
     bl_options     = {'INTERNAL','UNDO'}
 

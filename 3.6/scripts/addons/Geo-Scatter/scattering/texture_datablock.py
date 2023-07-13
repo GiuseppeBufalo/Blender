@@ -44,7 +44,7 @@ def user_name_upd(self,context):
         search_name = f".TEXTURE {self.user_name}.{i:03}"
         i+=1
 
-    self.is_default = (search_name==".TEXTURE *DEFAULT* MKIII")
+    self.is_default = (search_name==".TEXTURE *DEFAULT* MKIV")
 
     ng.name = search_name
     self.user_name = search_name.replace(".TEXTURE ","") #only "same ?" check above will save us from feedback loop
@@ -278,26 +278,27 @@ class SCATTER5_PR_node_texture(bpy.types.PropertyGroup):
     """bpy.data.node_groups[i].scatter5.texture"""
 
     user_name : bpy.props.StringProperty(
-        default="*DEFAULT* MKIII",
+        default="*DEFAULT* MKIV",
         update=user_name_upd,
         )
 
-    def get_psy_users(self):
-        """collect all scatter-systems user of this texture data"""
+    def get_system_users(self):
+        """collect all scatter-systems/group-systems user of this texture data"""
 
-        psy_users = []
+        #get all psy or group systems
+        all_systems = { itm.get_interface_item_source() for e in bpy.context.scene.scatter5.get_all_emitters(all_scenes=True) for itm in e.scatter5.particle_interface_items }
 
-        for p in bpy.context.scene.scatter5.get_all_psys(): 
-            for k in p.bl_rna.properties.keys():
+        #filter psys depending if they got a texture pointer assigned to this self texture
+        users=set()
+        for sys in all_systems:
+            for k in sys.bl_rna.properties.keys():
                 if (k.endswith("texture_ptr")):
-                    value = getattr(p,k)
-                    if (value!=""):
-                        if (value.endswith(self.user_name)):
-                            if (p not in psy_users):
-                                psy_users.append(p)
-
-        return psy_users
-
+                    value = getattr(sys,k)
+                    if ((value!="") and (value.endswith(self.user_name))):
+                        users.add(sys)
+                        
+        return users
+                        
     is_default : bpy.props.BoolProperty(
         default=True,
         update=is_default_upd,
@@ -567,12 +568,13 @@ class SCATTER5_PR_node_texture(bpy.types.PropertyGroup):
     #mapping 
 
     mapping_projection : bpy.props.EnumProperty(
-        name=translate("Space"),
+        name=translate("Projection Space"),
+        description=translate("Define how this texture will be applied on your scatter"),
         default= "local", 
-        items= [ ("local", "Local", "", "ORIENTATION_LOCAL", 0),
-                 ("global", "Global", "", "WORLD", 1),
-                 ("uv", "UV", "", "UV", 2),
-                 ("object", "Object", "", "EYEDROPPER", 3),
+        items= [ ("local", "Local", translate("Project the texture on each of your distribution surface(s) space, this will lead to a stable projection if you need to resize/rotate/relocate your distribution surface(s)"), "ORIENTATION_LOCAL", 0),
+                 ("global", "Global", translate("Project the texture based on the world space, (aka the space of your scene). This will lead to an uniform projection across all surfaces, independently of their transofmation"), "WORLD", 1),
+                 ("uv", "UV", translate("Project the texture based on the given UV map of your surface(s). This means that you'll be able to precisely adjust the texture based on the UV coordinates. Make sure that all surface(s) upon which this texture is projected have this UV attribute"), "UV", 2),
+                 ("object", "Object", translate("Project the texture based on the transformation matrix of a chosen object, great if you'd like to animate your scatter-texture"), "EYEDROPPER", 3),
                ],
         update=mapping_projection_upd,
         )
@@ -611,7 +613,7 @@ class SCATTER5_PR_node_texture(bpy.types.PropertyGroup):
         update=mapping_random_seed_upd,
         )
     mapping_random_is_random_seed : bpy.props.BoolProperty( #= value of the property is of no importance, only the update signal matter
-        name=translate("Radomize Seed"),
+        name=translate("Randomize Seed"),
         default=False,
         update=mapping_random_is_random_seed_upd,
         )
@@ -873,7 +875,7 @@ class SCATTER5_OT_scatter_texture_new(bpy.types.Operator):
 
     bl_idname      = "scatter5.scatter_texture_new"
     bl_label       = ""
-    bl_description = translate("Create a new Scatter node texture data")
+    bl_description = translate("Create a new Scatter-Texture data")
     bl_options     = {'INTERNAL','UNDO'}
 
     ptr_name : bpy.props.StringProperty()
@@ -883,14 +885,14 @@ class SCATTER5_OT_scatter_texture_new(bpy.types.Operator):
 
         #by default will always be the default texture .TEXTURE *DEFAULT MK...*
         #meaning we just have to dupplicate 
-        texture_node = context.s5_ctxt_ptr_texture_node
+        texture_node = context.pass_ui_arg_texture_node
         texture_node.node_tree = texture_node.node_tree.copy()
         texture_node.node_tree.scatter5.texture.user_name = self.new_name
         texture_node.node_tree.scatter5.texture.mapping_random_allow = True
 
         #update api
-        psy = context.s5_ctxt_ptr_psy #why on heck are we using a UILAyout context argument method here?
-        setattr(psy,self.ptr_name, texture_node.node_tree.name)
+        ctxt_system = context.pass_ui_arg_system #why on heck are we using a UILAyout context argument method here?
+        setattr(ctxt_system,self.ptr_name, texture_node.node_tree.name)
 
         return {'FINISHED'}
 
@@ -928,7 +930,7 @@ class SCATTER5_OT_scatter_texture_enum(bpy.types.Operator):
             print("Nodegroup not found") #should never happend
             return {'FINISHED'} 
 
-        texture_node = context.s5_ctxt_ptr_texture_node
+        texture_node = context.pass_ui_arg_texture_node
         texture_node.node_tree = bpy.data.node_groups[self.enum]
         texture_node.node_tree.scatter5.texture.user_name = self.enum.replace(".TEXTURE ","")
             
@@ -936,8 +938,8 @@ class SCATTER5_OT_scatter_texture_enum(bpy.types.Operator):
         texture_node.node_tree.scatter5.texture.mapping_uv_ptr = texture_node.node_tree.scatter5.texture.mapping_uv_ptr
 
         #update api
-        psy = context.s5_ctxt_ptr_psy
-        setattr(psy,self.ptr_name, texture_node.node_tree.name)
+        ctxt_system = context.pass_ui_arg_system
+        setattr(ctxt_system, self.ptr_name, texture_node.node_tree.name)
 
         #also update visualizer, if found 
         for o in [o for o in bpy.data.objects if (o.type=="MESH") and (len(o.modifiers)!=0)]:
@@ -952,21 +954,23 @@ class SCATTER5_OT_scatter_texture_enum(bpy.types.Operator):
 class SCATTER5_OT_scatter_texture_duppli(bpy.types.Operator):
 
     bl_idname      = "scatter5.scatter_texture_duppli"
-    bl_label       = ""
-    bl_description = ""
+    bl_label       = translate("Make this texture data unique for this system")
+    bl_description = translate("Make this texture data unique for this system")
     bl_options     = {'INTERNAL','UNDO'}
 
     ptr_name : bpy.props.StringProperty()
 
     def execute(self, context):
 
-        texture_node = context.s5_ctxt_ptr_texture_node
+        #replace with copy and update naming
+        texture_node = context.pass_ui_arg_texture_node
         texture_node.node_tree = texture_node.node_tree.copy()
-        texture_node.node_tree.scatter5.texture.user_name = texture_node.node_tree.name.replace(".TEXTURE ","")
+        new_name = texture_node.node_tree.name.replace(".TEXTURE ","")
+        texture_node.node_tree.scatter5.texture.user_name = new_name
         
         #update api
-        psy = context.s5_ctxt_ptr_psy
-        setattr(psy,self.ptr_name, texture_node.node_tree.name)
+        ctxt_system = context.pass_ui_arg_system
+        setattr(ctxt_system, self.ptr_name, texture_node.node_tree.name)
 
         return {'FINISHED'}
 
@@ -1030,12 +1034,11 @@ class SCATTER5_PT_scatter_texture(bpy.types.Panel):
     #bl_options     = {"DRAW_BOX"}
 
     def draw(self, context):
-
+        
         layout = self.layout
 
-        emitter = bpy.context.scene.scatter5.emitter
-        ng = context.s5_ctxt_ptr_ng
-        psy = context.s5_ctxt_ptr_psy
+        ng = context.pass_ui_arg_ng
+        ctxt_system = context.pass_ui_arg_system
         node_props = ng.scatter5.texture      
 
         element = layout.column(align=True)
@@ -1200,13 +1203,13 @@ class SCATTER5_PT_scatter_texture(bpy.types.Panel):
 
         element = layout.column(align=True)
         lbl = element.row(align=True)
-        lbl.label(text="Space:")
+        lbl.label(text="Projection Space:")
 
         element.prop(node_props, "mapping_projection",text="")
 
         if (node_props.mapping_projection=="uv"):
             ptr = element.row(align=True)
-            ptr.alert = ( bool(node_props.mapping_uv_ptr) and (node_props.mapping_uv_ptr not in psy.get_surfaces_match_uv(bpy.context, node_props.mapping_uv_ptr)) )
+            ptr.alert = ( bool(node_props.mapping_uv_ptr) and (node_props.mapping_uv_ptr not in ctxt_system.get_surfaces_match_attr("uv")(ctxt_system, context, node_props.mapping_uv_ptr)) )
             ptr.prop(node_props, "mapping_uv_ptr", text="", icon="GROUP_UVS",)
 
         elif (node_props.mapping_projection=="object"):
@@ -1246,11 +1249,11 @@ class SCATTER5_PT_scatter_texture(bpy.types.Panel):
         args = {"text":translate("Quit Visualization"),"icon":"PANEL_CLOSE"} if is_vizualizing else {"text":translate("Visualize as Attribute"),"icon":"VPAINT_HLT"}
         op = ope.operator("scatter5.scatter_texture_visualizer", **args,)
         op.scatter_texture_name = ng.name
-
+        
         return None 
 
 
-def draw_texture_datablock(layout, psy=None, ptr_name="", texture_node=None, new_name=""):
+def draw_texture_datablock(layout, system=None, ptr_name="", texture_node=None, new_name=""):
     """draw texture datablock"""
 
     ng = texture_node.node_tree
@@ -1264,8 +1267,8 @@ def draw_texture_datablock(layout, psy=None, ptr_name="", texture_node=None, new
     enum = data_row.row(align=True)
     enum.alignment = "LEFT"
     enum.scale_x = 0.91
-    enum.context_pointer_set("s5_ctxt_ptr_psy",psy)
-    enum.context_pointer_set("s5_ctxt_ptr_texture_node", texture_node) 
+    enum.context_pointer_set("pass_ui_arg_system", system,)
+    enum.context_pointer_set("pass_ui_arg_texture_node", texture_node,)
     op = enum.operator_menu_enum("SCATTER5_OT_scatter_texture_enum", "enum", text=" ", icon="NODE_TEXTURE")
     op.ptr_name = ptr_name
 
@@ -1274,8 +1277,8 @@ def draw_texture_datablock(layout, psy=None, ptr_name="", texture_node=None, new
     if (ng.name.startswith(".TEXTURE *DEFAULT")):
         
         ope = data_row.row(align=True)
-        ope.context_pointer_set("s5_ctxt_ptr_psy", psy,)
-        ope.context_pointer_set("s5_ctxt_ptr_texture_node", texture_node,)
+        ope.context_pointer_set("pass_ui_arg_system", system,)
+        ope.context_pointer_set("pass_ui_arg_texture_node", texture_node,)
         op = ope.operator("scatter5.scatter_texture_new", text=translate("New"), icon="ADD", )
         op.ptr_name = ptr_name
         op.new_name = new_name
@@ -1294,16 +1297,16 @@ def draw_texture_datablock(layout, psy=None, ptr_name="", texture_node=None, new
         ope = data_row.row(align=True)
         ope.alignment = "RIGHT"
         ope.scale_x = 0.7
-        ope.context_pointer_set("s5_ctxt_ptr_psy",psy)
-        ope.context_pointer_set("s5_ctxt_ptr_texture_node", texture_node)
-        op = ope.operator("scatter5.scatter_texture_duppli", text=str(ng.users),)
+        ope.context_pointer_set("pass_ui_arg_system", system,)
+        ope.context_pointer_set("pass_ui_arg_texture_node", texture_node,)
+        op = ope.operator("scatter5.scatter_texture_duppli", text=str(len(ng.scatter5.texture.get_system_users())),) #might be a lot of loop for UI.. 
         op.ptr_name = ptr_name
 
     #settings panel
 
     panel = data_row.row(align=True)
-    panel.context_pointer_set("s5_ctxt_ptr_ng",ng)
-    panel.context_pointer_set("s5_ctxt_ptr_psy",psy)
+    panel.context_pointer_set("pass_ui_arg_ng", ng,)
+    panel.context_pointer_set("pass_ui_arg_system", system,)
     panel.popover(panel="SCATTER5_PT_scatter_texture",text="", icon="OPTIONS",)
 
     return 
@@ -1336,18 +1339,16 @@ class SCATTER5_OT_scatter_texture_visualizer(bpy.types.Operator):
         self.ng = bpy.data.node_groups.get(self.scatter_texture_name)
 
         #gather data to enter viz, aka all surface users 
-        self.surface_users = []
-        for p in self.ng.scatter5.texture.get_psy_users():
-            for s in p.get_surfaces(): 
-                if (s not in self.surface_users): 
-                    self.surface_users.append(s)
+        self.surface_users = set()
+        for sys in self.ng.scatter5.texture.get_system_users():
+            for s in sys.get_surfaces():
+                self.surface_users.add(s)
 
-        #gather data needed to exit viz 
-        self.viz_objs = []
+        #gather data needed to exit viz (if already viz objects existing)
+        self.viz_objs = set()
         for o in [o for o in bpy.data.objects if (o.type=="MESH")]: 
             if (".S5PatternViz" in o.data.color_attributes):
-                if (o not in self.viz_objs):
-                    self.viz_objs.append(o)
+                self.viz_objs.add(o)
 
         return None
 
@@ -1386,7 +1387,7 @@ class SCATTER5_OT_scatter_texture_visualizer(bpy.types.Operator):
             o.data.color_attributes.active_color = vcol
 
             #add geonode modifier and set up settings
-            mod = import_and_add_geonode( o, mod_name="ScatterVisualizer", node_name=".ScatterTextureVisualizer", blend_path=directories.addon_visualizer_blend, copy=True,)
+            mod = import_and_add_geonode(o, mod_name="ScatterVisualizer", node_name=".ScatterTextureVisualizer", blend_path=directories.addon_visualizer_blend, copy=True,)
             mod["Output_3_attribute_name"] = vcol.name
             viz_node = mod.node_group.nodes["texture"]
             viz_node.node_tree = self.ng

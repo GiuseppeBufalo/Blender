@@ -46,7 +46,7 @@ class SCATTER5_OT_generate_thumbnail(bpy.types.Operator): #This is the same gene
         scat_op    = bpy.context.scene.scatter5.operators.generate_thumbnail
 
         box, is_open = ui_templates.box_panel(self, layout,         
-            prop_str = "ui_dialog_biomethumb", #REGTIME_INSTRUCTION:UI_BOOL_KEY:"ui_dialog_biomethumb";UI_BOOL_VAL:"1"
+            prop_str = "ui_dialog_biomethumb", #INSTRUCTION:REGISTER:UI:BOOL_NAME("ui_dialog_biomethumb");BOOL_VALUE(1)
             icon = "RESTRICT_RENDER_OFF", 
             name = translate("Generate Thumbnail"),
             )

@@ -19,7 +19,7 @@ from .. utils.event_utils import get_event
 from .. resources.icons import cust_icon
 from .. resources.translate import translate
 
-from .. handlers import upd_list_particles
+from .. handlers import on_particle_interface_interaction_handler
 
 
 #####################################################################################################
@@ -32,36 +32,69 @@ def set_sel(psys,value):
     return None 
 
 
-def upd_particle_systems_idx(self,context):
+def on_particle_interface_interaction(self,context):
     """function that run when user set a particle system as active, used for shift&alt shortcut, also change selection"""
 
-    scat_scene = bpy.context.scene.scatter5
-    emitter = self.id_data
-    psys = emitter.scatter5.particle_systems
+    #get latest active interface item
+    itm = self.get_interface_active_item()
 
-    #set psy.active property based from emitter, very useful when browsing api, .active shall be ONLY changed from here, nowhere else!
-    for i,p in enumerate(psys):
-        p.active = (i==self.particle_systems_idx)
+    #special case for psys, we have a handy p.active read-only property that we update on each list interaction
+    if (itm is None): 
+        for p in self.particle_systems:
+            p.active = False
+        return None 
 
-    psy_active = emitter.scatter5.get_psy_active() #same as self.get_psy_active()
-    if (psy_active is None):
-        return None
+    #get source itm, interface itm are fake, they are only useful to send back the original item, 
+    #this item can either be a `emitter.scatter5.particle_groups[x]` or a `emitter.scatter5.particle_systems[x]`
+    source_itm = itm.get_interface_item_source()
+    if (source_itm is None):
+        for p in self.particle_systems:
+            p.active = False
+        raise Exception("We could't find the source object of this interface item,\nhow on earth did you manage that!?\nPlease report it, we need to fix this.")
+        return None 
 
+    elif (itm.interface_item_type=="GROUP"):
+        for p in self.particle_systems:
+            p.active = False
+
+    elif (itm.interface_item_type=="SCATTER"):
+        for p in self.particle_systems:
+            p.active = (p.name==source_itm.name)
+
+    #get event for shortcuts
     event = get_event()
 
-    #shift support
+    emitter = source_itm.id_data
+
+    #setting as active will always trigger the reset of the selection, except using is pressing shifts
     if (not event.shift):
-        set_sel(psys,False,)
+        set_sel(self.particle_systems,False,)
 
-    psy_active.sel = True
+    #shortcuts if active itm psy: 
+    if (itm.interface_item_type=="SCATTER"):
+        p = source_itm
 
-    #alt support 
+        #if we set active a psy item, always set sel the psy active
+        p.sel = True
+
+    #shortcuts if active itm is group! 
+    elif (itm.interface_item_type=="GROUP"):
+        g = source_itm
+        gpsys = [p for p in emitter.scatter5.particle_systems if (p.group!="") and (p.group==g.name) ]
+
+        #if we set active a group item, always set sel all group psys
+        for p in gpsys:
+            p.sel = True
+
+    #alt support = we hide anything that is not selected
     if (event.alt):
-        for p in psys:
-            p.hide_viewport = not p.sel
+        with bpy.context.scene.scatter5.factory_update_pause(event=True,delay=True,sync=True):
+            for p in self.particle_systems:
+                p.hide_viewport = not p.sel
+                continue
 
     #run handler function on each system list interaction
-    upd_list_particles()
+    on_particle_interface_interaction_handler()
 
     return None 
 
@@ -69,12 +102,17 @@ def upd_particle_systems_idx(self,context):
 class SCATTER5_OT_toggle_selection(bpy.types.Operator):
     """toggle select all"""
     bl_idname      = "scatter5.toggle_selection"
-    bl_label       = ""
-    bl_description = translate("Select/Deselect everything")
+    bl_label       = translate("Scatter-System(s) Selection Toggle")
+    bl_description = ""
 
     emitter_name : bpy.props.StringProperty()
+    group_name : bpy.props.StringProperty(default="", options={"SKIP_SAVE",},)
     select : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
     deselect : bpy.props.BoolProperty(default=False, options={"SKIP_SAVE",},)
+
+    @classmethod
+    def description(cls, context, properties): 
+        return translate("Select/Deselect Every System(s)") if properties.group_name=="" else translate("Select/Deselect group system(s)")
 
     @classmethod
     def poll(cls, context):
@@ -87,7 +125,10 @@ class SCATTER5_OT_toggle_selection(bpy.types.Operator):
               emitter = bpy.context.scene.scatter5.emitter
         else: emitter = bpy.data.objects.get(self.emitter_name)
 
-        psys = emitter.scatter5.particle_systems
+        #specified a group name? if not use all psys, else use all psys of group
+        if (self.group_name==""):
+              psys = emitter.scatter5.particle_systems[:]
+        else: psys = [ p for p in emitter.scatter5.particle_systems if p.group==self.group_name ]
 
         #Select All?
         if (self.select==True):
@@ -97,11 +138,11 @@ class SCATTER5_OT_toggle_selection(bpy.types.Operator):
         elif (self.deselect==True):
             set_sel(psys,False)
 
-        #Then Toggle automatically 
+        #if neither then Toggle automatically 
         else:
-            if (True in set(p.sel for p in psys)):
-                  set_sel(psys,False)
-            else: set_sel(psys,True)
+            if (False in set(p.sel for p in psys)):
+                  set_sel(psys,True)
+            else: set_sel(psys,False)
 
         return {'FINISHED'}
 

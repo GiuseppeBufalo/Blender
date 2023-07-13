@@ -11,42 +11,41 @@
 
 import bpy, os 
 
-
-# Native Blender Paths
-
-blender_version = bpy.utils.resource_path("USER")                  # .../Blender Foundation/Blender/2.9x/
-blender_addons  = os.path.join(blender_version,"scripts","addons") # .../Blender Foundation/Blender/2.9x/scripts/addons/
-blender_user    = os.path.dirname(blender_version)                 # .../Blender Foundation/Blender/
-blender_data    = os.path.join(blender_user,"data")                # .../Blender Foundation/Blender/data/
-
 # Addon Path (searching is relative from this file.)
 
-addon_scatter          = os.path.dirname(os.path.dirname(__file__))         # .../addons/Scatter/
-addon_resources        = os.path.join( addon_scatter ,"resources")          # .../addons/Scatter/resources/
-addon_license_type     = os.path.join( addon_resources ,"license")          # .../addons/Scatter/resources/license/
-addon_icons            = os.path.join( addon_resources ,"icons")            # .../addons/Scatter/resources/icons/
-addon_dat_icons        = os.path.join( addon_resources ,"dat icons")        # .../addons/Scatter/resources/dat icons/
-addon_thumbnail        = os.path.join( addon_resources ,"thumbnail")        # .../addons/Scatter/resources/thumbnail/
-addon_translations     = os.path.join( addon_resources ,"translations")     # .../addons/Scatter/resources/translations/
-addon_blends           = os.path.join( addon_scatter ,"blends")             # .../addons/Scatter/blends/
-addon_nodegroups       = os.path.join( addon_blends ,"nodegroups")          # .../addons/Scatter/blends/nodegroups/
-addon_engine_blend     = os.path.join( addon_nodegroups,"engine.blend")     # .../addons/Scatter/blends/nodegroups/engine.blend
-addon_logo_blend       = os.path.join( addon_nodegroups,"logo.blend")       # .../addons/Scatter/blends/nodegroups/logo.blend
-addon_vgmasks_blend    = os.path.join( addon_nodegroups,"vgmasks.blend")    # .../addons/Scatter/blends/nodegroups/vgmasks.blend
-addon_visualizer_blend = os.path.join( addon_nodegroups,"visualizer.blend") # .../addons/Scatter/blends/nodegroups/visualizer.blend
-addon_merge_blend      = os.path.join( addon_nodegroups,"merge.blend")      # .../addons/Scatter/blends/nodegroups/merge.blend
-addon_masks            = os.path.join( addon_scatter ,"masks")              # .../addons/Scatter/masks/
+addon_dir              = os.path.dirname(os.path.dirname(__file__))     # ../addons/{Addon Name}/
+addon_resources        = os.path.join( addon_dir ,"resources")          # ../addons/{Addon Name}/resources/
+addon_license_type     = os.path.join( addon_resources ,"license")      # ../addons/{Addon Name}/resources/license/
+addon_icons            = os.path.join( addon_resources ,"icons")        # ../addons/{Addon Name}/resources/icons/
+addon_dat_icons        = os.path.join( addon_resources ,"dat icons")    # ../addons/{Addon Name}/resources/dat icons/
+addon_thumbnail        = os.path.join( addon_resources ,"thumbnail")    # ../addons/{Addon Name}/resources/thumbnail/
+addon_translations     = os.path.join( addon_resources ,"translations") # ../addons/{Addon Name}/resources/translations/
+addon_blends           = os.path.join( addon_dir ,"blends")             # ../addons/{Addon Name}/blends/
+addon_engine_blend     = os.path.join( addon_blends,"engine.blend")     # ../addons/{Addon Name}/blends/engine.blend
+addon_logo_blend       = os.path.join( addon_blends,"logo.blend")       # ../addons/{Addon Name}/blends/logo.blend
+addon_vgmasks_blend    = os.path.join( addon_blends,"vgmasks.blend")    # ../addons/{Addon Name}/blends/vgmasks.blend
+addon_visualizer_blend = os.path.join( addon_blends,"visualizer.blend") # ../addons/{Addon Name}/blends/visualizer.blend
+addon_merge_blend      = os.path.join( addon_blends,"merge.blend")      # ../addons/{Addon Name}/blends/merge.blend
+addon_masks            = os.path.join( addon_dir ,"masks")              # ../addons/{Addon Name}/masks/
+
+# Native Blender Paths & added ../data/library
+
+blender_version = bpy.utils.resource_path("USER")                  # ../Blender Foundation/Blender/2.9x/
+blender_addons  = os.path.join(blender_version,"scripts","addons") # ../Blender Foundation/Blender/2.9x/scripts/addons/
+blender_user    = os.path.dirname(blender_version)                 # ../Blender Foundation/Blender/
+blender_data    = os.path.join(blender_user,"data")                # ../Blender Foundation/Blender/data/
+lib_default     = os.path.join(blender_data,"scatter library")     # ../Blender Foundation/Blender/data/scatter library/  
 
 # Library Path 
-
-lib_default = os.path.join(blender_data,"scatter library")  # .../Blender Foundation/Blender/data/scatter library/  
     
-lib_library = lib_default                                   # .../scatter library/ 
-lib_market  = os.path.join(lib_library,"_market_")          # .../scatter library/_market_/   
-lib_biomes  = os.path.join(lib_library,"_biomes_")          # .../scatter library/_biomes_/   
-lib_presets = os.path.join(lib_library,"_presets_")         # .../scatter library/_presets_/   
-lib_prescat = os.path.join(lib_presets,"per_categories")    # .../scatter library/_presets_/per_categories/
-lib_bitmaps = os.path.join(lib_library,"_bitmaps_")         # .../scatter library/_bitmaps_/    
+lib_library = lib_default                                   # ../scatter library/ 
+lib_market  = os.path.join(lib_library,"_market_")          # ../scatter library/_market_/   
+lib_userhas = os.path.join(lib_library,"_possessions_")     # ../scatter library/_possessions_/    
+lib_biomes  = os.path.join(lib_library,"_biomes_")          # ../scatter library/_biomes_/   
+lib_presets = os.path.join(lib_library,"_presets_")         # ../scatter library/_presets_/   
+lib_prescat = os.path.join(lib_presets,"per_categories")    # ../scatter library/_presets_/per_categories/
+lib_bitmaps = os.path.join(lib_library,"_bitmaps_")         # ../scatter library/_bitmaps_/    
+
 
 
 #it will need to update library globals directly after properties are register to access addon_prefs.library_path
@@ -56,27 +55,34 @@ def update_lib():
     """update global from  directories module with user custom addon_prefs.library_path"""
 
     new_lib_library = bpy.context.preferences.addons["Geo-Scatter"].preferences.library_path                   
-    new_lib_biomes  = os.path.join(new_lib_library,"_biomes_") 
     new_lib_market  = os.path.join(new_lib_library,"_market_") 
+    new_lib_userhas = os.path.join(new_lib_library,"_possessions_")
+    new_lib_biomes  = os.path.join(new_lib_library,"_biomes_") 
     new_lib_presets = os.path.join(new_lib_library,"_presets_")      
     new_lib_bitmaps = os.path.join(new_lib_library,"_bitmaps_")  
 
     #if user path is wrong or structure not respected, use default path
+
     if (    (not os.path.exists(new_lib_library) ) 
          or (not os.path.exists(new_lib_biomes) )
-         or (not os.path.exists(new_lib_market) )
          or (not os.path.exists(new_lib_presets) ) 
          or (not os.path.exists(new_lib_bitmaps) ) 
         ):
-        print(f"Error, didn't found some of these paths: [\n  '{new_lib_library}',\n  '{new_lib_biomes}',\n  '{new_lib_market}',\n  '{new_lib_presets}',\n  '{new_lib_bitmaps}'\n] in {new_lib_library}")
+        print(f"Error, didn't found essential paths: [\n  '{new_lib_library}',\n  '{new_lib_biomes}',\n  '{new_lib_presets}',\n  '{new_lib_bitmaps}'\n] ")
         return None 
 
-    global lib_library, lib_biomes, lib_market, lib_presets, lib_bitmaps
+    #apply changes
+    global lib_library, lib_market, lib_userhas, lib_biomes, lib_presets, lib_prescat, lib_bitmaps
+
     lib_library = new_lib_library        
-    lib_biomes  = new_lib_biomes
     lib_market  = new_lib_market
+    lib_userhas = new_lib_userhas
+    lib_biomes  = new_lib_biomes
     lib_presets = new_lib_presets   
+    lib_prescat = os.path.join(lib_presets,"per_categories")
     lib_bitmaps = new_lib_bitmaps   
+
+    library_startup()
 
     return None 
 
@@ -97,8 +103,8 @@ def library_startup():
 
     from pathlib import Path
 
-    global blender_data, lib_default, lib_biomes, lib_market, lib_presets, lib_bitmaps   
-    for p in [ blender_data, lib_default, lib_biomes, lib_market, lib_presets, lib_bitmaps]:
+    global blender_data, lib_default, lib_biomes, lib_market, lib_userhas, lib_presets, lib_bitmaps   
+    for p in [ blender_data, lib_default, lib_biomes, lib_market, lib_userhas, lib_presets, lib_bitmaps]:
         if not os.path.exists(p): 
             Path(p).mkdir(parents=True, exist_ok=True)
 

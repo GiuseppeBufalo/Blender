@@ -80,12 +80,10 @@ class SCATTER5_PR_procedural_vg(bpy.types.PropertyGroup):  #registered in .prope
     object_ptr : bpy.props.PointerProperty(
         type=bpy.types.Object,
         )
-
-    def poll_curve_type(self, object):
-        return (object.type == "CURVE")
+    
     curve_ptr : bpy.props.PointerProperty(
         type=bpy.types.Object,
-        poll=poll_curve_type,
+        poll=lambda s,o: o.type=="CURVE",
         )
 
     #psy proximity 
@@ -187,7 +185,7 @@ class SCATTER5_PR_procedural_vg(bpy.types.PropertyGroup):  #registered in .prope
                ("edge_len"       ,translate("Length")      ,"" ,"EDGESEL" ,11),    
                ("edge_index"     ,translate("Index")       ,"" ,"EDGESEL" ,12),       
               ],
-        description=translate("Calculate lightning of given lamps:"),
+        description=translate("Calculate lighting of given lamps:"),
         )
 
     mesh_data_prox_distance : bpy.props.FloatProperty(
@@ -224,11 +222,9 @@ class SCATTER5_PR_procedural_vg(bpy.types.PropertyGroup):  #registered in .prope
         description=translate("Ray-casting from given camera will collide with:"),
         )
     
-    def poll_cam_type(self, object):
-        return (object.type == "CAMERA")
     visib_cam : bpy.props.PointerProperty(
         type=bpy.types.Object,
-        poll=poll_cam_type,
+        poll=lambda s,o: o.type=="CAMERA",
         )
 
     visib_clip_distance : bpy.props.BoolProperty(
@@ -306,7 +302,7 @@ class SCATTER5_PR_procedural_vg(bpy.types.PropertyGroup):  #registered in .prope
                ("ptr"   ,translate("Given Light")      ,"",2),
                ("col"   ,translate("Given Collection") ,"",3),
                ("scene" ,translate("Whole Scene")      ,"",4),],
-        description=translate("Calculate lightning of given lamps:"),
+        description=translate("Calculate lighting of given lamps:"),
         )
 
     def poll_light_type(self, object):
