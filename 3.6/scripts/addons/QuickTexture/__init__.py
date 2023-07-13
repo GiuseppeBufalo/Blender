@@ -1,8 +1,8 @@
 bl_info = {
-    "name": "QuickTexture 2022",
+    "name": "QuickTexture 2024",
     "author": "Jama Jurabaev and ALKSNDR",
     "version": (1, 0),
-    "blender": (3, 4, 0),
+    "blender": (3, 5, 0),
     "location": "See Sidebar ('N' Panel) for Hotkeys",
     "description": "Sketching in 3D for Concept Artists",
     "wiki_url": "http://www.alksndr.com/quicktools",
@@ -12,6 +12,7 @@ bl_info = {
 
 import bpy
 from bpy.utils import register_class, unregister_class
+import addon_utils
 from .operators import (
     MyPropertiesQT,
     QT_PT_panel,
@@ -24,6 +25,9 @@ from .operators import (
     QT_OT_heightmask_qt,
     QT_OT_depthmask_qt,
     QT_OT_viewlayer_qt,
+    QT_OT_vertexmask_qt,
+    QT_OT_cavitymask_qt,
+    QT_OT_aomask_qt,
     QT_OT_replacemaps_qt,
     QT_OT_smudge_qt,
     QT_OT_replacealpha_qt,
@@ -32,8 +36,18 @@ from .operators import (
     QT_OT_makeunique,
     QT_OT_decal_qt,
     VIEW3D_MT_QT_PIE1,
+    VIEW3D_MT_QT_PIE,
+    VIEW3D_OT_PIE_QT_PIE_call,
     BakeFileSelector,
     bakeTextures,
+    previewTextures,
+    bakePreviewTextures,
+    quicktexture_uv,
+    quicktexture_view,
+    quicktexture_box,
+    photomodelingplane,
+    photomodelingbox,
+    photomodelingapply,
 )
 from bpy.props import (
     FloatProperty,
@@ -83,6 +97,14 @@ class quickTexturePrefs(bpy.types.AddonPreferences):
         name="Alt Navigation", description="Alt Navigation", default=0
     )
 
+    mouse_mult: FloatProperty(
+        name="Mouse Speed Multiplier",
+        description="Mouse Speed Multiplier",
+        default=1,
+        min=0.1,
+        max=10,
+    )
+
     def draw(self, context):
         layout = self.layout
         wm = bpy.context.window_manager
@@ -95,6 +117,7 @@ class quickTexturePrefs(bpy.types.AddonPreferences):
         row = box.row()
         row.prop(bpy.context.preferences.addons[__name__].preferences, "window_buffer")
         row.prop(bpy.context.preferences.addons[__name__].preferences, "text_size")
+        row.prop(bpy.context.preferences.addons[__name__].preferences, "mouse_mult")
         row = box.row()
         row.prop(bpy.context.preferences.addons[__name__].preferences, "col_primary")
         row.prop(bpy.context.preferences.addons[__name__].preferences, "col_accent")
@@ -107,7 +130,7 @@ keys = {
         {
             "label": "QuickTexture",
             "keymap": "Object Mode",
-            "idname": "wm.quicktexture",
+            "idname": "object.quicktexture",
             "type": "T",
             "ctrl": True,
             "alt": False,
@@ -117,7 +140,7 @@ keys = {
         {
             "label": "QuickTexture",
             "keymap": "Mesh",
-            "idname": "wm.quicktexture",
+            "idname": "object.quicktexture",
             "type": "T",
             "ctrl": True,
             "alt": False,
@@ -140,7 +163,23 @@ keys = {
 
 def get_keys():
     keylists = []
+
+    success = addon_utils.check('QuickDeform')
+    if not success[0]:
+        pie = {
+            "label": "QuickTexture Pie",
+            "keymap": "Object Mode",
+            "idname": "object.quicktexturepie",
+            "type": "Q",
+            "ctrl": False,
+            "alt": True,
+            "shift": False,
+            "value": "PRESS",
+        }
+        keys["MENU"].append(pie)
+
     keylists.append(keys["MENU"])
+
     return keylists
 
 
@@ -196,19 +235,32 @@ classes = (
     QT_OT_material_qt,
     QT_OT_boxlayer_qt,
     QT_OT_texturemask_qt,
+    QT_OT_cavitymask_qt,
+    QT_OT_aomask_qt,
     QT_OT_heightmask_qt,
     QT_OT_depthmask_qt,
     QT_OT_viewlayer_qt,
     QT_OT_replacemaps_qt,
     QT_OT_replacealpha_qt,
     QT_OT_normalmask_qt,
-    QT_OT_decal_qt,
+    QT_OT_vertexmask_qt,
     QT_OT_smudge_qt,
     QT_OT_copymats,
     QT_OT_makeunique,
+    QT_OT_decal_qt,
+    VIEW3D_MT_QT_PIE1,
+    VIEW3D_MT_QT_PIE,
+    VIEW3D_OT_PIE_QT_PIE_call,
     BakeFileSelector,
     bakeTextures,
-    VIEW3D_MT_QT_PIE1,
+    previewTextures,
+    bakePreviewTextures,
+    quicktexture_uv,
+    quicktexture_view,
+    quicktexture_box,
+    photomodelingplane,
+    photomodelingbox,
+    photomodelingapply,
 )
 
 

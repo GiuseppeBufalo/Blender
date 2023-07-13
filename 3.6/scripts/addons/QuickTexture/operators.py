@@ -1,4 +1,3 @@
-from re import I
 import bpy
 import os
 from os.path import abspath, join, exists
@@ -16,7 +15,6 @@ import math
 import bmesh
 from bpy_extras import view3d_utils
 from bpy_extras.object_utils import AddObjectHelper, object_data_add
-import bgl
 import blf
 import gpu
 from gpu_extras.batch import batch_for_shader
@@ -33,7 +31,6 @@ from mathutils.geometry import intersect_line_line
 from mathutils.geometry import intersect_line_line_2d
 import traceback
 
-from bgl import *
 from bpy_extras.io_utils import ImportHelper
 from bpy_extras.io_utils import ExportHelper
 
@@ -46,10 +43,73 @@ from . import utils
 from . import objects
 from . import maths
 
+class VIEW3D_MT_QT_PIE(Menu):
+    bl_label = "QuickTexture"
+
+    def draw(self, context):
+        layout = self.layout
+        prefs = context.preferences
+        inputs = prefs.inputs
+        pie = layout.menu_pie()
+        scene = context.scene
+
+        scale_x = 1.1
+        scale_y = 1.1
+
+        other = pie.column()
+        other_menu = other.box().column()
+        other_menu.scale_y = scale_y
+        other_menu.scale_x = scale_x
+        other_menu.label(text="QUICKTEXTURE")
+        other_menu.operator("object.quicktexturebox")
+        other_menu.operator("object.quicktextureview")
+        other_menu.operator("object.quicktextureuv")
+        other_menu.operator("object.quickdecal")
+        other_menu.operator("object.photomodelingplane")
+        other_menu.operator("object.photomodelingbox")
+        other_menu.operator("object.photomodelingapply")
+
+
+class VIEW3D_OT_PIE_QT_PIE_call(bpy.types.Operator):
+    bl_idname = "object.quicktexturepie"
+    bl_label = "Pie Menu"
+    bl_description = "Calls pie menu"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        bpy.ops.wm.call_menu_pie(name="VIEW3D_MT_QT_PIE")
+        return {"FINISHED"}
+
+
+def update_ao_radius(self, context):
+
+    ob = bpy.context.active_object
+    if ob:
+        mat = ob.data.materials[0]
+        for n in mat.node_tree.nodes:
+            if n.name == 'Group.001':
+                ao = n
+
+        ao.inputs[0].default_value = bpy.context.window_manager.my_toolqt.ao_radius_preview
+
+def update_cavity_radius(self, context):
+
+    ob = bpy.context.active_object
+    if ob:
+        mat = ob.data.materials[0]
+        for n in mat.node_tree.nodes:
+            if n.name == 'Group':
+                cavity = n
+
+        cavity.inputs[0].default_value = bpy.context.window_manager.my_toolqt.cavity_radius_preview
 
 class MyPropertiesQT(bpy.types.PropertyGroup):
 
     ob: PointerProperty(type=bpy.types.Object)
+
+    preview_mat: PointerProperty(type=bpy.types.Material)
+
+    render_engine: BoolProperty(name="render_engine", description="render_engine", default=0)
 
     running_qt: IntProperty(name="running_qt", description="running_qt", default=0)
 
@@ -62,8 +122,8 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
     res: IntProperty(
         name="res",
         description="Resolution of Decal Projection",
-        default=2,
-        min=1,
+        default=0,
+        min=0,
         max=10,
     )
 
@@ -77,6 +137,24 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
         max=0.1,
     )
 
+    cavity_radius_preview: FloatProperty(
+        name="cavity_radius_preview",
+        description="Cavity Radius Preview",
+        default=0.3,
+        min=0.001,
+        max=10,
+        update = update_cavity_radius
+    )
+
+    ao_radius_preview: FloatProperty(
+        name="ao_radius_preview",
+        description="AO Radius Preview",
+        default=0.3,
+        min=0.001,
+        max=10,
+        update = update_ao_radius
+    )
+
     decal: BoolProperty(name="decal", description="decal", default=0)
 
     use_uv: BoolProperty(name="use_uv", description="use_uv", default=0)
@@ -84,10 +162,12 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
     save_original_mat: BoolProperty(
         name="save_original_mat",
         description="Save a copy of the original pre Bake material in the scene after Baking",
-        default=0,
+        default=1,
     )
 
     proc_uv: BoolProperty(name="proc_uv", description="proc_uv", default=0)
+
+    in_bake_preview: BoolProperty(name="in_bake_preview", description="in_bake_preview", default=0)
 
     blend: BoolProperty(name="blend", description="blend", default=0)
 
@@ -109,7 +189,15 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
 
     metal: BoolProperty(name="metal", description="metal", default=0)
 
-    bump: FloatProperty(name="bump", description="bump", default=0.1)
+    bump: FloatProperty(name="bump", description="bump", default=1)
+
+    bump_strength: FloatProperty(name="bumpstr", description="bumpstr", default=0.1)
+
+    bump_layer: FloatProperty(name="bumplayer", description="bumplayer", default=-10)
+
+    bevel_radius: FloatProperty(name="bevelradius", description="bevelradius", default=0.1)
+
+    ao_radius: FloatProperty(name="aoradius", description="aoradius", default=0.1)
 
     normal: FloatProperty(name="normal", description="normal", default=1)
 
@@ -213,6 +301,10 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
         name="blendvalue", description="blendvalue", default=0, min=0, max=1
     )
 
+    disp_str: FloatProperty(
+        name="dispstrength", description="dispstrength", default=0.5, min=0, max=1
+    )
+
     blendcontrast: FloatProperty(
         name="blendcontrast", description="blendcontrast", default=0
     )
@@ -231,6 +323,22 @@ class MyPropertiesQT(bpy.types.PropertyGroup):
 
     noisedistortion: FloatProperty(
         name="noisedistortion", description="noisedistortion", default=0, min=0, max=30
+    )
+
+    variation_scale: FloatProperty(
+        name="variation_scale", description="variation_scale", default=0, min=0, max=30
+    )
+
+    variation_smoothness: FloatProperty(
+        name="variation_smoothness", description="variation_smoothness", default=0, min=0, max=1
+    )
+
+    variation_intensity: FloatProperty(
+        name="variation_intensity", description="variation_intensity", default=0, min=0, max=1
+    )
+
+    variation_sat: FloatProperty(
+        name="variation_sat", description="variation_sat", default=0, min=0, max=1
     )
 
     makeunique: BoolProperty(
@@ -312,17 +420,14 @@ class QT_PT_panel(bpy.types.Panel):
 
         box = layout.box()
         row = box.row()
+        row.label(text="GENERAL")
+        row = box.row()
         row.label(text="Ctrl + T = Quick Texture")
         row = box.row()
         row.label(text="Ctrl + Shift + D = Quick Decal")
-        row = box.row()
-        row.prop(
-            bpy.context.window_manager.my_toolqt,
-            "res",
-            text="Decal Resolution",
-            slider=1,
-        )
         box = layout.box()
+        row = box.row()
+        row.label(text="EDIT")
         row = box.row()
         row.label(text="G = Move Texture")
         row = box.row()
@@ -375,7 +480,13 @@ class QT_PT_panel(bpy.types.Panel):
         row = box.row()
         row.label(text="8 = Randomization")
         row = box.row()
+        row.label(text="9 = Variety")
+        row = box.row()
+        row.label(text="0 = Displacement")
+        row = box.row()
         row.label(text="U = Use De-Tiling")
+        row = box.row()
+        row.label(text="Shift T = Triplanar Blend")
         row = box.row()
         row.label(text="Ctrl I = Invert Map")
         row = box.row()
@@ -405,6 +516,12 @@ class QT_PT_panel(bpy.types.Panel):
         row = box.row()
         row.label(text="Ctrl + M = Mask By Texture")
         row = box.row()
+        row.label(text="Ctrl + C = Mask By Cavity")
+        row = box.row()
+        row.label(text="Ctrl + A = Mask By AO")
+        row = box.row()
+        row.label(text="Shift + V = Mask By Vertex Color")
+        row = box.row()
         row.label(text="Alt + H = Mask By Depth Map")
         row = box.row()
         row.label(text="Ctrl + H = Mask By Height")
@@ -416,6 +533,10 @@ class QT_PT_panel(bpy.types.Panel):
         row.label(text="Backspace = Delete Mask")
         box = layout.box()
         row = box.row()
+        row.label(text="SETTINGS")
+        row = box.row()
+        row.prop(bpy.context.window_manager.my_toolqt, "mode", expand=True)
+        row = box.row()
         row.prop(
             bpy.context.window_manager.my_toolqt,
             "forceprocedural",
@@ -424,22 +545,18 @@ class QT_PT_panel(bpy.types.Panel):
         )
         box = layout.box()
         row = box.row()
-        row.prop(bpy.context.window_manager.my_toolqt, "mode", expand=True)
-        row = box.row()
-        row.operator(QT_OT_copymats.bl_idname)
-        row = box.row()
         row.prop(
             bpy.context.window_manager.my_toolqt,
             "makeunique",
             text="Unlink Material After Copy",
         )
         row = box.row()
+        row.operator(QT_OT_copymats.bl_idname)
+        row = box.row()
         row.operator(QT_OT_makeunique.bl_idname)
         box = layout.box()
         row = box.row()
         row.label(text="BAKING")
-        row = box.row()
-        row.operator(bakeTextures.bl_idname)
         row = box.row()
         row.prop(
             bpy.context.window_manager.my_toolqt, "bakename", text="Bake Texture Name"
@@ -472,6 +589,26 @@ class QT_PT_panel(bpy.types.Panel):
             text="Save Original Mat",
             slider=False,
         )
+        row = box.row()
+        row.operator(bakeTextures.bl_idname)
+        row = box.row()
+        row.operator(bakePreviewTextures.bl_idname)
+        row = box.row()
+        row.operator(previewTextures.bl_idname)
+        row = box.row()
+        if bpy.context.window_manager.my_toolqt.in_bake_preview:
+            row.prop(
+                bpy.context.window_manager.my_toolqt,
+                "cavity_radius_preview",
+                text="Cavity Radius",
+                slider=True,
+            )
+            row.prop(
+                bpy.context.window_manager.my_toolqt,
+                "ao_radius_preview",
+                text="AO Radius",
+                slider=True,
+            )
 
 
 class VIEW3D_MT_QT_PIE1(Menu):
@@ -502,6 +639,9 @@ class VIEW3D_MT_QT_PIE1(Menu):
         other_menu.operator(QT_OT_depthmask_qt.bl_idname)
         other_menu.operator(QT_OT_heightmask_qt.bl_idname)
         other_menu.operator(QT_OT_normalmask_qt.bl_idname)
+        other_menu.operator(QT_OT_vertexmask_qt.bl_idname)
+        other_menu.operator(QT_OT_cavitymask_qt.bl_idname)
+        other_menu.operator(QT_OT_aomask_qt.bl_idname)
         other_menu.operator(QT_OT_smudge_qt.bl_idname)
         other_menu.operator(QT_OT_replacemaps_qt.bl_idname)
         other_menu.operator(QT_OT_replacealpha_qt.bl_idname)
@@ -525,7 +665,6 @@ class VIEW3D_MT_QT_PIE1(Menu):
 def draw_quickTexture(self, context):
     font_id = 0  # XXX, need to find out how best to get this.
     region = context.region
-    bgl.glEnable(bgl.GL_BLEND)
 
     if bpy.context.window_manager.my_toolqt.running_qt and self.core_shader:
 
@@ -537,7 +676,7 @@ def draw_quickTexture(self, context):
         else:
             text = "QUICK TEXTURE"
 
-        dpi = int(round(bpy.context.preferences.system.ui_scale, 1))
+        dpi = 1
 
         height = blf.dimensions(font_id, text)[1] * 5
         space = height * 0.5
@@ -599,6 +738,10 @@ def draw_quickTexture(self, context):
             activemap = "UV"
         elif bpy.context.window_manager.my_toolqt.activemap == 8:
             activemap = "Randomization"
+        elif bpy.context.window_manager.my_toolqt.activemap == 9:
+            activemap = "Variation"
+        elif bpy.context.window_manager.my_toolqt.activemap == 0:
+            activemap = "Displacement"
 
         if bpy.context.window_manager.my_toolqt.blend:
             activemap = "Blend"
@@ -625,9 +768,18 @@ def draw_quickTexture(self, context):
             )
             blf.draw(font_id, text1)
 
-            text1 = "(H) Smoothing: " + str(
-                round(bpy.context.window_manager.my_toolqt.blendsmoothing, 2)
-            )
+            if self.bevel_mask:
+                text1 = "(H) Radius: " + str(
+                    round(bpy.context.window_manager.my_toolqt.bevel_radius, 2)
+                )
+            elif self.ao_mask:
+                text1 = "(H) Radius: " + str(
+                    round(bpy.context.window_manager.my_toolqt.ao_radius, 2)
+                )
+            else:
+                text1 = "(H) Smoothing: " + str(
+                    round(bpy.context.window_manager.my_toolqt.blendsmoothing, 2)
+                )
             text2 = "(V) Value: " + str(
                 round(bpy.context.window_manager.my_toolqt.blendvalue, 2)
             )
@@ -1052,9 +1204,14 @@ def draw_quickTexture(self, context):
                     triblend = "Off"
                 else:
                     triblend = "On"
-                text1 = "(H) UV Blend Amount: " + str(
-                    round(bpy.context.window_manager.my_toolqt.tiling_blend_amount, 2)
-                )
+                if self.diffuse_tex.projection == "BOX":
+                    text1 = "(H) UV Blend Amount: " + str(
+                        round(self.diffuse_tex.projection_blend, 2)
+                    )
+                else:
+                    text1 = "(H) UV Blend Amount: " + str(
+                        round(bpy.context.window_manager.my_toolqt.tiling_blend_amount, 2)
+                    )
                 text2 = "(V) UV Blend Noise: " + str(
                     round(bpy.context.window_manager.my_toolqt.tiling_blend_noise, 2)
                 )
@@ -1075,6 +1232,7 @@ def draw_quickTexture(self, context):
             if (
                 bpy.context.window_manager.my_toolqt.activemap > 1
                 and bpy.context.window_manager.my_toolqt.activemap != 8
+                and bpy.context.window_manager.my_toolqt.activemap != 9
             ):
                 dim_x = blf.dimensions(font_id, text3)[0] + 30
                 blf.position(font_id, self.regX - dim_x - uiWidth, space * 3, 0)
@@ -1242,6 +1400,119 @@ def draw_quickTexture(self, context):
                 )
                 blf.draw(font_id, text5)
 
+            # variation
+            if bpy.context.window_manager.my_toolqt.activemap == 9:
+                text1 = "(H) Scale: " + str(
+                    round(bpy.context.window_manager.my_toolqt.variation_scale, 2)
+                )
+                text2 = "(V) Intensity: " + str(
+                    round(bpy.context.window_manager.my_toolqt.variation_intensity, 2)
+                )
+                text3 = "(C) Smoothness: " + str(
+                    round(bpy.context.window_manager.my_toolqt.variation_smoothness, 2)
+                )
+                text4 = "(X) Saturation: " + str(
+                    round(bpy.context.window_manager.my_toolqt.variation_sat, 2)
+                )
+
+                dim_x = blf.dimensions(font_id, text4)[0] + 30
+                blf.position(font_id, self.regX - dim_x - uiWidth, space * 1, 0)
+                blf.color(
+                    font_id,
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        0
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        1
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        2
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        3
+                    ],
+                )
+                blf.draw(font_id, text4)
+
+                dim_x = blf.dimensions(font_id, text3)[0] + 30
+                blf.position(font_id, self.regX - dim_x - uiWidth, space * 2, 0)
+                blf.color(
+                    font_id,
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        0
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        1
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        2
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        3
+                    ],
+                )
+                blf.draw(font_id, text3)
+
+                blf.position(font_id, self.regX - dim_x - uiWidth, space * 3, 0)
+                blf.color(
+                    font_id,
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        0
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        1
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        2
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        3
+                    ],
+                )
+                blf.draw(font_id, text2)
+
+                blf.position(font_id, self.regX - dim_x - uiWidth, space * 4, 0)
+                blf.color(
+                    font_id,
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        0
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        1
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        2
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        3
+                    ],
+                )
+                blf.draw(font_id, text1)
+
+            # displacement
+            if bpy.context.window_manager.my_toolqt.activemap == 0:
+                text = "(V) Value: " + str(
+                    round(bpy.context.window_manager.my_toolqt.disp_str, 2)
+                )
+                dim_x = blf.dimensions(font_id, text)[0] + 30
+                blf.position(font_id, self.regX - dim_x - uiWidth, space, 0)
+                blf.color(
+                    font_id,
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        0
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        1
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        2
+                    ],
+                    bpy.context.preferences.addons[__package__].preferences.col_primary[
+                        3
+                    ],
+                )
+                blf.draw(font_id, text)
+
             if bpy.context.window_manager.my_toolqt.activelayer > 1:
                 opac = str(round(bpy.context.window_manager.my_toolqt.opacity, 2))
             else:
@@ -1249,7 +1520,7 @@ def draw_quickTexture(self, context):
 
             text = "(O) Layer Mix Amount: " + opac
             dim_x = blf.dimensions(font_id, text)[0] + 30
-            blf.position(font_id, 15, space * 8, 0)
+            blf.position(font_id, 15, space * 9, 0)
             if self.o:
                 blf.color(
                     font_id,
@@ -1291,7 +1562,7 @@ def draw_quickTexture(self, context):
 
             text = "(M) Metalness: " + label
             dim_x = blf.dimensions(font_id, text)[0] + 30
-            blf.position(font_id, 15, space * 7, 0)
+            blf.position(font_id, 15, space * 8, 0)
             if bpy.context.window_manager.my_toolqt.metal:
                 blf.color(
                     font_id,
@@ -1330,7 +1601,7 @@ def draw_quickTexture(self, context):
                 round(bpy.context.window_manager.my_toolqt.sss, 3)
             )
             dim_x = blf.dimensions(font_id, text)[0] + 30
-            blf.position(font_id, 15, space * 6, 0)
+            blf.position(font_id, 15, space * 7, 0)
             if self.l:
                 blf.color(
                     font_id,
@@ -1369,7 +1640,7 @@ def draw_quickTexture(self, context):
                 round(bpy.context.window_manager.my_toolqt.emit, 3)
             )
             dim_x = blf.dimensions(font_id, text)[0] + 30
-            blf.position(font_id, 15, space * 5, 0)
+            blf.position(font_id, 15, space * 6, 0)
             if self.e:
                 blf.color(
                     font_id,
@@ -1411,7 +1682,7 @@ def draw_quickTexture(self, context):
 
             text = "(A) AO Strength: " + ao
             dim_x = blf.dimensions(font_id, text)[0] + 30
-            blf.position(font_id, 15, space * 4, 0)
+            blf.position(font_id, 15, space * 5, 0)
             if self.a:
                 blf.color(
                     font_id,
@@ -1445,12 +1716,38 @@ def draw_quickTexture(self, context):
                     ],
                 )
             blf.draw(font_id, text)
+            if bpy.context.window_manager.my_toolqt.bump_layer > 0:
+                depth = "OUT"
+            elif bpy.context.window_manager.my_toolqt.bump_layer < 0:
+                depth = "IN"
+            else:
+                depth = "NEUTRAL"
 
-            text = "(SHIFT B) Bump Strength: " + str(
-                round(bpy.context.window_manager.my_toolqt.bump, 3)
-            )
+            text = "(ALT B) Bump Layer Depth: " + depth
             dim_x = blf.dimensions(font_id, text)[0] + 30
             blf.position(font_id, 15, space * 3, 0)
+            blf.color(
+                font_id,
+                bpy.context.preferences.addons[__package__].preferences.col_primary[
+                    0
+                ],
+                bpy.context.preferences.addons[__package__].preferences.col_primary[
+                    1
+                ],
+                bpy.context.preferences.addons[__package__].preferences.col_primary[
+                    2
+                ],
+                bpy.context.preferences.addons[__package__].preferences.col_primary[
+                    3
+                ],
+            )
+            blf.draw(font_id, text)
+
+            text = "(SHIFT B) Bump Strength: " + str(
+                round(bpy.context.window_manager.my_toolqt.bump_strength, 3)
+            )
+            dim_x = blf.dimensions(font_id, text)[0] + 30
+            blf.position(font_id, 15, space * 4, 0)
             if self.shiftb:
                 blf.color(
                     font_id,
@@ -1581,9 +1878,9 @@ class BakeFileSelector(bpy.types.Operator, ExportHelper):
 
 
 class quickTexture(bpy.types.Operator):
-    """Operator which runs its self from a timer"""
+    """Create a QuickTexture on the selected object"""
 
-    bl_idname = "wm.quicktexture"
+    bl_idname = "object.quicktexture"
     bl_label = "QuickTexture"
     bl_options = {"REGISTER", "UNDO"}
 
@@ -1665,6 +1962,7 @@ class quickTexture(bpy.types.Operator):
                                     )
                                 ):
                                     self.normal_tex = n
+
                                 if n.name.startswith(
                                     "QT_Normal_Strength_"
                                     + str(
@@ -1820,6 +2118,26 @@ class quickTexture(bpy.types.Operator):
                                         self.bump_bump.inputs[0].default_value
                                     )
                                 if n.name.startswith(
+                                    "QT_Bump_Strength_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.bump_strength = n
+                                    bpy.context.window_manager.my_toolqt.bump_strength = (
+                                        self.bump_strength.inputs[1].default_value
+                                    )
+                                if n.name.startswith(
+                                    "QT_Mix_Mask_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.bump_layer = n
+                                    bpy.context.window_manager.my_toolqt.bump_layer = (
+                                        self.bump_layer.inputs[3].default_value
+                                    )
+                                if n.name.startswith(
                                     "QT_Bump_Invert_"
                                     + str(
                                         bpy.context.window_manager.my_toolqt.activelayer
@@ -1938,6 +2256,7 @@ class quickTexture(bpy.types.Operator):
                                     )
                                 ):
                                     self.ao_tex = n
+
                                 if n.name.startswith(
                                     "QT_AO_Multiply_"
                                     + str(
@@ -1948,6 +2267,23 @@ class quickTexture(bpy.types.Operator):
                                     bpy.context.window_manager.my_toolqt.ao = (
                                         self.ao_multiply.inputs[0].default_value
                                     )
+
+                                if n.name.startswith(
+                                    "QT_AO_Mask_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.ao_mask = n
+
+                                # cavity
+                                if n.name.startswith(
+                                    "QT_Bevel_Mask_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.bevel_mask = n
 
                                 # height
                                 if n.name.startswith(
@@ -2075,6 +2411,37 @@ class quickTexture(bpy.types.Operator):
                                     )
                                 ):
                                     self.randval = n
+                                # random
+                                if n.name.startswith(
+                                    "QT_Variety_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.variation = n
+
+                                # disp
+                                if n.name.startswith(
+                                    "QT_Disp_Vec_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.disp_vec = n
+                                if n.name.startswith(
+                                    "QT_Disp_Tex_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.disp_tex = n
+                                if n.name.startswith(
+                                    "QT_Displacement_Mapping_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.disp_mapping = n
 
                                 # blend
                                 if bpy.context.window_manager.my_toolqt.blend:
@@ -2271,6 +2638,7 @@ class quickTexture(bpy.types.Operator):
                         )
 
                         delta = -0.005
+                        delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                         if self.shift == 1:
                             delta *= 0.4
@@ -2334,6 +2702,12 @@ class quickTexture(bpy.types.Operator):
                                     4,
                                     "Z",
                                 )
+                            if bpy.context.window_manager.my_toolqt.activemap == 0:
+                                mat = Matrix.Rotation(
+                                    self.disp_mapping.inputs[2].default_value[2],
+                                    4,
+                                    "Z",
+                                )
 
                             view = Vector((self.rv3d.view_matrix[2][0:3])).normalized()
                             viewmat = self.rv3d.view_matrix.normalized().to_3x3()
@@ -2392,6 +2766,15 @@ class quickTexture(bpy.types.Operator):
                                     yval * dist
                                 )
                                 self.alpha_mapping.inputs[1].default_value[2] = 1
+
+                                if self.disp_mapping:
+                                    self.disp_mapping.inputs[1].default_value[0] += (
+                                        xval * dist
+                                    )
+                                    self.disp_mapping.inputs[1].default_value[1] += (
+                                        yval * dist
+                                    )
+                                    self.disp_mapping.inputs[1].default_value[2] = 1
 
                             elif bpy.context.window_manager.my_toolqt.activemap == 2:
                                 self.rough_mapping.inputs[1].default_value[0] += (
@@ -2454,12 +2837,23 @@ class quickTexture(bpy.types.Operator):
                                     )
                                     self.smudge_mapping.inputs[1].default_value[2] = 1
 
+                            elif bpy.context.window_manager.my_toolqt.activemap == 0:
+                                if self.disp_mapping:
+                                    self.disp_mapping.inputs[1].default_value[0] += (
+                                        xval * dist
+                                    )
+                                    self.disp_mapping.inputs[1].default_value[1] += (
+                                        yval * dist
+                                    )
+                                    self.disp_mapping.inputs[1].default_value[2] = 1
+
                         context.area.tag_redraw()
 
                 if self.s:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.003
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2510,6 +2904,17 @@ class quickTexture(bpy.types.Operator):
                         self.alpha_mapping.inputs[3].default_value[2] += (
                             delta * self.alpha_mapping.inputs[3].default_value[2]
                         )
+
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[0] += (
+                                delta * self.disp_mapping.inputs[3].default_value[0]
+                            )
+                            self.disp_mapping.inputs[3].default_value[1] += (
+                                delta * self.disp_mapping.inputs[3].default_value[1]
+                            )
+                            self.disp_mapping.inputs[3].default_value[2] += (
+                                delta * self.disp_mapping.inputs[3].default_value[2]
+                            )
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 2:
                         self.rough_mapping.inputs[3].default_value[0] += (
@@ -2589,12 +2994,25 @@ class quickTexture(bpy.types.Operator):
                                 delta * self.smudge_mapping.inputs[3].default_value[2]
                             )
 
+                    elif bpy.context.window_manager.my_toolqt.activemap == 0:
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[0] += (
+                                delta * self.disp_mapping.inputs[3].default_value[0]
+                            )
+                            self.disp_mapping.inputs[3].default_value[1] += (
+                                delta * self.disp_mapping.inputs[3].default_value[1]
+                            )
+                            self.disp_mapping.inputs[3].default_value[2] += (
+                                delta * self.disp_mapping.inputs[3].default_value[2]
+                            )
+
                     context.area.tag_redraw()
 
                 if self.shifts:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.003
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2621,6 +3039,11 @@ class quickTexture(bpy.types.Operator):
                         self.alpha_mapping.inputs[3].default_value[0] += (
                             delta * self.alpha_mapping.inputs[3].default_value[0]
                         )
+
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[0] += (
+                                delta * self.disp_mapping.inputs[3].default_value[0]
+                            )
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 2:
                         self.rough_mapping.inputs[3].default_value[0] += (
@@ -2663,12 +3086,19 @@ class quickTexture(bpy.types.Operator):
                                 delta * self.smudge_mapping.inputs[3].default_value[0]
                             )
 
+                    elif bpy.context.window_manager.my_toolqt.activemap == 0:
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[0] += (
+                                delta * self.disp_mapping.inputs[3].default_value[0]
+                            )
+
                     context.area.tag_redraw()
 
                 if self.alts:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.003
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2695,6 +3125,11 @@ class quickTexture(bpy.types.Operator):
                         self.alpha_mapping.inputs[3].default_value[1] += (
                             delta * self.alpha_mapping.inputs[3].default_value[1]
                         )
+
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[1] += (
+                                delta * self.disp_mapping.inputs[3].default_value[1]
+                            )
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 2:
                         self.rough_mapping.inputs[3].default_value[1] += (
@@ -2735,12 +3170,19 @@ class quickTexture(bpy.types.Operator):
                                 delta * self.smudge_mapping.inputs[3].default_value[1]
                             )
 
+                    elif bpy.context.window_manager.my_toolqt.activemap == 0:
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[3].default_value[1] += (
+                                delta * self.disp_mapping.inputs[3].default_value[1]
+                            )
+
                     context.area.tag_redraw()
 
                 if self.r == 1:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= 0.0025
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2756,6 +3198,8 @@ class quickTexture(bpy.types.Operator):
                         self.rough_mapping.inputs[2].default_value[2] += delta
                         self.bump_mapping.inputs[2].default_value[2] += delta
                         self.alpha_mapping.inputs[2].default_value[2] += delta
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[2].default_value[2] += delta
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 2:
                         self.rough_mapping.inputs[2].default_value[2] += delta
@@ -2783,12 +3227,17 @@ class quickTexture(bpy.types.Operator):
                         if self.smudge_mapping:
                             self.smudge_mapping.inputs[2].default_value[2] += delta
 
+                    if bpy.context.window_manager.my_toolqt.activemap == 0:
+                        if self.disp_mapping:
+                            self.disp_mapping.inputs[2].default_value[2] += delta
+
                     context.area.tag_redraw()
 
                 if self.l:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.0005
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2815,6 +3264,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.001
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2842,6 +3292,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.01
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2882,6 +3333,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.002
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -2924,6 +3376,7 @@ class quickTexture(bpy.types.Operator):
                 if self.shifth:
 
                     delta = event.mouse_prev_x - event.mouse_x
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if (
                         bpy.context.window_manager.my_toolqt.blend
@@ -2973,6 +3426,7 @@ class quickTexture(bpy.types.Operator):
                 if self.shiftn:
 
                     delta = event.mouse_prev_x - event.mouse_x
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     delta *= -0.005
 
@@ -3009,6 +3463,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.001
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -3035,13 +3490,13 @@ class quickTexture(bpy.types.Operator):
                             )
 
                     else:
-                        self.bump_bump.inputs[0].default_value += delta
-                        if self.bump_bump.inputs[0].default_value < 0:
-                            self.bump_bump.inputs[0].default_value = 0
-                        if self.bump_bump.inputs[0].default_value > 5:
-                            self.bump_bump.inputs[0].default_value = 5
-                        bpy.context.window_manager.my_toolqt.bump = (
-                            self.bump_bump.inputs[0].default_value
+                        self.bump_strength.inputs[1].default_value += delta
+                        if self.bump_strength.inputs[1].default_value < 0:
+                            self.bump_strength.inputs[1].default_value = 0
+                        if self.bump_strength.inputs[1].default_value > 5:
+                            self.bump_strength.inputs[1].default_value = 5
+                        bpy.context.window_manager.my_toolqt.bump_strength = (
+                            self.bump_strength.inputs[1].default_value
                         )
 
                     context.area.tag_redraw()
@@ -3050,6 +3505,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.001
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -3073,6 +3529,26 @@ class quickTexture(bpy.types.Operator):
 
                             bpy.context.window_manager.my_toolqt.blendsmoothing = (
                                 self.blend_power.inputs[1].default_value
+                            )
+                        if self.bevel_mask:
+                            self.bevel_mask.inputs[0].default_value += delta
+                            if self.bevel_mask.inputs[0].default_value < 0.001:
+                                self.bevel_mask.inputs[0].default_value = 0.001
+                            if self.bevel_mask.inputs[0].default_value > 15:
+                                self.bevel_mask.inputs[0].default_value = 15
+
+                            bpy.context.window_manager.my_toolqt.bevel_radius = (
+                                self.bevel_mask.inputs[0].default_value
+                            )
+                        if self.ao_mask:
+                            self.ao_mask.inputs[1].default_value += delta
+                            if self.ao_mask.inputs[1].default_value < 0.001:
+                                self.ao_mask.inputs[1].default_value = 0.001
+                            if self.ao_mask.inputs[1].default_value > 15:
+                                self.ao_mask.inputs[1].default_value = 15
+
+                            bpy.context.window_manager.my_toolqt.ao_radius = (
+                                self.ao_mask.inputs[1].default_value
                             )
 
                     else:
@@ -3117,6 +3593,22 @@ class quickTexture(bpy.types.Operator):
                                     ].default_value = (
                                         bpy.context.window_manager.my_toolqt.tiling_blend_amount
                                     )
+                            else:
+                                if self.diffuse_tex.projection == "BOX":
+                                    self.diffuse_tex.projection_blend += delta
+                                    self.rough_tex.projection_blend += delta
+                                    if self.bump_tex:
+                                        self.bump_tex.projection_blend += delta
+                                    if self.normal_tex:
+                                        self.normal_tex.projection_blend += delta
+                                    if self.ao_tex:
+                                        self.ao_tex.projection_blend += delta
+                                    if self.alpha_tex:
+                                        self.alpha_tex.projection_blend += delta
+                                    if self.disp_tex:
+                                        self.disp_tex.projection_blend += delta
+                                    if self.mask_tex:
+                                        self.mask_tex.projection_blend += delta
 
                         if bpy.context.window_manager.my_toolqt.activemap == 8:
                             if self.randcolor:
@@ -3128,6 +3620,16 @@ class quickTexture(bpy.types.Operator):
                                 bpy.context.window_manager.my_toolqt.random_hue = (
                                     self.randcolor.inputs[2].default_value
                                 )
+                        if bpy.context.window_manager.my_toolqt.activemap == 9:
+                            if self.variation:
+                                self.variation.inputs[1].default_value += delta * 20
+                                if self.variation.inputs[1].default_value < 0:
+                                    self.variation.inputs[1].default_value = 0
+                                if self.variation.inputs[1].default_value > 100:
+                                    self.variation.inputs[1].default_value = 100
+                                bpy.context.window_manager.my_toolqt.variation_scale = (
+                                    self.variation.inputs[1].default_value
+                                )
 
                     context.area.tag_redraw()
 
@@ -3135,6 +3637,7 @@ class quickTexture(bpy.types.Operator):
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.005
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -3278,10 +3781,33 @@ class quickTexture(bpy.types.Operator):
                                     self.randcolor.inputs[4].default_value
                                 )
 
+                        if bpy.context.window_manager.my_toolqt.activemap == 9:
+                            if self.variation:
+                                self.variation.inputs[3].default_value += delta * 5
+                                if self.variation.inputs[3].default_value < 0:
+                                    self.variation.inputs[3].default_value = 0
+                                if self.variation.inputs[3].default_value > 1:
+                                    self.variation.inputs[3].default_value = 1
+                                bpy.context.window_manager.my_toolqt.variation_intensity = (
+                                    self.variation.inputs[3].default_value
+                                )
+
+                        if bpy.context.window_manager.my_toolqt.activemap == 0:
+                            if self.disp_vec:
+                                self.disp_vec.inputs[2].default_value += delta
+                                if self.disp_vec.inputs[2].default_value < 0:
+                                    self.disp_vec.inputs[2].default_value = 0
+                                if self.disp_vec.inputs[2].default_value > 5:
+                                    self.disp_vec.inputs[2].default_value = 5
+                                bpy.context.window_manager.my_toolqt.disp_str = (
+                                    self.disp_vec.inputs[2].default_value
+                                )
+
                 if self.c:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.005
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -3414,10 +3940,22 @@ class quickTexture(bpy.types.Operator):
                                     self.randval.inputs[1].default_value[2]
                                 )
 
+                        if bpy.context.window_manager.my_toolqt.activemap == 9:
+                            if self.variation:
+                                self.variation.inputs[2].default_value += delta * 2
+                                if self.variation.inputs[2].default_value < 0:
+                                    self.variation.inputs[2].default_value = 0
+                                if self.variation.inputs[2].default_value > 1:
+                                    self.variation.inputs[2].default_value = 1
+                                bpy.context.window_manager.my_toolqt.variation_smoothness = (
+                                    self.variation.inputs[2].default_value
+                                )
+
                 if self.x:
 
                     delta = event.mouse_prev_x - event.mouse_x
                     delta *= -0.005
+                    delta *= bpy.context.preferences.addons[__package__].preferences.mouse_mult
 
                     if self.shift == 1:
                         delta *= 0.2
@@ -3452,6 +3990,17 @@ class quickTexture(bpy.types.Operator):
                                     self.randcolor.inputs[3].default_value = 1
                                 bpy.context.window_manager.my_toolqt.random_sat = (
                                     self.randcolor.inputs[3].default_value
+                                )
+
+                        if bpy.context.window_manager.my_toolqt.activemap == 9:
+                            if self.variation:
+                                self.variation.inputs[4].default_value += delta * 5
+                                if self.variation.inputs[4].default_value < 0:
+                                    self.variation.inputs[4].default_value = 0
+                                if self.variation.inputs[4].default_value > 1:
+                                    self.variation.inputs[4].default_value = 1
+                                bpy.context.window_manager.my_toolqt.variation_sat = (
+                                    self.variation.inputs[4].default_value
                                 )
 
             # OS KEYS
@@ -3728,11 +4277,38 @@ class quickTexture(bpy.types.Operator):
                             )
                             bpy.context.window_manager.my_toolqt.ob.location = newloc
 
-                    if empty_uv:
-                        cloc = bpy.context.scene.cursor.location
-                        empty_uv.location = region_2d_to_location_3d(
-                            self.region, self.rv3d, (self.coord), (cloc)
-                        )
+                            scene = context.scene
+                            viewlayer = context.view_layer
+                            view_vector = view3d_utils.region_2d_to_vector_3d(self.region, self.rv3d, coord)
+                            ray_origin = view3d_utils.region_2d_to_origin_3d(self.region, self.rv3d, coord)
+                            result, location, normal, index, hitobj, matrix = scene.ray_cast(
+                                viewlayer.depsgraph, ray_origin, view_vector
+                            )
+
+                            if hitobj:
+                                node_obj = None
+                                for mod in bpy.context.window_manager.my_toolqt.ob.modifiers:
+                                    if mod.name.startswith("QT_Decal"):
+                                        geomod = mod
+                                node_tree = bpy.data.node_groups[geomod.node_group.name]
+                                for n in node_tree.nodes:
+                                    if n.type == "OBJECT_INFO":
+                                        if node_obj != n:
+                                            node_obj = n
+                                node_obj.inputs[0].default_value = hitobj
+
+                                if node_obj:
+                                    # parenting
+                                    bpy.context.window_manager.my_toolqt.ob.parent = None
+
+                                    bpy.data.objects[hitobj.name].select_set(True)
+                                    bpy.context.view_layer.objects.active = hitobj
+
+                                    bpy.ops.object.parent_set(type="OBJECT")
+                                    bpy.ops.object.select_all(action="DESELECT")
+
+                                    bpy.data.objects[bpy.context.window_manager.my_toolqt.ob.name].select_set(True)
+                                    bpy.context.view_layer.objects.active = bpy.context.window_manager.my_toolqt.ob
 
                     if resetparm:
                         if self.diffuse_mapping:
@@ -3837,7 +4413,6 @@ class quickTexture(bpy.types.Operator):
                         else:
                             self.l = 1
 
-            # AO
             elif event.type == "A":
                 if event.value == "PRESS":
 
@@ -3864,10 +4439,21 @@ class quickTexture(bpy.types.Operator):
 
                         if self.ctrl == 1 and self.shift == 0 and self.alt == 0:
                             self.ctrl = 0
-                            self.alt = 0
-                            self.shift = 0
-                            self.alpha_type = 1
-                            # bpy.ops.qt.replacealpha('INVOKE_DEFAULT')
+                            if bpy.context.window_manager.my_toolqt.activelayer > 1:
+
+                                # check if mask exists on current layer
+                                mask = 0
+                                for n in self.nodes:
+                                    if n.name.endswith(
+                                        "Mask_"
+                                        + str(
+                                            bpy.context.window_manager.my_toolqt.activelayer
+                                        )
+                                    ):
+                                        mask = 1
+
+                                if mask == 0:
+                                    bpy.ops.qt.aomask_qt("INVOKE_DEFAULT")
 
                         elif self.ctrl == 0 and self.shift == 0 and self.alt == 1:
                             self.ctrl = 0
@@ -3921,7 +4507,6 @@ class quickTexture(bpy.types.Operator):
             # EMISSION
             elif event.type == "E":
                 if event.value == "PRESS":
-
                     self.a = 0
                     self.g = 0
                     self.s = 0
@@ -3939,15 +4524,11 @@ class quickTexture(bpy.types.Operator):
                     self.o = 0
                     self.x = 0
 
-                    if event.ctrl == 0 and event.shift == 0 and event.alt == 0:
+                    if self.ctrl == 0 and self.shift == 0 and self.alt == 0:
                         if self.e:
                             self.e = 0
                         else:
                             self.e = 1
-
-                    else:
-                        bpy.context.window_manager.my_toolqt.running_qt = 0
-                        return {"PASS_THROUGH"}
 
             # BUMP
             elif event.type == "B":
@@ -3984,6 +4565,18 @@ class quickTexture(bpy.types.Operator):
                             self.shiftb = 0
                         else:
                             self.shiftb = 1
+
+                    if self.shift == 0 and self.ctrl == 0 and self.alt == 1:
+                        if self.bump_layer:
+                            if bpy.context.window_manager.my_toolqt.bump_layer < 0:
+                                self.bump_layer.inputs[3].default_value = 0
+                                bpy.context.window_manager.my_toolqt.bump_layer = 0
+                            elif bpy.context.window_manager.my_toolqt.bump_layer > 0:
+                                self.bump_layer.inputs[3].default_value = -10
+                                bpy.context.window_manager.my_toolqt.bump_layer = -10
+                            else:
+                                self.bump_layer.inputs[3].default_value = 10
+                                bpy.context.window_manager.my_toolqt.bump_layer = 10
 
                     if self.shift == 1 and self.ctrl == 1 and self.alt == 0:
                         bpy.context.window_manager.my_toolqt.running_qt = 0
@@ -4087,7 +4680,6 @@ class quickTexture(bpy.types.Operator):
             }:
                 return {"PASS_THROUGH"}
 
-            # VALUE
             elif event.type == "V":
                 if event.value == "PRESS":
 
@@ -4122,6 +4714,10 @@ class quickTexture(bpy.types.Operator):
                                 if bpy.context.window_manager.my_toolqt.activelayer < 5:
                                     bpy.ops.qt.viewlayer_qt("INVOKE_DEFAULT")
 
+                        elif self.shift:
+                            self.shift = 0
+                            bpy.ops.qt.vertexmask_qt("INVOKE_DEFAULT")
+
                         else:
                             if self.v:
                                 self.v = 0
@@ -4132,7 +4728,6 @@ class quickTexture(bpy.types.Operator):
                         self.shift = 0
                         self.alt = 0
 
-            # SATURATION
             elif event.type == "C":
                 if event.value == "PRESS":
 
@@ -4153,7 +4748,30 @@ class quickTexture(bpy.types.Operator):
                     self.o = 0
                     self.x = 0
 
-                    if self.alt:
+                    if self.ctrl == 1 and self.alt == 0 and self.shift == 0:
+                        if (
+                            bpy.context.window_manager.my_toolqt.blend == 0
+                            and bpy.context.window_manager.my_toolqt.mask == 0
+                        ):
+                            self.ctrl = 0
+                            if bpy.context.window_manager.my_toolqt.activelayer > 1:
+
+                                # check if mask exists on current layer
+                                mask = 0
+                                for n in self.nodes:
+                                    if n.name.endswith(
+                                        "Mask_"
+                                        + str(
+                                            bpy.context.window_manager.my_toolqt.activelayer
+                                        )
+                                    ):
+                                        mask = 1
+
+                                if mask == 0:
+                                    bpy.ops.qt.cavitymask_qt("INVOKE_DEFAULT")
+
+
+                    elif self.alt == 1 and self.shift == 0 and self.ctrl == 0:
                         if bpy.context.window_manager.my_toolqt.activemap == 1:
                             if self.diffuse_tex:
                                 if self.diffuse_tex.extension == "CLIP":
@@ -4213,7 +4831,7 @@ class quickTexture(bpy.types.Operator):
                                 else:
                                     self.alpha_tex.extension = "CLIP"
 
-                    else:
+                    elif self.alt == 0 and self.shift == 0 and self.shift == 0:
                         if self.c:
                             self.c = 0
                         else:
@@ -4474,9 +5092,12 @@ class quickTexture(bpy.types.Operator):
                         ].default_value = not self.bump_invert.inputs[0].default_value
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 4:
-                        self.mask_invert.inputs[
-                            0
-                        ].default_value = not self.mask_invert.inputs[0].default_value
+                        if self.ao_mask:
+                            self.ao_mask.inside = not self.ao_mask.inside
+                        else:
+                            self.mask_invert.inputs[
+                                0
+                            ].default_value = not self.mask_invert.inputs[0].default_value
 
                     elif bpy.context.window_manager.my_toolqt.activemap == 5:
                         self.alpha_invert.inputs[
@@ -4515,6 +5136,10 @@ class quickTexture(bpy.types.Operator):
                         self.mat.shadow_method = "NONE"
                     else:
                         self.mat.shadow_method = "HASHED"
+                    if bpy.context.scene.render.engine == 'CYCLES':
+                        bpy.context.object.visible_shadow = not bpy.context.object.visible_shadow
+                        bpy.context.object.visible_glossy = not bpy.context.object.visible_glossy
+                        bpy.context.object.visible_diffuse = not bpy.context.object.visible_diffuse
 
             # DUPLICATE LAYER
             elif event.shift and event.type == "D" and event.value == "PRESS":
@@ -4817,6 +5442,11 @@ class quickTexture(bpy.types.Operator):
                         ):
                             self.bump_bump = n
                         if n.name.startswith(
+                            "QT_Bump_Strength_"
+                            + str(bpy.context.window_manager.my_toolqt.activelayer)
+                        ):
+                            self.bump_strength = n
+                        if n.name.startswith(
                             "QT_Bump_Invert_"
                             + str(bpy.context.window_manager.my_toolqt.activelayer)
                         ):
@@ -5025,7 +5655,10 @@ class quickTexture(bpy.types.Operator):
                         self.bump_bright_contrast.outputs[0], self.bump_clamp.inputs[0]
                     )
                     self.node_tree.links.new(
-                        self.bump_clamp.outputs[0], self.bump_bump.inputs[2]
+                        self.bump_clamp.outputs[0], self.bump_strength.inputs[0]
+                    )
+                    self.node_tree.links.new(
+                        self.bump_strength.outputs[0], self.bump_bump.inputs[2]
                     )
 
                     self.node_tree.links.new(
@@ -5494,10 +6127,10 @@ class quickTexture(bpy.types.Operator):
                     if not self.randcolor:
                         filepath = None
                         for mod in addon_utils.modules():
-                            if mod.bl_info["name"] == "QuickTexture 2022":
+                            if mod.bl_info["name"].startswith("QuickTexture"):
                                 filepath = mod.__file__
                         dirpath = os.path.dirname(filepath)
-                        fullpath = os.path.join(dirpath, "QT_GeoNodes.blend")
+                        fullpath = os.path.join(dirpath, "QT_Presets.blend")
                         with bpy.data.libraries.load(fullpath, link=False) as (
                             data_from,
                             data_to,
@@ -5531,10 +6164,10 @@ class quickTexture(bpy.types.Operator):
                     if not self.randval:
                         filepath = None
                         for mod in addon_utils.modules():
-                            if mod.bl_info["name"] == "QuickTexture 2022":
+                            if mod.bl_info["name"].startswith("QuickTexture"):
                                 filepath = mod.__file__
                         dirpath = os.path.dirname(filepath)
-                        fullpath = os.path.join(dirpath, "QT_GeoNodes.blend")
+                        fullpath = os.path.join(dirpath, "QT_Presets.blend")
                         with bpy.data.libraries.load(fullpath, link=False) as (
                             data_from,
                             data_to,
@@ -5566,6 +6199,67 @@ class quickTexture(bpy.types.Operator):
                 self.node_tree.links.new(
                     self.out_node.inputs[0], self.final_node.outputs[0]
                 )
+
+            elif event.type == "NINE":
+                self.a = 0
+                self.g = 0
+                self.s = 0
+                self.r = 0
+                self.l = 0
+                self.e = 0
+                self.shifth = 0
+                self.alts = 0
+                self.shifts = 0
+                self.shiftb = 0
+                self.shiftn = 0
+                self.ctrli = 0
+                self.h = 0
+                self.v = 0
+                self.c = 0
+                self.o = 0
+                self.x = 0
+
+                if bpy.context.window_manager.my_toolqt.blend == 0:
+
+                    bpy.context.window_manager.my_toolqt.mask = 0
+                    bpy.context.window_manager.my_toolqt.activemap = 9
+
+                    if not self.variation:
+                        filepath = None
+                        for mod in addon_utils.modules():
+                            if mod.bl_info["name"].startswith("QuickTexture"):
+                                filepath = mod.__file__
+                        dirpath = os.path.dirname(filepath)
+                        fullpath = os.path.join(dirpath, "QT_Presets.blend")
+                        with bpy.data.libraries.load(fullpath, link=False) as (
+                            data_from,
+                            data_to,
+                        ):
+                            data_to.node_groups = [
+                                name
+                                for name in data_from.node_groups
+                                if name.startswith("QT_Variety")
+                            ]
+                        original_group = bpy.data.node_groups["QT_Variety"]
+
+                        variation = original_group.copy()
+                        self.variation = self.nodes.new(type="ShaderNodeGroup")
+                        self.variation.node_tree = bpy.data.node_groups[variation.name]
+                        self.variation.name = "QT_Variety_" + str(
+                            bpy.context.window_manager.my_toolqt.activelayer
+                        )
+
+                        self.variation.location = self.diffuse_bright_contrast.location
+                        self.variation.location.x += 200
+
+                        self.node_tree.links.new(
+                            self.diffuse_bright_contrast.outputs[0],
+                            self.variation.inputs[0],
+                        )
+                        self.node_tree.links.new(
+                            self.variation.outputs[0], self.core_shader.inputs[0]
+                        )
+
 
             # ACTIVE LAYER
             elif event.type == "Q" and event.value == "PRESS":
@@ -5685,6 +6379,13 @@ class quickTexture(bpy.types.Operator):
                             bpy.context.window_manager.my_toolqt.bump = (
                                 self.bump_bump.inputs[0].default_value
                             )
+                            bpy.context.window_manager.my_toolqt.bump_strength = (
+                                self.bump_strength.inputs[0].default_value
+                            )
+                            if self.bump_layer:
+                                bpy.context.window_manager.my_toolqt.bump_layer = (
+                                    self.bump_layer.inputs[0].default_value
+                                )
                             bpy.context.window_manager.my_toolqt.spec = (
                                 self.core_shader.inputs[7].default_value
                             )
@@ -5840,6 +6541,13 @@ class quickTexture(bpy.types.Operator):
                         bpy.context.window_manager.my_toolqt.bump = (
                             self.bump_bump.inputs[0].default_value
                         )
+                        bpy.context.window_manager.my_toolqt.bump_strength = (
+                            self.bump_strength.inputs[0].default_value
+                        )
+                        if self.bump_layer:
+                            bpy.context.window_manager.my_toolqt.bump_layer = (
+                                self.bump_layer.inputs[0].default_value
+                            )
                         bpy.context.window_manager.my_toolqt.spec = (
                             self.core_shader.inputs[7].default_value
                         )
@@ -5890,10 +6598,10 @@ class quickTexture(bpy.types.Operator):
                     if not self.diffuse_seamless:
                         filepath = None
                         for mod in addon_utils.modules():
-                            if mod.bl_info["name"] == "QuickTexture 2022":
+                            if mod.bl_info["name"].startswith("QuickTexture"):
                                 filepath = mod.__file__
                         dirpath = os.path.dirname(filepath)
-                        fullpath = os.path.join(dirpath, "QT_GeoNodes.blend")
+                        fullpath = os.path.join(dirpath, "QT_Presets.blend")
                         with bpy.data.libraries.load(fullpath, link=False) as (
                             data_from,
                             data_to,
@@ -6377,6 +7085,26 @@ class quickTexture(bpy.types.Operator):
                                     self.bump_bump = n
                                     bpy.context.window_manager.my_toolqt.bump = (
                                         self.bump_bump.inputs[0].default_value
+                                    )
+                                if n.name.startswith(
+                                    "QT_Bump_Layer_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.bump_layer = n
+                                    bpy.context.window_manager.my_toolqt.bump = (
+                                        self.bump_layer.inputs[3].default_value
+                                    )
+                                if n.name.startswith(
+                                    "QT_Bump_Strength_"
+                                    + str(
+                                        bpy.context.window_manager.my_toolqt.activelayer
+                                    )
+                                ):
+                                    self.bump_strength = n
+                                    bpy.context.window_manager.my_toolqt.bump = (
+                                        self.bump_strength.inputs[1].default_value
                                     )
                                 if n.name.startswith(
                                     "QT_Bump_Invert_"
@@ -6927,6 +7655,14 @@ class quickTexture(bpy.types.Operator):
                                     self.bump_bump.inputs[0].default_value
                                 )
                             if n.name.startswith(
+                                "QT_Bump_Strength_"
+                                + str(bpy.context.window_manager.my_toolqt.activelayer)
+                            ):
+                                self.bump_strength = n
+                                bpy.context.window_manager.my_toolqt.bump_strength = (
+                                    self.bump_strength.inputs[1].default_value
+                                )
+                            if n.name.startswith(
                                 "QT_Bump_Invert_"
                                 + str(bpy.context.window_manager.my_toolqt.activelayer)
                             ):
@@ -7279,6 +8015,7 @@ class quickTexture(bpy.types.Operator):
 
                         if self.bump_bump:
                             self.bump_bump.inputs[0].default_value = 0
+                            self.bump_strength.inputs[1].default_value = 0
 
                         if self.core_shader:
                             self.core_shader.inputs[1].default_value = 0
@@ -7415,6 +8152,7 @@ class quickTexture(bpy.types.Operator):
 
                         if self.bump_bump:
                             self.bump_bump.inputs[0].default_value = 0
+                            self.bump_strength.inputs[1].default_value = 0
 
                         if self.core_shader:
                             self.core_shader.inputs[1].default_value = 0
@@ -7588,6 +8326,7 @@ class quickTexture(bpy.types.Operator):
 
                         if self.bump_bump:
                             self.bump_bump.inputs[0].default_value = 0
+                            self.bump_strength.inputs[1].default_value = 0
 
                         if self.core_shader:
                             self.core_shader.inputs[1].default_value = 0
@@ -7724,6 +8463,7 @@ class quickTexture(bpy.types.Operator):
 
                         if self.bump_bump:
                             self.bump_bump.inputs[0].default_value = 0
+                            self.bump_strength.inputs[1].default_value = 0
 
                         if self.core_shader:
                             self.core_shader.inputs[1].default_value = 0
@@ -7804,11 +8544,29 @@ class quickTexture(bpy.types.Operator):
             elif event.type == "WHEELDOWNMOUSE":
                 return {"PASS_THROUGH"}
 
-            elif event.type == "ZERO":
-                return {"PASS_THROUGH"}
+            elif event.type == "ZERO" and event.value == "PRESS":
+                self.a = 0
+                self.g = 0
+                self.s = 0
+                self.r = 0
+                self.l = 0
+                self.e = 0
+                self.shiftn = 0
+                self.shifth = 0
+                self.alts = 0
+                self.shifts = 0
+                self.shiftb = 0
+                self.ctrli = 0
+                self.h = 0
+                self.v = 0
+                self.c = 0
+                self.o = 0
+                self.x = 0
 
-            elif event.type == "NINE":
-                return {"PASS_THROUGH"}
+                if bpy.context.window_manager.my_toolqt.blend == 0:
+                    bpy.context.window_manager.my_toolqt.mask = 0
+                    bpy.context.window_manager.my_toolqt.activemap = 0
+                context.area.tag_redraw()
 
             elif event.type == "NUMPAD_0":
                 return {"PASS_THROUGH"}
@@ -7959,6 +8717,212 @@ class quickTexture(bpy.types.Operator):
 
                 if event.ctrl == 0 and event.shift == 0 and event.alt == 0:
                     return {"PASS_THROUGH"}
+
+                elif event.ctrl == 0 and event.shift == 1 and event.alt == 0:
+                    if (
+                        self.tex_coord.label == "Box"
+                        or self.tex_coord.label == "UV"
+                    ):
+                        if self.diffuse_tex:
+
+                            if self.diffuse_tex.projection == "FLAT":
+
+                                bpy.context.window_manager.my_toolqt.triplanar = (
+                                    1
+                                )
+
+                                self.diffuse_tex.projection = "BOX"
+                                self.diffuse_tex.projection_blend = 0.3
+                                self.rough_tex.projection = "BOX"
+                                self.rough_tex.projection_blend = 0.3
+
+                                t_name = self.tex_coord.name
+                                t_label = self.tex_coord.label
+                                t_location = self.tex_coord.location
+                                self.node_tree.nodes.remove(self.tex_coord)
+                                self.tex_coord = self.node_tree.nodes.new(
+                                    "ShaderNodeTexCoord"
+                                )
+                                self.tex_coord.name = t_name
+                                self.tex_coord.label = t_label
+                                self.tex_coord.location = t_location
+
+                                self.node_tree.links.new(
+                                    self.tex_coord.outputs[0],
+                                    self.diffuse_mapping.inputs[0],
+                                )
+                                self.node_tree.links.new(
+                                    self.tex_coord.outputs[0],
+                                    self.rough_mapping.inputs[0],
+                                )
+
+                                if self.bump_tex:
+                                    self.bump_tex.projection = "BOX"
+                                    self.bump_tex.projection_blend = 0.3
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.bump_mapping.inputs[0],
+                                    )
+                                if self.normal_tex:
+                                    self.normal_tex.projection = "BOX"
+                                    self.normal_tex.projection_blend = 0.3
+
+                                if self.ao_tex:
+                                    self.ao_tex.projection = "BOX"
+                                    self.ao_tex.projection_blend = 0.3
+
+                                if self.alpha_tex:
+                                    self.alpha_tex.projection = "BOX"
+                                    self.alpha_tex.projection_blend = 0.3
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.alpha_mapping.inputs[0],
+                                    )
+                                if self.disp_tex:
+                                    self.disp_tex.projection = "BOX"
+                                    self.disp_tex.projection_blend = 0.3
+
+                                if self.mask_tex:
+                                    self.mask_tex.projection = "BOX"
+                                    self.mask_tex.projection_blend = 0.3
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.mask_mapping.inputs[0],
+                                    )
+
+                            else:
+
+                                bpy.context.window_manager.my_toolqt.triplanar = (
+                                    0
+                                )
+
+                                self.diffuse_tex.projection = "FLAT"
+                                self.rough_tex.projection = "FLAT"
+
+                                if self.tex_coord.label == "UV":
+
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[2],
+                                        self.diffuse_mapping.inputs[0],
+                                    )
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[2],
+                                        self.rough_mapping.inputs[0],
+                                    )
+
+                                    if self.bump_tex:
+                                        self.bump_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[2],
+                                            self.bump_mapping.inputs[0],
+                                        )
+                                    if self.normal_tex:
+                                        self.normal_tex.projection = "FLAT"
+                                    if self.ao_tex:
+                                        self.ao_tex.projection = "FLAT"
+                                    if self.alpha_tex:
+                                        self.alpha_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[2],
+                                            self.alpha_mapping.inputs[0],
+                                        )
+                                    if self.disp_tex:
+                                        self.disp_tex.projection = "FLAT"
+                                    if self.mask_tex:
+                                        self.mask_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[2],
+                                            self.mask_mapping.inputs[0],
+                                        )
+
+                                else:
+                                    t_name = self.tex_coord.name
+                                    t_label = self.tex_coord.label
+                                    t_location = self.tex_coord.location
+                                    self.node_tree.nodes.remove(self.tex_coord)
+                                    self.tex_coord = self.node_tree.nodes.new(
+                                        "ShaderNodeUVMap"
+                                    )
+                                    self.tex_coord.name = t_name
+                                    self.tex_coord.label = t_label
+                                    self.tex_coord.location = t_location
+                                    self.tex_coord.uv_map = "QT_UV_Box_Layer_1"
+
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.diffuse_mapping.inputs[0],
+                                    )
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.rough_mapping.inputs[0],
+                                    )
+
+                                    if self.bump_tex:
+                                        self.bump_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[0],
+                                            self.bump_mapping.inputs[0],
+                                        )
+                                    if self.normal_tex:
+                                        self.normal_tex.projection = "FLAT"
+                                    if self.ao_tex:
+                                        self.ao_tex.projection = "FLAT"
+                                    if self.alpha_tex:
+                                        self.alpha_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[0],
+                                            self.alpha_mapping.inputs[0],
+                                        )
+                                    if self.disp_tex:
+                                        self.disp_tex.projection = "FLAT"
+                                    if self.mask_tex:
+                                        self.mask_tex.projection = "FLAT"
+                                        self.node_tree.links.new(
+                                            self.tex_coord.outputs[0],
+                                            self.mask_mapping.inputs[0],
+                                        )
+
+                            # mapping scale reset
+
+                            self.diffuse_mapping.inputs[3].default_value[0] = 1
+                            self.diffuse_mapping.inputs[3].default_value[1] = 1
+                            self.diffuse_mapping.inputs[3].default_value[2] = 1
+
+                            self.rough_mapping.inputs[3].default_value[0] = 1
+                            self.rough_mapping.inputs[3].default_value[1] = 1
+                            self.rough_mapping.inputs[3].default_value[2] = 1
+
+                            self.bump_mapping.inputs[3].default_value[0] = 1
+                            self.bump_mapping.inputs[3].default_value[1] = 1
+                            self.bump_mapping.inputs[3].default_value[2] = 1
+
+                            self.alpha_mapping.inputs[3].default_value[0] = 1
+                            self.alpha_mapping.inputs[3].default_value[1] = 1
+                            self.alpha_mapping.inputs[3].default_value[2] = 1
+
+                            if self.alpha_mapping:
+                                self.alpha_mapping.inputs[3].default_value[
+                                    0
+                                ] = 1
+                                self.alpha_mapping.inputs[3].default_value[
+                                    1
+                                ] = 1
+                                self.alpha_mapping.inputs[3].default_value[
+                                    2
+                                ] = 1
+
+                            # smudge
+                            for n in self.node_tree.nodes:
+                                if n.type == "MAPPING":
+                                    self.node_tree.links.new(
+                                        self.tex_coord.outputs[0],
+                                        self.smudge.inputs[0],
+                                    )
+                                    self.node_tree.links.new(
+                                        self.smudge.outputs[0], n.inputs[0]
+                                    )
+
+                        context.area.tag_redraw()
 
                 elif event.ctrl == 1 and event.shift == 0 and event.alt == 0:
                     context.area.tag_redraw()
@@ -8138,6 +9102,8 @@ class quickTexture(bpy.types.Operator):
         self.bump_tex = None
         self.bump_bright_contrast = None
         self.bump_bump = None
+        self.bump_strength = None
+        self.bump_layer = None
         self.bump_invert = None
         self.bump_hue_sat = None
         self.mask_tex = None
@@ -8184,10 +9150,18 @@ class quickTexture(bpy.types.Operator):
         self.blend_noise = None
         self.blend_bright_contrast = None
 
+        self.bevel_mask = None
+        self.ao_mask = None
+
         self.prev_blend_node = None
 
         self.randval = None
         self.randcolor = None
+        self.variation = None
+
+        self.disp_tex = None
+        self.disp_mapping = None
+        self.disp_vec = None
 
         # collections
         if "QuickTexture" in bpy.data.collections:
@@ -8414,6 +9388,7 @@ class quickTexture(bpy.types.Operator):
                                     normal_spec = None
                                     ao_spec = None
                                     alpha_spec = None
+                                    disp_spec = None
 
                                     if mat.node_tree:
                                         for n in mat.node_tree.nodes:
@@ -8549,6 +9524,21 @@ class quickTexture(bpy.types.Operator):
                                                     ao_spec = bpy.data.images[
                                                         n.image.name
                                                     ]
+                                                if (
+                                                    "disp"
+                                                    in str(n.image.name).lower()
+                                                ):
+                                                    disp_spec = bpy.data.images[
+                                                        n.image.name
+                                                    ]
+                                                if "displacement" in str(n.image.name).lower():
+                                                    disp_spec = bpy.data.images[
+                                                        n.image.name
+                                                    ]
+                                                if "height" in str(n.image.name).lower():
+                                                    disp_spec = bpy.data.images[
+                                                        n.image.name
+                                                    ]
 
                                     if albedo_spec:
                                         objects.remake_material(
@@ -8559,18 +9549,19 @@ class quickTexture(bpy.types.Operator):
                                             normal_spec,
                                             alpha_spec,
                                             ao_spec,
+                                            disp_spec,
                                         )
                                     else:
                                         if len(ob.data.materials) > 0:
                                             for m in ob.data.materials:
                                                 if m:
-                                                    bpy.data.materials.remove(m)
+                                                    m = None
                                             importbrowser = 1
                             else:
                                 if len(ob.data.materials) > 0:
                                     for m in ob.data.materials:
                                         if m:
-                                            bpy.data.materials.remove(m)
+                                            m = None
                                     importbrowser = 1
                     else:
                         importbrowser = 1
@@ -9389,6 +10380,114 @@ class QT_OT_texturemask_qt(Operator, ImportHelper):
         return {"FINISHED"}
 
 
+class QT_OT_cavitymask_qt(Operator):
+    bl_idname = "qt.cavitymask_qt"
+    bl_label = "Cavity Mask"
+    bl_options = {"PRESET", "UNDO"}
+    bl_description = "Create New Cavity Mask"
+
+    @classmethod
+    def poll(self, context):
+
+        nodes = None
+        if bpy.context.window_manager.my_toolqt.activelayer > 1:
+            if bpy.context.window_manager.my_toolqt.selected:
+                if bpy.context.window_manager.my_toolqt.ob:
+                    if len(bpy.context.window_manager.my_toolqt.ob.material_slots) > 0:
+                        mat = bpy.context.window_manager.my_toolqt.ob.material_slots[
+                            bpy.context.window_manager.my_toolqt.matindex
+                        ].material
+                        if mat:
+                            for n in mat.node_tree.nodes:
+                                if n.name.startswith("QT_Shader"):
+                                    nodes = n.node_tree.nodes
+                                    node_tree = n.node_tree
+            # check if mask exists on current layer
+            mask = 0
+            if nodes:
+                for n in nodes:
+                    if n.name.endswith(
+                        "Mask_" + str(bpy.context.window_manager.my_toolqt.activelayer)
+                    ):
+                        mask = 1
+
+            if mask == 0:
+                return True
+            else:
+                return None
+        else:
+            return None
+
+    def execute(self, context):
+
+        ob = bpy.context.active_object
+
+        bpy.context.window_manager.my_toolqt.mask = 1
+        bpy.context.window_manager.my_toolqt.activemap = 4
+        objects.cavity_mask(
+            self,
+            context,
+            ob.data.materials[bpy.context.window_manager.my_toolqt.matindex],
+            bpy.context.window_manager.my_toolqt.activelayer,
+        )
+
+        return {"FINISHED"}
+
+
+class QT_OT_aomask_qt(Operator):
+    bl_idname = "qt.aomask_qt"
+    bl_label = "AO Mask"
+    bl_options = {"PRESET", "UNDO"}
+    bl_description = "Create New AO Mask"
+
+    @classmethod
+    def poll(self, context):
+
+        nodes = None
+        if bpy.context.window_manager.my_toolqt.activelayer > 1:
+            if bpy.context.window_manager.my_toolqt.selected:
+                if bpy.context.window_manager.my_toolqt.ob:
+                    if len(bpy.context.window_manager.my_toolqt.ob.material_slots) > 0:
+                        mat = bpy.context.window_manager.my_toolqt.ob.material_slots[
+                            bpy.context.window_manager.my_toolqt.matindex
+                        ].material
+                        if mat:
+                            for n in mat.node_tree.nodes:
+                                if n.name.startswith("QT_Shader"):
+                                    nodes = n.node_tree.nodes
+                                    node_tree = n.node_tree
+            # check if mask exists on current layer
+            mask = 0
+            if nodes:
+                for n in nodes:
+                    if n.name.endswith(
+                        "Mask_" + str(bpy.context.window_manager.my_toolqt.activelayer)
+                    ):
+                        mask = 1
+
+            if mask == 0:
+                return True
+            else:
+                return None
+        else:
+            return None
+
+    def execute(self, context):
+
+        ob = bpy.context.active_object
+
+        bpy.context.window_manager.my_toolqt.mask = 1
+        bpy.context.window_manager.my_toolqt.activemap = 4
+        objects.ao_mask(
+            self,
+            context,
+            ob.data.materials[bpy.context.window_manager.my_toolqt.matindex],
+            bpy.context.window_manager.my_toolqt.activelayer,
+        )
+
+        return {"FINISHED"}
+
+
 class QT_OT_depthmask_qt(Operator, ImportHelper):
     bl_idname = "qt.depthmask_qt"
     bl_label = "Depth Mask"
@@ -9467,6 +10566,64 @@ class QT_OT_depthmask_qt(Operator, ImportHelper):
                 bpy.context.window_manager.my_toolqt.activelayer,
                 bpy.context.window_manager.my_toolqt.proc_uv,
             )
+
+        return {"FINISHED"}
+
+
+class QT_OT_vertexmask_qt(Operator):
+    bl_idname = "qt.vertexmask_qt"
+    bl_label = "Vertex Mask"
+    bl_options = {"PRESET", "UNDO"}
+    bl_description = "Create New Vertex Mask"
+
+    @classmethod
+    def poll(self, context):
+
+        nodes = None
+        if bpy.context.window_manager.my_toolqt.activelayer > 1:
+            if (
+                len(bpy.context.window_manager.my_toolqt.ob.material_slots)
+                > 0
+            ):
+                mat = (
+                    bpy.context.window_manager.my_toolqt.ob.material_slots[
+                        bpy.context.window_manager.my_toolqt.matindex
+                    ].material
+                )
+                if mat:
+                    for n in mat.node_tree.nodes:
+                        if n.name.startswith("QT_Shader"):
+                            nodes = n.node_tree.nodes
+                mask = 0
+                if nodes:
+                    for n in nodes:
+                        if n.name.endswith(
+                            "Mask_"
+                            + str(bpy.context.window_manager.my_toolqt.activelayer)
+                        ):
+                            mask = 1
+
+                if mask == 0:
+                    return True
+                else:
+                    return None
+            else:
+                return None
+        else:
+            return None
+
+    def execute(self, context):
+
+        sel = bpy.context.selected_objects
+        ob = sel[0]
+
+        vertex = ob.data.color_attributes.active_color.name
+        objects.vertex_mask(
+            self,
+            context,
+            ob.data.materials[bpy.context.window_manager.my_toolqt.matindex],
+            bpy.context.window_manager.my_toolqt.activelayer, vertex,
+        )
 
         return {"FINISHED"}
 
@@ -9640,6 +10797,8 @@ class QT_OT_smudge_qt(Operator, ImportHelper):
 
         return {"FINISHED"}
 
+        return {"FINISHED"}
+
 
 class QT_OT_replacemaps_qt(Operator, ImportHelper):
     bl_idname = "qt.replacemaps"
@@ -9692,6 +10851,7 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
         bump_mapping = None
         mask_mapping = None
         alpha_mapping = None
+        disp_mapping = None
 
         diffuse_tex = None
         rough_tex = None
@@ -9700,12 +10860,14 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
         normal_tex = None
         alpha_tex = None
         ao_tex = None
+        disp_tex = None
 
         albedo_spec = None
         roughness_spec = None
         normal_spec = None
         ao_spec = None
         alpha_spec = None
+        disp_spec = None
 
         if len(self.files) > 1:
             for f in self.files:
@@ -9824,6 +10986,22 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
                     bpy.ops.image.open(filepath=img_path)
                     bpy.data.images[f.name].filepath = img_path
                     ao_spec = bpy.data.images[f.name]
+                if "displacement" in str(f.name).lower():
+                    img_path = os.path.join(dirname, f.name)
+                    bpy.ops.image.open(filepath=img_path)
+                    disp_spec = bpy.data.images[f.name]
+                if "disp" in str(f.name).lower():
+                    img_path = os.path.join(dirname, f.name)
+                    bpy.ops.image.open(filepath=img_path)
+                    disp_spec = bpy.data.images[f.name]
+                if "dis" in str(f.name).lower():
+                    img_path = os.path.join(dirname, f.name)
+                    bpy.ops.image.open(filepath=img_path)
+                    disp_spec = bpy.data.images[f.name]
+                if "height" in str(f.name).lower():
+                    img_path = os.path.join(dirname, f.name)
+                    bpy.ops.image.open(filepath=img_path)
+                    disp_spec = bpy.data.images[f.name]
 
         if nodes:
             for n in nodes:
@@ -9907,6 +11085,17 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
                 ):
                     layer = n
 
+                if n.name.startswith(
+                    "QT_Displacement_Mapping_"
+                    + str(bpy.context.window_manager.my_toolqt.activelayer)
+                ):
+                    disp_mapping = n
+                if n.name.startswith(
+                    "QT_Disp_Tex_"
+                    + str(bpy.context.window_manager.my_toolqt.activelayer)
+                ):
+                    disp_tex = n
+
         if bpy.context.window_manager.my_toolqt.activemap == 1:
 
             if diffuse_mapping:
@@ -9964,6 +11153,19 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
                 if ao_spec:
                     ao_tex.image = ao_spec
 
+            if disp_mapping:
+                disp_mapping.inputs[3].default_value[0] = size / 2
+                disp_mapping.inputs[3].default_value[1] = 0.5
+                disp_mapping.inputs[1].default_value[0] = 0.5 + (
+                    disp_mapping.inputs[3].default_value[0] / 2
+                )
+                disp_mapping.inputs[1].default_value[1] = 0.25
+
+                if disp_spec:
+                    disp_tex.image = disp_spec
+                else:
+                    disp_tex.image = img_spec
+
         elif bpy.context.window_manager.my_toolqt.activemap == 2:
 
             if rough_mapping:
@@ -10009,7 +11211,6 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
                 mask_tex.image = img_spec
 
         elif bpy.context.window_manager.my_toolqt.activemap == 5:
-
             if alpha_spec:
                 alpha_tex.image = alpha_spec
             else:
@@ -10023,6 +11224,18 @@ class QT_OT_replacemaps_qt(Operator, ImportHelper):
                 )
                 alpha_mapping.inputs[1].default_value[1] = 0.25
 
+        elif bpy.context.window_manager.my_toolqt.activemap == 0:
+            if disp_mapping:
+                disp_mapping.inputs[3].default_value[0] = size / 2
+                disp_mapping.inputs[3].default_value[1] = 0.5
+                disp_mapping.inputs[1].default_value[0] = 0.5 + (
+                    disp_mapping.inputs[3].default_value[0] / 2
+                )
+                disp_mapping.inputs[1].default_value[1] = 0.25
+                if disp_spec:
+                    disp_tex.image = disp_spec
+                else:
+                    disp_tex.image = img_spec
         return {"FINISHED"}
 
 
@@ -10125,11 +11338,36 @@ class QT_OT_copymats(Operator):
     bl_description = "Select target objects then select source"
     bl_options = {"PRESET", "UNDO"}
 
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        if obj:
+            mat = obj.active_material
+
+        if obj and mat:
+            if not mat.name.startswith("QT_Preview"):
+                return True
+
     def execute(self, context):
 
+        # convert to geo if curve
         sel = bpy.context.selected_objects
         ob = sel[-1]
         act = bpy.context.view_layer.objects.active
+
+        bpy.ops.object.select_all(action="DESELECT")
+        for ob in sel:
+            if ob.type == 'CURVE':
+                bpy.context.view_layer.objects.active = ob
+                bpy.data.objects[ob.name].select_set(True)
+                bpy.ops.object.convert(target="MESH")
+
+        for ob in sel:
+            bpy.context.view_layer.objects.active = ob
+            bpy.data.objects[ob.name].select_set(True)
+        sel = bpy.context.selected_objects
+
+        bpy.context.view_layer.objects.active = act
 
         bpy.ops.object.make_links_data(type="MATERIAL")
 
@@ -10417,6 +11655,16 @@ class QT_OT_makeunique(Operator):
     bl_description = "Make Unique"
     bl_options = {"PRESET", "UNDO"}
 
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        if obj:
+            mat = obj.active_material
+
+        if obj and mat:
+            if not mat.name.startswith("QT_Preview"):
+                return True
+
     def execute(self, context):
 
         sel = bpy.context.selected_objects
@@ -10452,7 +11700,13 @@ class QT_OT_makeunique(Operator):
                     out.inputs["Surface"], group_node.outputs[0]
                 )
 
+                if len(group_node.outputs) > 1:
+                    ob.active_material.node_tree.links.new(
+                        out.inputs["Displacement"], group_node.outputs[1]
+                    )
+
         return {"FINISHED"}
+
 
 
 class QT_OT_decal_qt(Operator, ImportHelper):
@@ -10559,22 +11813,34 @@ class QT_OT_decal_qt(Operator, ImportHelper):
                 - bpy.context.window_manager.my_toolqt.decal_raydir * pushback
             )
 
-            filepath = None
-            for mod in addon_utils.modules():
-                if mod.bl_info["name"] == "QuickTexture 2022":
-                    filepath = mod.__file__
+        # setup alpha border
+        colattr = ob.data.color_attributes.new(
+            name = 'QT_Decal_Alpha',
+            type = 'FLOAT_COLOR',
+            domain = 'POINT',
+        )
+        cols = []
+        for v_index in range(len(ob.data.vertices)):
+            cols += [0,0,0,1]
+        colattr.data.foreach_set("color", cols)
 
-            dirpath = os.path.dirname(filepath)
-            fullpath = os.path.join(dirpath, "QT_GeoNodes.blend")
+        filepath = None
+        for mod in addon_utils.modules():
+            if mod.bl_info["name"].startswith("QuickTexture"):
+                filepath = mod.__file__
+
+        dirpath = os.path.dirname(filepath)
+        fullpath = os.path.join(dirpath, "QT_Presets.blend")
+
+        if len(sel) > 0:
 
             with bpy.data.libraries.load(fullpath, link=False) as (data_from, data_to):
                 data_to.node_groups = [
-                    name for name in data_from.node_groups if name.startswith("Decal")
+                    name for name in data_from.node_groups if name.startswith("QT_Decal")
                 ]
 
             geomod = ob.modifiers.new(name="QT_Decal", type="NODES")
-
-            original_group = bpy.data.node_groups["Decal"]
+            original_group = bpy.data.node_groups["QT_Decal"]
             single_user_group = original_group.copy()
             geomod.node_group = single_user_group
 
@@ -10591,6 +11857,36 @@ class QT_OT_decal_qt(Operator, ImportHelper):
 
             geomod["Input_2"] = bpy.context.window_manager.my_toolqt.res
             geomod["Input_3"] = 0.01
+
+        with bpy.data.libraries.load(fullpath, link=False) as (data_from, data_to):
+            data_to.node_groups = [
+                name for name in data_from.node_groups if name.startswith("QT_AlphaBorder")
+            ]
+
+        mat = ob.data.materials[0]
+        for n in mat.node_tree.nodes:
+            if n.name.startswith("QT_Shader"):
+                node_tree = n.node_tree
+
+        for n in node_tree.nodes:
+            if n.name == "QT_Alpha_Clamp_1":
+                node_clamp = n
+            if n.name == "QT_Alpha_Bright_Contrast_1":
+                node_bright = n
+
+        original_group_alpha = bpy.data.node_groups["QT_AlphaBorder"]
+        alphaborder = original_group_alpha.copy()
+        alphaborder_node = node_tree.nodes.new(type="ShaderNodeGroup")
+        alphaborder_node.node_tree = bpy.data.node_groups[alphaborder.name]
+        alphaborder_node.location.x = node_clamp.location.x - 200
+        alphaborder_node.location.y = node_clamp.location.y
+        alphaborder_node.name = "QT_AlphaBorder_1"
+        node_tree.links.new(node_bright.outputs[0], alphaborder_node.inputs[0])
+        node_tree.links.new(alphaborder_node.outputs[0], node_clamp.inputs[0])
+
+        for n in alphaborder_node.node_tree.nodes:
+            if n.name == 'Color Attribute':
+                n.layer_name = "QT_Decal_Alpha"
 
         # parenting
         if len(sel) > 0:
@@ -10610,7 +11906,7 @@ class QT_OT_decal_qt(Operator, ImportHelper):
 
 
 class quickDecal(bpy.types.Operator):
-    """Operator which runs its self from a timer"""
+    """Project a QuickDecal on the selected object"""
 
     bl_idname = "object.quickdecal"
     bl_label = "QuickDecal"
@@ -10684,6 +11980,8 @@ class quickDecal(bpy.types.Operator):
         self.bump_tex = None
         self.bump_bright_contrast = None
         self.bump_bump = None
+        self.bump_strength = None
+        self.bump_layer = None
         self.bump_invert = None
         self.bump_hue_sat = None
         self.mask_tex = None
@@ -10823,6 +12121,11 @@ class bakeTextures(Operator):
     _render = None
     _samples = None
 
+    @classmethod
+    def poll(cls, context):
+        if not bpy.context.window_manager.my_toolqt.in_bake_preview:
+            return True
+
     def Bake(self, context):
         yield 1
 
@@ -10832,7 +12135,7 @@ class bakeTextures(Operator):
         if bpy.context.window_manager.my_toolqt.forceprocedural:
             if len(obj.data.uv_layers) > 0:
                 for layer in obj.data.uv_layers:
-                    if layer.name.startswith("SmartUVmap"):
+                    if layer.name.startswith("QT_SmartUVMap"):
                         uvmap = layer
 
         if obj and len(obj.data.materials) > 0:
@@ -10844,7 +12147,11 @@ class bakeTextures(Operator):
             maplist = ["DIFFUSE", "ROUGHNESS", "NORMAL"]
 
             for i in range(len(maplist)):
+                sel = bpy.context.selected_objects
+                if len(sel) > 1:
+                    bpy.context.scene.render.bake.use_selected_to_active = True
 
+                # prepare bake node
                 bake_spec = (
                     bpy.context.window_manager.my_toolqt.bakename
                     + "_"
@@ -10864,20 +12171,16 @@ class bakeTextures(Operator):
                 bake_node.select = True
                 node_tree.nodes.active = bake_node
                 bake_node.show_texture = True
-
                 if bpy.context.window_manager.my_toolqt.forceprocedural:
                     uv_node = node_tree.nodes.new("ShaderNodeUVMap")
                     uv_node.uv_map = uvmap.name
                     node_tree.links.new(uv_node.outputs[0], bake_node.inputs[0])
+                else:
+                    uv_node = None
 
-                if i == 0:
-                    bpy.context.scene.render.bake.use_pass_indirect = False
-                    bpy.context.scene.render.bake.use_pass_direct = False
-                elif i == 2:
-                    bake_node.image.colorspace_settings.name = "Non-Color"
-
+                # multi material
                 for x in range(len(obj.data.materials)):
-                    if x > 0:
+                    if x > 1:
                         img_node = obj.data.materials[x].node_tree.nodes.new(
                             "ShaderNodeTexImage"
                         )
@@ -10886,7 +12189,15 @@ class bakeTextures(Operator):
                         obj.data.materials[x].node_tree.nodes.active = img_node
                         img_node.show_texture = True
 
-                while bpy.ops.object.bake("INVOKE_DEFAULT", type=maplist[i]) != {
+                baketype = maplist[i]
+                if i == 0:
+                    bpy.context.scene.render.bake.use_pass_indirect = False
+                    bpy.context.scene.render.bake.use_pass_direct = False
+                elif i == 2:
+                    bake_node.image.colorspace_settings.name = "Non-Color"
+
+                # bake
+                while bpy.ops.object.bake("INVOKE_DEFAULT", type=baketype) != {
                     "RUNNING_MODAL"
                 }:
                     yield 1
@@ -10896,6 +12207,11 @@ class bakeTextures(Operator):
                 bake_image.save_render(filepath=bake_path)
 
                 bpy.data.images.remove(bake_image)
+
+                node_tree.nodes.remove(bake_node)
+
+                if uv_node:
+                    node_tree.nodes.remove(uv_node)
 
         yield 0
 
@@ -10926,7 +12242,7 @@ class bakeTextures(Operator):
                 if bpy.context.window_manager.my_toolqt.forceprocedural:
                     if len(obj.data.uv_layers) > 0:
                         for layer in obj.data.uv_layers:
-                            if layer.name.startswith("SmartUVmap"):
+                            if layer.name.startswith("QT_SmartUVMap"):
                                 obj.data.uv_layers[layer.name].active = True
                                 obj.data.uv_layers[layer.name].active_render = True
 
@@ -11028,7 +12344,7 @@ class bakeTextures(Operator):
 
                 if bpy.context.window_manager.my_toolqt.forceprocedural:
                     uv_node = node_tree.nodes.new("ShaderNodeUVMap")
-                    uv_node.uv_map = "SmartUVmap"
+                    uv_node.uv_map = "QT_SmartUVMap"
                     node_tree.links.new(uv_node.outputs[0], diffuse_tex.inputs[0])
                     node_tree.links.new(uv_node.outputs[0], rough_tex.inputs[0])
                     node_tree.links.new(uv_node.outputs[0], normal_tex.inputs[0])
@@ -11037,12 +12353,19 @@ class bakeTextures(Operator):
 
                 context.scene.render.engine = self._render
                 bpy.context.scene.cycles.samples = self._samples
+                bpy.context.window_manager.my_toolqt.forceprocedural = 0
 
                 return {"FINISHED"}
 
         return {"PASS_THROUGH"}
 
     def execute(self, context: bpy.context):
+
+        if bpy.data.is_saved:
+            abs_filepath = bpy.path.abspath('//')
+            if not os.path.isdir(str(abs_filepath+"textures")):
+                os.mkdir(str(abs_filepath+"textures"))
+
 
         if (
             not context.active_object.select_get()
@@ -11052,8 +12375,15 @@ class bakeTextures(Operator):
             return {"FINISHED"}
 
         if not len(str(bpy.context.window_manager.my_toolqt.bakepath)) > 0:
-            self.report({"WARNING"}, "No valid selected objects")
-            return {"FINISHED"}
+            if bpy.data.is_saved:
+                abs_filepath = bpy.path.abspath('//')
+                if not os.path.isdir(str(abs_filepath+"QT_Textures")):
+                    os.mkdir(str(abs_filepath+"QT_Textures"))
+                else:
+                    bpy.context.window_manager.my_toolqt.bakepath = str(abs_filepath+"QT_Textures")
+            else:
+                self.report({"WARNING"}, "No valid file path")
+                return {"FINISHED"}
 
         # unique mat first
         if bpy.context.window_manager.my_toolqt.save_original_mat:
@@ -11092,6 +12422,249 @@ class bakeTextures(Operator):
                         out.inputs["Surface"], group_node.outputs[0]
                     )
 
+        # store settings
+        self._samples = bpy.context.scene.cycles.samples
+        self._render = context.scene.render.engine
+
+        # settings
+        if context.scene.render.engine != "CYCLES":
+            context.scene.render.engine = "CYCLES"
+        bpy.context.scene.cycles.samples = bpy.context.window_manager.my_toolqt.samples
+
+        # prepare
+        bpy.ops.object.convert(target="MESH")
+
+        if bpy.context.window_manager.my_toolqt.forceprocedural:
+            bpy.context.active_object.data.uv_layers.new(name="QT_SmartUVMap")
+            bpy.context.object.data.uv_layers["QT_SmartUVMap"].active = True
+            bpy.context.object.data.uv_layers["QT_SmartUVMap"].active_render = True
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action="SELECT")
+            bpy.ops.uv.smart_project()
+            bpy.ops.object.editmode_toggle()
+
+        # modal
+        self.BakeCrt = self.Bake(context)
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(0.5, window=context.window)
+        wm.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+
+
+class previewTextures(Operator):
+    bl_idname = "wm.previewtextures"
+    bl_label = "Preview AO / Cavity Toggle"
+    bl_description = "Preview AO and Cavity Textures Toggle"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context: bpy.context):
+
+        if (
+            not context.active_object.select_get()
+            or not context.active_object.type == "MESH"
+        ):
+            self.report({"WARNING"}, "No valid selected objects")
+            return {"FINISHED"}
+
+        obj = context.active_object
+        mat = obj.active_material
+        create = 1
+
+        if mat:
+            if mat.name.startswith("QT_Preview"):
+                obj.active_material = bpy.context.window_manager.my_toolqt.preview_mat
+                if bpy.context.window_manager.my_toolqt.render_engine:
+                    context.scene.render.engine = "CYCLES"
+                else:
+                    context.scene.render.engine = "BLENDER_EEVEE"
+                    bpy.context.window_manager.my_toolqt.render_engine = 0
+                bpy.context.window_manager.my_toolqt.in_bake_preview = 0
+                create = 0
+            else:
+                create = 1
+        else:
+            create = 1
+
+        if create:
+            bpy.context.window_manager.my_toolqt.preview_mat = mat
+            bpy.context.window_manager.my_toolqt.in_bake_preview = 1
+
+            # import preview mat and set it
+            filepath = None
+            for mod in addon_utils.modules():
+                if mod.bl_info["name"].startswith("QuickTexture"):
+                    filepath = mod.__file__
+            dirpath = os.path.dirname(filepath)
+            fullpath = os.path.join(dirpath, "QT_Presets.blend")
+            with bpy.data.libraries.load(fullpath, link=False) as (
+                data_from,
+                data_to,
+            ):
+                data_to.materials = [
+                    name
+                    for name in data_from.materials
+                    if name.startswith("QT_Preview")
+                ]
+
+            preview_mat = bpy.data.materials["QT_Preview"]
+            obj.active_material = preview_mat
+
+            if context.scene.render.engine == "CYCLES":
+                bpy.context.window_manager.my_toolqt.render_engine = 1
+            else:
+                bpy.context.window_manager.my_toolqt.render_engine = 0
+
+            if context.scene.render.engine != "CYCLES":
+                context.scene.render.engine = "CYCLES"
+
+        return {"FINISHED"}
+
+
+class bakePreviewTextures(Operator):
+    bl_idname = "wm.bakepreviewtextures"
+    bl_label = "Bake AO / Cavity Textures"
+    bl_description = "Bake AO / Cavity Textures only"
+    bl_options = {"PRESET", "UNDO"}
+
+    _timer = None
+    _mat = None
+
+    _render = None
+    _samples = None
+
+    @classmethod
+    def poll(cls, context):
+        if bpy.context.window_manager.my_toolqt.in_bake_preview:
+            return True
+
+    def Bake(self, context):
+        yield 1
+
+        obj = context.active_object
+
+        uvmap = None
+        if len(obj.data.uv_layers) > 0:
+            for layer in obj.data.uv_layers:
+                uvmap = layer
+
+        if obj and len(obj.data.materials) > 0:
+            node_tree = None
+            self._mat = obj.active_material
+            nodes = self._mat.node_tree.nodes
+            node_tree = self._mat.node_tree
+            maplist = ["AO", "CAVITY"]
+
+            for i in range(len(maplist)):
+
+                bake_spec = (
+                    bpy.context.window_manager.my_toolqt.bakename
+                    + "_"
+                    + maplist[i]
+                    + ".png"
+                )
+                bake_spec = "QT_" + obj.name + "_" + maplist[i] + ".png"
+                bake_path = os.path.join(
+                    bpy.context.window_manager.my_toolqt.bakepath, bake_spec
+                )
+                bake_node = node_tree.nodes.new("ShaderNodeTexImage")
+                bake_image = bpy.data.images.new(
+                    bake_spec,
+                    bpy.context.window_manager.my_toolqt.bakeres,
+                    bpy.context.window_manager.my_toolqt.bakeres,
+                )
+                bake_node.image = bake_image
+                bake_node.select = True
+                node_tree.nodes.active = bake_node
+                bake_node.show_texture = True
+
+                uv_node = node_tree.nodes.new("ShaderNodeUVMap")
+                uv_node.uv_map = uvmap.name
+                node_tree.links.new(uv_node.outputs[0], bake_node.inputs[0])
+
+                for n in node_tree.nodes:
+                    if n.name == "Shader_Cavity":
+                        cav = n
+                    if n.name == "Shader_AO":
+                        ao = n
+                    if n.name == "Material Output":
+                        out = n
+                    if n.name == "Vector Math":
+                        combined = n
+
+                if i == 0:
+                    node_tree.links.new(ao.outputs[0], out.inputs[0])
+                else:
+                    node_tree.links.new(cav.outputs[0], out.inputs[0])
+
+                node_tree.links.new(uv_node.outputs[0], bake_node.inputs[0])
+
+                while bpy.ops.object.bake("INVOKE_DEFAULT", type='EMIT') != {
+                    "RUNNING_MODAL"
+                }:
+                    yield 1
+                while not bake_image.is_dirty:
+                    yield 1
+
+                bake_image.save_render(filepath=bake_path)
+
+                bpy.data.images.remove(bake_image)
+
+                node_tree.links.new(combined.outputs[0], out.inputs[0])
+                node_tree.nodes.remove(bake_node)
+                node_tree.nodes.remove(uv_node)
+
+        yield 0
+
+    def modal(self, context, event):
+
+        if event.type in {"RIGHTMOUSE", "ESC"}:
+            self.report({"INFO"}, "Baking map cancelled")
+            return {"CANCELLED"}
+
+        if event.type == "TIMER":
+
+            result = next(self.BakeCrt)
+
+            if result == -1:
+                self.report({"INFO"}, "Baking map cancelled")
+                return {"CANCELLED"}
+
+            if result == 0:
+                # finish
+                wm = context.window_manager
+                wm.event_timer_remove(self._timer)
+                self.report({"INFO"}, "Baking map completed")
+                bpy.context.window_manager.my_toolqt.in_bake_preview = 0
+
+                context.active_object.active_material = bpy.context.window_manager.my_toolqt.preview_mat
+                if bpy.context.window_manager.my_toolqt.render_engine:
+                    context.scene.render.engine = "CYCLES"
+                    context.scene.render.engine = self._render
+                    bpy.context.scene.cycles.samples = self._samples
+                else:
+                    context.scene.render.engine = "BLENDER_EEVEE"
+                    bpy.context.window_manager.my_toolqt.render_engine = 0
+
+                return {"FINISHED"}
+
+        return {"PASS_THROUGH"}
+
+    def execute(self, context: bpy.context):
+
+        if not len(str(bpy.context.window_manager.my_toolqt.bakepath)) > 0:
+            if bpy.data.is_saved:
+                abs_filepath = bpy.path.abspath('//')
+                if not os.path.isdir(str(abs_filepath+"QT_Textures")):
+                    os.mkdir(str(abs_filepath+"QT_Textures"))
+                else:
+                    bpy.context.window_manager.my_toolqt.bakepath = str(abs_filepath+"QT_Textures")
+            else:
+                self.report({"WARNING"}, "No valid file path")
+                return {"FINISHED"}
+
+
+        bpy.context.window_manager.my_toolqt.forceprocedural = 0
+
         # only works on active object
         obj = context.active_object
         bpy.ops.object.select_all(action="DESELECT")
@@ -11107,17 +12680,26 @@ class bakeTextures(Operator):
             context.scene.render.engine = "CYCLES"
         bpy.context.scene.cycles.samples = bpy.context.window_manager.my_toolqt.samples
 
-        # prepare
-        bpy.ops.object.convert(target="MESH")
+        uv = 0
+        uvmap = None
+        if len(obj.data.uv_layers) > 0:
+            uvs = [
+                u
+                for u in obj.data.uv_layers
+                if u != obj.data.uv_layers
+            ]
+            while uvs:
+                obj.data.uv_layers.remove(uvs.pop())
 
-        if bpy.context.window_manager.my_toolqt.forceprocedural:
-            bpy.context.active_object.data.uv_layers.new(name="SmartUVmap")
-            bpy.context.object.data.uv_layers["SmartUVmap"].active = True
-            bpy.context.object.data.uv_layers["SmartUVmap"].active_render = True
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.mesh.select_all(action="SELECT")
-            bpy.ops.uv.smart_project()
-            bpy.ops.object.editmode_toggle()
+        bpy.context.active_object.data.uv_layers.new(name="QT_SmartUVMap")
+        bpy.context.object.data.uv_layers["QT_SmartUVMap"].active = True
+        bpy.context.object.data.uv_layers["QT_SmartUVMap"].active_render = True
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project()
+        bpy.ops.object.editmode_toggle()
+
+        bpy.ops.object.convert(target='MESH')
 
         # modal
         self.BakeCrt = self.Bake(context)
@@ -11125,3 +12707,91 @@ class bakeTextures(Operator):
         self._timer = wm.event_timer_add(0.5, window=context.window)
         wm.modal_handler_add(self)
         return {"RUNNING_MODAL"}
+
+
+class quicktexture_uv(Operator):
+    bl_idname = "object.quicktextureuv"
+    bl_label = "QuickTexture (UV)"
+    bl_description = "QuickTexture Use UV's"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.context.window_manager.my_toolqt.forceprocedural = 0
+        bpy.ops.object.quicktexture("INVOKE_DEFAULT")
+
+        return {"FINISHED"}
+
+
+class quicktexture_view(Operator):
+    bl_idname = "object.quicktextureview"
+    bl_label = "QuickTexture Procedural (View)"
+    bl_description = "QuickTexture Procedural From View"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.context.window_manager.my_toolqt.forceprocedural = 1
+        bpy.context.window_manager.my_toolqt.mode = "view"
+        bpy.ops.object.quicktexture("INVOKE_DEFAULT")
+
+        return {"FINISHED"}
+
+
+class quicktexture_box(Operator):
+    bl_idname = "object.quicktexturebox"
+    bl_label = "QuickTexture Procedural (Box)"
+    bl_description = "QuickTexture Procedural Box"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.context.window_manager.my_toolqt.forceprocedural = 1
+        bpy.context.window_manager.my_toolqt.mode = "box"
+        bpy.ops.object.quicktexture("INVOKE_DEFAULT")
+
+        return {"FINISHED"}
+
+
+class photomodelingplane(Operator):
+    bl_idname = "object.photomodelingplane"
+    bl_label = "Photomodeling Plane"
+    bl_description = "Make a Photomodeling Plane"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.context.window_manager.my_toolqt.forceprocedural = 1
+        bpy.context.window_manager.my_toolqt.mode = "view"
+        bpy.ops.object.quicktexture("INVOKE_DEFAULT")
+
+        return {"FINISHED"}
+
+
+class photomodelingbox(Operator):
+    bl_idname = "object.photomodelingbox"
+    bl_label = "Photomodeling Box"
+    bl_description = "Make a Photomodeling Box"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.ops.object.select_all(action="DESELECT")
+        bpy.context.window_manager.my_toolqt.forceprocedural = 1
+        bpy.context.window_manager.my_toolqt.mode = "box"
+        bpy.ops.object.quicktexture("INVOKE_DEFAULT")
+
+        return {"FINISHED"}
+
+
+class photomodelingapply(Operator):
+    bl_idname = "object.photomodelingapply"
+    bl_label = "Freeze Photomodel"
+    bl_description = "Freeze Photomodel"
+    bl_options = {"PRESET", "UNDO"}
+
+    def execute(self, context):
+
+        bpy.ops.object.convert(target='MESH')
+        return {"FINISHED"}

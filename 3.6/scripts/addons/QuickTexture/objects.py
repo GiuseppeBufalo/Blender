@@ -130,6 +130,7 @@ def create_material(
     normal_spec = None
     ao_spec = None
     alpha_spec = None
+    disp_spec = None
 
     if len(files) > 1:
         for f in files:
@@ -224,6 +225,22 @@ def create_material(
                 img_path = os.path.join(dirname, f.name)
                 bpy.ops.image.open(filepath=img_path)
                 ao_spec = bpy.data.images[f.name]
+            if "displacement" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "disp" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "dis" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "height" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
 
     width, height = img_spec.size
     if width == 0:
@@ -239,6 +256,9 @@ def create_material(
 
     groupname = "QT_Shader_" + img_spec.name
     grp = bpy.data.node_groups.new(groupname, "ShaderNodeTree")
+    grp.inputs.new("NodeSocketShader", "Input")
+    grp.outputs.new("NodeSocketShader", "Output")
+    grp.outputs.new("NodeSocketVector", "Output")
     group_node = material.node_tree.nodes.new("ShaderNodeGroup")
     group_node.node_tree = bpy.data.node_groups[grp.name]
     group_node.name = groupname
@@ -301,8 +321,11 @@ def create_material(
         bump_mapping.name = "QT_Bump_Mapping_1"
         alpha_mapping.name = "QT_Alpha_Mapping_1"
 
-        if decal:
+        if disp_spec:
+            disp_mapping = node_tree.nodes.new("ShaderNodeMapping")
+            disp_mapping.name = "QT_Displacement_Mapping_1"
 
+        if decal:
             coord = node_tree.nodes.new("ShaderNodeAttribute")
             coord.name = "QT_UV_Layer_1"
             coord.label = "UV"
@@ -326,6 +349,9 @@ def create_material(
                     node_tree.links.new(coord.outputs[0], bump_mapping.inputs[0])
                     node_tree.links.new(coord.outputs[0], alpha_mapping.inputs[0])
 
+                    if disp_spec:
+                        node_tree.links.new(coord.outputs[0], disp_mapping.inputs[0])
+
                 else:
                     coord = node_tree.nodes.new("ShaderNodeUVMap")
                     coord.name = "QT_UV_Layer_1"
@@ -337,6 +363,9 @@ def create_material(
                     node_tree.links.new(coord.outputs[0], bump_mapping.inputs[0])
                     node_tree.links.new(coord.outputs[0], alpha_mapping.inputs[0])
 
+                    if disp_spec:
+                        node_tree.links.new(coord.outputs[0], disp_mapping.inputs[0])
+
             else:
                 coord = node_tree.nodes.new("ShaderNodeTexCoord")
                 coord.name = "QT_UV_Layer_1"
@@ -347,10 +376,15 @@ def create_material(
                 node_tree.links.new(coord.outputs[2], bump_mapping.inputs[0])
                 node_tree.links.new(coord.outputs[2], alpha_mapping.inputs[0])
 
+                if disp_spec:
+                    node_tree.links.new(coord.outputs[2], disp_mapping.inputs[0])
+
             diffuse_mapping.vector_type = "TEXTURE"
             rough_mapping.vector_type = "TEXTURE"
             bump_mapping.vector_type = "TEXTURE"
             alpha_mapping.vector_type = "TEXTURE"
+            if disp_spec:
+                disp_mapping.vector_type = "TEXTURE"
 
             test = context.active_object
 
@@ -360,6 +394,8 @@ def create_material(
                 bump_mapping.inputs[3].default_value[1] = 1 / size
                 alpha_mapping.inputs[3].default_value[1] = 1 / size
 
+                if disp_spec:
+                    disp_mapping.inputs[3].default_value[1] = 1 / size
             else:
 
                 diff = test.scale[1] - test.scale[0]
@@ -383,6 +419,12 @@ def create_material(
                 rough_mapping.inputs[3].default_value[1] = test.scale[1]
                 bump_mapping.inputs[3].default_value[1] = test.scale[1]
                 alpha_mapping.inputs[3].default_value[1] = test.scale[1]
+
+                if disp_spec:
+                    disp_mapping.inputs[1].default_value[0] = test.scale[0] / 2 + diff
+                    disp_mapping.inputs[1].default_value[1] = 0.25
+                    disp_mapping.inputs[3].default_value[0] = test.scale[0]
+                    disp_mapping.inputs[3].default_value[1] = test.scale[1]
 
         # diffuse
         diffuse_tex = node_tree.nodes.new("ShaderNodeTexImage")
@@ -448,17 +490,21 @@ def create_material(
 
         bump_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
         bump_bump = node_tree.nodes.new("ShaderNodeBump")
-        bump_bump.inputs[0].default_value = 0.1
+        bump_bump.inputs[0].default_value = 1
         bump_invert = node_tree.nodes.new("ShaderNodeInvert")
         bump_invert.inputs[0].default_value = 0
         bump_hue_sat = node_tree.nodes.new("ShaderNodeHueSaturation")
         bump_hue_sat.inputs[1].default_value = 0
+        bump_strength = node_tree.nodes.new("ShaderNodeMath")
 
         bump_tex.name = "QT_Bump_Tex_1"
         bump_bright_contrast.name = "QT_Bump_Bright_Contrast_1"
         bump_bump.name = "QT_Bump_Bump_1"
         bump_invert.name = "QT_Bump_Invert_1"
         bump_hue_sat.name = "QT_Bump_Hue_Sat_1"
+        bump_strength.name = "QT_Bump_Strength_1"
+        bump_strength.operation = "MULTIPLY"
+        bump_strength.inputs[1].default_value = 0.01
 
         node_tree.links.new(bump_tex.outputs[0], bump_hue_sat.inputs[4])
         node_tree.links.new(bump_hue_sat.outputs[0], bump_invert.inputs[1])
@@ -469,7 +515,8 @@ def create_material(
         bump_clamp.name = "QT_Bump_Clamp_1"
 
         node_tree.links.new(bump_bright_contrast.outputs[0], bump_clamp.inputs[0])
-        node_tree.links.new(bump_clamp.outputs[0], bump_bump.inputs[2])
+        node_tree.links.new(bump_clamp.outputs[0], bump_strength.inputs[0])
+        node_tree.links.new(bump_strength.outputs[0], bump_bump.inputs[2])
 
         node_tree.links.new(bump_mapping.outputs[0], bump_tex.inputs[0])
         node_tree.links.new(bump_bump.outputs[0], core_shader.inputs[22])
@@ -583,6 +630,23 @@ def create_material(
                     if not proc_uv:
                         node_tree.links.new(coord.outputs[2], smudge.inputs[0])
 
+        # displacement
+        if disp_spec:
+            disp_tex = node_tree.nodes.new("ShaderNodeTexImage")
+            disp_vec = node_tree.nodes.new("ShaderNodeDisplacement")
+            disp_tex.image = disp_spec
+            disp_tex.image.colorspace_settings.name = "Non-Color"
+            disp_tex.show_texture = True
+
+            disp_tex.name = "QT_Disp_Tex_1"
+            disp_vec.name = "QT_Disp_Vec_1"
+
+            node_tree.links.new(disp_mapping.outputs[0], disp_tex.inputs[0])
+            node_tree.links.new(disp_tex.outputs[0], disp_vec.inputs[0])
+            node_tree.links.new(disp_vec.outputs[0], out_node.inputs[1])
+
+            material.node_tree.links.new(group_node.outputs[1], out_material.inputs[2])
+
         # align
         auto_align_nodes(node_tree)
 
@@ -592,6 +656,15 @@ def create_material(
 
             if n.name.startswith("QT_AO_Tex"):
                 n.location.y += 150
+
+            if n.name.startswith("QT_Disp_Vec"):
+                n.location.x += 150
+
+    render = context.scene.render.engine
+    if render != "CYCLES":
+        context.scene.render.engine = "CYCLES"
+    material.cycles.displacement_method = 'BOTH'
+    context.scene.render.engine = render
 
     return material
 
@@ -605,6 +678,7 @@ def box_layer(
     normal_spec = None
     ao_spec = None
     alpha_spec = None
+    disp_spec = None
 
     if len(files) > 1:
         for f in files:
@@ -700,6 +774,22 @@ def box_layer(
                 img_path = os.path.join(dirname, f.name)
                 bpy.ops.image.open(filepath=img_path)
                 ao_spec = bpy.data.images[f.name]
+            if "displacement" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "disp" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "dis" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "height" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
 
     width, height = img_spec.size
     size = width / height
@@ -793,8 +883,11 @@ def box_layer(
         if n.name.startswith("QT_Layer_" + str(activelayer - 1)):
             prev_shader = n
 
-        if n.name.startswith("QT_Layer_" + str(activelayer)):
-            next_shader = n
+        if n.name.startswith("QT_Disp_Vec_" + str(activelayer - 1)):
+            prev_disp_layer = n
+
+        if n.name.startswith("QT_Disp_Layer_" + str(activelayer - 1)):
+            prev_disp_layer = n
 
     new_shader = node_tree.nodes.new("ShaderNodeBsdfPrincipled")
     new_shader.name = "QT_Shader_" + str(activelayer)
@@ -853,6 +946,16 @@ def box_layer(
     rough_mapping.vector_type = "TEXTURE"
     bump_mapping.vector_type = "TEXTURE"
     alpha_mapping.vector_type = "TEXTURE"
+
+    if disp_spec:
+        disp_mapping = node_tree.nodes.new("ShaderNodeMapping")
+        disp_mapping.name = "QT_Displacement_Mapping_" + str(activelayer)
+        disp_mapping.vector_type = "TEXTURE"
+        disp_mapping.inputs[3].default_value[0] = size / 2
+        disp_mapping.inputs[3].default_value[1] = 0.5
+        disp_mapping.inputs[1].default_value[0] = 0.5 + (
+            disp_mapping.inputs[3].default_value[0] / 2
+        )
 
     # diffuse
     diffuse_tex = node_tree.nodes.new("ShaderNodeTexImage")
@@ -916,17 +1019,21 @@ def box_layer(
 
     bump_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
     bump_bump = node_tree.nodes.new("ShaderNodeBump")
-    bump_bump.inputs[0].default_value = 0.1
+    bump_bump.inputs[0].default_value = 1
     bump_invert = node_tree.nodes.new("ShaderNodeInvert")
     bump_invert.inputs[0].default_value = 0
     bump_hue_sat = node_tree.nodes.new("ShaderNodeHueSaturation")
     bump_hue_sat.inputs[1].default_value = 0
+    bump_strength = node_tree.nodes.new("ShaderNodeMath")
 
     bump_tex.name = "QT_Bump_Tex_" + str(activelayer)
     bump_bright_contrast.name = "QT_Bump_Bright_Contrast_" + str(activelayer)
     bump_bump.name = "QT_Bump_Bump_" + str(activelayer)
     bump_invert.name = "QT_Bump_Invert_" + str(activelayer)
     bump_hue_sat.name = "QT_Bump_Hue_Sat_" + str(activelayer)
+    bump_strength.name = "QT_Bump_Strength_" + str(activelayer)
+    bump_strength.operation = "MULTIPLY"
+    bump_strength.inputs[1].default_value = 0.01
 
     node_tree.links.new(bump_tex.outputs[0], bump_hue_sat.inputs[4])
     node_tree.links.new(bump_hue_sat.outputs[0], bump_invert.inputs[1])
@@ -937,7 +1044,8 @@ def box_layer(
     bump_clamp.name = "QT_Bump_Clamp_" + str(activelayer)
 
     node_tree.links.new(bump_bright_contrast.outputs[0], bump_clamp.inputs[0])
-    node_tree.links.new(bump_clamp.outputs[0], bump_bump.inputs[2])
+    node_tree.links.new(bump_clamp.outputs[0], bump_strength.inputs[0])
+    node_tree.links.new(bump_strength.outputs[0], bump_bump.inputs[2])
 
     node_tree.links.new(bump_mapping.outputs[0], bump_tex.inputs[0])
     node_tree.links.new(bump_bump.outputs[0], new_shader.inputs[22])
@@ -1029,12 +1137,40 @@ def box_layer(
                 node_tree.links.new(coord.outputs[0], smudge.inputs[0])
                 node_tree.links.new(smudge.outputs[0], n.inputs[0])
 
+    # displacement
+    if disp_spec:
+        disp_tex = node_tree.nodes.new("ShaderNodeTexImage")
+        disp_vec = node_tree.nodes.new("ShaderNodeDisplacement")
+        disp_tex.image = disp_spec
+        disp_tex.image.colorspace_settings.name = "Non-Color"
+        disp_tex.show_texture = True
+
+        disp_tex.name = "QT_Disp_Tex_" + str(activelayer)
+        disp_vec.name = "QT_Disp_Vec_" + str(activelayer)
+
+        node_tree.links.new(disp_mapping.outputs[0], disp_tex.inputs[0])
+        node_tree.links.new(disp_tex.outputs[0], disp_vec.inputs[0])
+        node_tree.links.new(disp_vec.outputs[0], out_node.inputs[1])
+
+        disp_layer = node_tree.nodes.new("ShaderNodeMix")
+        disp_layer.name = "QT_Disp_Layer_" + str(activelayer)
+        disp_layer.data_type = "VECTOR"
+        disp_layer.inputs[0].default_value = 0.5
+
+        node_tree.links.new(prev_disp_layer.outputs[0], disp_layer.inputs[4])
+        node_tree.links.new(disp_vec.outputs[0], disp_layer.inputs[5])
+        node_tree.links.new(disp_layer.outputs[1], out_node.inputs[1])
+
     # triplanar
     if bpy.context.window_manager.my_toolqt.triplanar:
         diffuse_tex.projection = "BOX"
         diffuse_tex.projection_blend = 0.3
         rough_tex.projection = "BOX"
         rough_tex.projection_blend = 0.3
+
+        if disp_spec:
+            diffuse_tex.projection = "BOX"
+            diffuse_tex.projection_blend = 0.3
 
         t_name = coord.name
         t_label = coord.label
@@ -1058,10 +1194,14 @@ def box_layer(
         if ao_spec:
             ao_tex.projection = "BOX"
             ao_tex.projection_blend = 0.3
-        if alpha_tex:
+        if alpha_spec:
             alpha_tex.projection = "BOX"
             alpha_tex.projection_blend = 0.3
             node_tree.links.new(coord2.outputs[0], alpha_mapping.inputs[0])
+        if disp_spec:
+            disp_tex.projection = "BOX"
+            disp_tex.projection_blend = 0.3
+            node_tree.links.new(coord2.outputs[0], disp_mapping.inputs[0])
 
     # align
     auto_align_nodes(node_tree)
@@ -1135,6 +1275,9 @@ def box_layer(
         if n.name.startswith("QT_AO_Tex") and n.name.endswith(str(activelayer)):
             n.location.y += 150
 
+        if n.name.startswith("QT_Disp_Vec"):
+            n.location.x += 150
+
 
 def view_layer(
     self, context, img_spec, material, activelayer, files, dirname, decal, selected
@@ -1145,6 +1288,7 @@ def view_layer(
     normal_spec = None
     ao_spec = None
     alpha_spec = None
+    disp_spec = None
 
     if len(files) > 1:
         for f in files:
@@ -1240,6 +1384,22 @@ def view_layer(
                 img_path = os.path.join(dirname, f.name)
                 bpy.ops.image.open(filepath=img_path)
                 ao_spec = bpy.data.images[f.name]
+            if "displacement" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "disp" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "dis" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
+            if "height" in str(f.name).lower():
+                img_path = os.path.join(dirname, f.name)
+                bpy.ops.image.open(filepath=img_path)
+                disp_spec = bpy.data.images[f.name]
 
     width, height = img_spec.size
     size = width / height
@@ -1362,6 +1522,12 @@ def view_layer(
         if n.name.startswith("QT_Layer_" + str(activelayer - 1)):
             prev_shader = n
 
+        if n.name.startswith("QT_Disp_Vec_" + str(activelayer - 1)):
+            prev_disp_layer = n
+
+        if n.name.startswith("QT_Disp_Layer_" + str(activelayer - 1)):
+            prev_disp_layer = n
+
     new_shader = node_tree.nodes.new("ShaderNodeBsdfPrincipled")
     new_shader.name = "QT_Shader_" + str(activelayer)
     new_shader.label = "QT_Layer_" + str(activelayer) + "_" + img_spec.name
@@ -1415,6 +1581,15 @@ def view_layer(
         alpha_mapping.inputs[3].default_value[1] = 0.5
         alpha_mapping.inputs[1].default_value[0] = 0.25
         alpha_mapping.inputs[1].default_value[1] = 0.25
+
+    if disp_spec:
+        disp_mapping = node_tree.nodes.new("ShaderNodeMapping")
+        disp_mapping.name = "QT_Displacement_Mapping_" + str(activelayer)
+        disp_mapping.vector_type = "TEXTURE"
+        disp_mapping.inputs[3].default_value[0] = size / 2
+        disp_mapping.inputs[3].default_value[1] = 0.5
+        disp_mapping.inputs[1].default_value[0] = 0.25
+        disp_mapping.inputs[1].default_value[1] = 0.25
 
     # diffuse
     diffuse_tex = node_tree.nodes.new("ShaderNodeTexImage")
@@ -1478,17 +1653,21 @@ def view_layer(
 
     bump_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
     bump_bump = node_tree.nodes.new("ShaderNodeBump")
-    bump_bump.inputs[0].default_value = 0.1
+    bump_bump.inputs[0].default_value = 1
     bump_invert = node_tree.nodes.new("ShaderNodeInvert")
     bump_invert.inputs[0].default_value = 0
     bump_hue_sat = node_tree.nodes.new("ShaderNodeHueSaturation")
     bump_hue_sat.inputs[1].default_value = 0
+    bump_strength = node_tree.nodes.new("ShaderNodeMath")
 
     bump_tex.name = "QT_Bump_Tex_" + str(activelayer)
     bump_bright_contrast.name = "QT_Bump_Bright_Contrast_" + str(activelayer)
     bump_bump.name = "QT_Bump_Bump_" + str(activelayer)
     bump_invert.name = "QT_Bump_Invert_" + str(activelayer)
     bump_hue_sat.name = "QT_Bump_Hue_Sat_" + str(activelayer)
+    bump_strength.name = "QT_Bump_Strength_" + str(activelayer)
+    bump_strength.operation = "MULTIPLY"
+    bump_strength.inputs[1].default_value = 0.01
 
     node_tree.links.new(bump_tex.outputs[0], bump_hue_sat.inputs[4])
     node_tree.links.new(bump_hue_sat.outputs[0], bump_invert.inputs[1])
@@ -1499,7 +1678,8 @@ def view_layer(
     bump_clamp.name = "QT_Bump_Clamp_" + str(activelayer)
 
     node_tree.links.new(bump_bright_contrast.outputs[0], bump_clamp.inputs[0])
-    node_tree.links.new(bump_clamp.outputs[0], bump_bump.inputs[2])
+    node_tree.links.new(bump_clamp.outputs[0], bump_strength.inputs[0])
+    node_tree.links.new(bump_strength.outputs[0], bump_bump.inputs[2])
 
     node_tree.links.new(bump_mapping.outputs[0], bump_tex.inputs[0])
     node_tree.links.new(bump_bump.outputs[0], new_shader.inputs[22])
@@ -1601,6 +1781,30 @@ def view_layer(
                 node_tree.links.new(coord.outputs[0], smudge.inputs[0])
                 node_tree.links.new(smudge.outputs[0], n.inputs[0])
 
+    # displacement
+    if disp_spec:
+        disp_tex = node_tree.nodes.new("ShaderNodeTexImage")
+        disp_vec = node_tree.nodes.new("ShaderNodeDisplacement")
+        disp_tex.image = disp_spec
+        disp_tex.image.colorspace_settings.name = "Non-Color"
+        disp_tex.show_texture = True
+
+        disp_tex.name = "QT_Disp_Tex_" + str(activelayer)
+        disp_vec.name = "QT_Disp_Vec_" + str(activelayer)
+
+        node_tree.links.new(disp_mapping.outputs[0], disp_tex.inputs[0])
+        node_tree.links.new(disp_tex.outputs[0], disp_vec.inputs[0])
+        node_tree.links.new(disp_vec.outputs[0], out_node.inputs[1])
+
+        disp_layer = node_tree.nodes.new("ShaderNodeMix")
+        disp_layer.name = "QT_Disp_Layer_" + str(activelayer)
+        disp_layer.data_type = "VECTOR"
+        disp_layer.inputs[0].default_value = 0.5
+
+        node_tree.links.new(prev_disp_layer.outputs[0], disp_layer.inputs[4])
+        node_tree.links.new(disp_vec.outputs[0], disp_layer.inputs[5])
+        node_tree.links.new(disp_layer.outputs[1], out_node.inputs[1])
+
     # align
     auto_align_nodes(node_tree)
 
@@ -1677,9 +1881,12 @@ def view_layer(
         if n.name.startswith("QT_AO_Tex") and n.name.endswith(str(activelayer)):
             n.location.y += 150
 
+        if n.name.startswith("QT_Disp_Vec"):
+            n.location.x += 150
+
 
 def remake_material(
-    ob, material, albedo_spec, roughness_spec, normal_spec, alpha_spec, ao_spec
+    ob, material, albedo_spec, roughness_spec, normal_spec, alpha_spec, ao_spec, disp_spec
 ):
 
     # material settings
@@ -1695,6 +1902,9 @@ def remake_material(
 
     groupname = "QT_Shader_" + albedo_spec.name
     grp = bpy.data.node_groups.new(groupname, "ShaderNodeTree")
+    grp.inputs.new("NodeSocketShader", "Input")
+    grp.outputs.new("NodeSocketShader", "Output")
+    grp.outputs.new("NodeSocketVector", "Output")
     group_node = material.node_tree.nodes.new("ShaderNodeGroup")
     group_node.node_tree = bpy.data.node_groups[grp.name]
     group_node.name = groupname
@@ -1730,6 +1940,10 @@ def remake_material(
     bump_mapping.name = "QT_Bump_Mapping_1"
     alpha_mapping.name = "QT_Alpha_Mapping_1"
 
+    if disp_spec:
+        disp_mapping = node_tree.nodes.new("ShaderNodeMapping")
+        disp_mapping.name = "QT_Displacement_Mapping_1"
+
     coord = node_tree.nodes.new("ShaderNodeTexCoord")
     coord.name = "QT_UV_Layer_1"
     coord.label = "UV"
@@ -1743,6 +1957,8 @@ def remake_material(
     rough_mapping.vector_type = "TEXTURE"
     bump_mapping.vector_type = "TEXTURE"
     alpha_mapping.vector_type = "TEXTURE"
+    if disp_spec:
+        disp_mapping.vector_type = "TEXTURE"
 
     # diffuse
     diffuse_tex = node_tree.nodes.new("ShaderNodeTexImage")
@@ -1800,17 +2016,21 @@ def remake_material(
 
     bump_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
     bump_bump = node_tree.nodes.new("ShaderNodeBump")
-    bump_bump.inputs[0].default_value = 0.1
+    bump_bump.inputs[0].default_value = 1
     bump_invert = node_tree.nodes.new("ShaderNodeInvert")
     bump_invert.inputs[0].default_value = 0
     bump_hue_sat = node_tree.nodes.new("ShaderNodeHueSaturation")
     bump_hue_sat.inputs[1].default_value = 0
+    bump_strength = node_tree.nodes.new("ShaderNodeMath")
 
     bump_tex.name = "QT_Bump_Tex_1"
     bump_bright_contrast.name = "QT_Bump_Bright_Contrast_1"
     bump_bump.name = "QT_Bump_Bump_1"
     bump_invert.name = "QT_Bump_Invert_1"
     bump_hue_sat.name = "QT_Bump_Hue_Sat_1"
+    bump_strength.name = "QT_Bump_Strength_1"
+    bump_strength.operation = "MULTIPLY"
+    bump_strength.inputs[1].default_value = 0.01
 
     node_tree.links.new(bump_tex.outputs[0], bump_hue_sat.inputs[4])
     node_tree.links.new(bump_hue_sat.outputs[0], bump_invert.inputs[1])
@@ -1821,7 +2041,8 @@ def remake_material(
     bump_clamp.name = "QT_Bump_Clamp_1"
 
     node_tree.links.new(bump_bright_contrast.outputs[0], bump_clamp.inputs[0])
-    node_tree.links.new(bump_clamp.outputs[0], bump_bump.inputs[2])
+    node_tree.links.new(bump_clamp.outputs[0], bump_strength.inputs[0])
+    node_tree.links.new(bump_strength.outputs[0], bump_bump.inputs[2])
 
     node_tree.links.new(bump_mapping.outputs[0], bump_tex.inputs[0])
     node_tree.links.new(bump_bump.outputs[0], core_shader.inputs[22])
@@ -1903,6 +2124,24 @@ def remake_material(
             node_tree.links.new(coord.outputs[2], smudge.inputs[0])
             node_tree.links.new(smudge.outputs[0], n.inputs[0])
 
+    # displacement
+    if disp_spec:
+        disp_tex = node_tree.nodes.new("ShaderNodeTexImage")
+        disp_vec = node_tree.nodes.new("ShaderNodeDisplacement")
+        disp_tex.image = disp_spec
+        disp_tex.image.colorspace_settings.name = "Non-Color"
+        disp_tex.show_texture = True
+
+        disp_tex.name = "QT_Disp_Tex_1"
+        disp_vec.name = "QT_Disp_Vec_1"
+
+        node_tree.links.new(coord.outputs[2], disp_mapping.inputs[0])
+        node_tree.links.new(disp_mapping.outputs[0], disp_tex.inputs[0])
+        node_tree.links.new(disp_tex.outputs[0], disp_vec.inputs[0])
+        node_tree.links.new(disp_vec.outputs[0], out_node.inputs[1])
+
+        material.node_tree.links.new(group_node.outputs[1], out_material.inputs[2])
+
     # align
     auto_align_nodes(node_tree)
 
@@ -1944,6 +2183,15 @@ def texture_mask(self, context, img_spec, material, activelayer, proc_uv):
 
         if n.name.startswith("QT_UV_Layer_" + str(activelayer)):
             coord = n
+
+        if n.name.startswith("QT_Bump_Clamp_" + str(activelayer)):
+            layer_clamp = n
+
+        if n.name.startswith("QT_Bump_Strength_" + str(activelayer)):
+            layer_strength = n
+
+        if n.name.startswith("QT_Bump_Bump_" + str(activelayer)):
+            layer_bump = n
 
     # mapping
     mask_mapping = node_tree.nodes.new("ShaderNodeMapping")
@@ -1990,9 +2238,20 @@ def texture_mask(self, context, img_spec, material, activelayer, proc_uv):
     mask_clamp.name = "QT_Clamp_Mask_" + str(activelayer)
 
     node_tree.links.new(out_node.inputs[0], mask_clamp.outputs[0])
-
     node_tree.links.new(mask_bright_contrast.outputs[0], mask_clamp.inputs[0])
     node_tree.links.new(mask_clamp.outputs[0], blend_node.inputs[0])
+
+    # layer
+    mask_mix = node_tree.nodes.new("ShaderNodeMix")
+    mask_add = node_tree.nodes.new("ShaderNodeMath")
+    mask_mix.name = "QT_Mix_Mask_" + str(activelayer)
+    mask_add.name = "QT_Add_Mask_" + str(activelayer)
+    mask_mix.inputs[3].default_value = bpy.context.window_manager.my_toolqt.bump_layer
+    node_tree.links.new(mask_clamp.outputs[0], mask_mix.inputs[0])
+    node_tree.links.new(mask_mix.outputs[0], mask_add.inputs[0])
+    node_tree.links.new(layer_clamp.outputs[0], mask_mix.inputs[1])
+    node_tree.links.new(layer_strength.outputs[0], mask_add.inputs[1])
+    node_tree.links.new(mask_add.outputs[0], layer_bump.inputs[2])
 
     # triplanar
     if bpy.context.window_manager.my_toolqt.triplanar:
@@ -2000,6 +2259,192 @@ def texture_mask(self, context, img_spec, material, activelayer, proc_uv):
         mask_tex.projection_blend = 0.3
 
     auto_align_nodes(node_tree)
+
+    for n in nodes:
+        if n.select:
+            n.location.y = 0
+            if activelayer == 2:
+                n.location.y -= 1500
+            elif activelayer == 3:
+                n.location.y -= 3500
+            elif activelayer == 4:
+                n.location.y -= 5500
+            elif activelayer == 5:
+                n.location.y -= 7500
+
+
+def cavity_mask(self, context, material, activelayer):
+
+    for n in material.node_tree.nodes:
+        if n.name == "QT_Output":
+            out_material = n
+
+        if n.name.startswith("QT_Shader"):
+            nodes = n.node_tree.nodes
+            node_tree = n.node_tree
+
+    for n in nodes:
+        if n.name == "Group Output":
+            out_node = n
+
+    for n in nodes:
+        n.select = False
+
+        if n.name.startswith("QT_Layer_" + str(activelayer)):
+            blend_node = n
+
+        if n.name.startswith("QT_Bump_Clamp_" + str(activelayer)):
+            layer_clamp = n
+
+        if n.name.startswith("QT_Bump_Strength_" + str(activelayer)):
+            layer_strength = n
+
+        if n.name.startswith("QT_Bump_Bump_" + str(activelayer)):
+            layer_bump = n
+
+    # mask
+    mask_bevel = node_tree.nodes.new("ShaderNodeBevel")
+    mask_geometry = node_tree.nodes.new("ShaderNodeNewGeometry")
+    mask_dot = node_tree.nodes.new("ShaderNodeVectorMath")
+    mask_invert = node_tree.nodes.new("ShaderNodeInvert")
+
+    mask_noise = node_tree.nodes.new("ShaderNodeTexNoise")
+    mask_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
+    mask_sub_clamp = node_tree.nodes.new("ShaderNodeMath")
+
+    mask_sub = node_tree.nodes.new("ShaderNodeMath")
+    mask_mult = node_tree.nodes.new("ShaderNodeMath")
+    mask_clamp = node_tree.nodes.new("ShaderNodeClamp")
+
+    # names
+    mask_bevel.name = "QT_Bevel_Mask_" + str(activelayer)
+    mask_geometry.name = "QT_Geometry_Mask_" + str(activelayer)
+    mask_dot.name = "QT_Dot_Mask_" + str(activelayer)
+    mask_invert.name = "QT_Invert_Mask_" + str(activelayer)
+    mask_noise.name = "QT_Noise_Mask_" + str(activelayer)
+    mask_bright_contrast.name = "QT_Bright_Contrast_Mask_" + str(activelayer)
+    mask_sub_clamp.name = "QT_Sub_Clamp_Mask_" + str(activelayer)
+    mask_sub.name = "QT_Sub_Mask_" + str(activelayer)
+    mask_mult.name = "QT_Mult_Mask_" + str(activelayer)
+    mask_clamp.name = "QT_Clamp_Mask_" + str(activelayer)
+
+    # settings
+    mask_bevel.samples = 8
+    mask_bevel.inputs[0].default_value = 0.1
+    mask_dot.operation = "DOT_PRODUCT"
+    mask_invert.inputs[0].default_value = 1
+    mask_noise.inputs[2].default_value = 0
+    mask_sub_clamp.operation = "SUBTRACT"
+    mask_sub_clamp.use_clamp = True
+    mask_sub.operation = "SUBTRACT"
+    mask_mult.operation = "MULTIPLY"
+    mask_mult.inputs[1].default_value = 10
+
+    # links
+    node_tree.links.new(mask_bevel.outputs[0], mask_dot.inputs[0])
+    node_tree.links.new(mask_geometry.outputs[1], mask_dot.inputs[1])
+    node_tree.links.new(mask_dot.outputs[1], mask_invert.inputs[1])
+
+    node_tree.links.new(mask_noise.outputs[0], mask_bright_contrast.inputs[0])
+    node_tree.links.new(mask_bright_contrast.outputs[0], mask_sub_clamp.inputs[0])
+
+    node_tree.links.new(mask_sub_clamp.outputs[0], mask_sub.inputs[1])
+    node_tree.links.new(mask_invert.outputs[0], mask_sub.inputs[0])
+    node_tree.links.new(mask_sub.outputs[0], mask_mult.inputs[0])
+    node_tree.links.new(mask_mult.outputs[0], mask_clamp.inputs[0])
+    node_tree.links.new(mask_clamp.outputs[0], blend_node.inputs[0])
+    node_tree.links.new(mask_clamp.outputs[0], out_node.inputs[0])
+
+    align_nodes(node_tree, blend_node, -100, -100)
+
+    for n in nodes:
+        if n.select:
+            n.location.y = 0
+            if activelayer == 2:
+                n.location.y -= 1500
+            elif activelayer == 3:
+                n.location.y -= 3500
+            elif activelayer == 4:
+                n.location.y -= 5500
+            elif activelayer == 5:
+                n.location.y -= 7500
+
+
+def ao_mask(self, context, material, activelayer):
+
+    for n in material.node_tree.nodes:
+        if n.name == "QT_Output":
+            out_material = n
+
+        if n.name.startswith("QT_Shader"):
+            nodes = n.node_tree.nodes
+            node_tree = n.node_tree
+
+    for n in nodes:
+        if n.name == "Group Output":
+            out_node = n
+
+    for n in nodes:
+        n.select = False
+
+        if n.name.startswith("QT_Layer_" + str(activelayer)):
+            blend_node = n
+
+        if n.name.startswith("QT_Bump_Clamp_" + str(activelayer)):
+            layer_clamp = n
+
+        if n.name.startswith("QT_Bump_Strength_" + str(activelayer)):
+            layer_strength = n
+
+        if n.name.startswith("QT_Bump_Bump_" + str(activelayer)):
+            layer_bump = n
+
+    # mask
+    mask_ao = node_tree.nodes.new("ShaderNodeAmbientOcclusion")
+    mask_invert = node_tree.nodes.new("ShaderNodeInvert")
+
+    mask_noise = node_tree.nodes.new("ShaderNodeTexNoise")
+    mask_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
+    mask_sub_clamp = node_tree.nodes.new("ShaderNodeMath")
+
+    mask_sub = node_tree.nodes.new("ShaderNodeMath")
+    mask_mult = node_tree.nodes.new("ShaderNodeMath")
+    mask_clamp = node_tree.nodes.new("ShaderNodeClamp")
+
+    # names
+    mask_ao.name = "QT_AO_Mask_" + str(activelayer)
+    mask_invert.name = "QT_Invert_Mask_" + str(activelayer)
+    mask_noise.name = "QT_Noise_Mask_" + str(activelayer)
+    mask_bright_contrast.name = "QT_Bright_Contrast_Mask_" + str(activelayer)
+    mask_sub_clamp.name = "QT_Sub_Clamp_Mask_" + str(activelayer)
+    mask_sub.name = "QT_Sub_Mask_" + str(activelayer)
+    mask_mult.name = "QT_Mult_Mask_" + str(activelayer)
+    mask_clamp.name = "QT_Clamp_Mask_" + str(activelayer)
+
+    # settings
+    mask_ao.inputs[1].default_value = 1
+    mask_invert.inputs[0].default_value = 1
+    mask_noise.inputs[2].default_value = 0
+    mask_sub_clamp.operation = "SUBTRACT"
+    mask_sub_clamp.use_clamp = True
+    mask_sub.operation = "SUBTRACT"
+    mask_mult.operation = "MULTIPLY"
+    mask_mult.inputs[1].default_value = 10
+
+    # links
+    node_tree.links.new(mask_ao.outputs[0], mask_invert.inputs[1])
+
+    node_tree.links.new(mask_noise.outputs[0], mask_bright_contrast.inputs[0])
+    node_tree.links.new(mask_bright_contrast.outputs[0], mask_sub_clamp.inputs[0])
+
+    node_tree.links.new(mask_sub_clamp.outputs[0], mask_sub.inputs[1])
+    node_tree.links.new(mask_invert.outputs[0], mask_sub.inputs[0])
+    node_tree.links.new(mask_sub.outputs[0], mask_mult.inputs[0])
+    node_tree.links.new(mask_mult.outputs[0], mask_clamp.inputs[0])
+    node_tree.links.new(mask_clamp.outputs[0], blend_node.inputs[0])
+    node_tree.links.new(mask_clamp.outputs[0], out_node.inputs[0])
+
+    align_nodes(node_tree, blend_node, -100, -100)
 
     for n in nodes:
         if n.select:
@@ -2133,7 +2578,7 @@ def height_mask(self, context, material, activelayer):
     mask_clamp.name = "QT_Clamp_Mask_" + str(activelayer)
 
     # links
-    node_tree.links.new(coord.outputs[3], mask_add.inputs[0])
+    node_tree.links.new(coord.outputs[0], mask_add.inputs[0])
     node_tree.links.new(mask_add.outputs[0], mask_xyz.inputs[0])
     node_tree.links.new(mask_xyz.outputs[2], mask_invert.inputs[1])
 
@@ -2172,6 +2617,34 @@ def height_mask(self, context, material, activelayer):
     mask_bright_contrast.location.y += 200
 
 
+def vertex_mask(self, context, material, activelayer, vertex):
+
+    for n in material.node_tree.nodes:
+        if n.name.startswith("QT_Shader"):
+            nodes = n.node_tree.nodes
+            node_tree = n.node_tree
+
+    for n in nodes:
+        if n.name == "Group Output":
+            out_node = n
+        if n.name == "QT_Layer_" + str(activelayer):
+            out_layer = n
+
+    color = node_tree.nodes.new("ShaderNodeVertexColor")
+
+    # names
+    color.name = "QT_Color_Mask_" + str(activelayer)
+
+    # links
+    node_tree.links.new(color.outputs[0], out_layer.inputs[0])
+
+    # settings
+    color.layer_name = vertex
+
+    color.location.y -= 1800
+    color.location.x -= 500
+
+
 def normal_mask(self, context, material, activelayer):
 
     for n in material.node_tree.nodes:
@@ -2195,10 +2668,12 @@ def normal_mask(self, context, material, activelayer):
     coord = node_tree.nodes.new("ShaderNodeTexCoord")
     mask_xyz = node_tree.nodes.new("ShaderNodeSeparateXYZ")
     mask_math = node_tree.nodes.new("ShaderNodeMath")
+    mask_power = node_tree.nodes.new("ShaderNodeMath")
     mask_noise = node_tree.nodes.new("ShaderNodeTexNoise")
     mask_bright_contrast = node_tree.nodes.new("ShaderNodeBrightContrast")
     mask_invert = node_tree.nodes.new("ShaderNodeInvert")
     mask_clamp = node_tree.nodes.new("ShaderNodeClamp")
+    vec_transform = node_tree.nodes.new("ShaderNodeVectorTransform")
 
     # names
     coord.name = "QT_UV_Layer_Mask_" + str(activelayer)
@@ -2208,12 +2683,16 @@ def normal_mask(self, context, material, activelayer):
     mask_bright_contrast.name = "QT_Bright_Contrast_Mask_" + str(activelayer)
     mask_invert.name = "QT_Invert_Mask_" + str(activelayer)
     mask_clamp.name = "QT_Clamp_Mask_" + str(activelayer)
+    vec_transform.name = "QT_Vector_Transform_" + str(activelayer)
+    mask_power.name = "QT_Power_Mask_" + str(activelayer)
 
     # links
-    node_tree.links.new(coord.outputs[1], mask_xyz.inputs[0])
+    node_tree.links.new(coord.outputs[1], vec_transform.inputs[0])
+    node_tree.links.new(vec_transform.outputs[0], mask_xyz.inputs[0])
     node_tree.links.new(mask_xyz.outputs[2], mask_invert.inputs[1])
     node_tree.links.new(mask_invert.outputs[0], mask_math.inputs[0])
-    node_tree.links.new(mask_math.outputs[0], mask_clamp.inputs[0])
+    node_tree.links.new(mask_math.outputs[0], mask_power.inputs[0])
+    node_tree.links.new(mask_power.outputs[0], mask_clamp.inputs[0])
 
     node_tree.links.new(mask_noise.outputs[0], mask_bright_contrast.inputs[0])
     node_tree.links.new(mask_bright_contrast.outputs[0], mask_math.inputs[1])
@@ -2227,9 +2706,15 @@ def normal_mask(self, context, material, activelayer):
     mask_bright_contrast.inputs[1].default_value = -1
     mask_bright_contrast.inputs[2].default_value = 10
     mask_math.operation = "SUBTRACT"
+    mask_power.operation = "POWER"
+    mask_power.inputs[1].default_value = 0.1
+    vec_transform.convert_from = "OBJECT"
+    vec_transform.convert_to = "WORLD"
 
     coord.location.x -= 700
+    vec_transform.location.x -= 600
     mask_xyz.location.x -= 500
+    mask_power.location.x -= 400
     mask_clamp.location.x -= 300
 
     auto_align_nodes(node_tree)
@@ -2331,6 +2816,9 @@ def blend(self, context, material, shader_node, out_mat, node_group_name):
     # create the blend group in the material
     groupname = "QT_Blend"
     grp = bpy.data.node_groups.new(groupname, "ShaderNodeTree")
+    grp.inputs.new("NodeSocketShader", "Input")
+    grp.outputs.new("NodeSocketShader", "Output")
+    grp.outputs.new("NodeSocketVector", "Output")
     blend_node = material.node_tree.nodes.new("ShaderNodeGroup")
     blend_node.node_tree = bpy.data.node_groups[grp.name]
     blend_node.name = groupname
@@ -2338,9 +2826,9 @@ def blend(self, context, material, shader_node, out_mat, node_group_name):
     # this is inside the blend group
     nodes = blend_node.node_tree.nodes
     node_tree = blend_node.node_tree
+    node_tree.inputs.new("NodeSocketShader", "Input")
     out_node = node_tree.nodes.new("NodeGroupOutput")
     in_node = node_tree.nodes.new("NodeGroupInput")
-    blend_node.inputs.new("NodeSocketShader", "Input")
     blend_node.location = shader_node.location
     blend_node.location.x += 250
     # creating the instanced group from the other material
@@ -2407,6 +2895,7 @@ def create_decal(self, context, sel, res, img_spec):
 
     # Create new mesh
     plane = context.active_object
+    plane.name = 'QT_Decal'
 
     px, py = img_spec.size
     size = px / py
@@ -2420,7 +2909,7 @@ def create_decal(self, context, sel, res, img_spec):
 
     bpy.ops.object.editmode_toggle()
     bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.mesh.subdivide(number_cuts=2)
+    bpy.ops.mesh.subdivide(number_cuts=10)
     bpy.ops.object.editmode_toggle()
 
     if len(sel) > 0:
@@ -2483,6 +2972,28 @@ def auto_align_nodes(node_tree):
 
     align(output_node)
 
+
+def align_nodes(node_tree, to_node, x, y):
+
+    """Given a shader node tree, arrange nodes neatly relative to the output node."""
+    x_gap = 400
+    y_gap = 400
+    nodes = node_tree.nodes
+    links = node_tree.links
+
+    def align(to_node):
+        from_nodes = get_input_nodes(to_node, links)
+        for i, node in enumerate(from_nodes):
+            if node.select:
+                node.location.x = min(node.location.x, to_node.location.x - x_gap)
+                node.location.y = to_node.location.y
+                node.location.y -= i * y_gap
+                node.location.y += (len(from_nodes) - 1) * y_gap / (len(from_nodes))
+                node.location.x += x
+                node.location.y += y
+                align(node)
+
+    align(to_node)
 
 def clean_node_tree(node_tree):
     """Clear all nodes in a shader node tree except the output.
