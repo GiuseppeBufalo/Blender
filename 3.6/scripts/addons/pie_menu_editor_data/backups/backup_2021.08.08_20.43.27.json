@@ -1,0 +1,468 @@
+{
+  "version": "1.18.2", 
+  "menus": [
+    [
+      "Action Center", 
+      "Window", 
+      "Z, NONE", 
+      [
+        [
+          "Individual", 
+          "COMMAND", 
+          "POINTCLOUD_DATA", 
+          "bpy.ops.view3d.ke_opc(combo='3')", 
+          0
+        ], 
+        [
+          "Cursor", 
+          "COMMAND", 
+          "PIVOT_CURSOR", 
+          "bpy.ops.view3d.ke_opc(combo='4')", 
+          0
+        ], 
+        [
+          "Global", 
+          "COMMAND", 
+          "ORIENTATION_VIEW", 
+          "bpy.ops.view3d.ke_opc(combo='1')", 
+          0
+        ], 
+        [
+          "Show 3D Cursor", 
+          "MENU", 
+          "SORTBYEXT", 
+          "@Popup Cursor", 
+          0
+        ], 
+        [
+          "Align Origin", 
+          "COMMAND", 
+          "FILE_REFRESH", 
+          "bpy.ops.view3d.align_origin_to_selected()", 
+          0
+        ], 
+        [
+          "Show Origin Axis", 
+          "COMMAND", 
+          "OUTLINER_DATA_EMPTY", 
+          "bpy.ops.machin3.toggle_object_axes()", 
+          0
+        ], 
+        [
+          "Local", 
+          "COMMAND", 
+          "ORIENTATION_LOCAL", 
+          "bpy.ops.view3d.ke_opc(combo='2')", 
+          0
+        ], 
+        [
+          "Normal", 
+          "COMMAND", 
+          "ORIENTATION_NORMAL", 
+          "C.scene.transform_orientation_slots[0].type = 'NORMAL'", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Popup Cursor", 
+      "Window", 
+      "", 
+      [
+        [
+          "row?fixed_but=True&size=LARGER&vspacer=NONE"
+        ], 
+        [
+          "spacer?hsep=ALIGNER"
+        ], 
+        [
+          "Snap  3D Cursor", 
+          "COMMAND", 
+          "CON_OBJECTSOLVER", 
+          "bpy.ops.view3d.cursor_fit_selected_and_orient()", 
+          0
+        ], 
+        [
+          "spacer?hsep=ALIGNER"
+        ], 
+        [
+          "row?fixed_but=True&size=LARGER&vspacer=NONE"
+        ], 
+        [
+          "spacer?hsep=ALIGNER"
+        ], 
+        [
+          "Show 3D Cursor", 
+          "HOTKEY", 
+          "^SORTBYEXT", 
+          "COMMA", 
+          0
+        ], 
+        [
+          "spacer?hsep=ALIGNER"
+        ]
+      ], 
+      "DIALOG", 
+      "pd?pd_panel=1", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Auto Smooth", 
+      "3D View; 3D View Generic", 
+      "K, NONE", 
+      [
+        [
+          "Shading Smooth", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.object.shade_smooth('EXEC_DEFAULT')", 
+          0
+        ], 
+        [
+          "Auto Smooth", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.context.object.data.use_auto_smooth = True", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease Pie", 
+      "Mesh", 
+      "E, NONE", 
+      [
+        [
+          "Crease 0.4", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.4", 
+          0
+        ], 
+        [
+          "Crease 0.2", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.2", 
+          0
+        ], 
+        [
+          "Crease -1", 
+          "MENU", 
+          "PROP_OFF", 
+          "Crease -1", 
+          0
+        ], 
+        [
+          "Crease 0.6", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.6", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.4", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.4000000059604645)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.2", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.20000000298023224)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease -1", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.6", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.6000000238418579)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Create", 
+      "3D View", 
+      "alt+C, NONE", 
+      [
+        [
+          "Cylinder", 
+          "COMMAND", 
+          "META_CAPSULE", 
+          "bpy.ops.mesh.primitive_cylinder_add(vertices=32)", 
+          0
+        ], 
+        [
+          "Cube", 
+          "COMMAND", 
+          "META_CUBE", 
+          "bpy.ops.mesh.primitive_cube_add()", 
+          0
+        ], 
+        [
+          "Custom Script", 
+          "MENU", 
+          "HAND", 
+          "Custom Script", 
+          0
+        ], 
+        [
+          "Sphere", 
+          "COMMAND", 
+          "META_BALL", 
+          "bpy.ops.mesh.primitive_uv_sphere_add()", 
+          0
+        ], 
+        [
+          "Plane", 
+          "COMMAND", 
+          "MESH_PLANE", 
+          "bpy.ops.mesh.primitive_plane_add()", 
+          0
+        ], 
+        [
+          "Quadsphere", 
+          "COMMAND", 
+          "META_BALL", 
+          "bpy.ops.machin3.quadsphere()", 
+          0
+        ], 
+        [
+          "Empty", 
+          "COMMAND", 
+          "EMPTY_AXIS", 
+          "bpy.ops.object.empty_add(type='PLAIN_AXES')", 
+          0
+        ], 
+        [
+          "Curve", 
+          "COMMAND", 
+          "GP_SELECT_POINTS", 
+          "bpy.ops.curve.primitive_bezier_curve_add()", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Custom Script", 
+      "Window", 
+      "", 
+      [
+        [
+          "Convert To Mesh", 
+          "COMMAND", 
+          "CUBE", 
+          "bpy.ops.object.convert(target='MESH')", 
+          0
+        ], 
+        [
+          "Convert To Curve", 
+          "COMMAND", 
+          "OUTLINER_DATA_GREASEPENCIL", 
+          "bpy.ops.object.convert(target='CURVE')", 
+          0
+        ], 
+        [
+          "Make Single User", 
+          "COMMAND", 
+          "UNLINKED", 
+          "bpy.ops.object.make_single_user('EXEC_DEFAULT', True, object=True, obdata=True, material=False, animation=False)", 
+          0
+        ], 
+        [
+          "Make Instances Real", 
+          "COMMAND", 
+          "MEMORY", 
+          "bpy.ops.object.duplicates_make_real()", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          "Remove Normal Data", 
+          "COMMAND", 
+          "ORIENTATION_NORMAL", 
+          "execute_script(\"C:/Users/giuse/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/startup/GB_remove_normal_data.py\")", 
+          0
+        ], 
+        [
+          "Mesh Cleaner", 
+          "COMMAND", 
+          "SHADERFX", 
+          "bpy.ops.view3d.ke_clean()", 
+          0
+        ], 
+        [
+          "Poly Debug Display", 
+          "COMMAND", 
+          "CAMERA_STEREO", 
+          "bpy.ops.hops.poly_debug_display()", 
+          0
+        ]
+      ], 
+      "RMENU", 
+      "rm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Escape", 
+      "Window", 
+      "ESC, NONE", 
+      [
+        [
+          "Deselect", 
+          "HOTKEY", 
+          "", 
+          "alt+A", 
+          0
+        ], 
+        [
+          "Lasso", 
+          "COMMAND", 
+          "", 
+          "bpy.ops.wm.tool_set_by_id(name='builtin.select_lasso')", 
+          0
+        ]
+      ], 
+      "SCRIPT", 
+      "s?", 
+      "PRESS", 
+      "", 
+      ""
+    ]
+  ]
+}

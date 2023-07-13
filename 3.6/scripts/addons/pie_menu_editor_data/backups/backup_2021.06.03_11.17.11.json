@@ -1,0 +1,475 @@
+{
+  "version": "1.18.2", 
+  "menus": [
+    [
+      "Custom Script", 
+      "Window", 
+      "alt+X, NONE", 
+      [
+        [
+          "Remove UVset", 
+          "COMMAND", 
+          "NODE_TEXTURE", 
+          "", 
+          0
+        ]
+      ], 
+      "RMENU", 
+      "rm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease Pie", 
+      "Mesh", 
+      "E, NONE", 
+      [
+        [
+          "Crease 0.4", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.4", 
+          0
+        ], 
+        [
+          "Crease 0.2", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.2", 
+          0
+        ], 
+        [
+          "Crease -1", 
+          "MENU", 
+          "PROP_OFF", 
+          "Crease -1", 
+          0
+        ], 
+        [
+          "Crease 0.6", 
+          "MENU", 
+          "PROP_ON", 
+          "Crease 0.6", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Cursor Pie", 
+      "Window", 
+      "shift+C, NONE", 
+      [
+        [
+          "Show Cursor", 
+          "HOTKEY", 
+          "SORTBYEXT", 
+          "COMMA", 
+          0
+        ], 
+        [
+          "Show Origin Axis", 
+          "COMMAND", 
+          "OUTLINER_OB_EMPTY", 
+          "bpy.ops.machin3.toggle_object_axes()", 
+          0
+        ], 
+        [
+          "Selection to Cursor", 
+          "COMMAND", 
+          "SHADING_WIRE", 
+          "bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)", 
+          0
+        ], 
+        [
+          "Cursor to Active", 
+          "COMMAND", 
+          "PIVOT_CURSOR", 
+          "bpy.ops.view3d.snap_cursor_to_active()", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Bevel 1", 
+      "Window", 
+      "alt+B, NONE", 
+      [
+        [
+          "Edge Bevel Weight 100%", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_bevelweight('EXEC_DEFAULT', True, value=1.0)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Bevel 0", 
+      "Window", 
+      "ctrl+B, NONE", 
+      [
+        [
+          "Edge Bevel Weight 0%", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_bevelweight('EXEC_DEFAULT', value=-1.0)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.6", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.6000000238418579)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease -1", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.2", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.20000000298023224)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Crease 0.4", 
+      "Window", 
+      "", 
+      [
+        [
+          "Crease -", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=-1.0)", 
+          0
+        ], 
+        [
+          "Crease +", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.transform.edge_crease('EXEC_DEFAULT', True, value=0.4000000059604645)", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Action Center", 
+      "Window", 
+      "Z, NONE", 
+      [
+        [
+          "Individual", 
+          "COMMAND", 
+          "POINTCLOUD_DATA", 
+          "bpy.ops.view3d.ke_opc(combo='3')", 
+          0
+        ], 
+        [
+          "Cursor", 
+          "COMMAND", 
+          "PIVOT_CURSOR", 
+          "bpy.ops.view3d.ke_opc(combo='4')", 
+          0
+        ], 
+        [
+          "Global", 
+          "COMMAND", 
+          "ORIENTATION_VIEW", 
+          "bpy.ops.view3d.ke_opc(combo='1')", 
+          0
+        ], 
+        [
+          "Show Cursor", 
+          "HOTKEY", 
+          "SORTBYEXT", 
+          "COMMA", 
+          0
+        ], 
+        [
+          "Align Origin", 
+          "COMMAND", 
+          "FILE_REFRESH", 
+          "bpy.ops.view3d.align_origin_to_selected()", 
+          0
+        ], 
+        [
+          "Show Origin Axis", 
+          "COMMAND", 
+          "OUTLINER_DATA_EMPTY", 
+          "bpy.ops.machin3.toggle_object_axes()", 
+          0
+        ], 
+        [
+          "Local", 
+          "COMMAND", 
+          "ORIENTATION_LOCAL", 
+          "bpy.ops.view3d.ke_opc(combo='2')", 
+          0
+        ], 
+        [
+          "Normal", 
+          "COMMAND", 
+          "ORIENTATION_NORMAL", 
+          "C.scene.transform_orientation_slots[0].type = 'NORMAL'", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Auto Smooth", 
+      "3D View; 3D View Generic", 
+      "K, NONE", 
+      [
+        [
+          "Shading Smooth", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.ops.object.shade_smooth('EXEC_DEFAULT')", 
+          0
+        ], 
+        [
+          "Auto Smooth", 
+          "COMMAND", 
+          "TEXT", 
+          "bpy.context.object.data.use_auto_smooth = True", 
+          0
+        ]
+      ], 
+      "MACRO", 
+      "m?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Escape", 
+      "Window", 
+      "ESC, NONE", 
+      [
+        [
+          "Deselect", 
+          "HOTKEY", 
+          "", 
+          "alt+A", 
+          0
+        ], 
+        [
+          "Lasso", 
+          "COMMAND", 
+          "", 
+          "bpy.ops.wm.tool_set_by_id(name='builtin.select_lasso')", 
+          0
+        ]
+      ], 
+      "SCRIPT", 
+      "s?", 
+      "PRESS", 
+      "", 
+      ""
+    ], 
+    [
+      "Create", 
+      "3D View", 
+      "alt+C, NONE", 
+      [
+        [
+          "Cylinder", 
+          "COMMAND", 
+          "META_CAPSULE", 
+          "bpy.ops.mesh.primitive_cylinder_add(vertices=32)", 
+          0
+        ], 
+        [
+          "Cube", 
+          "COMMAND", 
+          "META_CUBE", 
+          "bpy.ops.mesh.primitive_cube_add()", 
+          0
+        ], 
+        [
+          "Sphere", 
+          "COMMAND", 
+          "META_BALL", 
+          "bpy.ops.mesh.primitive_uv_sphere_add()", 
+          0
+        ], 
+        [
+          "Free Box", 
+          "COMMAND", 
+          "FUND", 
+          "bpy.ops.object.box_create()", 
+          0
+        ], 
+        [
+          "Free Cylinder", 
+          "COMMAND", 
+          "FUND", 
+          "bpy.ops.object.cylinder_create()", 
+          0
+        ], 
+        [
+          "Free Quadsphere", 
+          "COMMAND", 
+          "FUND", 
+          "bpy.ops.object.spherecube_create()", 
+          0
+        ], 
+        [
+          "Plane", 
+          "COMMAND", 
+          "META_PLANE", 
+          "bpy.ops.mesh.primitive_plane_add()", 
+          0
+        ], 
+        [
+          "Quadsphere", 
+          "COMMAND", 
+          "META_BALL", 
+          "bpy.ops.machin3.quadsphere()", 
+          0
+        ], 
+        [
+          ""
+        ], 
+        [
+          ""
+        ]
+      ], 
+      "PMENU", 
+      "pm?", 
+      "PRESS", 
+      "", 
+      ""
+    ]
+  ]
+}

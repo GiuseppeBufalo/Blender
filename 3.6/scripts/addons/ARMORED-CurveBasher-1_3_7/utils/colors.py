@@ -1,0 +1,17 @@
+DEMO_COLOR = (0.743594, 0.126, 0.026, 1)
+
+WHITE = (1, 1, 1)
+BLACK = (0, 0, 0)
+TITLE_COLOR = (0.6, 0.6, 0.6)
+HIGHLIGHT_COLOR = (1, .25, 0.4)
+HUD_BACKGROUND = (.1, .1, .1, .95)
+
+RED = (1, 0.12, 0.33)
+GREEN = (0.5, .88, .42)
+BLUE = (0, 0, 1)
+
+TRUE_COLOR  = (.3, 1, .71)
+FALSE_COLOR = (.5, .5, .5)
+
+SHADOW_COLOR = (0, 0, 0)
+SHADOW_ALPHA = 0.5

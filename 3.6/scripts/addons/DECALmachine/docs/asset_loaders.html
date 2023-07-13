@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://machin3.io/DECALmachine/docs/asset_loaders.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Asset Loaders + Insert - DECALmachine</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Asset Loaders + Insert";
+        var mkdocs_page_input_path = "asset_loaders.md";
+        var mkdocs_page_url = "/DECALmachine/docs/asset_loaders.html";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-78703389-1', 'DMdocs');
+        ga('send', 'pageview');
+      </script>
+    
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> DECALmachine
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="index.html">DECALmachine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What's new?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Menus</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="pie_menu.html">Pie Menu</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panels.html">Panels</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Basics</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="assets.html">Assets</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="asset_loaders.html">Asset Loaders + Insert</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#object-mode">Object Mode</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#using-the-asset-loaders-insert">Using the Asset Loaders + Insert</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#using-batch-insert">Using Batch Insert</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#quick-insert">Quick Insert</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#edit-modeuv-editor">Edit Mode/UV Editor</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#selection">Selection</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="select.html">Select</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="re-apply.html">Re-Apply</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_defaults.html">Adjust Decals/Defaults</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="project.html">Project</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="slice.html">Slice + Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="gpanel.html">GPanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="epanel.html">Epanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="join_split.html">Join and Split</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="get_backup.html">Get Backup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sweep_decal_backups.html">Sweep Decal Backups</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="match_material.html">Match Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panel_cut.html">Panel Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="init_generated_coords.html">Initialize Generated Coords</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="transfer_uvs.html">Transfer UVs</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="init_trim_sheet_material.html">Init Trim Sheet Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="setup_subsets.html">Setup Subsets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_trim.html">Unwrap Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_to_empty_trim.html">Unwrap to Empty Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_trim.html">Adjust Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_cut.html">Trim Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="mirror_trim.html">Mirror Trim</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="quad_unwrap.html">Quad Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="box_unwrap.html">Box Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stitch.html">Stitch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Utils</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="remove_decal_orphans.html">Remove Decal Orphans</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="fix_texture_paths.html">Fix Texture Paths</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="validate_decal.html">Validate Decal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="clear_decal_props.html">Clear Decal Props</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_instant.html">Instant</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_batch.html">Batch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim Sheet Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_creation.html">Trim Sheets</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Export</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="export_introduction.html">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_atlas.html">Atlasing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_trim_sheet.html">Trim Sheets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_bake.html">Baking</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Assets</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="update_decals.html">Update Decal and Trim Libraries</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="update_blend_files.html">Update Blend Files</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="supplied_assets.html">Supplied Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Ecosystem</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="addons.html">Addons</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_resources.html">Decal Resources</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_resources.html">Trim Sheet Resources</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">DECALmachine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Basics &raquo;</li>
+      <li>Asset Loaders + Insert</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h2 id="asset-loaders">Asset Loaders</h2>
+<h3 id="object-mode">Object Mode</h3>
+<p><strong>shortcut</strong> <code>D</code></p>
+<p>In object mode the asset loaders, located in the <a href="pie_menu.html">Pie Menu</a>, are used to append <a href="assets.html">Decals</a> from your Decal libraries, or <a href="assets.html#trim-decals">Trim Decals</a> from your Trim Sheets to the current scene, a process performed by the <em>Insert</em> tool.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>By default Decals will added at the location of the mouse, at the time of opening the pie menu.<br />
+This can be changed in the main <a href="panels.html">Panel</a>.</p>
+</div>
+<p><img alt="DecalLibaries" src="img/asset_loaders/libraries.jpg" />
+<em>Various Decal libraries, represented by Asset Loaders in the DECALmachine pie menu</em></p>
+<h4 id="using-the-asset-loaders-insert">Using the Asset Loaders + Insert</h4>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/HOsVBOQJ618" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/oP9JbLj94kE" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h4 id="using-batch-insert">Using Batch Insert</h4>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/qePJ_eCM94o" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h4 id="quick-insert">Quick Insert</h4>
+<p><strong>shortcut</strong> <code>CTRL + D</code></p>
+<p>To quickly bring the same Decal into the scene, that you've appended previously, <em>Quick Insert</em> can be used, thereby skipping the <a href="pie_menu.html">Pie Menu</a> completely.</p>
+<h3 id="edit-modeuv-editor">Edit Mode/UV Editor</h3>
+<p><strong>shortcut</strong> <code>D</code></p>
+<h4 id="selection">Selection</h4>
+<p>Select one or multiple faces.</p>
+<p>In edit mode or in the UV editor, only the registered Trim Sheets will appear in the pie menu.<br />
+Instead of appending Decal or <a href="assets.html#trim-decals">Trim Decal</a> objects via the <em>Insert</em> tool, clicking on the plus button or thumbnails will run the <a href="unwrap_trim.html"><em>Unwrap Trim</em></a> tool. </p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="assets.html" class="btn btn-neutral float-left" title="Assets"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="select.html" class="btn btn-neutral float-right" title="Select">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="assets.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="select.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

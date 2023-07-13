@@ -1,0 +1,2 @@
+C:\Users\doria\AppData\Roaming\Blender Foundation\Blender\2.92\scripts\addons\Scatter\cpp\x64\Release\scatter.dll
+C:\Users\doria\AppData\Roaming\Blender Foundation\Blender\2.92\scripts\addons\Scatter5\cpp\x64\Release\scatter.dll

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://machin3.io/DECALmachine/docs/export_atlas.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Atlasing - DECALmachine</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Atlasing";
+        var mkdocs_page_input_path = "export_atlas.md";
+        var mkdocs_page_url = "/DECALmachine/docs/export_atlas.html";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-78703389-1', 'DMdocs');
+        ga('send', 'pageview');
+      </script>
+    
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> DECALmachine
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="index.html">DECALmachine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What's new?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Menus</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="pie_menu.html">Pie Menu</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panels.html">Panels</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Basics</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="assets.html">Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="asset_loaders.html">Asset Loaders + Insert</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="select.html">Select</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="re-apply.html">Re-Apply</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_defaults.html">Adjust Decals/Defaults</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="project.html">Project</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="slice.html">Slice + Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="gpanel.html">GPanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="epanel.html">Epanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="join_split.html">Join and Split</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="get_backup.html">Get Backup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sweep_decal_backups.html">Sweep Decal Backups</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="match_material.html">Match Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panel_cut.html">Panel Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="init_generated_coords.html">Initialize Generated Coords</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="transfer_uvs.html">Transfer UVs</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="init_trim_sheet_material.html">Init Trim Sheet Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="setup_subsets.html">Setup Subsets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_trim.html">Unwrap Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_to_empty_trim.html">Unwrap to Empty Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_trim.html">Adjust Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_cut.html">Trim Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="mirror_trim.html">Mirror Trim</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="quad_unwrap.html">Quad Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="box_unwrap.html">Box Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stitch.html">Stitch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Utils</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="remove_decal_orphans.html">Remove Decal Orphans</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="fix_texture_paths.html">Fix Texture Paths</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="validate_decal.html">Validate Decal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="clear_decal_props.html">Clear Decal Props</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_instant.html">Instant</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_batch.html">Batch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim Sheet Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_creation.html">Trim Sheets</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Export</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="export_introduction.html">Introduction</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="export_atlas.html">Atlasing</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#atlasing-in-decalmachine">Atlasing in DECALmachine</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#atlas-creation">Atlas Creation</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#use-and-export-atlas">Use and Export Atlas</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#use-atlas">Use Atlas</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#join-and-split-atlased-decals">Join and Split atlased Decals</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#export-atlas">Export Atlas</a>
+    </li>
+        </ul>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unity">Unity</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#hdrp">HDRP</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#amplify-shader-editor">Amplify Shader Editor</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#urp">URP</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unreal-engine">Unreal Engine</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#background">Background</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#1-patching-unreal-engine">1. Patching Unreal Engine</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#what-does-the-code-change-actually-do">What does the code change actually do?</a>
+    </li>
+    <li class="toctree-l4"><a class="reference internal" href="#why-is-this-functionality-important">Why is this functionality important?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#2-decalmachine">2. DECALmachine</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#3-finalizing-textures">3. Finalizing Textures</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#faking-ao">Faking AO</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#4-decal-shader-in-ue4">4. Decal Shader in UE4</a>
+        <ul>
+    <li class="toctree-l4"><a class="reference internal" href="#parallax-occlusion-mapping">Parallax Occlusion Mapping</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_trim_sheet.html">Trim Sheets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_bake.html">Baking</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Assets</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="update_decals.html">Update Decal and Trim Libraries</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="update_blend_files.html">Update Blend Files</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="supplied_assets.html">Supplied Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Ecosystem</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="addons.html">Addons</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_resources.html">Decal Resources</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_resources.html">Trim Sheet Resources</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">DECALmachine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Export &raquo;</li>
+      <li>Atlasing</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<h2 id="atlasing-in-decalmachine">Atlasing in DECALmachine</h2>
+<p><em>Atlasing</em> in context of DECALmachine is the process of packing individual Decal textures into a single texture sheet, and then having all of those individual Decals, use a single material and set of textures.<br />
+This is necessary for efficient rendering in game engines like Unity, Unreal Engine etc.</p>
+<p>In DECALmachine this is a 2 step process: </p>
+<ol>
+<li>Atlas Creation</li>
+<li>Atlas Use and Export</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>An <strong>Atlas</strong> in DECALmachine is defined by a set of textures, in combination with a <code>data.json</code> file, containing meta data about the specific position of each decal in the atlas.<br />
+Atlases and <a href="trim_sheet_creation.html">Trim Sheets</a> share the same data format, hence why atlased Decals are also referred to as <em>Trims</em> in the data file.</p>
+</div>
+<h3 id="atlas-creation">Atlas Creation</h3>
+<p>DECALmachine 2.0 provides 2 Atlases ready to go.<br />
+One for the <a href="supplied_assets.html#aircraft">Aircraft Decal</a> library, and one for the <a href="supplied_assets.html#examples">Example and Example Panels</a> libraries.<br />
+So, if you intend to export Decals from these libraries, you don't have to create your own Atlases, you can use the supplied ones.</p>
+<p>But if you want to export your own decals, you have to create your own Atlas too. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can pack Decals from a variety of Decal libraries into a single Atlas. You don't have to create per-library Atlases!</p>
+</div>
+<p>Atlas Creation is done from the <em>Decal, Atlas &amp; Trim Sheet Creation</em> <a href="panels.html">panel</a>.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/MvLGcHF7VVw" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="use-and-export-atlas">Use and Export Atlas</h3>
+<h4 id="use-atlas">Use Atlas</h4>
+<p>In DECALmachine <em>using an Atlas</em> means, changing a Decal's UVs to match the position of that Decal in the Atlas.<br />
+Individual Decals have UVs covering the entire UV space, but atlased Decals only cover a small part of it.<br />
+With the UVs changed, all Decals belonging to the same Atlas, will then also share a single <em>Atlas Material</em>.</p>
+<p>This process of <em>using an Atlas</em> is reversible, so you can restore your original Decals using unique textures at any time.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Since Trim Sheets use the same data format as Atlases, Trim Decals can use those Sheets as Atlases right away. <br />
+There is no need to create new Atlases from Trim Decals, although you still can do that if you want.</p>
+</div>
+<h4 id="join-and-split-atlased-decals">Join and Split atlased Decals</h4>
+<p>For convenience DECALmachine also provides tools to Join and Split atlased Decals, because Decals that share a single Atlas Material, can be rendered more efficiently if they are a single object too.</p>
+<h4 id="export-atlas">Export Atlas</h4>
+<p><em>Exporting an Atlas</em> simply refers to the process of copying Atlas Textures to the desired target location.<br />
+If you want to channel pack the textures, you can do that directly from the Atlas section of the Decal Export <a href="panels.html">Panel</a></p>
+<p>You can optionally export your atlased Decals and any other selected objects from that same panel, or just use Blender's native object export.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/x-Ha-OifVqA" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h2 id="unity">Unity</h2>
+<p>Unity comes with two main <a href="https://docs.unity3d.com/Manual/ScriptableRenderPipeline.html">render pipelines</a>: HDRP and URP.<br />
+HDRP supports deferred rendering, while URP supports only forward rendering, and so no decal shaders.</p>
+<h3 id="hdrp">HDRP</h3>
+<p>HDRP supplies it's own <a href="https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@7.1/manual/Decal-Shader.html">decal shader</a>, that you can try.<br />
+But most likely you'll you want to use a custom shader, for the Decals coming out of DECALmachine.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/RWLldozHSGc" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+<p><em>Deferred Decals will effortlessly blend with any material that's under them, even textured ones</em></p>
+<p>With the advent of <a href="https://docs.unity3d.com/Manual/com.unity.shadergraph.html">Shader Graph</a>, creating your own <em>Decal Shader</em> is easy and everyone can do it.</p>
+<p>A Decal shader can be very simple, and for instance only affect normals, or it can be slightly more elaborate - but still pretty simple:</p>
+<p><img alt="ShaderGraphNormalMappedDecalShader" src="img/export_atlas/SG_normal_mapped_decal_shader.jpg" />
+<em>a shader used for <a href="assets.html">Simple/Subset/Panel</a> Decals, affecting color, normals, AO, metalness, smoothness and emission</em></p>
+<p><img alt="ShaderGraphInfoDecalShader" src="img/export_atlas/SG_info_decal_shader.jpg" />
+<em>a shader used for <a href="assets.html">Info</a> Decals, affecting, color, metalness, smoothness and emission</em></p>
+<p>You can download the two shaders above from <a href="https://github.com/machin3io/MACHIN3shaders/">this repo</a>.</p>
+<h4 id="amplify-shader-editor">Amplify Shader Editor</h4>
+<p>You can also use <a href="http://amplify.pt/unity/amplify-shader-editor/">ASE</a> to build those exact same shaders.<br />
+Not only does ASE provide a better experience, but you can also add parallax to you decals, that <a href="assets.html#parallax">looks exactly</a> like the one used by DECALmachine in Blender.</p>
+<p><img alt="ASEParallax" src="img/export_atlas/ase_parallax.gif" />
+<em>Decal <a href="http://wiki.amplify.pt/index.php?title=Unity_Products:Amplify_Shader_Editor/Parallax_Mapping">parallax in ASE</a> using a white height map</em></p>
+<h3 id="urp">URP</h3>
+<p>In URP's forward rendering, there's no way to reproduce the material blending you can have in HDRP. Decals will always be opaque, just like in Blender. </p>
+<p>And so if you use URP, I would suggest using <a href="export_trim_sheet.html">Trim Sheets</a>, over Decals.  </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In theory, you could still use Decals in URP using a simple Lit Shader, optionally alpha mapped.<br />
+But you'd be responsible for matching the Decal materials to the underlaying materials yourself.<br />
+This is possible with simple, plain materials, but not feasible with textured ones.</p>
+</div>
+<h2 id="unreal-engine">Unreal Engine</h2>
+<p>This section about DECALmachine and Unreal Engine 4 is graciously provided by <a href="https://www.artstation.com/thadclevenger">Thad Clevenger</a>, who was intrumental in the release of DECALmachine 2.0 and provided feedback throughout development.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>I would kindly ask you to <strong>not contact</strong> Thad for support on this specifically and definitely not on DECALmachine in general.<br />
+Instead, please submit any questions you may have and discuss this on <a href="https://blenderartists.org/t/decalmachine/688181">Blender Artists</a> or <a href="https://polycount.com/discussion/210294/blender-decalmachine-surface-detailing-using-mesh-decals/">polycount</a>.</p>
+</div>
+<h3 id="background">Background</h3>
+<p>I am a Senior Artist at Funcom working on our next big project, and I was tasked with helping determine the pipeline for our vehicles/hard surface objects.<br />
+After doing a lot of research we ended up deciding to use the mid-poly/decal workflow, that I’m sure most of you are familiar with. This is where DECALmachine comes in.  DECALmachine makes the process of creating, managing, and editing decals much easier.  </p>
+<p>Needless to say, I wanted to add it into our pipeline. However, we were immediately faced with a big problem. UE4 does not have all of the functionality necessary to achieve the same visual results as DECALmachine in Blender or <a href="export_atlas.html#unity">Unity</a>.<br />
+Thankfully, with some searching and help from one of our programmers (Marcos Pereira) we were able to add that functionality to UE4 and get close to 1 to 1 parity with DECALmachine in UE4.  </p>
+<p>As of now, Unity is still more powerful than UE4 when it comes to decals, but if your project is using Unreal and you want a decal solution then this is the best I have found.</p>
+<h3 id="1-patching-unreal-engine">1. Patching Unreal Engine</h3>
+<p>As I mentioned above, at the time of this tutorial<sup>version 4.24</sup> UE4 still doesn’t have all of the decal functionality that Unity does.<br />
+Specifically, allowing you to edit the opacity channels of a decal independently. <br />
+In order to get parity with DECALmachine, you MUST have the ability to edit the opacity of a decal independently in its Diffuse, Metallic, Roughness, and Normal channels.   </p>
+<p>The good news is that you can fix this with a small code update. The fix for this is <a href="https://github.com/EpicGames/UnrealEngine/pull/5463#issue-245176527">found here</a>. You will need a Github account to access this link.  </p>
+<p>I’m not a programmer so I’m going to assume that you will have one of your programmers look at this link and add the code where necessary. <br />
+Hopefully Epic will update this themselves and then this step will no longer be necessary, but according to our programmers it is not hard to implement.</p>
+<h4 id="what-does-the-code-change-actually-do">What does the code change actually do?</h4>
+<p>It allows you to create a new type of opacity map that is basically 3 masks in one.  Depending on which channel the masks are in (R,G, or B) each channel affects a different part of your decal.</p>
+<p>A mask in the R channel of this map will ONLY affect the Diffuse and Emissive channels of your decal. 
+A mask in the G channel of this map will ONLY affect the Normal channel of your decal.
+A mask in the B channel of this map will ONLY affect the Metal and Roughness channels of your decal.</p>
+<p>The bit of code below shows what I stated above.</p>
+<pre><code>Out.MRT[0].a = Opacity.r; // Emissive
+Out.MRT[1].a = Opacity.g; // Normal
+Out.MRT[2].a = Opacity.b; // Metallic, Specular, Roughness
+Out.MRT[3].a = Opacity.r; // BaseColor
+</code></pre>
+<h4 id="why-is-this-functionality-important">Why is this functionality important?</h4>
+<p><img alt="UnrealEngine01" src="img/export_atlas/unreal_engine_01.jpg" /></p>
+<p>As you see in the image above, the decal is displaying ONLY its normal in certain areas (i.e. surrounding the bolt) but it displays all of its channels (diffuse, metallic, roughness and normal) on the bolt itself.<br />
+Allowing only the normal of the decal to show up in certain areas gives a really nice “built in look”. Because of this, this bolt will always look like part of the background no matter what material I use behind it.
+Combined with Parallax Occlusion this is almost indistinguishable from real geometry.</p>
+<p>Without the code change, a decal in UE4 shares transparency across all channels equally.  This prevents you from being able to achieve these nice transitions from the background object to the decal.</p>
+<h3 id="2-decalmachine">2. DECALmachine</h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This section just walks you though the atlasing and export process.<br />
+It's also covered in more detail in video form <a href="export_atlas.html">above</a>.</p>
+</div>
+<p>Now that you’ve implemented the code above you can author your decals.<br />
+You can author them with any program, but I have found nothing that works better than DECALmachine and Blender out of the box. I’m actually very new to Blender and still do most of my work in Maya. However, it is still worth it to bring my models into Blender just for DECALmachine alone. I can always bring them back into Maya when I’m done and Blender is free so there is very little reason not to get it.</p>
+<p><img alt="UnrealEngine02" src="img/export_atlas/unreal_engine_02.jpg" /></p>
+<p>I’ve placed a few decals on this cube asset to represent a final model. Once you've finished your own asset in DECALmachine and are happy with how everything looks then it is time to create an atlas.<br />
+This is a very powerful feature in DECALmachine so definitely take some time to go through the <a href="export_atlas.html">Atlasing section</a> above.  </p>
+<p>To create a new atlas from the decals you have placed you need to open up the DECALmachine sidebar in Blender by hitting the <code>N</code> hotkey. Then click on the MACHIN3 tab and go to the <em>Decal, Atlas &amp; Trim Sheet Creation</em> section.  Click <em>Create new Decal Atlas from Scene</em>, then re-pack/tweak as needed.<br />
+Once you’re happy, you need to <em>Store selected Atlas</em>.</p>
+<p><img alt="UnrealEngine03" src="img/export_atlas/unreal_engine_03.jpg" /></p>
+<p>Next, Select your Atlas in in the export <a href="panels.html">panel</a>, and have your decals <a href="export_atlas.html#use-and-export-atlas"><em>Use the Atlas</em></a>.</p>
+<p><img alt="UnrealEngine04" src="img/export_atlas/unreal_engine_04.jpg" /></p>
+<p>Now we can export the textures we need to set up everything in UE4.</p>
+<p><img alt="UnrealEngine05" src="img/export_atlas/unreal_engine_05.jpg" />
+<em>Your export panel should look something like this</em></p>
+<p>Make sure you have <em>masks</em> enabled in the <em>Channel Packed</em> section. 
+The four drop down menus should be set to the following:  </p>
+<ul>
+<li>Subset Occlusion</li>
+<li>Alpha</li>
+<li>Subset Occlusion</li>
+<li>None</li>
+</ul>
+<p>That is going to create our Opacity Mask that we talked about in <a href="export_atlas.html#1-patching-unreal-engine">Step 1</a>,
+which is the most important texture in getting this all to look correct in Unreal.<br />
+Once your textures are exported, you will need to export your model as an fbx. Just select everything and export it as one object.  </p>
+<h3 id="3-finalizing-textures">3. Finalizing Textures</h3>
+<p>We are almost ready to set everything up in UE4. Before we do that however, I like to finish my textures in Substance Painter so that I can customize my atlas’ materials.<br />
+Also, UE4 does not currently<sup>v4.24</sup> support AO for mesh decals, so I like to fake them in the texture. Normally this is a bad idea, but in this case it’s the only option. I’ll explain how in the next step.</p>
+<p>For this step I use Substance Painter, but you are free to do this however you like.<br />
+In Painter it’s easy to add wear and dirt to my decals, etc.
+To do this I bring the following maps, that I have just exported into Painter:</p>
+<ul>
+<li>Curvature</li>
+<li>AO </li>
+<li>Normal</li>
+<li>Subset</li>
+</ul>
+<p>Then I use these maps to generate my final atlas textures for UE4.<br />
+I use the <em>Subset</em> texture as to mask where I want the materials of my decals to be - metal and paint in this instance. <br />
+The vent in the bottom right is solely in the normal map so it doesn’t receive any materials.</p>
+<p><img alt="UnrealEngine06" src="img/export_atlas/unreal_engine_06.jpg" /></p>
+<p>Here is what the cube looks like in Painter when I’m done. Note, there is no parallax here, just a normal.<br />
+I added a metal material to the left decals and painted the top right decal yellow. I also added some grunge to everything.  </p>
+<h4 id="faking-ao">Faking AO</h4>
+<p>Since UE4 doesn’t have an AO channel for decals, make sure that <strong>ANY PART OF THE DECAL ONLY SHOWING THE NORMAL MAP</strong> is made black in the color map.  </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>DECALmachine itself, does not provide a color map for normal mapped Decals and so Atlases.  </p>
+</div>
+<p>This will really help make things look correct so I highly recommend doing it. It should look like the image below when done.</p>
+<p><img alt="UnrealEngine07" src="img/export_atlas/unreal_engine_07.jpg" />
+<em>use the inverted subset mask to apply black color</em></p>
+<p>If you do this correctly it will automatically work in UE4.
+This is due to how we exported the <em>masks</em> texture in <a href="export_atlas.html#2-decalmachine">Step 2</a>.  It’s complicated, but all you need to know is if your decal only has its normal map showing then it should be colored black for your diffuse / base color texture. </p>
+<p>At this point you can export your final textures from Painter.<br />
+After that, you should have a Base Color, Packed Roughness/Metallic, and a Normal Map.</p>
+<p>Take these textures along with the Height map and Opacity map you exported from DECALmachine, and import them all into UE4.</p>
+<h3 id="4-decal-shader-in-ue4">4. Decal Shader in UE4</h3>
+<p>Now that we have the final atlas textures created, we need to set up the decal shader in UE4.<br />
+And of course we are going to using mesh decals for this workflow, not <a href="https://docs.unrealengine.com/en-US/Engine/Actors/DecalActor/index.html">decal actors</a>.  </p>
+<p>There are many reasons for this, but performance alone is worth it. The cons versus using a projected decal actor is, that you cannot move them around in engine. However, DECALmachine makes adjusting them easy and you just need to re-export the mesh again.</p>
+<p>First, create a material and call it whatever you like. This will be your decal material.</p>
+<p><img alt="UnrealEngine08" src="img/export_atlas/unreal_engine_08.jpg" /></p>
+<p>In the materials Details tab change the material domain, blend mode, and decal blend mode, to the properties above.</p>
+<p>Now it’s just a matter of plugging in all of the maps we’ve created into their correct locations. Plug in your Base Color, Metallic, Roughness, and Normal to their corresponding channels.  </p>
+<p>The only new part of this process is the  <em>masks</em> texture we exported in <a href="export_atlas.html#2-decalmachine">Step 2</a>.<br />
+Make sure you leave that texture set to <strong>sRGB</strong> in its properties and connect it to the Opacity channel as seen below.</p>
+<p><img alt="UnrealEngine09" src="img/export_atlas/unreal_engine_09.jpg" /></p>
+<p>You can also see, that I have Parrallax Occlusion Mapping node connected to the UV inputs of my texture nodes, and I go into the settings for it below.  </p>
+<h4 id="parallax-occlusion-mapping">Parallax Occlusion Mapping</h4>
+<p>Plug the atlas height map at the top. I recommend you use the settings I have below for everything else.<br />
+But feel free to play around with it or use a Bump Offset Node instead.<br />
+Bump Offset doesn’t look quite as good but is cheaper and still holds up for most cases.</p>
+<p><img alt="UnrealEngine10" src="img/export_atlas/unreal_engine_10.jpg" /></p>
+<h3 id="conclusion">Conclusion</h3>
+<p>Now that we have all of our maps plugged in correctly, it should look like the image below.<br />
+You can use any material on the background cube object and the decals will look great due to the new opacity mask we generated.</p>
+<p><img alt="UnrealEngine11" src="img/export_atlas/unreal_engine_11.jpg" /></p>
+<p>Here I swapped the cube’s material to metal and the decals blend in perfectly due to the new opacity mask and code.</p>
+<p><img alt="UnrealEngine12" src="img/export_atlas/unreal_engine_12.jpg" /></p>
+<p>This was a very rudimentary example, but the pros for using decals for micro details combined with mid-poly models can be great.<br />
+No more texel density issues, lower texture memory, easy to edit, modular, faster to model, etc.</p>
+<p>I hope this helped you out.  I know it's fairly technical, but it is intended for devs that are looking for a decal solution with UE4.  Our goal is to help get UE4 working even better with DECALmachine in the future.</p>
+<p>Cheers,<br />
+<a href="https://www.artstation.com/thadclevenger">Thad Clevenger</a>,<br />
+<em>Senior Artist at <a href="https://funcom.com">Funcom</a></em></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Again, I want to reiterate to please not contact Thad for support.<br />
+You can submit any questions or suggestions you have <a href="https://blenderartists.org/t/decalmachine/688181">Blender Artists</a> or <a href="https://polycount.com/discussion/210294/blender-decalmachine-surface-detailing-using-mesh-decals/">polycount</a>.</p>
+</div>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="export_introduction.html" class="btn btn-neutral float-left" title="Introduction"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="export_trim_sheet.html" class="btn btn-neutral float-right" title="Trim Sheets">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="export_introduction.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="export_trim_sheet.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

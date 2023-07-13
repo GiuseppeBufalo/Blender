@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://machin3.io/MECHmachine/docs/whatsnew.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>What's new? - MESHmachine</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "What\u0027s new?";
+        var mkdocs_page_input_path = "whatsnew.md";
+        var mkdocs_page_url = "/MECHmachine/docs/whatsnew.html";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-78703389-1', 'MMdocs');
+        ga('send', 'pageview');
+      </script>
+    
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> MESHmachine
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="index.html">MESHmachine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="whatsnew.html">What's new?</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#012">0.12</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0112">0.11.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0111">0.11.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#011">0.11</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#010">0.10</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#boolean">Boolean</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#symmetrize">Symmetrize</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#more">More</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#091">0.9.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#09">0.9</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#boolean_1">Boolean</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#unfuse-and-unbevel">Unfuse and Unbevel</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#more_1">More</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#plugs">Plugs</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#082">0.8.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#081">0.8.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#08">0.8</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#cursor-to-stash">Cursor to Stash</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#split-booleans">Split Booleans</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#wedge">Wedge</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#072">0.7.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#071">0.7.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#07">0.7</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#installation-support">Installation &amp; Support</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#boolean_2">Boolean</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#selection">Selection</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#symmetrize_1">Symmetrize</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#stashes">Stashes</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#more_2">More</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#experimental-features">Experimental Features</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0613">0.6.13</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0612">0.6.12</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0611">0.6.11</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#0610">0.6.10</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#069">0.6.9</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#068">0.6.8</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#06">0.6</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#new-since-0513">new since 0.5.13</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#new-since-05">new since 0.5</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#beyond-06">beyond 0.6</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#05">0.5</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#fuse">Fuse</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#change-width">Change Width</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#unfuse">Unfuse</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#unchamfer">Unchamfer</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#unfck">Unf*ck</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#turn-corner">Turn Corner</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#quad-corner">Quad Corner</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Chamfers and Fillets</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="change_width.html">Change Width</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="fuse.html">Fuse</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="flatten.html">Flatten</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unfuse.html">Unfuse</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="refuse.html">Refuse</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unchamfer.html">Unchamfer</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unbevel.html">Unbevel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unfuck.html">Unf*ck</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="turn_corner.html">Turn Corner</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="quad_corner.html">Quad Corner</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="mark_loop.html">Mark Loop</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Plugs</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="plugs_introduction.html">Plugs Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="plug_creation.html">Plug Creation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="advanced_plug_creation.html">Advanced Plug Creation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="remove_plugs.html">Remove Plugs</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="delete_plug.html">Delete Plug</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="plug_resources.html">Plug Resources</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Booleans</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="boolean.html">Boolean</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="boolean_cleanup.html">Boolean Cleanup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="chamfer.html">Chamfer</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="offset.html">Offset</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Stashes</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="create_stash.html">Create Stash</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="view_stashes.html">View Stashes</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="transfer_stashes.html">Transfer Stashes</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stashes_panel.html">Stashes Panel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="orphan_stashes.html">Orphan Stashes</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sweep_stashes.html">Sweep Stashes</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="conform.html">Conform</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="quick_patch.html">Quick Patch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Normals</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="normal_flatten_straighten.html">Normal Flatten and Straighten</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="normal_transfer.html">Normal Transfer</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="normal_clear.html">Normal Clear</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Mirror</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="symmetrize.html">Symmetrize</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="real_mirror.html">Real Mirror</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Selection</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="lselect.html">LSelect</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sselect.html">SSelect</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="vselect.html">VSelect</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="select.html">Select</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Refinement</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="wedge.html">Wedge</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Looptools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="circle_relax.html">Circle and Relax</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">MESHmachine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Get Started &raquo;</li>
+      <li>What's new?</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<h2 id="012">0.12</h2>
+<p>TODO</p>
+<h2 id="0112">0.11.2</h2>
+<p>This release hopefully resolves some odd 3.1 related crashes.<br />
+I've also added small, one-time thank you message, when opening the addon preferences forfthe first time.</p>
+<h2 id="0111">0.11.1</h2>
+<p>The previous release has been very solid. So besides a few minor tweaks and adjusments 0.11.1 only really prevents cutters created by the Boolean tool from being rendered.  </p>
+<h2 id="011">0.11</h2>
+<p>This is the Blender 3.1 release.<br />
+In addition to 3.1 support, 0.11 also provides a permanent solution to the <a href="https://developer.blender.org/T93896">vertex group memory issue</a> affecting <a href="normal_transfer.html">NormalTransefr</a>, <a href="conform.html">Conform</a> and <a href="plugs_introduction.html">Plug</a>, that was introduced in Blender 3.0, and for which 0.10 only provided a workaround, and one that didn't include Plug.</p>
+<p>And that's about it. Lately, I was rather occupied with <a href="https://punch.machin3.io">PUNCHit</a> and <a href="https://twitter.com/search?f=live&amp;q=MACHIN3tools%20(from%3Amachin3io)%20-filter%3Areplies&amp;src=typed_query">MACHIN3tools</a> and even some <a href="https://twitter.com/machin3io/status/1489018487615934465">design work</a> for once.</p>
+<p>Oh, I also have a <a href="https://patreon.com/machin3">Patreon</a> account now, where I will do pre-releases of upcoming addons, and <a href="https://twitter.com/machin3io/status/1499788313468801029">where I share blend files</a>, if I manage to find time for art. So if you are interested in further supporting my work, that would be a good way to do it. It is very much appreciated! Thank you for considering!</p>
+<h2 id="010">0.10</h2>
+<p>This is a small feature update. Both new features are based on user feedback, so thanks to you guys for suggesting these.</p>
+<h3 id="boolean">Boolean</h3>
+<p>The <a href="boolean.html#duplicate">Duplicate Boolean</a> tool is now fully recursive, which means, it can duplicate or instance complex boolean setups, where the boolean operands themselves have boolean modifiers. This includes <a href="https://masterxeon1001.gumroad.com/l/BoxCutter">BoxCutter</a> insets.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You still only need to have the main object selected, and all <em>cutters</em> can remain hidden.</p>
+</div>
+<h3 id="symmetrize">Symmetrize</h3>
+<p>The <a href="symmetrize.html">Symmetrize</a> tool now has a <em>Remove</em> mode, which you can toggle using the <code>X</code> key.<br />
+Instead of mirroring the mesh along one axis and in one direction, it will instead remove half the mesh in the chosen direction.  </p>
+<p>Furthermore, using the <code>S</code> key you can now also choose to affect only the selected parts of a mesh. This works for both - <em>Symmetrize</em> and <em>Remove</em> mode.</p>
+<h3 id="more">More</h3>
+<p>In addition there are a few fixes in regards to MACHIN3tools' group empties.
+Check out the <a href="changelog.html">changelog</a> for details.</p>
+<p>Merry Christmas, enjoy the holidays!</p>
+<h2 id="091">0.9.1</h2>
+<p>This mostly a bugfix release, but it also improves Flatten and Unchamfer.</p>
+<p>Blender 3.0 unfortunatly broke the NormalTransferand Conform tools, due a bug relating to <a href="https://developer.blender.org/T93896">vertex groups</a>.</p>
+<p>Furthermore, due to a change in keymap property representation in Blender 3.0, it was no longer possible to add the Split or Delete tools (depending on your keymap choice of <code>Y</code> or <code>X</code>) to the MESHmachine menu. This has been fixed now.</p>
+<p>Check out the <a href="changelog.html">changelog</a> for details.</p>
+<h2 id="09">0.9</h2>
+<p>This is the Blender 3.0 release. Note, that at the time of this release, Blender 3.0 is still in beta.
+Alongside 3.0, Blender 2.93 LTS is still being supported, but support for any earlier versions is dropped now.</p>
+<p>This release also no longer relies on Blender's <a href="https://docs.blender.org/api/3.0/bgl.html"><em>bgl</em></a> module for VIEW3D drawing.<br />
+However, if you want MESHmachine to draw smooth, anti-aliased lines, you need to enable <em>Use Legacy Line Smoothing</em> in the addon <a href="preferences.html#legacy-line-smoothing">preferences</a>, which still uses <em>bgl</em>.</p>
+<h3 id="boolean_1">Boolean</h3>
+<p>This release adds the <a href="boolean.html#duplicate">Duplicate Boolean</a> tool, which is used to easily duplicate or instance objects with one or multiple boolean modifiers, including all the boolean objects - aka "cutters" - even if they are hidden.</p>
+<p>The <a href="boolean.html">Apply Boolean</a> tool has been updated to support applying boolean mods on multi-object selections.</p>
+<h3 id="unfuse-and-unbevel">Unfuse and Unbevel</h3>
+<p>Both tools will no longer set sharp edges by default, unless the face selection actually consists of smooth faces.</p>
+<h3 id="more_1">More</h3>
+<p>There are various smaller tweaks and adjustments, such as improvements to the GetSupport tool and the removal of legacy code for pre-2.93 case handling.</p>
+<p>Finally note that, due to the number of tools in the addon, not everything could be fully tested in 3.0, so some issues may still arise and should be <a href="faq.html#get-support">reported</a>.</p>
+<h3 id="plugs">Plugs</h3>
+<p>To conclude, here is a <a href="https://akhmadiev.gumroad.com/l/DEbyg">very interesting, topology-focused</a> use case for <a href="plugs_introduction.html">Plugs</a>, which you may want to check out, by <a href="https://akhmadiev.gumroad.com/l/DEbyg">Unis</a> on gumroad.</p>
+<p><a href="https://akhmadiev.gumroad.com/l/DEbyg"><img alt="UnisTopologyPlugs" src="img/plug_resources/unis_01.jpg" /></a></p>
+<h2 id="082">0.8.2</h2>
+<p>A tiny bugfix release addressing an issue on some linux systems.<br />
+Also, disable Wedge debug output, which was accidentally left enabled in 0.8.1.</p>
+<h2 id="081">0.8.1</h2>
+<p>This is a hotfix release for the Wedge tool. No other changes.</p>
+<h2 id="08">0.8</h2>
+<p>MESHmachine 0.8 is the official 2.93 release, and I'd ask you to update to 2.93, if you haven't already.<br />
+2.93 is the latest stable release, and the latest LTS release at the same time. Any issues occurring only in earlier versions will not be addressed going forward. </p>
+<p>This is a feature release adding the <a href="wedge.html">Wedge tool</a>, <a href="boolean.html">Split Booleans</a> and related tooling, and the ability to set the <a href="view_stashes.html">Cursor to Stashes</a>.<br />
+Beyond that there have been some tweaks and a few fixes.</p>
+<h3 id="cursor-to-stash">Cursor to Stash</h3>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/hR3p8ClohCc" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="split-booleans">Split Booleans</h3>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/dAJoLS7Stz0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="wedge">Wedge</h3>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/iZi5H73_Z6I" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<p>Check out the <a href="changelog.html">changelog</a> for the full list of changes.</p>
+<h2 id="072">0.7.2</h2>
+<p>The second release in the 0.7 cycle resolves an issue with subset plug creation.<br />
+It also adds the ability to stash evaluated meshes by holding <code>ALT</code>, and improves dealing with child objects when swapping stashes.  </p>
+<p>See the <a href="changelog.html">changelog</a> for details.</p>
+<h2 id="071">0.7.1</h2>
+<p>This is a small bugfix release with some UI tweaks.<br />
+If you have 0.7 installed already, I'd consider this an optional update, depending on whether you require any of the <a href="changelog.html">supplied fixes or tweaks</a>.</p>
+<p>The easiest way to install a bugfix release like this one, is to simply overwrite the existing <a href="installation.html#blenders-addons-folder"><em>MESHmachine addon folder</em></a> with the <em>MESHmachine</em> folder in the 0.7.1 zip file. There's no need to delete anything.</p>
+<h2 id="07">0.7</h2>
+<p>The 0.7 release is the first real feature release since 0.6, which released 2.5 years ago.<br />
+While there have been the 2.80 port and a few compatibility releases - some with new features sneaked in - there hasn't been a lot of development happening since 0.6.</p>
+<p>This is due to the complete rewrite of <a href="https://decal.machin3.io">DECALmachine</a> for Blender 2.80, as well as the following updates creating a full <a href="https://machin3.io/DECALmachine/docs/export_introduction">decal export pipeline</a>, which took 2+ years in total.</p>
+<p>MESHmachine 0.7 then is the result of finally spending some new development time on MESHmachine again, and pulling together a few unreleased features I had been sitting on for those past 2+ years.
+It brings various improvements in regards to existing workflows, some new tools and features, and new documentation.  </p>
+<p>0.7 is only the start though, I will make MESHmachine a main focus of my development efforts for 2021, and likely 2022 as well. </p>
+<h3 id="installation-support">Installation &amp; Support</h3>
+<p>Please make sure to check the updated <a href="installation.html">installation instructions</a>, as well as the <a href="preferences.html">preferences</a>.<br />
+Also <a href="faq.html#get-support">see this</a>, if you require product support.</p>
+<h3 id="boolean_2">Boolean</h3>
+<p>MESHmachine 0.7 adds two <a href="boolean.html">boolean tools</a>, for adding and applying booleans.<br />
+Unique about them - besides the convenience - is the integration with <a href="create_stash.html">stashes</a>.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/_Vt_5enDIWA" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="selection">Selection</h3>
+<p>While <a href="vselect.html">VSelect</a> was present in 0.6 already, <a href="lselect.html">LSelect</a> and <a href="sselect.html">SSelect</a> only came with 0.6.10 and remained undocumented - until now.<br />
+Still, buried in a sub-menu, all three could be awkard to use, considering how frequent selections are done while modeling.</p>
+<p>The new <a href="select.html">Select</a> tool rectifies this.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/xgO_v57sUQs" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="symmetrize_1">Symmetrize</h3>
+<p>MESHmachine's <a href="symmetrize.html">Symmetrize</a> has been a bit restrictive in the past, as it required 3 separate keymaps to mirror in 3 directions, and at all times an awareness of how your object is aligned. If you wanted to mirror in one of the other 3 directions, you'd have to use the redo panel.</p>
+<p>Version 0.7 adds the <em>flick mode</em>, which means you can use a single keymap to mirror in all 6 directions, in a manner very similar to how pie menus work.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/Z1mkkGQIGlI" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<h3 id="stashes">Stashes</h3>
+<p>Stashes, a central feature of MESHmachine, are becomming even better.<br />
+You can now conveniently access them from the sidebar, complementing the <a href="view_stashes.html">View Stashes</a> tool. 
+From here you can now even define custom names.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/WMgIcA9vV_s" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<p>In addition to editing and retrieving stashes, you can now also swap them with the active object.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/Au_IyjXS1U4" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<p>Furthermore, removing object stashes, and dealing with <a href="orphan_stashes.html">orphan stashes</a> has been simplified.<br />
+You can now <a href="create_stash.html">create stashes</a> from face selections, and you can <a href="sweep_stashes.html">sweep stashes</a> if they end up cluttering your scene after appending objects.</p>
+<h3 id="more_2">More</h3>
+<p>If you ever needed to delete a plug, know that you can <a href="delete_plug.html">do that easily now</a>.<br />
+And if you ever forgot to create a stash and needed a normal source to flx a shading issue, perhaps after plugging, you can try creating a <a href="quick_patch.html">Quick Patch</a> with MESHmachine 0.7.</p>
+<h3 id="experimental-features">Experimental Features</h3>
+<p>I have decided to release a few experimental features with this release, the most exciting being the OffsetCut tool. <br />
+Please understand, that experimental features are undocumented, untested and not covered by product support.<br />
+I consider them unfinished, see <a href="preferences.html#experimental-features">this</a> for details.</p>
+<hr />
+<p>In conclusion, I want to thank you for your patience and for your support.<br />
+You can check out the <a href="changelog.html">changelog</a> for details on this release, as well as view all new videos in this <a href="https://www.youtube.com/playlist?list=PLcEiZ9GDvSdUYciAqSNYfbBJ4FmTWqDKy">playlist</a>.</p>
+<h2 id="0613">0.6.13</h2>
+<p>This is a tiny bugfix release for users of 2.90, that fixes an exception when adding a plug to a library.</p>
+<h2 id="0612">0.6.12</h2>
+<p>This release ensures compatibility with Blender 2.90 and adds ALT navigation support for users of the Industry Compatibly keymap.
+It also changes how panels are registered to support proper workspace filtering.</p>
+<h2 id="0611">0.6.11</h2>
+<p>This release ensures compatibility with Blender 2.83 and fixes a few minor issues.<br />
+See the <a href="changelog.html">changelog</a> for details.</p>
+<h2 id="0610">0.6.10</h2>
+<p>This releases adds new Selection tools like LSelect and SSelect.</p>
+<p>Lselect can select edge loops based on an angle threshold, which allows for loop selection next to ngons.
+In Face mode, LSelect can select face loops based on an initial 2 face selection. This mode is specifically made to easily select <em>perimeter loops</em> on the outer bounds of plugs.</p>
+<p>SSelect can simplify the selection of sharp edges. Based on an initial selection of sharp edges, the tool will select all other sharp edges touching the initial selection.
+Again, this is helpful in cases where Blender's default loop selection fails due to the presences of ngons.</p>
+<p>Both tools can be found the <em>Select</em> sub menu</p>
+<p>This version also introduces the ability to edit existing <em>stashes</em>. Just bring up the <em>ViewStashes</em> tool, pick a stash and press the <code>E</code> key.
+When you are done, press <code>ALT + ESC</code> to exit <em>edit stash</em> mode.</p>
+<p>Finally, the <em>LoopTools Circle Wrapper</em> now has the ability to fix the midpoint, which can be way off, if the circle has an irregular vert distribution. 
+Use the <code>X</code> key once the tools is running.</p>
+<h2 id="069">0.6.9</h2>
+<p>This release updates MESHmachine to properly work with recent Blender builds, which introduced some deep internal changes.</p>
+<p>As a result, Plugs can now be used with <em>Redo Last</em>, there are no longer deformation and rotation issues.</p>
+<p>There is however also <a href="https://developer.blender.org/T64794">a new issue</a>, preventing Array plugs from being normal transferred. This should hopefully be solved over the next days without the need for another MESHmachine update.</p>
+<p>Other than that, there have been a number of smaller fixes and tweaks.<br />
+The multi-region issue affecting modal tools and modal HUDs has been fixed. A rare drawing issue for the BooleanCleanup tool has been resoluved as well.</p>
+<p>The stashes HUD in the 3D View can now be scaled using Blender's ui_scale pref, as well as MESHmachine's modal_HUD_scale pref.</p>
+<p>All changes can be seen in the <a href="changelog.html">changelog</a>.</p>
+<h2 id="068">0.6.8</h2>
+<p>The 0.6.8 release is the first MESHmachine for Blender 2.80.<br />
+It is for the most part a straight port of MESHmachine 0.6. There are only a few additions, but numerous tweaks and improvements.<br />
+Users of the previous 0.6 version should feel right at home, maybe more so than ever - now in Blender 2.80.</p>
+<p>A few things - mostly legacy modal options - have been removed to streamline the codebase going forwards.</p>
+<p>Check out the <a href="changelog.html##v068">changelog</a> for a detailed list of all changes.</p>
+<div class="admonition danger">
+<p class="admonition-title">Attention</p>
+<p>There are two open Blender bugs affecting the <strong>Plug tool</strong>: <a href="https://developer.blender.org/T64300">T64300</a> and <a href="https://developer.blender.org/T64307">T64307</a>.<br />
+Until they are fixed, there will be issues with plugging and <strong>Redo Last</strong>.  </p>
+<p>This means, you currently can't change the plug rotation via the <em>redo panel</em>, and Plug deformation will stop working, as soon as any property is changed in the <em>redo panel</em>.
+You should be able to work around that by manualy undoing as <a href="https://twitter.com/machin3io/status/1126242983819579392">demonstrated here</a>.    </p>
+<p>Furthermore, the contain and normal transfer options are now temporarily enabled by default to avoid unecessary undos. This comes at a ~50% performance cost.</p>
+</div>
+<h2 id="06">0.6</h2>
+<p>Quite a lot has happened since 0.5.13, and even more has happened since the initial 0.5 release, 6 months ago.<br />
+To get a better understanding of the amount of work that went into the 0.6 release, feel free to glance over the <a href="changelog.html">changelog</a>. </p>
+<h3 id="new-since-0513">new since 0.5.13</h3>
+<p>First and foremost, highly anticipated, <strong>Plugs</strong> are here.  </p>
+<p>Plugs are a quick way to add detail to a mesh. Make sure to check out the <a href="plugs_introduction.html">Plugs Introduction</a> first.<br />
+The Plug tool is the biggest, most complex tool I've worked on so far, and it has a few controls to tune its behavior, which you should learn first.</p>
+<p>The Plug tool alone is nothing, without the <a href="plug_resources.html">plug library</a> system, which allows you easily access and manage plug assets.<br />
+There are a number of example plugs to familiarize yourself with the plug tools and ideas.<br />
+Beyond these example plugs, you can also get <a href="plug_resources.html#tagapaw">3rd party plug libraries</a>. </p>
+<p>What I really want, is for you to <a href="plug_creation.html">create your own plugs</a>. And you are of course free to sell or share your plug libraries, if you want.</p>
+<p>Beyond Plugs, there are two other powerful tools called Real Mirror and VSelect.
+<a href="real_mirror.html">Real Mirror</a> turns mirror modifiers into real, separate geometry with proper origins and orientation. It also mirrors custom normals.</p>
+<p><a href="vselect.html">VSelect</a> is extremely useful to select geometry based on vertex group membership. It's perfect in combination with the Normal Transfer and Conform tools.</p>
+<p>Furthermore, the modal HUDs can now be scaled. Check out the <a href="preferences.html">preferences</a> for details.</p>
+<p>I have removed the HUD positioning options for now. There are a number of problems with fixed HUD positions and I didn't have the time and patience to work around them.<br />
+Following the mouse position is a superior approach IMHO and it's what I use. Let me know if you hate this :)</p>
+<p>Finally, and perhaps most importantly, I have invested <em>a lot</em> of time into documentation, I hope it was spent well.<br />
+Every single tool is documented and demonstrated in narrated videos, which you can watch via this <a href="https://www.youtube.com/watch?v=i68jOGMEUV8&amp;list=PLcEiZ9GDvSdXR9kd4O6cdQN_6i0LOe5lw&amp;index=1">youtube playlist</a>.
+These videos are also embedded throughout this very documentation, which I think is a better way to consume them.</p>
+<p>Also, checkout the updated <a href="faq.html">FAQ</a>, where I explain some of the core ideas and theory behind MESHmachine.</p>
+<h3 id="new-since-05">new since 0.5</h3>
+<p>Where should I start? </p>
+<p>Take a look at the sidebar to the left. The initial release only had the chamfer and fillet tools and had them in their earliest iterations.<br />
+All of these have been improved and expanded. All of them are (optionally) modal now, making them so much more convenient to use.  </p>
+<p>The concept of <a href="create_stash.html">Stashes</a> has been introduced. <a href="normal_flatten_straighten.html">Normal tools</a>, <a href="boolean_cleanup.html">post-boolean tools</a> and <a href="symmetrize.html">mirror tools</a> have been built.<br />
+The list goes on, and will keep growing.</p>
+<h3 id="beyond-06">beyond 0.6</h3>
+<p>I feel like 0.6 is in a great state now. A lot of pieces are in place and I'm looking forward to spend some serious art time with this release.  </p>
+<p>No doubt, there are still kinks to smooth out, and tool performances to be improved. This will be the focus of 0.7, I think. </p>
+<p>I've got plans for some new tools as well. There's also the 2.80 port to be done, which will likely happen before 0.7.</p>
+<hr />
+<p>Quite a few people have been very excited for this release, I just hope it doesn't disappoint.<br />
+I'm certainly very happy with how MESHmachine has evolved. It really has come a <strong>long</strong> way and I've learned so much in the process.</p>
+<p>Happy plugging.</p>
+<h2 id="05">0.5</h2>
+<p>The initial release provides a number of tools, that work in tandem and outline a modeling workflow, that was previously impossible.<br />
+MESHmachine should dramatically increase your flexibility, especially when working with bevels on a geometry level.</p>
+<p>It is not to be used in isolation and does not intend to replace any other tools.
+Rather, it's an addition to the basic modeling toolset, which IMHO really should have been ubiquitous in 3D software for at least the past decade, hence the subtitle :)</p>
+<p>This release aims to test the waters, to find out what the larger community thinks and to retrieve feedback as well as uncover edge cases where the tools fail to work.</p>
+<blockquote></blockquote>
+
+<h3 id="fuse">Fuse</h3>
+<p><a href="fuse.html"><em>The Fuse</em></a> tool is the center piece of MESHmachine. Its purpose is to create rounded surfaces from chamfers/flat bevels.</p>
+<h3 id="change-width">Change Width</h3>
+<p>Using the <a href="change_width.html"><em>Change Width</em></a> tool you can easily adjust the width of an existing chamfer.</p>
+<h3 id="unfuse">Unfuse</h3>
+<p><a href="unfuse.html"><em>Unfuse</em></a> turns a curved surface created by Fuse or the Bevel and Bridge tools into a chamfer.</p>
+<h3 id="unchamfer">Unchamfer</h3>
+<p>The <a href="unchamfer.html"><em>Unchamfer</em></a> tool turns a chamfer back into into a hard edge.</p>
+<hr />
+<p>Now, with these 4 tools in place, a few others could be build, just by combining them.</p>
+<p>The <a href="refuse.html"><em>Refuse</em></a> tool is just the <em>Unfuse</em> and <em>Fuse</em> tools called in sequence, which effectively means you can edit bevel geometry.
+Similarly, the <a href="unbevel.html"><em>Unbevel</em></a> tool is just <em>Unfuse</em> and <em>Unchamfer</em> called in sequence.</p>
+<p>In addition there's a few more tools, that can be very useful in dealing with speciic situations</p>
+<h3 id="unfck">Unf*ck</h3>
+<p><a href="unfuck.html"><em>Unf*ck</em></a> aligns vertices along an implicit spline curve. This is especially useful in situations were the Bevel tool overshoots vertex positions.</p>
+<h3 id="turn-corner">Turn Corner</h3>
+<p>The <a href="turn_corner.html"><em>Turn Corner</em></a> tool is used to re-direct the flow of a chamfer.</p>
+<h3 id="quad-corner">Quad Corner</h3>
+<p>The <a href="quad_corner.html"><em>Quad Corner</em></a> tool is used to convert a triangular bevel corner into a quad corner.</p>
+<hr />
+<p>That's about it for the inital release. I'm looking forward to feedback.<br />
+There will likely be a number of edge cases, that I didn't catch yet and I hope to fix these <a href="faq.html#reporting-errors-or-problems">as soon as they are reported</a>.</p>
+<p>Looking back at how <a href="https://machin3.io/DECALmachine/">DECALmachine</a> evolved in one year, I can't wait to see what MESHmachine will become over the next 12 months..</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="preferences.html" class="btn btn-neutral float-left" title="Preferences"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="faq.html" class="btn btn-neutral float-right" title="FAQ">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="preferences.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="faq.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

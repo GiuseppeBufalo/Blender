@@ -1,0 +1,31 @@
+[3.68.24]
+
+New/improved:
+- Code structure: refactored code to clearly state licensing, "src" folder containing GPL python files, Royalty Free and CC0 for other asset blend files
+- Rig: New leg FK lock setting, similar to arms FK lock
+- Rig: When binding, removal of existing vertex groups can now be disabled as a default preference. A warning message is displayed at the first bind
+- Rig: New "Remove Selected Driver" function to remove the corrective driver of the selected shape key, deletes the helper bone as well
+- Rig: When initializing the armature scale during Match to Rig, the animations can now be scale compensated automatically. A dialog box prompts the user to enable scale compensation or not
+- Rig: Cosmetic, brought back some colorful icons from Blender 2.79!
+- Picker: Show a warning if the picker addon is not installed (Misc tab)
+- Skin: When binding, used vertex groups are now also searched in geometry nodes attributes, to exclude them from removal
+- Skin: If binding fails because of scale issue, a popup message now proposes to rebind with Scale Fix enabled automatically
+- Smart: Cosmetic, new markers icons, also fixing OpenGL error message on MacOS
+- Interface: the "Mirror Shape Keys" button was moved to the Shape Keys dropdown menu, and renamed "Mirror All Shape Keys"
+- Check for update: Now shows a differential log, comparing the log of the new available version versus the current old version
+
+
+Fixed:
+- Rig: Spine reference bones had incorrectly more than one bbone segment, leading to error when keyframing the whole character
+- Rig: Add Blink Pose was not resetting bones transform properly after adding the constraint
+- Rig Layers: Made "Edit Layer..." a movable panel instead of an embedded menu panel to avoid the glitch making it disappear when moving the mouse cursor
+- Rig: IK-FK snap invalid vector angle error
+- Rig: The Lite version menu was kept hidden
+- Picker: Missing eyelids
+- Skin: Error while using edge selection mode with "Set Eyelids Borders"
+- Skin: Make sure the current armature modifier has a target armature
+- Smart: Error crash when facial markers were invalid
+- Smart: Switched to marker images, to fix error on MacOS with Metal backend due to OpenGL functions not supported
+- Export: Broken export when the scene was duplicated as a Full Copy and linked overrides
+- Export: Custom renaming and UE renaming were conflicting
+- Export: Error when exporting meshes with topology changing modifiers (Decimate) and shape keys

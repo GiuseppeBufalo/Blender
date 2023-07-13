@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://machin3.io/DECALmachine/docs/changelog.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>Changelog - DECALmachine</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Changelog";
+        var mkdocs_page_input_path = "changelog.md";
+        var mkdocs_page_url = "/DECALmachine/docs/changelog.html";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-78703389-1', 'DMdocs');
+        ga('send', 'pageview');
+      </script>
+    
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> DECALmachine
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="index.html">DECALmachine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What's new?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Menus</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="pie_menu.html">Pie Menu</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panels.html">Panels</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Basics</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="assets.html">Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="asset_loaders.html">Asset Loaders + Insert</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="select.html">Select</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="re-apply.html">Re-Apply</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_defaults.html">Adjust Decals/Defaults</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="project.html">Project</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="slice.html">Slice + Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="gpanel.html">GPanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="epanel.html">Epanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="join_split.html">Join and Split</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="get_backup.html">Get Backup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sweep_decal_backups.html">Sweep Decal Backups</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="match_material.html">Match Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panel_cut.html">Panel Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="init_generated_coords.html">Initialize Generated Coords</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="transfer_uvs.html">Transfer UVs</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="init_trim_sheet_material.html">Init Trim Sheet Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="setup_subsets.html">Setup Subsets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_trim.html">Unwrap Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_to_empty_trim.html">Unwrap to Empty Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_trim.html">Adjust Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_cut.html">Trim Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="mirror_trim.html">Mirror Trim</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="quad_unwrap.html">Quad Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="box_unwrap.html">Box Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stitch.html">Stitch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Utils</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="remove_decal_orphans.html">Remove Decal Orphans</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="fix_texture_paths.html">Fix Texture Paths</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="validate_decal.html">Validate Decal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="clear_decal_props.html">Clear Decal Props</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_instant.html">Instant</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_batch.html">Batch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim Sheet Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_creation.html">Trim Sheets</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Export</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="export_introduction.html">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_atlas.html">Atlasing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_trim_sheet.html">Trim Sheets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_bake.html">Baking</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Assets</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="update_decals.html">Update Decal and Trim Libraries</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="update_blend_files.html">Update Blend Files</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="supplied_assets.html">Supplied Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Ecosystem</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="addons.html">Addons</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_resources.html">Decal Resources</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_resources.html">Trim Sheet Resources</a>
+                  </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="changelog.html">Changelog</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#272">2.7.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#271">2.7.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#27">2.7</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#265">2.6.5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#264">2.6.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#263">2.6.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#262">2.6.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#261">2.6.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#26">2.6</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#251">2.5.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#25">2.5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#241">2.4.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#24">2.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#23">2.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#22">2.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#21">2.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#201">2.0.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#20">2.0</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#194">1.9.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#193">1.9.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#192">1.9.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#191">1.9.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#19">1.9</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#187">1.8.7</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#186">1.8.6</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#185">1.8.5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#184">1.8.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#183">1.8.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#182">1.8.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#181">1.8.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#18">1.8</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#142a">1.4.2a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#142">1.4.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#141a">1.4.1a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#141">1.4.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#14a">1.4a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#14">1.4</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#135b">1.3.5b</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#135a">1.3.5a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#135">1.3.5</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13c">1.3c</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13b">1.3b</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13a">1.3a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#13">1.3</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12b">1.2b</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12a">1.2a</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#12">1.2</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#11">1.1</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#10">1.0</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">DECALmachine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Changelog</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="_1"></h1>
+<h2 id="272">2.7.2</h2>
+<blockquote>
+<p>2023-04-21</p>
+</blockquote>
+<ul>
+<li>fix trim/atlas gizmos being drawn as ellipses in Blender 3.5</li>
+<li>fix decal orientation when placed on non-uniformly scaled object</li>
+</ul>
+<h2 id="271">2.7.1</h2>
+<blockquote>
+<p>2022-12-30</p>
+</blockquote>
+<ul>
+<li>fix issues introduced by 3.4's new MIX node<ul>
+<li>update SetupSubsets op (for trimsheet materials)</li>
+<li>update decal to trimsheet material matching</li>
+<li>fix related BakePreview exception</li>
+</ul>
+</li>
+</ul>
+<h2 id="27">2.7</h2>
+<blockquote>
+<p>2022-11-25</p>
+</blockquote>
+<ul>
+<li>raise minimum version to Blender 3.3 LTS</li>
+<li>Adjust tool<ul>
+<li>fix panel trim decals created from <strong>Info</strong> Trim Sheets not being accessible for Panel Cycling via Adjust</li>
+</ul>
+</li>
+<li>Decal Creation<ul>
+<li>optionally create float (16bit) normal maps</li>
+<li>it's experimental, enable it in addon preferences &gt; Decal Creation tab</li>
+<li>NOTE: Atlases created from there will still only use 8-bit normals</li>
+</ul>
+</li>
+<li>tweak decal library layout in Pie menu, adjusting the icon width accordingly <em>(proxeIO)</em></li>
+</ul>
+<h2 id="265">2.6.5</h2>
+<blockquote>
+<p>2022-08-06</p>
+</blockquote>
+<ul>
+<li>fix modal HUDs being drawing off-screen in Blender 3.2.2</li>
+</ul>
+<h2 id="264">2.6.4</h2>
+<blockquote>
+<p>2022-06-08</p>
+</blockquote>
+<ul>
+<li>fix material matching in Blender 3.2</li>
+</ul>
+<h2 id="263">2.6.3</h2>
+<blockquote>
+<p>2022-04-30</p>
+</blockquote>
+<ul>
+<li>fix rare issue with sluggishness of addon preferences caused by legacy library check</li>
+<li>add thank you note to addon preferences </li>
+</ul>
+<h2 id="262">2.6.2</h2>
+<blockquote>
+<p>2022-04-24</p>
+</blockquote>
+<ul>
+<li>fix MacOS issue when registering Atlases caused by .DS_store files</li>
+<li>a few small tweaks and fixes</li>
+</ul>
+<h2 id="261">2.6.1</h2>
+<blockquote>
+<p>2022-03-15</p>
+</blockquote>
+<ul>
+<li>fix atlas creation in Blender 3.1</li>
+<li>fix decal-from-text creation in Blender 3.1</li>
+</ul>
+<h2 id="26">2.6</h2>
+<blockquote>
+<p>2022-03-09</p>
+</blockquote>
+<ul>
+<li>support Blender 3.1</li>
+<li>further harden asset registration by introducing concept of <em>corrupted</em> libraries<ul>
+<li>corrupted libraries are libraries containing non-decal folders</li>
+<li>prevent registering and updating them</li>
+<li>GetSupport tool<ul>
+<li>indicate if a library is corrupted</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Project<ul>
+<li>fix issues when target object scaled up a lot due to surface distances being returned in the object's local space</li>
+</ul>
+</li>
+<li>update PIL/pillow to 9.0.1</li>
+</ul>
+<h2 id="251">2.5.1</h2>
+<blockquote>
+<p>2021-12-18</p>
+</blockquote>
+<ul>
+<li>fix Bake Preview in Blender 3.0</li>
+<li>fix adding Decal to existing Atlas in Blender 3.0</li>
+<li>fix issues relating to Blender 3.0's change in keymap property representation</li>
+<li>fix issues relating to Blender 3.0's None type material previews</li>
+<li>fix visual bug due to missing AO clamping in Decal Node Group<ul>
+<li>update supplied assets accordingly</li>
+<li>update Templates so newly created Decals are fixed</li>
+<li>add <em>Fix AO Clamping</em> debug tool, to update existing users assets</li>
+</ul>
+</li>
+</ul>
+<h2 id="25">2.5</h2>
+<blockquote>
+<p>2021-11-25</p>
+</blockquote>
+<ul>
+<li>support Blender 3.0</li>
+<li>in Blender 3.0, introduce Decal and Trim Sheet Asset Update<ul>
+<li>add Update21DecalLibrary tool</li>
+<li>add Update21BlenderFile tool</li>
+<li>update BatchUpdate tool</li>
+</ul>
+</li>
+<li>update Validate tool</li>
+<li>further harden asset registration<ul>
+<li>add additional system console output, if assets fail to register</li>
+</ul>
+</li>
+<li>make Decal and Trim Sheet material deduplication more efficient, improving scene load/update performance</li>
+<li>properly deduplicate Trim Sheet materials, when initiating them on meshes without existing materials</li>
+<li>improve MyDecals library collision handling when changing assetspath</li>
+<li>improve RemoveOrphans tool</li>
+<li>improve GetSupport tool</li>
+<li>addon preferences<ul>
+<li>add option for legacy line smoothing </li>
+<li>add warnings in addon prefs, if assets fail to register</li>
+</ul>
+</li>
+<li>remove legacy code for Blender pre-2.93</li>
+<li>drop bgl module use for view3d drawing (except for legacy line smoothing)</li>
+</ul>
+<h2 id="241">2.4.1</h2>
+<blockquote>
+<p>2021-09-10</p>
+</blockquote>
+<ul>
+<li>TrimCut<ul>
+<li>adapt to 2.93.4 knife project breaking change</li>
+</ul>
+</li>
+<li>PIL Installation<ul>
+<li>raise PIL version to 8.3.1<ul>
+<li>on some macos versions 8.1.0 just wouldn't install due to missing libjpeg dependency</li>
+</ul>
+</li>
+<li>install wheel before installing pillow</li>
+</ul>
+</li>
+<li>fix issues on some linux systems</li>
+</ul>
+<h2 id="24">2.4</h2>
+<blockquote>
+<p>2021-07-24</p>
+</blockquote>
+<ul>
+<li>bump minimum blender version to 2.93 (LTS)<ul>
+<li>can be seen as suggestion for now, 2.83+ is still good, but be prepared to update if any issues arise</li>
+<li>add version warning to prefs for Blender versions smaller than 2.93</li>
+</ul>
+</li>
+<li>add Transfer UVs tool (side panel tool)<ul>
+<li>transfer decal parent's UVs to selected decals </li>
+<li>transfer image textures directly connected to decal parent's Principled BSDF node to selected decals' materials</li>
+</ul>
+</li>
+<li>Decal Creation<ul>
+<li>support info decal names from file name for info decals created from PNGs</li>
+<li>support skipping the automatic decal index, that's normally added to the front of the decal name<ul>
+<li>this can then result in two kinds of conflicts<ul>
+<li>without the index, an existing decal folder with the name of the to-be-added decal exist already</li>
+<li>when adding multiple decals the decal name could be a duplicate and so only the first of the duplicates will be added</li>
+</ul>
+</li>
+<li>for both there are warnings in the creation panel</li>
+<li>and both cases will be skipped by the AddDecalToLibrary tool<ul>
+<li>if any are skipped, there will be a popup message pointing it out</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>support storing specific subset material component in the decal asset blend</li>
+<li>for Simple, Subset and Panel decals: skip normal flattening if enabled, but object is not smooth shaded</li>
+<li>ensure user is returned to original scene, when decal creation is finished</li>
+</ul>
+</li>
+<li>Creation Panel<ul>
+<li>add ability to open selected user-decal(unlocked) lib in the file browser</li>
+<li>improve dealing with cases where no user-decal libs are present</li>
+</ul>
+</li>
+<li>Baking<ul>
+<li>ensure user is returned to original scene, when decal creation is finished</li>
+</ul>
+</li>
+<li>make decal library visibility accessible from the 3D view via the pie menu<ul>
+<li>add 10 customizable visibility presets, see tooltips for details</li>
+</ul>
+</li>
+<li>support hiding panel decal libraries from the Adjust tool's ability to cycle through individual panel decals<ul>
+<li>by default have "panel scrolling" disabled for the Example Sheet's panel trims</li>
+<li>support creating panel decals without materials, when all registered panel decals are hidden from "panel scrolling"</li>
+</ul>
+</li>
+<li>Slice, EPanel + GPanel tools<ul>
+<li>properly name the panel decal object and mesh, even when no decal material can be applied</li>
+</ul>
+</li>
+<li>make addon and asset registration much more robust<ul>
+<li>allow addon registration without ANY decal and trim sheet libs present<ul>
+<li>users can now manually remove the entire assets path or any of it's subfolders and DM will still come up fine</li>
+</ul>
+</li>
+<li>disable assets path reset when user-set external assets path doesn't contain valid libraries as it's no longer required</li>
+</ul>
+</li>
+<li>Atlasing<ul>
+<li>improve panel decal pre-packing logic</li>
+<li>fix atlas repack issue, introduced in 2.3</li>
+</ul>
+</li>
+<li>Adjust tool<ul>
+<li>add setting in addon prefs to require <code>ALT</code> key when adjusting decal height to prevent accidental changes</li>
+</ul>
+</li>
+<li>GPanel tool<ul>
+<li>fix rare issue with gpencil NaN points</li>
+</ul>
+</li>
+<li>fix material matching/deduplication to DEFAULTWHITE and DEFAULTMETAL materials</li>
+<li>change default decal height to 0.9998, slightly more surface distance to minimize clipping</li>
+<li>collapse modifiers in all supplied decal assets</li>
+<li>Update18DecalLibrary + Update20DecalLibrary tools<ul>
+<li>improve polling</li>
+</ul>
+</li>
+<li>replace previous parenting and unparenting logic</li>
+<li>improve some terminal output for Windows users</li>
+<li>rename Init Generated UVs tool to Init Generated Coords</li>
+</ul>
+<h2 id="23">2.3</h2>
+<blockquote>
+<p>2021-03-24</p>
+</blockquote>
+<ul>
+<li>Decal Creation (Advanced)<ul>
+<li>support forced UUIDs for decal creation, allowing for iterative decal creation from geometry where each new decal will use the same UUID that's stored on the active source object</li>
+</ul>
+</li>
+<li>Atlasing<ul>
+<li>fix unwrapping of trim panel decals when packed in REPEAT mode</li>
+</ul>
+</li>
+<li>Insert<ul>
+<li>prevent exception when encountering custom, user-added texture in decal asset file (not recommended)</li>
+</ul>
+</li>
+<li>ReApply<ul>
+<li>fix typo causing rare exception</li>
+</ul>
+</li>
+<li>fix issue with PIL installation</li>
+</ul>
+<h2 id="22">2.2</h2>
+<blockquote>
+<p>2021-02-27</p>
+</blockquote>
+<ul>
+<li>add SweepDecalBackups tool<ul>
+<li>clean scene from decal backups after appending objects with projected and/or panel decals</li>
+</ul>
+</li>
+<li>Decal Creation<ul>
+<li>use GPU if that's the render device set in the current scene</li>
+<li>draw render device indication in panel and print it to the terminal</li>
+<li>prevent residue LIBRARY_DECALS causing any problems when creating new decals</li>
+</ul>
+</li>
+<li>Project, Slice, PanelCut tools - use FAST solver in 2.91+</li>
+<li>add basic statusbar info for all modal ops</li>
+<li>PIL<ul>
+<li>support installation on python 3.9.1</li>
+<li>use version 8.1.0 going forward</li>
+<li>fix issues with extremely large bakes or atlases</li>
+</ul>
+</li>
+<li>force-reset assets path after manual installation with external assetspath, if no valid libraries can be found</li>
+<li>fix 2.93 activation issues and layout exceptions due to change in bpy.props representation before registration</li>
+<li>update decal resources</li>
+<li>update license</li>
+</ul>
+<h2 id="21">2.1</h2>
+<blockquote>
+<p>2020-11-27</p>
+</blockquote>
+<ul>
+<li>Decal Assets update to 2.1<ul>
+<li>add emission strength input for decal and trim sheet node groups (including for Blender 2.83 and 2.90)</li>
+<li>replace Texture Coordinates(UV) node with UVMap node in all parallax node trees</li>
+<li>add Update20DecalLibrary tool<ul>
+<li>update 2.0.x decal and trim sheet libraries libraries to 2.1</li>
+</ul>
+</li>
+<li>update Update18DecalLibrary tool<ul>
+<li>update 1.8-1.9.4 decal libraries to 2.1</li>
+</ul>
+</li>
+<li><strong>add BatchUpdate tool</strong><ul>
+<li>update all 1.8-1.9.4 or 2.0.x legacy decal or trim sheet libraries in the assets path in one go</li>
+<li>directly from the addon prefs, or from the update panel</li>
+</ul>
+</li>
+<li>support importing 1.8-1.9.4 or 2.0.x legacy decal or trim sheet libraries</li>
+<li>add Update20BlendFile tool<ul>
+<li>update blend files containing 2.0.x decals and trim Sheet materials to 2.1</li>
+</ul>
+</li>
+<li>update Update18BlendFile tool<ul>
+<li>update blend files containing 1.8 - 1.9.4 decals to 2.1 </li>
+</ul>
+</li>
+<li>update Decal Example resources to use the new 2.1 decals</li>
+<li>update Validate tool for legacy decal detection from a 2.1 perspective</li>
+<li>improve process of assets path change, including renaming the legacy MyDecals library</li>
+</ul>
+</li>
+<li>expose trim uv layer (Trim Unwrap) and secondary uv layer (Box Unwrap) to addon preferences</li>
+<li>explicitly use 'Atlas UVs' UV layer for atlased decals</li>
+<li>adapt to 2.91 API changes</li>
+<li>prevent crash when undoing after adding a decal to a scene from the asset loaders</li>
+<li>prevent potential high resolution bake issues due to default PIL.Image.MAX_IMAGE_SIZE being too small</li>
+<li>prevent importing Atlases as Decal/Trim Sheet libraries</li>
+<li>fix noise in Example Sheet's normal map, causing minor distortions on highly reflective trim sheet materials</li>
+<li>remove Update14DecalLibrary tool</li>
+<li>clarify license</li>
+</ul>
+<h2 id="201">2.0.1</h2>
+<blockquote>
+<p>2020-10-16</p>
+</blockquote>
+<ul>
+<li>Project<ul>
+<li>UV transfer - match UV layers by order, not name, to prevent issues in non-english Blender versions</li>
+</ul>
+</li>
+<li>Info Decal Creation (from Images and Fonts)<ul>
+<li>prevent decal UV layer names other than 'UVMap' in non-english Blender versions</li>
+</ul>
+</li>
+<li>Update18DecalLibrary<ul>
+<li>fix exception when updating decals, that don't use an index</li>
+</ul>
+</li>
+<li>Trim Sheet Creation Panel<ul>
+<li>tweak layout to show Trim Sheet Textures section also when in import mode</li>
+</ul>
+</li>
+<li>AddDecalsToAtlas<ul>
+<li>fix poll</li>
+</ul>
+</li>
+<li>InitTrimSheet<ul>
+<li>improve poll</li>
+</ul>
+</li>
+<li>use system's default encoding instead of utf-8 for debug output</li>
+</ul>
+<h2 id="20">2.0</h2>
+<blockquote>
+<p>2020-09-03</p>
+</blockquote>
+<ul>
+<li>add Create/Import Atlas tools</li>
+<li>add Use Atlas tool</li>
+<li>add Join Atlased Decals and Split Atlased Decals tools</li>
+<li>add Export tool</li>
+<li>add Init/Import/Duplicate Trim Sheet tools</li>
+<li>add InitTrimSheetMaterial tool</li>
+<li>add Setup Subsets tool</li>
+<li>add UnwrapTrim tool</li>
+<li>add UnwrapToEmptyTrim tool</li>
+<li>add AdjustTrim tool</li>
+<li>add TrimCut tool</li>
+<li>add AlignDecalToEdge tool </li>
+<li>add QuadUnwrap tool</li>
+<li>add BoxUnwrap tool</li>
+<li>add MirrorTrim tool</li>
+<li>add Stitch tool</li>
+<li>add Update18DecalLibrary tool</li>
+<li>add Update18BlendFile tool</li>
+<li>Decal Creation<ul>
+<li>support baking emission for simple, subset, panel and info Decals</li>
+<li>fix rare texture size rounding issue</li>
+</ul>
+</li>
+<li>Decal Baking<ul>
+<li>support emission bakes</li>
+</ul>
+</li>
+<li>add Join and Split tools</li>
+<li>Adjust<ul>
+<li>add Emission mode (E key) to adjust emission strength use X and C for 10 and 0 presets</li>
+<li>change Parallax mode to D key and reset with X the to the amount stored in the Decals blend file </li>
+<li>in AO mode (A key) use C key for 0 preset</li>
+<li>fix UV stretch exception when going across 0</li>
+</ul>
+</li>
+<li>MatchMaterial<ul>
+<li>support transmissive materials</li>
+<li>support emissive materials</li>
+</ul>
+</li>
+<li>Insert<ul>
+<li>support batch inserting entire libraries with ALT</li>
+<li>prevent raycast errors when objects scaled to 0 are present</li>
+</ul>
+</li>
+<li>Validate<ul>
+<li>support trim Decals</li>
+<li>support decal versioning</li>
+</ul>
+</li>
+<li>FixTexturePaths<ul>
+<li>support instant decals</li>
+<li>support trim sheets</li>
+<li>support instant trim sheets</li>
+<li>support UUID based path reconstruction</li>
+</ul>
+</li>
+<li>improve Remove Decal Orphans tool</li>
+<li>expose ReRenderThumbnails developer tool</li>
+<li>Texture (Un)Packing<ul>
+<li>support unpacking in local relative folder as a fallback or forced with ALT</li>
+<li>support Trim Sheets and Trim Decals</li>
+</ul>
+</li>
+<li>support ALT navigation for all modal tools</li>
+<li>update Examples blends + Decals</li>
+<li>update Decals <ul>
+<li>support emission and emission maps</li>
+<li>support normal blending</li>
+<li>add alpha input to info decal groups, useful for weathering or simply making decals transparent</li>
+<li>use Principled PBR's alpha socket instead of mixing with transparent shader</li>
+<li>split nrm_alpha and color_alpha into normal, color and masks maps</li>
+<li>support parallax for panel decals</li>
+</ul>
+</li>
+<li>add Example Trim Sheet</li>
+<li>add Example and Aircraft Decal Atlas</li>
+<li>preferences<ul>
+<li>point assetspath to assets, not assets/Decals</li>
+<li>add ability to restore keymaps, if the user ends up deleting some</li>
+</ul>
+</li>
+<li>prevent issues for users not using an English Blender</li>
+<li>Pie Menu<ul>
+<li>enable for edit mode and UV editor</li>
+<li>show trim sheet libraries</li>
+<li>optionally show Trim and Split tools</li>
+<li>add emission indicator in decal thumbnails</li>
+</ul>
+</li>
+<li>Sidebar <ul>
+<li>main panel<ul>
+<li>add toggles to collapse/expand defaults/tools/utils</li>
+<li>add toggle to hide/show decal node trees</li>
+</ul>
+</li>
+<li>add Atlas and Trim Sheet creation to creation panel</li>
+<li>add Atlas to export panel</li>
+<li>help panel <ul>
+<li>add warning if file is unsaved, before loading Example files</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>add Trim Sheet panel to Material Properties</li>
+<li>remove DECALmachine context menu</li>
+</ul>
+<h2 id="194">1.9.4</h2>
+<blockquote>
+<p>2020-06-16</p>
+</blockquote>
+<ul>
+<li>Insert - rebuild decal texture paths completely every time they are brought into the scene</li>
+<li>FixTexturePaths - update rebuilding of decal textures paths in existing blend files</li>
+</ul>
+<h2 id="193">1.9.3</h2>
+<blockquote>
+<p>2020-06-03</p>
+</blockquote>
+<ul>
+<li>ensure PIL can be registered in 2.83+ at start up</li>
+<li>prevent undo related crash bug in 2.83+</li>
+<li>prevent issue when unregistering</li>
+<li>fix EPanel freeze/crash in 2.82+</li>
+<li>fix Adjust UV stretch issue</li>
+</ul>
+<h2 id="192">1.9.2</h2>
+<blockquote>
+<p>2019-12-13</p>
+</blockquote>
+<ul>
+<li>fix cropping of L images for decal creation</li>
+<li>fix 2.82 exception when calling pie menu or quick insert</li>
+</ul>
+<h2 id="191">1.9.1</h2>
+<blockquote>
+<p>2019-10-22</p>
+</blockquote>
+<ul>
+<li>remove ability to create info decals from JPGs</li>
+<li>redo image and font loading for decal creation, due to changes in 2.81</li>
+<li>fix issues when creating EPanel edge-only object from decals</li>
+<li>fix occasional decal creation crash in 2.81, when alternating between info decal creation from image and from font </li>
+<li>fix uv issue Project tool, for non-English Blender versions</li>
+<li>fix issue in Validate tool</li>
+<li>fix exception caused by CTRL projecting with mirror mods present</li>
+<li>fix potential issue in the Material Match tool</li>
+<li>fix exception in Slice/EPanel/Gpanel, try to ensure the panel width is never 0</li>
+</ul>
+<h2 id="19">1.9</h2>
+<blockquote>
+<p>2019-09-04</p>
+</blockquote>
+<ul>
+<li>Add Bake tool</li>
+<li>Add PanelCutting + RemoveMeshCuts tools</li>
+<li>Add RemoveAllInstantDecals tool</li>
+<li>Add new Example blend files</li>
+<li>Select tool<ul>
+<li>support selecting all decals of the selected type</li>
+</ul>
+</li>
+<li>RemoveMeshCuts tool<ul>
+<li>add ALT selection(instead of removal) mode</li>
+</ul>
+</li>
+<li>Epanel tool<ul>
+<li>add SHIFT mode: mark edges as MESHCUT edges</li>
+<li>add CTRL mode: delete edges immediately</li>
+<li>add ALT mode: convert selection to edge-only object<ul>
+<li>can be combined with SHIFT or CTRL keys</li>
+</ul>
+</li>
+<li>support local view</li>
+<li>automatically parent edge-only object</li>
+<li>support single object selection, and option optional forced target</li>
+<li>remove custom normals, if present</li>
+<li>create backup object when run from object mode</li>
+</ul>
+</li>
+<li>ReApply tool<ul>
+<li>don't change blend_method when auto-matching material</li>
+</ul>
+</li>
+<li>Adjust tool<ul>
+<li>don't change blend_method when changing panel decal material</li>
+<li>change blend method per decal-material, not per decal-type-material</li>
+</ul>
+</li>
+<li>InitGeneratedUVs<ul>
+<li>use non-evaluated mesh by default</li>
+</ul>
+</li>
+<li>DECALmachine panel<ul>
+<li>add EPanel to Tools section</li>
+</ul>
+</li>
+<li>fix issue with ReApply when used on projected decals with mirror mods</li>
+<li>fix issue in Create when prefs.edit.use_enter_edit_mode is enabled</li>
+<li>prevent issues in relation to decal type collections and multiple scenes</li>
+<li>fix issue with DM's default material no being selectable in DM panel when Auto-Match is set to Material</li>
+<li>fix redo issue due to poll being too strict in ClearDecalProps tool</li>
+<li>fix faceidx out of range errors when panel decals have mirror mods</li>
+</ul>
+<h2 id="187">1.8.7</h2>
+<blockquote>
+<p>2019-08-04</p>
+</blockquote>
+<ul>
+<li>add EPanel tool<ul>
+<li>can be used on edge selection in edit mode or from edge object in object mode</li>
+<li>in edit mode it's accessible from the context menu</li>
+</ul>
+</li>
+<li>add RemoveDecalOrphans tool</li>
+<li>add ClearDecalProps tools</li>
+<li>add InitGeneratedUVs tool</li>
+<li>Create tool<ul>
+<li>add Batch (Info) Decal Creation</li>
+<li>support local view</li>
+<li>fix issue with Decal Creation using the Flatten Normals option in combination with existing custom normals</li>
+</ul>
+</li>
+<li>ReApply tool<ul>
+<li>add two-sided panel decal auto-material-matching</li>
+<li>fix issue when reapplying/auto-material-matching projected decals</li>
+</ul>
+</li>
+<li>Match tool<ul>
+<li>draw panel side indicators</li>
+<li>make DM default metal material matchable</li>
+</ul>
+</li>
+<li>Adjust tool<ul>
+<li>keep existing panel decal material matches intact when changing panel material/type</li>
+<li>improve cursor screen wrapping</li>
+</ul>
+</li>
+<li>Project and Slice tools<ul>
+<li>clear residual custom normals on projected and sliced decals</li>
+</ul>
+</li>
+<li>Insert tool<ul>
+<li>make surface snapping optional when bringing decals into the scene</li>
+</ul>
+</li>
+<li>Pie Menu<ul>
+<li>avoid potential performance issue (on Windows only?)</li>
+</ul>
+</li>
+<li>remove Debug Panel and move its tools into Utils sectino of main DECALmachine panel</li>
+<li>enable eevee material backface culling for decal materials to avoid flipped decals going unnoticed</li>
+<li>avoid keymap conflicts between BoxCutter and DM, when either Pie is mapped to a different key</li>
+<li>fix GPanel crash</li>
+</ul>
+<h2 id="186">1.8.6</h2>
+<blockquote>
+<p>2019-06-27</p>
+</blockquote>
+<ul>
+<li>Decal Defaults <ul>
+<li>add toggle for decal texture storage<ul>
+<li>pack: textures are saved in the blend (heavy blend files, that load everywhere)</li>
+<li>unpack: textures are not saved in the blend (light blend files, that load on computers with the same decal asset folder)</li>
+</ul>
+</li>
+<li>can be (un)toggled at any time</li>
+</ul>
+</li>
+<li>Project tool<ul>
+<li>clear existing uvs and make sure the decal has only one uv map</li>
+<li>make sure faces of projected decals have material index of 0, otherwise joining decals may mix up materials</li>
+<li>fix issue when finding target</li>
+<li>fix projection preview drawing being in xray in modal mode, due change in default Blender behavior</li>
+</ul>
+</li>
+<li>Slice tool<ul>
+<li>clear existing uvs and make sure the decal has only one uv map</li>
+<li>improve direction vectors in default(float) mode</li>
+</ul>
+</li>
+<li>Insert tool<ul>
+<li>allow adding decals on evaluated geo (such as on mirrored parts of objects)</li>
+</ul>
+</li>
+<li>Pie Menu<ul>
+<li>increase panel width precision to 3</li>
+</ul>
+</li>
+<li>Preferences<ul>
+<li>fix broken decal asset libraries ui list, due to API change</li>
+<li>update decal resource links</li>
+</ul>
+</li>
+<li>update matching of default-white material/None material</li>
+<li>fix issue when removing old version and installing new one in the same Blender session</li>
+<li>various raycast and performance improvements</li>
+</ul>
+<h2 id="185">1.8.5</h2>
+<blockquote>
+<p>2019-05-20</p>
+</blockquote>
+<ul>
+<li>fix Decal Creation issues, due to recent depsgraph changes</li>
+</ul>
+<h2 id="184">1.8.4</h2>
+<blockquote>
+<p>2019-05-20</p>
+</blockquote>
+<ul>
+<li>fix Slice not clearing materials, due to recent depsgraph changes</li>
+</ul>
+<h2 id="183">1.8.3</h2>
+<blockquote>
+<p>2019-05-18</p>
+</blockquote>
+<ul>
+<li>fix recent depsgraph issues</li>
+<li>improve raycast and raycast performance</li>
+</ul>
+<h2 id="182">1.8.2</h2>
+<blockquote>
+<p>2019-05-13</p>
+</blockquote>
+<ul>
+<li>add GPanel<ul>
+<li>panel decal creation from grease pencil strokes</li>
+</ul>
+</li>
+<li>update PIL to 6.0.0</li>
+<li>improve PIL installation</li>
+<li>add extra, temporary debug output for decal creation, likely only related to Oscuart addon exception</li>
+<li>fix material match issue introduced in Blender 8f71a84496a9/27d097e92d54 (May 13th)</li>
+<li>fix raycast issue where decals were not aligned properly on modifier geometry</li>
+</ul>
+<h2 id="181">1.8.1</h2>
+<blockquote>
+<p>2019-04-25</p>
+</blockquote>
+<ul>
+<li>add update check<ul>
+<li>appears in pie menu once update is available</li>
+</ul>
+</li>
+<li>work around issue in Unwrap (alternative mode) and Decal Creation, due to open Blender bug</li>
+<li>fix rare panel decal UV over or under stretching in Slice and Unwrap </li>
+<li>fix Normal Transfer defaults not being enforced by Shrinkwrap</li>
+<li>optimze addons check on preferences - about page</li>
+</ul>
+<h2 id="18">1.8</h2>
+<blockquote>
+<p>2019-04-06</p>
+</blockquote>
+<ul>
+<li>completely rewrite DM for Blender 2.80</li>
+<li>redo Project tool, add new Shrinkwrap variation</li>
+<li>redo Slice, add new super robust "float slice", massively improve "topo slice"</li>
+<li>redo Instant Decal creation, add 3 new ways to create Info Decals inside Blender</li>
+<li>redo pie menu completely, add sidebar panels </li>
+<li>support unlimited decal libraries</li>
+<li>add new raycast Decal insertion</li>
+<li>add new Re-Apply tool</li>
+<li>add new modal "Adjust-everything" tool</li>
+<li>add new automatic material matching</li>
+<li>add new scene-wide default settings</li>
+<li>take full advantage of Eevee incl. real-time parallax</li>
+<li>hide decal materials and textures</li>
+<li>improve integration with GroupPro, Batch Ops, Hard Ops and MACHIN3tools</li>
+</ul>
+<h2 id="142a">1.4.2a</h2>
+<blockquote>
+<p>2018-01-15</p>
+</blockquote>
+<ul>
+<li>fix MACHIN3tools Shading Switch related decal transparancy issue</li>
+</ul>
+<h2 id="142">1.4.2</h2>
+<blockquote>
+<p>2018-01-14</p>
+</blockquote>
+<ul>
+<li>added ReconstructPanelCutter tool</li>
+<li>added 'Remove Decal' property to ExtractSource tool, also clear parent</li>
+<li>added Principled BSDF support to WStep()</li>
+<li>added Edit/Commit Normal Source tool</li>
+<li>exposed base material parameters in DM Preferences<ul>
+<li>adjusted decal materials according to those preferencess when inserting decals and when slicing</li>
+<li>updated InitBaseMaterial() to take parameters</li>
+</ul>
+</li>
+<li>added MACHIN3tools Material Viewport Compensation support to InitBaseMaterial</li>
+<li>added 'Remove Decal' property to ExtractSource as well as clear parent</li>
+<li>added interpolation type selection to WStep properties</li>
+<li>added option to allow hard edges to WStep, which adds 2nd DataTransfer and mask existing hard edges using a vertex group</li>
+<li>added SufaceFix tool, Edit/Commit Surface Fix tool and Unlink tool(space bar menu only)</li>
+<li>added threshold value to control duplicate vert removal in Material Cut</li>
+<li>added option to mark edges Freestyle in Material Cut<ul>
+<li>added ConvertFreestyletoSeam and ConvertSeamToFreestyle operators (spacebar menu)</li>
+</ul>
+</li>
+<li>simplified DecalRotate into single operator for CW and CCW rotations</li>
+<li>added axis option to DecalRotate in object mode</li>
+<li>added higher quality decal textures of decals02_32 - decals02_37</li>
+<li>inverted most supplied info decal textures to be white and set the invert slider in their decal materials to 0</li>
+<li>updated MACHIN3shaders(unity3D) to include 'Blend Surface Normals' parameter and change info decal transparency to opacity</li>
+<li>improved or re-added curvature in supplied panel decals textures</li>
+<li>added 'Combine all-to-one' option to DECALBakeDown</li>
+<li>added Assign Unique Materials option to Decal Exports<ul>
+<li>added "Treat Freestyle edges as seams" to export options, if Assign Unique Materials is turned on</li>
+</ul>
+</li>
+<li>added option to create 'DM_non-decals' group in ExportGroup  for convenience</li>
+<li>exposed atlas padding value to DM preferences</li>
+<li>added 'Suppress Decal Name' option to DM create preferences for Batch Decal Creation</li>
+<li>added 'Normal Alpha Tolerance' option to create preferences</li>
+<li>improved batch decal creation sorting</li>
+<li>updated color profiles in DECAL_create.blend for 2.79</li>
+<li>fixed info decals creation issue in 2.79 where texture assignment and thumbnail generation would fail</li>
+<li>fixed nrm_alpha map atlas quality issue when scaling decals in atlas or when using atlas downsampling</li>
+<li>fixed issue with Match Material replacing materials of supplied decals with materials of custom decals</li>
+<li>fixed exception in DECALexport when non-mesh objects are part of the selection</li>
+<li>fixed exception where atlas could not be laid out due to missing texture</li>
+<li>fixed exception and added warning in Panelize on closed meshes</li>
+<li>fixed DecalProject uv issue when pivot was not set to bounding box center</li>
+<li>fixed ExportGroup exception when blend file is saved to new name after atlas has been packed<ul>
+<li>prevent export group creation from going forward in this case and open the new export folder, so you can copy the json and png files over from the old one</li>
+</ul>
+</li>
+<li>fixed exception in export group creation when disabled mods on decals can't be applied<ul>
+<li>in case of M3_copied_normals mods being the issue, the export groups target object will be added as the normal source and the mod will be applied</li>
+</ul>
+</li>
+<li>fixed subtractor decal material input socket sorting</li>
+<li>fixed slice tools showing up in pie in edit mode</li>
+<li>fixed info decal shader(in MACHIn3shaders for unity) issue with metalness not working as expected with transparency</li>
+</ul>
+<h2 id="141a">1.4.1a</h2>
+<blockquote>
+<p>2017-09-24</p>
+</blockquote>
+<ul>
+<li>catch the most frequent errors resulting from improper installation and provide terminal output info about how to solve them</li>
+<li>added GroupPro connection</li>
+</ul>
+<h2 id="141">1.4.1</h2>
+<blockquote>
+<p>2017-09-20</p>
+</blockquote>
+<ul>
+<li>rebuilt Match Material completely<ul>
+<li>added operator properties to match either Material or Subset or both (Material 1 and 2 in Panel Decals)</li>
+<li>supports matching any of a target objects materials, by choosing a material socket id from the operator properties</li>
+<li>supports matching Principled BSDF and Glossy BSDF shaders</li>
+<li>avoids creating duplicate materials and finds existing materials that match the criteria</li>
+</ul>
+</li>
+<li>added Update Decal Nodes tool, to update scenes created before 2.79 to support Principled BSDF decals<ul>
+<li>runs automatically on pre 2.79 decals, dropped into a scene via the Asset Loaders</li>
+</ul>
+</li>
+<li>Decals created in 2.79 will use the Principled BSDF shader</li>
+<li>removed Get and Set Material tools, as Match Material does the same now and does it better</li>
+<li>Init Base Material initiates a Principled BSDF base material in 2.79</li>
+<li>added filmic 2.79 support</li>
+<li>added Topo Slice twist offset parameter</li>
+<li>improved Panel Transition panel section selection logic</li>
+<li>changed export triangulation quad method to FIXED</li>
+<li>moved HOps fix over to HardOps - update to 'Hard Ops 0093 - Neptunium' to use DECALmachine 1.4.1</li>
+<li>fixed export related issue with decals projected on material decals</li>
+<li>fixed Remove Decal Mode for panel decal assets</li>
+<li>fxxed Rotate Decal not working ing edit mode for some users</li>
+<li>fixed MaterialCut and PanelTransition not working properly in 2.79</li>
+<li>fixed issue with assetpaths resisting change</li>
+<li>fixed Rotate UVs option not working for some users</li>
+<li>fixed empty material slots issue in (W)Step</li>
+</ul>
+<h2 id="14a">1.4a</h2>
+<blockquote>
+<p>2017-08-30</p>
+</blockquote>
+<ul>
+<li>added consistent scale parameter to prefs, making the unit scale compensation optional</li>
+<li>fixed wstep exception, when no HOps is installed</li>
+<li>adjusted wstep behaviour for when no HOps is installed</li>
+</ul>
+<h2 id="14">1.4</h2>
+<blockquote>
+<p>2017-08-29</p>
+</blockquote>
+<ul>
+<li>created complete decal export pipeline<ul>
+<li>decal atlas creation</li>
+<li>use existing atlas Solution</li>
+<li>automatic decal UVs according to atlas packing</li>
+<li>export targets:<ul>
+<li>Unity3D - MACHIN3<ul>
+<li>decal shaders: plain, textured, info, panels</li>
+</ul>
+</li>
+<li>Unity3D - bac9</li>
+<li>Unreal Engine 4</li>
+<li>Substance Painter</li>
+<li>Sketchfab</li>
+<li>Unpacked</li>
+</ul>
+</li>
+<li>bake decals down</li>
+</ul>
+</li>
+<li>added w-step - a custom vertex normal workflow</li>
+<li>added float slice</li>
+<li>added draw slice</li>
+<li>added panelize tool</li>
+<li>added keymap settings to preferences</li>
+<li>added operator properties to the main tools</li>
+<li>added automatic parenting of projections and slices to their targets, incl for decal- and cutter backups/sources</li>
+<li>support scene scale/unit settings</li>
+<li>added remove decal mode</li>
+<li>improved material cut</li>
+<li>keymapped gpencil pie to 'CTRL+D'</li>
+<li>added win32 PIL, thanks to Jordan</li>
+<li>fixed project and slice(panel_unwrap) to always remove existing uvs</li>
+<li>fixed main DM pie, to only trigger object and edit modes</li>
+<li>fixed issue with non-tangent base normal maps from instant decal creation</li>
+<li>fixed black/dark ao issue in instant decal creation related to hidden geometry</li>
+<li>fixed issue with remove duplicates replacing custom decals</li>
+<li>fixed panel transition issue when panel strips were split</li>
+</ul>
+<h2 id="135b">1.3.5b</h2>
+<blockquote>
+<p>2017-06-07</p>
+</blockquote>
+<ul>
+<li>auto-set cycles and auto-switch to material view when inserting decals</li>
+<li>fixed decal create exception when scene has no world</li>
+<li>fixed panel unwrap exception when panel decal geo is hidden</li>
+<li>fixed thumbnail rendering issue related to non-png file ending setting in render panel</li>
+<li>added experimental, alternative PIL for linux</li>
+<li>simplified Readme.md and Readme.html</li>
+<li>added local copy of full documentation in ReadtheDocs format</li>
+</ul>
+<h2 id="135a">1.3.5a</h2>
+<blockquote>
+<p>2017-05-19</p>
+</blockquote>
+<ul>
+<li>fixed batch decal creation bug when encountering filename with illegal characters</li>
+<li>fixed filmic related batch decal creation bug</li>
+<li>added panel decal resolution options, useful for repeating elements in panel decals which require more length</li>
+<li>clarified and extended installation instructions</li>
+<li>switched CREATE_decal.blend to CPU rendering</li>
+</ul>
+<h2 id="135">1.3.5</h2>
+<blockquote>
+<p>2017-05-10</p>
+</blockquote>
+<ul>
+<li>5 new panel decals</li>
+<li>added Init Base Material tool</li>
+<li>changed panel unwrap from EVEN to LENGTH, allowing for regular repeating patterns in paneling</li>
+<li>added panel decal material choice for decal slice/knife</li>
+<li>decal creation: added instant panel creation</li>
+<li>decal creation: fixed info decal batch creation, when filmic is not installed</li>
+<li>decal creation: improved alignment of decal plane to source geometry when baking</li>
+<li>improved Asset Management check to make sure its activated before DM, before exposing AM related settings</li>
+<li>decal creation: improved height map mid level adjustment</li>
+<li>decal creation: added 'replace last' checkbox, to overwrite last decal of category</li>
+<li>decal creation: exposed ao samples</li>
+<li>decal creation: exposed height contrast and parallax value for finer depth control</li>
+<li>added CustomDecals library for user created decals</li>
+<li>added uv rotation support to decal rotate tool (in edit mode or image editor)</li>
+<li>decal creation: fixed pink thumbnails with gaffer addon and similar</li>
+<li>decal creation: fixed thumbnail resolution percentage</li>
+</ul>
+<h2 id="13c">1.3c</h2>
+<blockquote>
+<p>2017-05-06</p>
+</blockquote>
+<ul>
+<li>bug fix in relation to custom script paths being set but not used</li>
+</ul>
+<h2 id="13b">1.3b</h2>
+<blockquote>
+<p>2017-05-06</p>
+</blockquote>
+<ul>
+<li>added a warning on windows and macos, when trying to create decals using an unsaved blender scene</li>
+</ul>
+<h2 id="13a">1.3a</h2>
+<blockquote>
+<p>2017-05-06</p>
+</blockquote>
+<ul>
+<li>added custom addon path support, thanks Ted</li>
+<li>switched the macos PIL to a precompiled version for python 3.5 instead of 3.6</li>
+</ul>
+<h2 id="13">1.3</h2>
+<blockquote>
+<p>2017-05-05</p>
+</blockquote>
+<ul>
+<li>dropped 2.77 support</li>
+<li>new simplified decal creation guide</li>
+<li>various cleanup and restructuring</li>
+<li>new modal <em>adjust decal height</em> tool, replacing the old decal push and decal lift</li>
+<li>decals with mirror modifiers already applied can now be projected properly</li>
+<li>added DECALcreate pie menu</li>
+<li>insert buttons above asset loaders for quick re-import of the last decal</li>
+<li>simplified custom decal creation: batch decal creation and instant decal creation</li>
+<li>added PIL python library requirement for automated processing and curvature map creation</li>
+<li>7 new subset decals</li>
+<li>added the_box sample scene</li>
+</ul>
+<h2 id="12b">1.2b</h2>
+<blockquote>
+<p>2017-04-25</p>
+</blockquote>
+<ul>
+<li>version bump in addon meta data</li>
+<li>additional info in the usage section of the readme, about the asset loader</li>
+</ul>
+<h2 id="12a">1.2a</h2>
+<blockquote>
+<p>2017-04-25</p>
+</blockquote>
+<ul>
+<li>2.77 decal creation hotfix to solve exception in saving decal blend</li>
+<li>no more unnecessary hiding of the original mesh when projecting on it</li>
+</ul>
+<h2 id="12">1.2</h2>
+<blockquote>
+<p>2017-04-24</p>
+</blockquote>
+<ul>
+<li>unpacked sample scenes</li>
+<li>added addon preferences to allow switching of the native path or the AM library</li>
+<li>decal_rotate always uses the active_element pivot now and sets it back to what it was before afterwards</li>
+<li>inserted decals always move to the cursor location, with AM they'd only do this when nothing was selected</li>
+<li>when using the built in asset loader, there won't be duplicate material instances with 0 users accumulating anymore as is the case with AM</li>
+<li>decal slice should now always be able to assign the decal panel material, no more dependence on AM</li>
+<li>safety checks for get_material and decal_project</li>
+<li>added decal creation guide and improved Readme(html), no more missing line breaks under windows</li>
+<li>added decal creation template files and helper scripts</li>
+<li>merged decals03 with decals02, as they are both subset decals</li>
+<li>default asset location in the addon folder, can be changed to use the AM library path, if you want</li>
+<li>some pie menu restructuring for the asset loader, there are 4 previews for 4 decal categories now</li>
+<li>added native asset loader, based on HOps tech, thanks guys!</li>
+<li>file split and source restructuring</li>
+<li>cleanup</li>
+</ul>
+<h2 id="11">1.1</h2>
+<blockquote>
+<p>2017-04-18</p>
+</blockquote>
+<ul>
+<li>added decals03 library category: decals based on <a href="https://gumroad.com/l/hardops">Hard Ops</a> assets</li>
+<li>added sample assets: the crate, the barrel, the egg</li>
+</ul>
+<h2 id="10">1.0</h2>
+<blockquote>
+<p>2017-04-17</p>
+</blockquote>
+<ul>
+<li>initial release</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="trim_sheet_resources.html" class="btn btn-neutral float-left" title="Trim Sheet Resources"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="trim_sheet_resources.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
