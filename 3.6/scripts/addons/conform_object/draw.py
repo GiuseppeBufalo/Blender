@@ -134,7 +134,7 @@ def _draw_callback_3d(context):
         # Draw vertices
         gpu.state.blend_set("ALPHA")
         gpu.state.point_size_set(context.window_manager.conform_object_ui.vertex_group_view_size)
-        shader = gpu.shader.from_builtin('3d_FLAT_COLOR')
+        shader = gpu.shader.from_builtin('3D_FLAT_COLOR')
         batch = batch_for_shader(shader, 'POINTS', {"pos": all_coords, "color": all_vertex_colors   })
         shader.bind()
         batch.draw(shader)

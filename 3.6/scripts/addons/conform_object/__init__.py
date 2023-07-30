@@ -15,8 +15,8 @@ bl_info = {
     "name" : "Conform Object",
     "author" : "Mark Kingsnorth",
     "description" : "Deform an object to the surface of another.",
-    "blender" : (2, 80, 0),
-    "version" : (1, 3, 0),
+    "blender" : (3, 0, 0),
+    "version" : (1, 4, 5),
     "location" : "",
     "warning" : "",
     "category" : "Mesh",
@@ -60,13 +60,19 @@ def depsgraph(none):
                     if found:
                         break
                 if not found:
+                    lattice_object = operators.get_lattice_obj(obj)
+                    if lattice_object:
+                        data_to_remove = lattice_object.data
+                        bpy.data.objects.remove(lattice_object)
+                        bpy.data.lattices.remove(data_to_remove) 
                     data = obj.data
                     bpy.data.objects.remove(obj)
                     bpy.data.meshes.remove(data)
             elif obj.conform_object.is_conform_obj:
                 grid_obj = operators.get_grid_obj(obj)
                 if not obj.conform_object.is_conform_shrinkwrap and grid_obj not in obj.children:
-                    operators.conform_undo(obj, bpy.context, remove_grid = False, set_active=False)
+                    # pass
+                    operators.conform_undo(obj, bpy.context, remove_grid = False, set_active=False, reset_matrix=False)
 
 
 

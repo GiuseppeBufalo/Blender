@@ -15,6 +15,7 @@ _deform_mod_name = 'Conform Deformation'
 _deform_shrinkwrap_mod_name = 'Conform Shrinkwrap'
 _transfer_mod_name = "Conform Object Normal Transfer"
 _subd_mod_name = "Conform Object Subdivisions"
+_lattice_mod_name = "Conform Lattice"
 
 
 def map_range(value, leftMin, leftMax, rightMin, rightMax):
@@ -188,6 +189,14 @@ def get_grid_obj(source_obj):
         return grid_object
     return None
 
+def get_lattice_obj(conform_grid_obj):
+    if _lattice_mod_name in conform_grid_obj.modifiers:
+        mod = conform_grid_obj.modifiers[_lattice_mod_name]
+        lat_object = mod.object
+        return lat_object
+    return None
+
+
 def get_world_projection_vectors(obj, location, normal):
     world_location = obj.matrix_world @ location
 
@@ -315,10 +324,8 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
         mod_items = []
         mod_items.append(('NONE', 'Choose Modifier', ''))
         mods = [m for m in context.active_object.modifiers if m.name not in [_deform_shrinkwrap_mod_name, _deform_mod_name]]
-        i = 0
         for mod in mods:
             mod_items.append((mod.name, mod.name, ''))
-            i+=1
         return mod_items
 
 
@@ -338,6 +345,13 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
 
     vertical_subdivisions : IntProperty(
             name="Grid Vertical Subdivisions",
+            description="Number of vertical subdivisions for grid",
+            default=20,
+            min = 0
+        )
+    
+    horizontal_subdivisions : IntProperty(
+            name="Grid Horizontal Subdivisions",
             description="Number of vertical subdivisions for grid",
             default=20,
             min = 0
@@ -437,6 +451,32 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
             default=True
             )
 
+
+    create_lattice : BoolProperty (
+            name="Create Lattice",
+            description="Create a Lattice to deform the grid",
+            default=False
+            )
+
+    lattice_u : IntProperty (
+            name="Lattice U",
+            description="Number of lattice subdivisions in U direction",
+            default=3,
+            min=2
+        )
+
+    lattice_v : IntProperty (
+            name="Lattice V",
+            description="Number of lattice subdivisions in V direction",
+            default=3,
+            min=2
+        )
+    
+    interpolation_type : EnumProperty(items=(('KEY_LINEAR', 'Linear interpolation', ''),
+                                            ('KEY_CARDINAL', 'Cardinal interpolation', ''),
+                                            ('KEY_CATMULL_ROM', 'Catmull-Rom interpolation', ''),
+                                            ('KEY_BSPLINE', 'BSpline interpolation', '')),
+                                        name = "Interpolation Type", default='KEY_BSPLINE')
 
     place_mod_at_start : BoolProperty (
             name="Deform Modifier at Start",
@@ -675,10 +715,21 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                 props.section_to_expand = 'show_grid_panel'
                 props.description = "Expand/Collapse Deformation Grid Parameters"
 
+                selected_lattices = [l for l in context.selected_objects if l.type == 'LATTICE']
+                if not selected_lattices:
+                    row.prop(self, 'create_lattice', text="", emboss = False,
+                                            icon="OUTLINER_OB_LATTICE" if self.create_lattice else "MOD_LATTICE")
+                else:
+                    row.label(text='', icon="OUTLINER_OB_LATTICE")
+                    row.label(text='', icon="CHECKMARK")
+
                 row = splits.row(align=True)
                 row.alignment = 'RIGHT'
+            
+                row.separator()
                 row.prop(self, 'hide_grid', text="", emboss = False,
                                         icon="HIDE_ON" if self.hide_grid else "HIDE_OFF")
+                row.separator()
                 row.prop(self, 'enable_grid', text="", emboss = False,
                                         icon="CHECKBOX_HLT" if self.enable_grid else "CHECKBOX_DEHLT")                          
 
@@ -687,7 +738,8 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                     col_trim = box.column(align=True)
                     col_props = col_trim.column(align=True)
                     col_props.prop(self, 'hide_grid', text="Show Grid" if self.hide_grid else "Hide Grid", toggle=True)
-                    col_props.prop(self, 'vertical_subdivisions', text="Grid Subdivisions")
+                    col_props.prop(self, 'vertical_subdivisions', text="Grid Subdivisions X")
+                    col_props.prop(self, 'horizontal_subdivisions', text="Grid Subdivisions Y")
                     col_props.prop(self, 'grid_subsurf') 
                     col_props.prop(self, 'grid_transform_x') 
                     col_props.prop(self, 'grid_transform_y') 
@@ -696,6 +748,20 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                     col_props.prop(self, 'grid_size_y')
                     col_props.prop(self, 'grid_rotation')
                     col_props.prop(self, 'falloff')
+                    col_props.separator()
+                    if not selected_lattices:
+                        col_props.prop(self, 'create_lattice', text="Lattice Created" if self.create_lattice else "Create Lattice", toggle=True)
+                        col_lat_props = col_props.column(align=True)
+                        col_lat_props.enabled = self.create_lattice
+                        col_lat_props.prop(self, 'lattice_u') 
+                        col_lat_props.prop(self, 'lattice_v') 
+                        col_lat_props.prop(self, 'interpolation_type', text="")
+                    else:
+                        col_lat_props = col_props.column(align=True).row()
+                        col_lat_props.alignment="CENTER"
+                        col_lat_props.label(text='', icon="CHECKMARK")
+                        col_lat_props.label(text="Lattice object already selected.")
+
                 
             col_props.separator()
 
@@ -853,8 +919,10 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object is not None and len(context.selected_objects) > 1 \
-                and len([o for o in context.selected_objects if o.type == 'MESH']) == len(context.selected_objects)
+        return context.active_object is not None and context.active_object.type == 'MESH' and\
+            len([o for o in context.selected_objects if o.type in {'MESH', 'LATTICE'}]) == len(context.selected_objects) and\
+            len([o for o in context.selected_objects if o.type == 'MESH']) > 1 and\
+            len([o for o in context.selected_objects if o.type == 'LATTICE'])  <= 1
 
 
     def invoke(self, context, event):
@@ -874,7 +942,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
         # find the nearest point on the target mesh.
         target_matrix_evaluated = target_obj_evaluated.matrix_world
 
-        source_objs = [obj for obj in context.selected_objects if obj != context.active_object]
+        source_objs = [obj for obj in context.selected_objects if obj != context.active_object and obj.type == 'MESH']
         
         # Parent source objects to target object if needed.
         if self.parent_source_obj:
@@ -902,7 +970,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                 source_obj.animation_data_clear()
                 collection.objects.link(source_obj)
             
-            conform_undo(source_obj, context)
+            conform_undo(source_obj, context, reset_matrix=False)
             source_obj.conform_object.is_conform_obj = False
             source_obj.conform_object.is_conform_shrinkwrap = False
 
@@ -1033,7 +1101,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
             context.view_layer.update()
 
             if self.conform_type == 'GRID':
-                conform_grid_obj = self.create_grid(source_obj, context, projection_vec, projection_mat, world_closest_point_on_target_obj, collection)
+                conform_grid_obj, lattice_obj = self.create_grid(source_obj, context, projection_vec, projection_mat, world_closest_point_on_target_obj, collection)
 
                 # Add a Surface Deform modifier to the Source Object and set the grid as the deform object and bind it.
                 if _deform_mod_name not in source_obj.modifiers:
@@ -1051,7 +1119,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                     bpy.ops.object.modifier_move_to_index(modifier=_deform_mod_name, index=0)
 
             # if graduated, create the graduated vertex group and assign it to the modifier.
-                if self.is_graduated:
+                if self.is_graduated and not lattice_obj:
                     old_active_group = source_obj.vertex_groups.active
                     if self.gradient_method == 'GRADIENT':
                         group = create_vertex_group(source_obj, _conform_obj_group_name, self.gradient_type, self.gradient_start, self.gradient_end, world_closest_point_on_target_obj, projection_vec)
@@ -1139,6 +1207,10 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
 
             if self.conform_type == 'GRID':
 
+                # Add the Lattice modifier if it was created.
+                if lattice_obj:
+                    lattice_mod = conform_grid_obj.modifiers.new(name=_lattice_mod_name, type='LATTICE')
+
                 # Now add a shrinkwrap modifer to the grid object.
                 shrink_mod_name = 'Conformation Shrink Wrap'
                 if shrink_mod_name not in conform_grid_obj.modifiers:
@@ -1178,6 +1250,10 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
                 # bind the grid object to the Source Object before it gets shrinkwrapped to the Target Object
                 bpy.ops.object.surfacedeform_bind(modifier=_deform_mod_name)
 
+                # Now apply the lattice if it was created.
+                if lattice_obj:
+                    lattice_mod.object = lattice_obj
+
                 # Now shrink to target object once it has been binded.
                 grid_shrinkwrap_mod.target = target_obj
             
@@ -1189,7 +1265,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
 
                 conform_grid_obj.conform_object.is_grid_obj = True
                 source_obj.conform_object.is_conform_shrinkwrap = False
-
+                
             elif self.conform_type == 'SHRINKWRAP':
                 source_obj.conform_object.is_conform_shrinkwrap = True
 
@@ -1248,8 +1324,11 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
             mesh = bpy.data.meshes.new("Conform Grid Mesh")
             conform_grid_obj = bpy.data.objects.new(source_obj.name + " Conform Grid", mesh)
             collection.objects.link(conform_grid_obj)
+            conform_grid_obj.conform_object.source_obj = source_obj
             bm = bmesh.new()
             bm.from_mesh(mesh)
+
+        lattice_obj = None
 
         conform_grid_obj.conform_object.is_grid_obj = False
         conform_grid_obj.matrix_world = projection_mat.copy()
@@ -1298,7 +1377,7 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
             vertical_edges.append(second_loop.edge)
             vertical_edges.append(second_loop.link_loop_next.link_loop_next.edge)
 
-        result = bmesh.ops.subdivide_edges(bm, edges=list(set(vertical_edges)), cuts=self.vertical_subdivisions, use_grid_fill=True, use_only_quads=False)
+        result = bmesh.ops.subdivide_edges(bm, edges=list(set(vertical_edges)), cuts=self.horizontal_subdivisions, use_grid_fill=True, use_only_quads=False)
 
 
         bm.to_mesh(mesh)
@@ -1316,7 +1395,62 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
         conform_grid_obj.show_in_front = True
         conform_grid_obj.display_type = 'WIRE'
 
-        return conform_grid_obj
+        # Create a lattice object to support grid deformation
+
+        selected_lattice = None
+        selected_lattices = [l for l in context.selected_objects if l.type =='LATTICE']
+        if selected_lattices:
+            selected_lattice = selected_lattices[0]
+        if selected_lattice:
+            context.view_layer.update()
+            lattice_obj = selected_lattice
+            lattice_obj.parent = conform_grid_obj
+            lattice_obj.matrix_parent_inverse = conform_grid_obj.matrix_world.inverted()
+            lattice_obj.show_in_front = True
+        elif self.create_lattice:
+            context.view_layer.update()
+
+            lattice_obj = get_lattice_obj(conform_grid_obj)
+
+            if lattice_obj and lattice_obj in conform_grid_obj.children:
+                lattice_data = lattice_obj.data
+            else:
+                lattice_data = bpy.data.lattices.new('Conform Grid Lattice')
+                lattice_obj = bpy.data.objects.new(source_obj.name + ' Conform Lattice', lattice_data)
+                lattice_obj.conform_object.is_conform_lattice = True
+                lattice_obj.conform_object.source_obj = source_obj
+                collection.objects.link(lattice_obj)
+
+            lattice_obj.matrix_world = projection_mat.copy()
+            lattice_obj.location = point
+            dimensions = []
+            dimensions.append(conform_grid_obj.dimensions[0] if conform_grid_obj.dimensions[0] else 0.001)
+            dimensions.append(conform_grid_obj.dimensions[1] if conform_grid_obj.dimensions[1] else 0.001)
+            dimensions.append(conform_grid_obj.dimensions[2] if conform_grid_obj.dimensions[2] else 0.001)
+            lattice_obj.dimensions=Vector(dimensions)
+
+            # Set lattice resolution
+            lattice_data.points_u = self.lattice_u
+            lattice_data.points_v = self.lattice_v
+            lattice_data.points_w = 1  # for a flat plane, 1  point is enough in the W axis
+
+            lattice_data.interpolation_type_u = self.interpolation_type
+            lattice_data.interpolation_type_v = self.interpolation_type
+            lattice_data.interpolation_type_w = self.interpolation_type
+
+            lattice_obj.location.x += self.grid_transform_x
+            lattice_obj.location.y += self.grid_transform_y
+            lattice_obj.location.z += self.grid_transform_z
+            
+            lattice_obj.scale.x *= self.grid_size_x
+            lattice_obj.scale.y *= self.grid_size_y
+
+            lattice_obj.show_in_front = True
+
+            lattice_obj.parent = conform_grid_obj
+            lattice_obj.matrix_parent_inverse = conform_grid_obj.matrix_world.inverted()
+
+        return conform_grid_obj, lattice_obj
 
     def calc_bbox(self, obj, context, mat=None):
 
@@ -1479,7 +1613,7 @@ def apply_modifier(obj, m):
 
 
 
-def conform_undo(source_obj, context, remove_grid=True, set_active=True):
+def conform_undo(source_obj, context, remove_grid=True, set_active=True, reset_matrix=True):
     if not source_obj.conform_object.is_conform_obj:
         return
 
@@ -1536,15 +1670,27 @@ def conform_undo(source_obj, context, remove_grid=True, set_active=True):
                     break
 
         if not found_other_grid:
+            lattice_obj = get_lattice_obj(grid_object)
+            if lattice_obj:
+                if not lattice_obj.select_get():
+                    data_to_remove = lattice_obj.data
+                    bpy.data.objects.remove(lattice_obj)
+                    bpy.data.lattices.remove(data_to_remove) 
+                else:
+                    old_lat_matrix = lattice_obj.matrix_world.copy()
+                    lattice_obj.parent = None
+                    lattice_obj.matrix_world = old_lat_matrix
+
             data_to_remove = grid_object.data
             bpy.data.objects.remove(grid_object)
             bpy.data.meshes.remove(data_to_remove)
 
-    
-    all_zeros = not np.any(source_obj.conform_object.original_matrix)
+    if reset_matrix:
+        all_zeros = not np.any(source_obj.conform_object.original_matrix)
 
-    if not all_zeros:    
-        source_obj.matrix_world = source_obj.conform_object.original_matrix
+        if not all_zeros:    
+            source_obj.matrix_world = source_obj.conform_object.original_matrix
+    
 
     if set_active and target_obj and target_obj.name in bpy.data.objects:
         try:
@@ -1565,7 +1711,6 @@ def conform_apply(source_obj, context):
         apply_modifier(source_obj, source_obj.modifiers[_subd_mod_name])
 
     #apply the deform modifier.
-    grid_object = get_grid_obj(source_obj)
     if _deform_mod_name in source_obj.modifiers:
         mod = source_obj.modifiers[_deform_mod_name]
         apply_modifier(source_obj, mod)
@@ -1586,10 +1731,19 @@ def conform_apply(source_obj, context):
     if _blend_obj_group_name in source_obj.vertex_groups:
         source_obj.vertex_groups.remove(source_obj.vertex_groups[_blend_obj_group_name])
 
+    
+
     #remove grid object.
+    grid_object = get_grid_obj(source_obj)
     if grid_object:
         # check all other objects in the scene to see if this is being used elsewhere.
         try:
+            lattice_obj = get_lattice_obj(grid_object)
+            if lattice_obj:
+                data_to_remove = lattice_obj.data
+                bpy.data.objects.remove(lattice_obj)
+                bpy.data.lattices.remove(data_to_remove) 
+
             data_to_remove = grid_object.data
             bpy.data.objects.remove(grid_object)
             bpy.data.meshes.remove(data_to_remove)
@@ -1676,6 +1830,111 @@ class CONFORMOBJECT_OT_ExpandCollapseUI(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class CONFORMOBJECT_OT_toggle_source_object_unselectable(bpy.types.Operator):
+    bl_idname = "conform_object.toggle_active_unselectable"
+    bl_label = "Toggle Source Object Unselectable"
+    bl_description = "Make source object selectable or unselectable"
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.lattice is not None and context.view_layer.objects.active and context.view_layer.objects.active.conform_object.source_obj
+
+    def execute(self, context):
+
+        # set outliner display.
+        for window in context.window_manager.windows:
+            screen = window.screen
+            for area in screen.areas:
+                if area.type == 'OUTLINER':
+                    for space in area.spaces:
+                        if space.type == 'OUTLINER':
+                            # now you can access space.show_restrict_column_select
+                            space.show_restrict_column_select = True
+                            break
+
+
+        # Set active object unselectable
+        hide_select = context.view_layer.objects.active.conform_object.source_obj.hide_select
+        context.view_layer.objects.active.conform_object.source_obj.hide_select = not hide_select
+
+        return {'FINISHED'}
+    
+class CONFORMOBJECT_OT_toggle_grid_visibility_from_source_object(bpy.types.Operator):
+    bl_idname = "conform_object.toggle_grid_visibility_from_source_object"
+    bl_label = "Toggle Grid Visibility"
+    bl_description = "Make the grid object visible/invisible"
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.view_layer.objects.active and context.view_layer.objects.active.conform_object.is_conform_obj
+
+    def execute(self, context):
+
+        for child in context.view_layer.objects.active.children:
+
+            if child.conform_object.is_grid_obj:
+                conform_grid_obj = child
+                visible = not conform_grid_obj.hide_viewport
+                conform_grid_obj.hide_set(visible) # EYE icon
+                conform_grid_obj.hide_viewport = visible # MONITOR icon
+                conform_grid_obj.hide_render = visible # RENDER icon
+
+                return {'FINISHED'}
+        return {'CANCELLED'}
+    
+class CONFORMOBJECT_OT_toggle_lattice_visibility_from_source_object(bpy.types.Operator):
+    bl_idname = "conform_object.toggle_lattice_visibility_from_source_object"
+    bl_label = "Toggle Grid Visibility"
+    bl_description = "Make the lattice object visible/invisible"
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.view_layer.objects.active and context.view_layer.objects.active.conform_object.is_conform_obj
+
+    def execute(self, context):
+
+        for child in context.view_layer.objects.active.children:
+            if child.conform_object.is_grid_obj:
+                for child2 in child.children:
+                    if child2.type == 'LATTICE' and child2.conform_object.is_conform_lattice:
+                        conform_lattice = child2
+                        visible = not conform_lattice.hide_viewport
+                        conform_lattice.hide_set(visible) # EYE icon
+                        conform_lattice.hide_viewport = visible # MONITOR icon
+                        conform_lattice.hide_render = visible # RENDER icon
+
+                    return {'FINISHED'}
+        return {'CANCELLED'}
+        
+
+class CONFORMOBJECT_OT_toggle_grid_visibility_from_lattice(bpy.types.Operator):
+    bl_idname = "conform_object.toggle_grid_visibility_from_lattice"
+    bl_label = "Toggle Grid Visibility"
+    bl_description = "Make the grid object visible/invisible"
+    bl_options = {'INTERNAL', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.lattice is not None and context.view_layer.objects.active and context.view_layer.objects.active.conform_object.source_obj
+
+    def execute(self, context):
+
+        if context.view_layer.objects.active.parent and context.view_layer.objects.active.parent.conform_object.is_grid_obj:
+            conform_grid_obj = context.view_layer.objects.active.parent
+            visible = not conform_grid_obj.hide_viewport
+            conform_grid_obj.hide_set(visible) # EYE icon
+            conform_grid_obj.hide_viewport = visible # MONITOR icon
+            conform_grid_obj.hide_render = visible # RENDER icon
+
+
+            return {'FINISHED'}
+        return {'CANCELLED'}
+        
+
+
 def menu_func(self, context):
     self.layout.menu(OBJECT_MT_conform_object.bl_idname)
 
@@ -1701,7 +1960,11 @@ classes = [
     CONFORMOBJECT_OT_ToggleGridSnap,
     CONFORMOBJECT_OT_Dig,
     OBJECT_MT_conform_object,
-    CONFORMOBJECT_OT_ExpandCollapseUI]
+    CONFORMOBJECT_OT_ExpandCollapseUI,
+    CONFORMOBJECT_OT_toggle_source_object_unselectable,
+    CONFORMOBJECT_OT_toggle_grid_visibility_from_source_object,
+    CONFORMOBJECT_OT_toggle_grid_visibility_from_lattice,
+    CONFORMOBJECT_OT_toggle_lattice_visibility_from_source_object]
 
 def register():
     global classes
