@@ -63,6 +63,7 @@ class setup:
         gpu.state.depth_test_set('NONE')
         gpu.state.blend_set('NONE')
 
+
     def __init__(self, op):
         preference = addon.preference()
         bc = bpy.context.scene.bc
@@ -83,11 +84,14 @@ class setup:
         self.fade_time = preference.display.shape_fade_time_in * 0.001
         self.fade = bool(preference.display.shape_fade_time_in) or bool(preference.display.shape_fade_time_out)
         self.fade_type = 'IN' if bool(preference.display.shape_fade_time_in) else 'NONE'
+        self.fade_exit = False
         self.alpha = 1.0 if self.fade_type == 'NONE' else 0.0
 
+        uniform_color = 'UNIFORM_COLOR' if bpy.app.version[0] >= 4 else '3D_UNIFORM_COLOR'
+        polyline_flat_color = 'POLYLINE_FLAT_COLOR' if bpy.app.version[0] >= 4 else '3D_POLYLINE_FLAT_COLOR'
         self.shaders = {
-            'uniform': gpu.shader.from_builtin('3D_UNIFORM_COLOR'),
-            'polylines': gpu.shader.from_builtin('3D_POLYLINE_FLAT_COLOR')}
+            'uniform': gpu.shader.from_builtin(uniform_color),
+            'polylines': gpu.shader.from_builtin(polyline_flat_color)}
         self.batches = dict()
 
         _shader.handlers.append(self)
@@ -97,6 +101,7 @@ class setup:
 
         draw_arguments = (self.draw_handler, (op, bpy.context), 'WINDOW', 'POST_VIEW')
         self.handler = SpaceView3D.draw_handler_add(*draw_arguments)
+
 
     def shader(self, polys=False, batch=False, alpha=False, operator=None):
         preference = addon.preference() if alpha else None
@@ -117,8 +122,8 @@ class setup:
 
         self.last = self.verts[:]
 
-        if not bc.running and bool(preference.display.shape_fade_time_out_extract):
-            if bc.extract_name:
+        if not bc.running and not self.fade_exit and self.fade_type == 'OUT':
+            if preference.display.shape_fade_time_out_extract and bc.extract_name:
                 self.shape = shape = bpy.data.objects[bc.extract_name]
 
                 self.name = bc.extract_name
@@ -132,6 +137,11 @@ class setup:
 
                 shape_matrix = bc.extract_matrix
                 polys = batch = True
+
+            elif preference.display.shape_fade_time_out:
+                polys = batch = True
+
+            self.fade_exit = True
 
         if polys and shape:
             polygons = len(shape.data.polygons)
@@ -227,7 +237,11 @@ class setup:
                 matrix @ bc.lattice.data.points[a].co_deform,
                 matrix @ bc.lattice.data.points[b].co_deform,
             ]
-            self.batches['wedge'] = shader.batch(self.shaders['uniform'], 'LINES', {'pos':line})
+            color = Vector((1, 1, 1, 1)) - Vector(wire_color)
+            color.w = 1
+            atributes = {'pos':line, 'color': (color, color)}
+            self.batches['wedge'] = shader.batch(self.shaders['polylines'], 'LINES', atributes)
+
 
     def draw(self, op, context):
         method_handler(
@@ -235,6 +249,7 @@ class setup:
             arguments = (op, context),
             identifier = 'Shape Shader',
             exit_method = self.remove)
+
 
     def draw_handler(self, op, context):
         preference = addon.preference()
@@ -266,6 +281,7 @@ class setup:
             wedge = self.batches['wedge']
             self.lines(context, wedge, polylines, wire_width() * 2, xray=True)
 
+
     def update(self, op, context):
         method_handler(
             self.update_handler,
@@ -273,12 +289,14 @@ class setup:
             identifier = 'Shape Shader Update',
             exit_method = self.remove)
 
+
     def update_handler(self, op, context):
         if not self.exit:
             self.mode = op.mode
 
         setup = self.shader
         setup(polys=not self.exit, batch=not self.exit, alpha=True, operator=op)
+
 
     def remove(self, force=True):
         if self.handler:
@@ -289,3 +307,4 @@ class setup:
                 bpy.context.area.tag_redraw()
 
             _shader.handlers = [handler for handler in _shader.handlers if handler != self]
+

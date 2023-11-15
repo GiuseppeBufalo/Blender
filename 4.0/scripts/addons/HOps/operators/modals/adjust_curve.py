@@ -2,7 +2,7 @@ import bpy, math
 from mathutils import Vector
 from bpy.props import IntProperty, FloatProperty
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -11,7 +11,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_AdjustCurveOperator(bpy.types.Operator):
@@ -162,7 +162,7 @@ class HOPS_OT_AdjustCurveOperator(bpy.types.Operator):
                     spline.type = self.spline_type[self.spline_type_index]
                     self.spline_type[self.spline_type_index]
                 curve.data.splines.update()
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Spline Type : {self.active_curve.data.splines.active.type}' )
             self.report({'INFO'}, F'Spline type:{self.active_curve.data.splines.active.type}')
 
@@ -290,7 +290,7 @@ class HOPS_OT_AdjustCurveOperator(bpy.types.Operator):
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append("{:.2f}".format(self.active_curve.data.bevel_depth))
                 win_list.append("{:.0f}".format(self.active_curve.data.render_resolution_u))
                 win_list.append("{:.0f}".format(self.active_curve.data.bevel_resolution))

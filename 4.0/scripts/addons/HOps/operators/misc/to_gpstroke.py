@@ -1,5 +1,5 @@
 import bpy, bmesh
-from ... preferences import get_preferences
+from ... utility import addon, operator_override
 from math import pi
 
 
@@ -96,7 +96,7 @@ class HOPS_OT_TO_GPSTROKE(bpy.types.Operator):
         self.layout.prop(self, 'hide_original')
 
     def invoke(self, context, event):
-        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if get_preferences().ui.Hops_extra_info else lambda val, sub=None: None
+        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if addon.preference().ui.Hops_extra_info else lambda val, sub=None: None
         self.selection = {o.name for o in context.selected_objects if o.type in self.object_types}
         self.active_obj_name = context.active_object.name
 
@@ -142,7 +142,7 @@ class HOPS_OT_TO_GPSTROKE(bpy.types.Operator):
             mod = new_obj.modifiers.new(type='TRIANGULATE', name='tri')
             mod.min_vertices = 5
 
-            bpy.ops.object.convert(override, target='GPENCIL', seams=True, faces = self.convert_faces, thickness=self.thickness, offset=self.stroke_offset)
+            operator_override(context, bpy.ops.object.convert, override, target='GPENCIL', seams=True, faces=self.convert_faces, thickness=self.thickness, offset=self.stroke_offset)
 
             stroke = context.active_object
             created_objects.append(stroke)

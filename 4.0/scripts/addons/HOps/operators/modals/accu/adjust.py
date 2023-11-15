@@ -21,7 +21,7 @@ class Adjust:
 
 
     def __setup(self):
-        built_in_shader = 'UNIFORM_COLOR' if bpy.app.version[0] >=4 else '3D_UNIFORM_COLOR'
+        built_in_shader = 'UNIFORM_COLOR' if bpy.app.version[0] >= 4 else '3D_UNIFORM_COLOR'
         self.shader = gpu.shader.from_builtin(built_in_shader)
         self.point_batch = None
         self.line_batch = None

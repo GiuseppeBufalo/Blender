@@ -20,6 +20,75 @@ def get_icon(name):
 
 
 
+def get_mouse_pos(self, context, event, hud=True, hud_offset=(20, 20)):
+
+    self.mouse_pos = Vector((event.mouse_region_x, event.mouse_region_y))
+
+    if hud:
+        scale = context.preferences.system.ui_scale * get_prefs().modal_hud_scale
+
+        self.HUD_x = self.mouse_pos.x + hud_offset[0] * scale
+        self.HUD_y = self.mouse_pos.y + hud_offset[1] * scale
+
+
+def wrap_mouse(self, context, x=False, y=False):
+
+    width = context.region.width
+    height = context.region.height
+
+    mouse = self.mouse_pos.copy()
+
+    if x:
+        if mouse.x <= 0:
+            mouse.x = width - 10
+
+        elif mouse.x >= width - 1:  # the -1 is required for full screen, where the max region width is never passed
+            mouse.x = 10
+
+    if y and mouse == self.mouse_pos:
+        if mouse.y <= 0:
+            mouse.y = height - 10
+
+        elif mouse.y >= height - 1:
+            mouse.y = 10
+
+    if mouse != self.mouse_pos:
+        warp_mouse(self, context, mouse)
+
+
+def warp_mouse(self, context, co2d=Vector(), region=True, hud_offset=(20, 20)):
+
+    coords = get_window_space_co2d(context, co2d) if region else co2d
+
+    context.window.cursor_warp(int(coords.x), int(coords.y))
+
+    self.mouse_pos = co2d if region else get_region_space_co2d(context, co2d)
+
+    if getattr(self, 'last_mouse', None):
+        self.last_mouse = self.mouse_pos
+
+    if getattr(self, 'HUD_x', None):
+        scale = context.preferences.system.ui_scale * get_prefs().modal_hud_scale
+
+        self.HUD_x = self.mouse_pos.x + hud_offset[0] * scale
+        self.HUD_y = self.mouse_pos.y + hud_offset[1] * scale
+
+
+def get_window_space_co2d(context, co2d=Vector()):
+
+    return co2d + Vector((context.region.x, context.region.y))
+
+
+def get_region_space_co2d(context, co2d=Vector()):
+
+    return Vector((context.region.x, context.region.y)) - co2d
+
+
+
+
+
+
+
 def init_cursor(self, event, offsetx=0, offsety=20):
     self.last_mouse_x = event.mouse_x
     self.last_mouse_y = event.mouse_y
@@ -81,8 +150,12 @@ def get_zoom_factor(context, depth_location, scale=10, ignore_obj_scale=False):
     center = Vector((context.region.width / 2, context.region.height / 2))
     offset = center + Vector((scale, 0))
 
-    center_3d = region_2d_to_location_3d(context.region, context.region_data, center, depth_location)
-    offset_3d = region_2d_to_location_3d(context.region, context.region_data, offset, depth_location)
+    try:
+        center_3d = region_2d_to_location_3d(context.region, context.region_data, center, depth_location)
+        offset_3d = region_2d_to_location_3d(context.region, context.region_data, offset, depth_location)
+    except:
+        print("exception!")
+        return 1
 
 
     if not ignore_obj_scale and context.active_object:
@@ -192,7 +265,8 @@ def draw_keymap_items(kc, name, keylist, layout):
                 idx += 1
 
         drawn.append(isdrawn)
-    return drawn
+
+    return any(d for d in drawn)
 
 
 def get_keymap_item(name, idname, key=None, alt=False, ctrl=False, shift=False, properties=[]):

@@ -3,13 +3,13 @@ from math import cos, sin
 from enum import Enum
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... ui_framework.flow_ui.flow import Flow_Menu, Flow_Form
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utility import math as hops_math
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
@@ -462,7 +462,7 @@ class HOPS_OT_To_Shape_V2(bpy.types.Operator):
             win_list = []
             mods_list = []
 
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append(self.shape.name)
 
                 if self.shape != Shapes.EMPTY and self.empty_opts != EmptyOpts.SINGLE:
@@ -1631,7 +1631,7 @@ class HOPS_OT_To_Shape_V2(bpy.types.Operator):
 
             gpu.state.line_width_set(1)
             self.shape_edges_shader.bind()
-            self.shape_edges_shader.uniform_float("color", get_preferences().color.Hops_wire_mesh)
+            self.shape_edges_shader.uniform_float("color", addon.preference().color.Hops_wire_mesh)
             self.shape_edges_batch.draw(self.shape_edges_shader)
 
         gpu.state.depth_test_set('NONE')

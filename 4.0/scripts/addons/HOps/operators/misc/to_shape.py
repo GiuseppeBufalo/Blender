@@ -2,12 +2,11 @@ import bpy
 import bmesh
 import bpy.utils.previews
 from math import radians
-from ... preferences import get_preferences
+from ... utility import addon, collections, object, math , modifier, operator_override
 from ... utils.blender_ui import get_dpi_factor
 from ... utils.context import ExecutionContext
 from bpy.props import EnumProperty, FloatProperty, BoolProperty
 from mathutils import Vector, Matrix, Euler
-from ... utility import collections, object, math , modifier
 
 class HOPS_OT_Conv_To_Shape(bpy.types.Operator):
     bl_idname = "hops.to_shape"
@@ -557,7 +556,7 @@ LMB+CTRL - Parent selection to empties
         override['edit_object'] = None
         override['selected_objects'] = list(self.created_shapes)
         override['mode'] = 'OBJECT'
-        bpy.ops.hops.draw_wire_mesh_launcher(override,'INVOKE_DEFAULT', target='SELECTED')
+        operator_override(context, bpy.ops.hops.draw_wire_mesh_launcher, override, 'INVOKE_DEFAULT', target='SELECTED')
 
         return {'FINISHED'}
 

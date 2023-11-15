@@ -7,14 +7,14 @@ from ... utils.objects import apply_scale
 from ... utility import modifier, ops
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.mod_controller import Mod_Controller
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list, custom_profile
-from ... addon.utility.profile import load_bevel_profile
+from ...utils.profile import load_bevel_profile
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... assets.custom_profiles import profile_path as hops_profile_path
 
 
@@ -65,6 +65,12 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
 
         # Mod Controller
         objs = [o for o in context.selected_objects if o.type in {'MESH', 'CURVE'}]
+
+        for obj in objs:
+            if not obj.data.use_auto_smooth:
+                obj.data.use_auto_smooth = True
+                obj.data.auto_smooth_angle = radians(60)
+
         type_map = {bpy.types.Mesh : 'BEVEL', bpy.types.Curve : 'BEVEL'}
         ctrl_new = True if event.ctrl and not self.ignore_ctrl else False
         self.mod_controller = Mod_Controller(context, objs, type_map, create_new=ctrl_new, active_obj=context.active_object)
@@ -80,7 +86,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
         self.profile_mode = False
         self.angle_mode = False
         self.percent_mode = False
-        self.adaptivemode = get_preferences().property.adaptivemode
+        self.adaptivemode = addon.preference().property.adaptivemode
         self.snap_break = 0.05
         self.snap_buffer = 0
 
@@ -138,7 +144,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                     mod_name = mod.name[:]
                     bpy.ops.object.modifier_apply(modifier=mod_name)
                     bpy.ops.hops.draw_wire_mesh_launcher('INVOKE_DEFAULT', target='SELECTED')
-                    if get_preferences().ui.Hops_extra_info:
+                    if addon.preference().ui.Hops_extra_info:
                         bpy.ops.hops.display_notification(info=f'{mod_name} : Applied' )
             # Display
             bpy.context.space_data.overlay.show_overlays = True
@@ -256,7 +262,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
             for mod in self.mod_controller.active_modifiers():
                 mod.limit_method = limit_methods[(limit_methods.index(mod.limit_method) + 1) % len(limit_methods)]
                 msg = mod.limit_method
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Limit Method : {msg}')
             self.report({'INFO'}, F'Limit Method : {msg}')
 
@@ -298,7 +304,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
             if event.shift:
                 self.segments_mode = False
                 if self.support_profile_scroll:
-                    if get_preferences().ui.Hops_extra_info:
+                    if addon.preference().ui.Hops_extra_info:
                         bpy.ops.hops.display_notification(info=F'Profile Scroll: {self.support_profile_scroll}' )
                     self.profile_mode = False
                     self.segments_mode = False
@@ -306,7 +312,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                     action = 'Started' if self.scrolling_profiles else 'Stopped'
                     self.report({'INFO'}, f'{action} scrolling profiles')
                 else:
-                    if get_preferences().ui.Hops_extra_info:
+                    if addon.preference().ui.Hops_extra_info:
                         bpy.ops.hops.display_notification(info='No Profiles Found' )
 
             # Profile Toggles
@@ -390,7 +396,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
             lw = lw * 0.5 if not event.shift else lw * 2
             mod.width = lw
 
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Bevel Set to: {lw:.3f}' )
             self.report({'INFO'}, F'Width Set to half: {lw:.3f}')
 
@@ -446,7 +452,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                     mod.width += bevel_offset * multiplier
 
             if self.adaptivemode:
-                self.adaptivesegments = int(mod.width * get_preferences().property.adaptiveoffset) + obj.hops.adaptivesegments
+                self.adaptivesegments = int(mod.width * addon.preference().property.adaptiveoffset) + obj.hops.adaptivesegments
                 mod.segments = self.adaptivesegments
 
 
@@ -469,7 +475,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
         # Adaptive
         elif self.adaptivemode:
             if event.ctrl:
-                get_preferences().property.adaptiveoffset += 0.5 * self.base_controls.scroll
+                addon.preference().property.adaptiveoffset += 0.5 * self.base_controls.scroll
             elif event.shift:
                 if self.base_controls.scroll > 0:
                     self.mod_controller.clamped_next_mod_index(forward=True)
@@ -550,7 +556,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
         mod = self.mod_controller.active_object_mod()
         if not mod: return
         angle = round(degrees(obj.data.auto_smooth_angle), 4)
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=F'Autosmooth : {angle}' )
         self.report({'INFO'}, F'Autosmooth : {angle} / Harden Normals : {mod.harden_normals}')
 
@@ -571,7 +577,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                 mod.profile = 0.5
 
         # Notifications
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=F'Vert Bevel' )
         self.report({'INFO'}, F'Vert Bevel')
 
@@ -589,14 +595,14 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
             obj.show_all_edges = True if obj.show_wire else False
 
         # Notifications
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info='Conversion Bevel' )
         self.report({'INFO'}, 'Conversion Bevel')
 
 
     def toggle_adaptive(self):
         self.adaptivemode = not self.adaptivemode
-        get_preferences().property.adaptivemode = not get_preferences().property.adaptivemode
+        addon.preference().property.adaptivemode = not addon.preference().property.adaptivemode
         self.report({'INFO'}, F'Adaptive Mode : {self.adaptivemode}')
 
 
@@ -643,7 +649,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
         # Main
         win_list = []
 
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
             win_list.append(mod.segments)
             win_list.append("%.3f" % mod.width)
             if mod.limit_method == 'ANGLE':
@@ -654,7 +660,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
 
         else:
             win_list.append(mod.name)
-            if self.text != "nothing" and get_preferences().property.workflow_mode == 'ANGLE' and mod.limit_method == 'ANGLE':
+            if self.text != "nothing" and addon.preference().property.workflow_mode == 'ANGLE' and mod.limit_method == 'ANGLE':
                 win_list.append(self.text)
             win_list.append("Segments : " + str(mod.segments))
             win_list.append("Width : "    + "%.4f" % mod.width)
@@ -784,12 +790,12 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                 self.text = "60° Bevel Added" if event.shift else "30° Bevel Added"
                 angle = radians(60) if event.shift else radians(30)
 
-                mod.limit_method = get_preferences().property.workflow_mode
-                mod.miter_outer = get_preferences().property.bevel_miter_outer
-                mod.miter_inner = get_preferences().property.bevel_miter_inner
-                mod.profile = get_preferences().property.bevel_profile
-                mod.loop_slide = get_preferences().property.bevel_loop_slide
-                mod.segments = get_preferences().property.default_segments
+                mod.limit_method = addon.preference().property.workflow_mode
+                mod.miter_outer = addon.preference().property.bevel_miter_outer
+                mod.miter_inner = addon.preference().property.bevel_miter_inner
+                mod.profile = addon.preference().property.bevel_profile
+                mod.loop_slide = addon.preference().property.bevel_loop_slide
+                mod.segments = addon.preference().property.default_segments
                 mod.use_clamp_overlap = False
                 mod.angle_limit = angle
                 mod.width = 0.01
@@ -808,22 +814,19 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                 elif obj.hops.status == "BOOLSHAPE":
                     mod.harden_normals = False
 
-                elif get_preferences().property.use_harden_normals and not obj.hops.status == 'BOOLSHAPE':
+                elif addon.preference().property.use_harden_normals and not obj.hops.status == 'BOOLSHAPE':
                     mod.harden_normals = True
 
                 obj.show_all_edges = True
 
                 if obj.type == 'MESH':
-                    if not obj.data.use_auto_smooth:
-                        obj.data.use_auto_smooth = True
-                        obj.data.auto_smooth_angle = radians(60)
                     if context.mode == 'EDIT_MESH':
                         vg = obj.vertex_groups.new(name='HardOps')
                         weight = context.scene.tool_settings.vertex_group_weight
                         context.scene.tool_settings.vertex_group_weight = 1.0
                         bpy.ops.object.vertex_group_assign()
                         context.scene.tool_settings.vertex_group_weight = weight
-                        if get_preferences().property.adjustbevel_use_1_segment:
+                        if addon.preference().property.adjustbevel_use_1_segment:
                             if context.tool_settings.mesh_select_mode[2] and obj.hops.status == "BOOLSHAPE":
                                 mod.segments = 1
                                 mod.harden_normals = False
@@ -835,9 +838,9 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                         ops.shade_smooth()
 
         # Notifications
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             mods = self.mod_controller.all_created_mods()
-            if get_preferences().property.workflow_mode == 'ANGLE':
+            if addon.preference().property.workflow_mode == 'ANGLE':
                 bpy.ops.hops.display_notification(info=f'Bevel Added {"%.1f"%(degrees(angle))}° - Total : {len(mods)}' )
             else:
                 bpy.ops.hops.display_notification(info=f'Bevel Added - Total : {len(mods)}' )
@@ -851,14 +854,14 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
         # --- Edge Cases --- #
 
         profile_opt = 'CUSTOM'
-        if get_preferences().property.profile_folder == '':
-            if get_preferences().property.use_default_profiles == False:
+        if addon.preference().property.profile_folder == '':
+            if addon.preference().property.use_default_profiles == False:
                 profile_opt = 'NONE'
             else:
                 profile_opt = 'DEFAULT'
 
-        if profile_opt == 'CUSTOM' and get_preferences().property.use_default_profiles:
-            profile_folder = Path(get_preferences().property.profile_folder).resolve()
+        if profile_opt == 'CUSTOM' and addon.preference().property.use_default_profiles:
+            profile_folder = Path(addon.preference().property.profile_folder).resolve()
             if len([x for x in profile_folder.glob('*.json') if x.is_file()]) == 0:
                 profile_opt = 'DEFAULT'
 
@@ -870,7 +873,7 @@ class HOPS_OT_AdjustBevelOperator(bpy.types.Operator):
                 self.profile_files = [x for x in profile_folder.glob('*.json') if x.is_file()]
 
         elif profile_opt == 'CUSTOM':
-            profile_folder = Path(get_preferences().property.profile_folder).resolve()
+            profile_folder = Path(addon.preference().property.profile_folder).resolve()
             self.profile_files = [x for x in profile_folder.glob('*.json') if x.is_file()]
 
         if self.profile_files:

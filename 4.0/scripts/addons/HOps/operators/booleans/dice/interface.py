@@ -1,5 +1,5 @@
 import bpy
-from .... preferences import get_preferences
+from .... utility import addon
 from .... ui_framework.utils.mods_list import get_mods_list
 from .... ui_framework import form_ui as form
 from . import Mode
@@ -49,7 +49,7 @@ def draw_FAS(op, context):
 def dice_3d_FAS(op, context, w_append, h_append):
     D3D = op.dice_3d
     boxelize = get_boxelize_ref()
-    prefs = get_preferences()
+    prefs = addon.preference()
 
     # Main
     w_append("3d Mode[V]") 
@@ -83,7 +83,7 @@ def dice_3d_FAS(op, context, w_append, h_append):
 
 def dice_2d_FAS(op, context, w_append, h_append):
     D2D = op.dice_2d
-    prefs = get_preferences()
+    prefs = addon.preference()
 
     # Main
     w_append("2d Mode[V]")
@@ -107,7 +107,7 @@ def dice_2d_FAS(op, context, w_append, h_append):
 
 def dice_line_FAS(op, context, w_append, h_append):
     DL = op.dice_line
-    prefs = get_preferences()
+    prefs = addon.preference()
 
     # Main
     w_append("Line Mode[V]")

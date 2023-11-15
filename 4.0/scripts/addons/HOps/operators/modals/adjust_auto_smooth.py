@@ -2,7 +2,7 @@ import bpy, math, numpy
 from bpy.props import BoolProperty
 from math import radians, degrees
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... utility import ops
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -10,7 +10,7 @@ from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
 from ... utils.objects import set_bool_tagets_on_objects_to_smooth
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 DESC = """Interactive Autosmooth Adjustment
@@ -90,7 +90,7 @@ class HOPS_OT_AdjustAutoSmooth(bpy.types.Operator):
                     for mod in bevmods:
                         mod.show_viewport = False
 
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.buffer = self.angle
 
         # Base Systems
@@ -284,7 +284,7 @@ class HOPS_OT_AdjustAutoSmooth(bpy.types.Operator):
 
         # Main
         win_list = []
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #fast
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #fast
             win_list.append(f'{self.angle:.1f}')
             win_list.append(f'{bpy.context.object.hops.is_global}')
             win_list.append(f'{bpy.context.object.data.use_auto_smooth}')
@@ -411,25 +411,25 @@ def bevels(obj, angle=False, weight=False, vertex_group=False, props={}):
 def add_bevel_modifier(context, object, angle):
     bevel_modifier = object.modifiers.new(name="Bevel", type="BEVEL")
     bevels = [mod for mod in object.modifiers if mod.type == 'BEVEL']
-    if get_preferences().ui.Hops_extra_info:
-        if get_preferences().property.workflow_mode == 'ANGLE':
+    if addon.preference().ui.Hops_extra_info:
+        if addon.preference().property.workflow_mode == 'ANGLE':
             bpy.ops.hops.display_notification(info=f'Bevel Added {"%.1f"%(degrees(angle))}° - Total : {len(bevels)}' )
         else:
             bpy.ops.hops.display_notification(info=f'Bevel Added - Total : {len(bevels)}' )
-    bevel_modifier.limit_method = get_preferences().property.workflow_mode
+    bevel_modifier.limit_method = addon.preference().property.workflow_mode
 
     bevel_modifier.angle_limit = angle
-    bevel_modifier.miter_outer = get_preferences().property.bevel_miter_outer
-    bevel_modifier.miter_inner = get_preferences().property.bevel_miter_inner
+    bevel_modifier.miter_outer = addon.preference().property.bevel_miter_outer
+    bevel_modifier.miter_inner = addon.preference().property.bevel_miter_inner
     bevel_modifier.width = 0.01
 
     if bpy.app.version > (2, 89, 0):
         bevel_modifier.affect = 'EDGES'
 
-    bevel_modifier.profile = get_preferences().property.bevel_profile
-    bevel_modifier.loop_slide = get_preferences().property.bevel_loop_slide
+    bevel_modifier.profile = addon.preference().property.bevel_profile
+    bevel_modifier.loop_slide = addon.preference().property.bevel_loop_slide
     bevel_modifier.use_clamp_overlap = False
-    bevel_modifier.segments = get_preferences().property.default_segments
+    bevel_modifier.segments = addon.preference().property.default_segments
     if object.dimensions[2] == 0 or object.dimensions[1] == 0 or object.dimensions[0] == 0:
         bevel_modifier.segments = 6
         if bpy.app.version < (2, 90, 0):
@@ -437,11 +437,11 @@ def add_bevel_modifier(context, object, angle):
         else:
             bevel_modifier.affect = 'VERTICES'
         bevel_modifier.use_clamp_overlap = True
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f'2d Bevel Added' )
     elif object.hops.status == "BOOLSHAPE":
         bevel_modifier.harden_normals = False
-    # elif get_preferences().property.use_harden_normals:
+    # elif addon.preference().property.use_harden_normals:
     #     bevel_modifier.harden_normals = True
     object.show_all_edges = True
 
@@ -452,7 +452,7 @@ def add_bevel_modifier(context, object, angle):
         if context.mode == 'EDIT_MESH':
             vg = object.vertex_groups.new(name='HardOps')
             bpy.ops.object.vertex_group_assign()
-            if get_preferences().property.adjustbevel_use_1_segment:
+            if addon.preference().property.adjustbevel_use_1_segment:
                 if context.tool_settings.mesh_select_mode[2] and object.hops.status == "BOOLSHAPE":
                     bevel_modifier.segments = 1
                     bevel_modifier.harden_normals = False
@@ -460,7 +460,7 @@ def add_bevel_modifier(context, object, angle):
             bevel_modifier.limit_method = 'VGROUP'
             bevel_modifier.vertex_group = vg.name
             bpy.ops.mesh.faces_shade_smooth()
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=f'Vgroup Bevel Added' )
         else:
             ops.shade_smooth()

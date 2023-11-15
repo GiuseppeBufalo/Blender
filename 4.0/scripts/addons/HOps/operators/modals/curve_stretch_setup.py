@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from bpy.types import Operator
 from bpy.props import IntProperty, FloatProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.master import Master
 from ...ui_framework.utils.mods_list import get_mods_list
 from . import infobar
@@ -96,7 +96,7 @@ class HOPS_OT_CurveStretch(Operator):
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(curve.points_number)
             else:
                 win_list.append("Mira Curve Setup")

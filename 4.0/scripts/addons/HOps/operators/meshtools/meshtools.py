@@ -3,7 +3,7 @@ from mathutils import Quaternion
 from bpy.props import IntProperty, BoolProperty, FloatProperty
 from ... utils.addons import addon_exists
 #from ... utils.operations import invoke_individual_resizing
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ...ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -12,7 +12,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_VertcircleOperator(bpy.types.Operator):
@@ -127,7 +127,7 @@ req. Looptools
             self.make_circles(context)
 
         elif self.base_controls.mouse:
-            if get_preferences().property.modal_handedness == 'LEFT':
+            if addon.preference().property.modal_handedness == 'LEFT':
                 self.radius -= self.base_controls.mouse
             else:
                 self.radius += self.base_controls.mouse
@@ -200,7 +200,7 @@ req. Looptools
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append("{:.0f}".format(number))
                 win_list.append("{:.3f}".format(self.radius))
             else:

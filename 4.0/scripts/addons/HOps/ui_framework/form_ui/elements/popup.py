@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Image
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from ... graphics.draw import render_text, draw_border_lines, render_quad
 from ... utils.geo import get_blf_text_dims
 from ... utils.checks import is_mouse_in_quad

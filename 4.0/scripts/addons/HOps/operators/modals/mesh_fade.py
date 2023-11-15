@@ -2,8 +2,8 @@ import bpy, bmesh, mathutils, math, gpu, time, numpy
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector, Matrix
 from bpy.props import EnumProperty, StringProperty, BoolProperty
-from ... addon.utility import method_handler
-from ... preferences import get_preferences
+from ... utility import method_handler
+from ... utility import addon
 
 ##############################################################################
 # Draw Data
@@ -71,12 +71,12 @@ class HOPS_OT_Draw_Wire_Mesh_Launcher(bpy.types.Operator):
     def execute(self, context):
 
         # Extra Check : If draw modal has not saved a time than just reset every thing manual
-        if time.time() - EXTRA_CHECK > get_preferences().ui.Hops_extra_draw_time:
+        if time.time() - EXTRA_CHECK > addon.preference().ui.Hops_extra_draw_time:
             Data.reset_data()
             Data.reset_states()
             Data.restart_modal = False
 
-        if get_preferences().ui.Hops_extra_draw == False:
+        if addon.preference().ui.Hops_extra_draw == False:
             return {'FINISHED'}
 
         if self.target == 'ACTIVE':
@@ -265,7 +265,7 @@ class HOPS_OT_Draw_Wire_Mesh(bpy.types.Operator):
             self.shader.reset(context)
 
         time_out = False
-        if time.time() - self.last_called > get_preferences().ui.Hops_extra_draw_time:
+        if time.time() - self.last_called > addon.preference().ui.Hops_extra_draw_time:
             time_out = True
 
         # Reset everything
@@ -299,7 +299,7 @@ class HOPS_OT_Draw_Wire_Mesh(bpy.types.Operator):
 class Shader():
 
     def __init__(self, context):
-        self.duration = get_preferences().ui.Hops_extra_draw_time
+        self.duration = addon.preference().ui.Hops_extra_draw_time
         self.reset(context)
         self.__setup_handle(context)
 
@@ -309,7 +309,7 @@ class Shader():
 
         self.fade_complete = False
         self.start_time = time.time()
-        color = get_preferences().color.Hops_wire_mesh
+        color = addon.preference().color.Hops_wire_mesh
         self.alpha = color[3]
         self.og_alpha = color[3]
         self.color = (color[0], color[1], color[2], self.alpha)

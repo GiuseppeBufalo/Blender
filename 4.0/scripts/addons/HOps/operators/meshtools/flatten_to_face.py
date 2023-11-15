@@ -6,7 +6,7 @@ import mathutils
 from bmesh.types import BMFace
 from mathutils import Vector, Matrix
 from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from ...utils.bmesh import get_face_center_location
 
@@ -73,7 +73,7 @@ class HOPS_OT_Flatten_To_Face(bpy.types.Operator):
 
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 

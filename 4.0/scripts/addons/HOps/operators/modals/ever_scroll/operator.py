@@ -1,11 +1,11 @@
 import bpy, time
-from .... preferences import get_preferences
+from .... utility import addon
 from .... ui_framework.master import Master
 from .... ui_framework import form_ui as form
 from .... ui_framework.utils.mods_list import get_mods_list
 from .... utility.base_modal_controls import Base_Modal_Controls, confirm_events, increment_maps, decrement_maps
 from .... utils.toggle_view3d_panels import collapse_3D_view_panels
-from .... addon.utility import method_handler
+from .... utility import method_handler
 from ... meshtools.applymod import apply_mod
 from .... utils.blender_ui import get_dpi_factor
 from .... ui.hops_helper.mods_data import DATA_PT_modifiers
@@ -18,7 +18,7 @@ from . coll_tracker import Coll_Tracker
 from . popups import popup_generator
 
 def max_rows():
-    return get_preferences().ui.Hops_modal_mod_count_fast_ui
+    return addon.preference().ui.Hops_modal_mod_count_fast_ui
 
 
 DESC = """Ever Scroll V2\n
@@ -131,10 +131,10 @@ class HOPS_OT_Ever_Scroll_V2(bpy.types.Operator):
         self.auto_scroll = Auto_Scroll(context)
 
         # Prefs
-        if get_preferences().property.ever_scroll_dot_open == 'DOT':
+        if addon.preference().property.ever_scroll_dot_open == 'DOT':
             self.dot_open = True
 
-        self.popup_style = get_preferences().property.in_tool_popup_style
+        self.popup_style = addon.preference().property.in_tool_popup_style
 
         # Hops Dots
         self.hops_dots_running = False
@@ -940,12 +940,12 @@ class HOPS_OT_Ever_Scroll_V2(bpy.types.Operator):
                 self.auto_scroll.sequance_hold = False
             else: return
 
-        if time.time() - self.auto_scroll.activated_time > get_preferences().property.auto_scroll_time_interval:
+        if time.time() - self.auto_scroll.activated_time > addon.preference().property.auto_scroll_time_interval:
             self.auto_scroll.activated_time = time.time()
 
             # Make both left and right scroll same direction
             step = 1
-            if get_preferences().property.modal_handedness == 'RIGHT': step *= -1
+            if addon.preference().property.modal_handedness == 'RIGHT': step *= -1
             self.scroll_trackers(context, step)
 
         # Pause looping on sequence restart
@@ -971,19 +971,19 @@ class HOPS_OT_Ever_Scroll_V2(bpy.types.Operator):
 
         if event.type in {'WHEELDOWNMOUSE', 'LEFT_BRACKET'} and event.value == 'PRESS':
             self.auto_scroll.activated_time = time.time()
-            get_preferences().property.auto_scroll_time_interval -= .125
-            if get_preferences().property.auto_scroll_time_interval < .1:
-                get_preferences().property.auto_scroll_time_interval = .25
+            addon.preference().property.auto_scroll_time_interval -= .125
+            if addon.preference().property.auto_scroll_time_interval < .1:
+                addon.preference().property.auto_scroll_time_interval = .25
 
-            bpy.ops.hops.display_notification(info=f"Interval time set: {get_preferences().property.auto_scroll_time_interval:.3f}")
+            bpy.ops.hops.display_notification(info=f"Interval time set: {addon.preference().property.auto_scroll_time_interval:.3f}")
 
         elif event.type in {'WHEELUPMOUSE', 'RIGHT_BRACKET'} and event.value == 'PRESS':
             self.auto_scroll.activated_time = time.time()
-            get_preferences().property.auto_scroll_time_interval += .125
-            if get_preferences().property.auto_scroll_time_interval > 60:
-                get_preferences().property.auto_scroll_time_interval = 60
+            addon.preference().property.auto_scroll_time_interval += .125
+            if addon.preference().property.auto_scroll_time_interval > 60:
+                addon.preference().property.auto_scroll_time_interval = 60
 
-            bpy.ops.hops.display_notification(info=f"Interval time set: {get_preferences().property.auto_scroll_time_interval:.3f}")
+            bpy.ops.hops.display_notification(info=f"Interval time set: {addon.preference().property.auto_scroll_time_interval:.3f}")
 
     # --- SHADER --- #
 

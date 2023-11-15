@@ -1,6 +1,6 @@
 import bpy, webbrowser
 from bpy_extras.image_utils import load_image
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.master import Master, Modal_Communications
 from .video_thumbs import image_folder
 
@@ -62,7 +62,7 @@ class Video_Controller:
 
     def draw_window(self, context, event):
         self.master.setup()
-        prefs = get_preferences()
+        prefs = addon.preference()
         window_name = "Videos"
         main_window = {}
 

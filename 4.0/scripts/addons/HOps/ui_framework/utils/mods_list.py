@@ -1,6 +1,6 @@
 import bpy
 import math
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 def get_mods_list(mods, ignore_mods=[]):

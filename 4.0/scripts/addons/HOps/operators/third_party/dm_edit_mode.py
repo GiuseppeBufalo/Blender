@@ -1,7 +1,7 @@
 import bpy, os, bmesh
 from pathlib import Path
 from bpy_extras.image_utils import load_image
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.master import Master
 from ...utils.addons import addon_exists
 from ... icons import icons_directory
@@ -101,7 +101,7 @@ class HOPS_OT_DM2_Window(bpy.types.Operator):
     def draw_window(self, context, event):
 
         self.master.setup()
-        prefs = get_preferences()
+        prefs = addon.preference()
         main_window = {
             "folders" : [],
             "files"   : [],

@@ -2,7 +2,7 @@ import bpy
 from bpy.types import Panel
 
 from math import radians
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_dimensions_options(Panel):
@@ -15,7 +15,7 @@ class HOPS_PT_dimensions_options(Panel):
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
-        preference = get_preferences().property
+        preference = addon.preference().property
         obj = bpy.context.object
 
         layout.column().prop(obj, 'dimensions', expand=True)

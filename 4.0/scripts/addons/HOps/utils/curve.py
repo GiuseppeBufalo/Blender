@@ -2,6 +2,8 @@ import bpy
 import math
 import bmesh
 
+from .. utility import operator_override
+
 
 def add_curve_to_scene(context, location=(0,0,0), name="curve", select=True):
     '''Create a new curve and add it to the viewlayer.'''
@@ -37,7 +39,7 @@ def add_bezier_spline(curve, location=(0,0,0)):
 
 def add_bezier_point(curve, location=(0,0,0)):
     '''Add a point to the bezier path.'''
-    
+
     curve.data.splines.active.bezier_points.add(count=1)
     curve.data.splines[0].bezier_points[-1].co = location
     curve.data.splines[0].bezier_points[-1].handle_right_type = 'AUTO'
@@ -65,7 +67,7 @@ def convert_curve_to_mesh(context, curve, smooth_repeat, smoothing_factor):
 
     # Come out of edit mode
     bpy.ops.object.mode_set(mode='OBJECT')
-    
+
     # Get current active object
     active_object = context.active_object
 
@@ -73,13 +75,13 @@ def convert_curve_to_mesh(context, curve, smooth_repeat, smoothing_factor):
     for obj in context.view_layer.objects:
         if obj.name != curve.name:
             obj.select_set(False)
-        
+
     # Make the curve the selected object
     override = context.copy()
     override['active_object'] = curve
 
     # Convert curve
-    bpy.ops.object.convert(override, target='MESH',  keep_original=False)
+    operator_override(context, bpy.ops.object.convert, override, target='MESH', keep_original=False)
 
     # Go back to edit mode
     bpy.ops.object.mode_set(mode='EDIT')

@@ -434,6 +434,15 @@ class BC_PT_helper(Panel):
                 props_mirror = props['MIRROR']
                 props_mirror['reset'] = True
 
+                if bc.running:
+                    gizmo = props_mirror['gizmo'] = self._prop.copy()
+                    gizmo['prop'] = 'mirror_gizmo'
+                    gizmo['text'] = 'Gizmo'
+                    gizmo['header'] = True
+                    gizmo['header_only'] = True
+                    gizmo['icon'] = 'EMPTY_AXIS'
+                    gizmo['icon_only'] = True
+
                 axis = props_mirror['axis'] = self._prop.copy()
                 axis['prop'] = 'mirror_axis'
                 axis['text'] = 'Axis'
@@ -693,7 +702,7 @@ class BC_PT_helper(Panel):
 
                 continue
 
-            if not prop['operator']:
+            if not prop['operator'] and hasattr(eval(prop['path']), prop['prop']):
                 prop_type = type(eval(F'{prop["path"]}.{prop["prop"]}')).__name__
 
             for _ in range(prop['pad']):

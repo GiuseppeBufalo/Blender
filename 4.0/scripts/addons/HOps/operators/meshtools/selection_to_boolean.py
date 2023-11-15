@@ -6,7 +6,7 @@ from math import radians
 from bmesh.types import BMFace
 from mathutils import Vector, Matrix, Euler
 from bpy.props import IntProperty, FloatProperty, BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.operator_ui import Master
 from ... utils.bmesh import get_verts_center
 from ...utility.object import apply_transforms
@@ -60,7 +60,7 @@ class HOPS_OT_Selection_To_Boolean(bpy.types.Operator):
                     [exit_code, "ERROR"]]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 
@@ -176,7 +176,7 @@ def get_extruded_faces(context: bpy.context, mesh: bpy.types.Mesh, bm: bmesh, fa
         # Assign boolean mod to original object
         mod = original_obj.modifiers.new("HOPS Boolean", 'BOOLEAN')
         if hasattr(mod, 'solver'):
-            mod.solver = get_preferences().property.boolean_solver
+            mod.solver = addon.preference().property.boolean_solver
         mod.object = new_obj
         mod.show_render = False
 

@@ -8,7 +8,7 @@ from math import radians
 from bpy.types import GizmoGroup, Operator, Gizmo
 from bpy.props import EnumProperty, BoolProperty
 
-from .... utility import addon, tool, screen, modifier
+from .... utility import addon, tool, screen, modifier, operator_override
 
 
 class BC_OT_transform_translate(Operator):
@@ -90,7 +90,8 @@ class BC_OT_transform_translate(Operator):
                     linked_objects.append(obj)
 
                     obj[flag] = True
-                    bpy.ops.object.duplicate({'active_object': None, 'object': None, 'selected_objects': linked_objects}, linked=False)
+                    override = {'selected_objects': linked_objects, 'active_object': None, 'object': None}
+                    operator_override(context, bpy.ops.object.duplicate, override, linked=False)
 
                     for new_obj in context.selected_objects:
                         if flag in new_obj:

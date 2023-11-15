@@ -22,9 +22,9 @@ Created by masterxeon1001 and team
 bl_info = {
     "name": "Hard Ops 9",
     "description": "Hard Ops 9 - Francium",
-    "author": "AR / MX, proxe, bonjorno7, Neerhom / c0, General Ginsu, MACHIN3, st3, Jacques Lucke, Ivan Santic, Robert Fornoff, Johnathan Mueller, Batfinger, SE, PL, MKB, CGStrive, PG, AX, Adam K, WZ, PW, and you",
-    "version": (0, 9, 87, 35),
-    "blender": (2, 83, 0),
+    "author": "AR / MX, proxe, bonjorno7, Neerhom, c0, MACHIN3, st3, General Ginsu, Jacques Lucke, Ivan Santic, Robert Fornoff, Johnathan Mueller, Batfinger, SE, PL, MKB, CGStrive, PG, AX, Adam K, WZ, PW, and you",
+    "version": (0, 9, 87, 37),
+    "blender": (3, 6, 0),
     "location": "View3D",
     # "warning": "Hard Ops - The Global Bevelling Offensive V 007x",
     "wiki_url": "https://masterxeon1001.com/2021/01/10/hard-ops-987-francium-release/",
@@ -44,7 +44,6 @@ if 'bpy' in locals():
 import bpy
 from bpy.utils import register_class, unregister_class
 from .registration import register_all, unregister_all
-# from .preferences import *
 from .material import *
 from .mesh_check import *
 from .ui_popup import *
@@ -118,7 +117,7 @@ from .operators.meshtools.selection_to_boolean_v3 import HOPS_OT_Sel_To_Bool_V3
 from .operators.meshtools.vertext_align import HOPS_OT_VertextAlign
 from .operators.meshtools.multi_tool.operator import HOPS_OT_FastMeshEditor
 from .operators.meshtools.add_object_to_selection import HOPS_OT_SelectedToSelection
-from .operators.meshtools.to_shape_v2 import HOPS_OT_To_Shape_V2
+#from .operators.meshtools.to_shape_v2 import HOPS_OT_To_Shape_V2
 from .operators.meshtools.poly_debug_display import HOPS_OT_Poly_Display_Debug
 from .operators.meshtools.floor import HOPS_OT_FLOOR, HOPS_OT_FLOOR_OBJECT
 from .operators.meshtools.clean_border import HOPS_OT_Clean_Border
@@ -187,6 +186,7 @@ from .operators.modals.to_shape_1_5 import HOPS_OT_Conv_To_Shape_1_5
 from .operators.modals.ever_scroll.operator import *
 from .operators.modals.map_scroll import HOPS_OT_Map_Scroll
 from .operators.modals.face_extract import HOPS_OT_FaceExtract
+from .operators.modals.radial_array_nodes import HOPS_OT_RadialArrayNodes
 
 from .operators.preferences.modifiers import *
 from .operators.preferences.set_sharpness import *
@@ -243,11 +243,10 @@ from .ui.hopstool_helper import *
 from .ui.main_menu import *
 from .ui.nodes_menu import HOPS_MT_NodesMenu
 from .ui.main_pie import *
-from .ui.status_helper import *
 from .ui.select_menu import *
 from .ui import modifier_uilist
 
-from .utility import check_for_update
+from .utility import updater
 
 from .utils.context import *
 from .utils.blender_ui import *
@@ -261,7 +260,7 @@ classes = (
     HOPS_MT_RenderSetSubmenuLQ,
     HOPS_MT_RenderSetSubmenuHQ,
     HOPS_OT_SelectedToSelection,
-    HOPS_OT_To_Shape_V2,
+    #HOPS_OT_To_Shape_V2,
     HOPS_OT_Poly_Display_Debug,
     HOPS_OT_FLOOR,
     HOPS_OT_FLOOR_OBJECT,
@@ -400,6 +399,7 @@ classes = (
     HOPS_OT_TriangulateModifier,
     #HOPS_OT_AdjustArrayOperator,
     HOPS_OT_RadialArray,
+    HOPS_OT_RadialArrayNodes,
     HOPS_OT_AdjustBevelOperator,
     #HOPS_OT_SuperArray,
     HOPS_OT_ST3_Array,
@@ -498,7 +498,6 @@ classes = (
     HOPS_MT_NodesMenu,
     HOPS_MT_ModSubmenu,
     HOPS_MT_MainPie,
-    HOPS_OT_StatusHelperPopup,
     HOPS_MT_InsertsObjectsSubmenu,
     HOPS_MT_MeshOperatorsSubmenu,
     HOPS_MT_ObjectsOperatorsSubmenu,
@@ -632,7 +631,7 @@ classes = (
 
 )
 
-from . import addon
+from . import src
 # from . addon import operator, panel, ui, keymap, pie, preference, property, topbar, tool
 
 
@@ -641,13 +640,13 @@ def register():
         register_class(cls)
 
     register_all()
-    addon.register()
+    src.register()
 
-    check_for_update(bl_info['version'])
+    updater.check_for_update(bl_info['version'])
 
 
 def unregister():
-    addon.unregister()
+    src.unregister()
     unregister_all()
 
     for cls in reversed(classes):

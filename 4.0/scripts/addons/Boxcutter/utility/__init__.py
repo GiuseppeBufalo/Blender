@@ -22,6 +22,14 @@ def context_copy(**kargs):
     return new_type(name='context', attribute=bpy.context.copy(), **kargs)
 
 
+def operator_override(context, op, override, *args, **kwargs):
+    if not hasattr(context, 'temp_override'):
+        return op({**override}, *args, **kwargs)
+
+    with context.temp_override(**override):
+        return op(*args, **kwargs)
+
+
 def debug_print(name, identifier, header=''):
     out = ''
 

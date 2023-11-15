@@ -7,7 +7,7 @@ import numpy as np
 def get_bbox(mesh=None, coords=None):
 
     vert_count = len(mesh.vertices)
-    coords = np.empty((vert_count, 3), np.float)
+    coords = np.empty((vert_count, 3), float)
     mesh.vertices.foreach_get('co', np.reshape(coords, vert_count * 3))
 
     xmin = np.min(coords[:, 0])
@@ -50,17 +50,17 @@ def get_coords(mesh, mx=None, offset=0, indices=False):
     verts = mesh.vertices
     vert_count = len(verts)
 
-    coords = np.empty((vert_count, 3), np.float)
+    coords = np.empty((vert_count, 3), float)
     mesh.vertices.foreach_get('co', np.reshape(coords, vert_count * 3))
 
     if offset:
-        normals = np.empty((vert_count, 3), np.float)
+        normals = np.empty((vert_count, 3), float)
         mesh.vertices.foreach_get('normal', np.reshape(normals, vert_count * 3))
 
         coords = coords + normals * offset
 
     if mx:
-        coords_4d = np.ones((vert_count, 4), dtype=np.float)
+        coords_4d = np.ones((vert_count, 4), dtype=float)
         coords_4d[:, :-1] = coords
 
         coords = np.einsum('ij,aj->ai', mx, coords_4d)[:, :-1]

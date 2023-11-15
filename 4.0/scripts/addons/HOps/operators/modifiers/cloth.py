@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 class HOPS_OT_MOD_Cloth(bpy.types.Operator):
@@ -59,7 +59,7 @@ Ctrl - Subd/Cloth/Subd
             else:
                 draw_data.append(['Cloth Modifier(s) already exist'])
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         if not event.shift:
             bpy.ops.hops.adjust_cloth('INVOKE_DEFAULT')

@@ -98,8 +98,8 @@ class Select:
 
         # Clean faces
         elif event.type == 'C' and event.value == "PRESS":
-            bpy.ops.mesh.remove_doubles(threshold=get_preferences().property.meshclean_remove_threshold)
-            bpy.ops.mesh.dissolve_limited(angle_limit=get_preferences().property.meshclean_dissolve_angle)
+            bpy.ops.mesh.remove_doubles(threshold=addon.preference().property.meshclean_remove_threshold)
+            bpy.ops.mesh.dissolve_limited(angle_limit=addon.preference().property.meshclean_dissolve_angle)
 
         # LOCK STATE : Boundary bevel
         elif event.type == 'B' and event.value == "PRESS":

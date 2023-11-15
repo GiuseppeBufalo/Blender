@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 import bpy.utils.previews
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from .. meshtools.applymod import apply_mod
 
@@ -61,7 +61,7 @@ CTRL + SHIFT - Smart Apply
             self.report({'INFO'}, F'Object Scroll')
 
         # Operator UI
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             if not HOPS_OT_ScrollMulti.called_ui:
                 HOPS_OT_ScrollMulti.called_ui = True
 
@@ -72,6 +72,6 @@ CTRL + SHIFT - Smart Apply
                 ]
 
                 ui.receive_draw_data(draw_data=draw_data)
-                ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+                ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}

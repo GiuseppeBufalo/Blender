@@ -5,11 +5,11 @@ from math import cos, sin, pi, radians, degrees
 from mathutils import Matrix, Vector
 from ... ui_framework.master import Master
 from ... ui_framework import form_ui as form
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 
 # Input system
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 from ... ui_framework.graphics.draw import render_quad, render_text, draw_border_lines
 from ... ui_framework.utils.geo import get_blf_text_dims
 
@@ -17,7 +17,7 @@ from ... ui_framework.utils.geo import get_blf_text_dims
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 # Save system
 invalid = {'\\', '/', ':', '*', '?', '"', '<', '>', '|', '.'}
@@ -360,7 +360,7 @@ class HOPS_OT_Blank_Light(bpy.types.Operator):
                 elif light.data.type == 'SUN':
                     sun_lights += 1
 
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append(f'P : {point_lights}')
                 win_list.append(f'A : {area_lights}')
                 win_list.append(f'S : {sun_lights}')
@@ -1153,7 +1153,7 @@ class HOPS_OT_Blank_Light(bpy.types.Operator):
         bpy.context.collection.objects.link(light_obj)
         light_obj.parent = self.empty
 
-        if get_preferences().property.to_light_constraint:
+        if addon.preference().property.to_light_constraint:
             con = light_obj.constraints.new(type='TRACK_TO')
             con.target = self.empty
             con.up_axis = 'UP_Y'
@@ -1616,7 +1616,7 @@ class HOPS_OT_Blank_Light(bpy.types.Operator):
     def get_json_folder_path(self):
         '''Return the folder path for the JSON files.'''
 
-        prefs = get_preferences()
+        prefs = addon.preference()
         folder = Path(prefs.property.lights_folder).resolve()
         
         if os.path.exists(folder):

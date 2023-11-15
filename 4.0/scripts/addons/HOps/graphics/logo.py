@@ -3,9 +3,8 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 from .. utils.blender_ui import get_dpi_factor
-from .. preferences import get_preferences
+from .. utility import addon
 from .. utility import active_tool
-from .. addon.utility import addon
 
 
 def draw_logo_hops():
@@ -15,26 +14,26 @@ def draw_logo_hops():
 
     if object is not None:
         if object.hops.status == "BOOLSHAPE":
-            color = get_preferences().color.Hops_logo_color_boolshape[:]
+            color = addon.preference().color.Hops_logo_color_boolshape[:]
         else:
-            color = get_preferences().color.Hops_logo_color[:]
+            color = addon.preference().color.Hops_logo_color[:]
 
     if addon.bc() and bpy.context.scene.bc.running:
         color = Vector(getattr(addon.bc().color, tracked_states.mode.lower()))
     # else:
     #     color = Vector(addon.bc().color.negative)
     else:
-        color = get_preferences().color.Hops_logo_color[:]
+        color = addon.preference().color.Hops_logo_color[:]
 
     factor = get_dpi_factor()
 
     rw = rw = bpy.context.region.width#  - get_3d_view_tools_panel_overlay_width(bpy.context.area, "right")
     rh = bpy.context.region.height - 50 * factor
-    d = get_preferences().color.Hops_logo_size * factor
-    # x = get_preferences().color.Hops_logo_x_position * factor
-    x = get_preferences().color.Hops_logo_x_position
-    # y = get_preferences().color.Hops_logo_y_position * factor
-    y = get_preferences().color.Hops_logo_y_position
+    d = addon.preference().color.Hops_logo_size * factor
+    # x = addon.preference().color.Hops_logo_x_position * factor
+    x = addon.preference().color.Hops_logo_x_position
+    # y = addon.preference().color.Hops_logo_y_position * factor
+    y = addon.preference().color.Hops_logo_y_position
 
     vertices = (
         (rw + 0*d + x, rh + (0*d + y)),

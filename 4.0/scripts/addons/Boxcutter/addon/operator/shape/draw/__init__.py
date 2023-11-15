@@ -359,7 +359,6 @@ class BC_OT_shape_draw(Operator):
 
         # self.shader.update_handler(self, bpy.context)
         # self.widgets.update_handler(self, bpy.context)
-        # refresh.bound_object(self, bpy.context)
 
         tracked_events.mouse = self.mouse
         tracked_events.lmb = self.lmb
@@ -391,8 +390,8 @@ class BC_OT_shape_draw(Operator):
         tracked_states.modified = self.modified
         tracked_states.bounds = self.bounds
 
-        if bc.shape:
-            tracked_states.thin = bc.shape.dimensions[2] <= preference.shape.offset
+        if bc.lattice:
+            tracked_states.thin = bc.lattice.dimensions[2] <= preference.shape.offset
 
         tracked_states.extruded = self.extruded
 

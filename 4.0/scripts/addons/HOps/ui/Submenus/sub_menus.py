@@ -1,7 +1,7 @@
 import bpy
 from ... icons import get_icon_id
 from ... utils.addons import addon_exists
-from ... preferences import get_preferences
+from ... utility import addon
 
 class HOPS_MT_Export(bpy.types.Menu):
     bl_idname = "HOPS_MT_Export"
@@ -34,7 +34,7 @@ class HOPS_MT_MaterialListMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        preference = get_preferences().ui
+        preference = addon.preference().ui
         col = layout.column(align=True)
 
         object = context.active_object
@@ -215,7 +215,7 @@ class HOPS_MT_ViewportSubmenu(bpy.types.Menu):
         row = layout.column().row()
         row.operator_context = 'INVOKE_DEFAULT'
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column =self.layout
@@ -273,7 +273,7 @@ class HOPS_MT_ViewportSubmenu(bpy.types.Menu):
             column.prop(view3d.shading, "type", text = "")
             column.separator()
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column.separator()
@@ -331,7 +331,7 @@ class HOPS_MT_RenderSetSubmenuLQ(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(get_preferences().property, "Eevee_preset_LQ", expand=True)
+        layout.prop(addon.preference().property, "Eevee_preset_LQ", expand=True)
 
 
 class HOPS_MT_RenderSetSubmenuHQ(bpy.types.Menu):
@@ -340,7 +340,7 @@ class HOPS_MT_RenderSetSubmenuHQ(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(get_preferences().property, "Eevee_preset_HQ", expand=True)
+        layout.prop(addon.preference().property, "Eevee_preset_HQ", expand=True)
 
 
 class HOPS_MT_RenderSetSubmenu(bpy.types.Menu):
@@ -504,7 +504,7 @@ class HOPS_MT_ModSubmenu(bpy.types.Menu):
 
         if object.mode == "OBJECT" and object.type == "MESH":
             row = layout.column().row()
-            if get_preferences().ui.expanded_menu:
+            if addon.preference().ui.expanded_menu:
                 column = row.column()
             else:
                 column =self.layout
@@ -516,7 +516,7 @@ class HOPS_MT_ModSubmenu(bpy.types.Menu):
 
             column.operator("hops.mirror_gizmo", text="Mirror", icon="MOD_MIRROR")
 
-            if get_preferences().ui.expanded_menu:
+            if addon.preference().ui.expanded_menu:
                 column.separator()
                 column.operator("hops.helper", text="Modifier Helper", icon="SCRIPTPLUGINS")
                 column.operator("hops.bool_toggle_viewport", text= "Toggle Modifiers", icon_value=get_icon_id("Tris")).all_modifiers = True
@@ -525,7 +525,7 @@ class HOPS_MT_ModSubmenu(bpy.types.Menu):
                 column.separator()
                 column.operator("hops.bool_stack", text="Stack / Unstack", icon="NODETREE")
 
-            if get_preferences().ui.expanded_menu:
+            if addon.preference().ui.expanded_menu:
                 column = row.column()
             else:
                 column.separator()
@@ -541,7 +541,7 @@ class HOPS_MT_ModSubmenu(bpy.types.Menu):
             column.operator("hops.mod_weighted_normal", text="Weighted Normal", icon="MOD_NORMALEDIT")
             column.operator("hops.mod_curve", text="Curve", icon="MOD_CURVE")
 
-            if get_preferences().ui.expanded_menu:
+            if addon.preference().ui.expanded_menu:
                 column = row.column()
             else:
                 column.separator()
@@ -559,7 +559,7 @@ class HOPS_MT_ModSubmenu(bpy.types.Menu):
             
 
             #Classic Q Menu Style
-            if get_preferences().ui.expanded_menu == False:
+            if addon.preference().ui.expanded_menu == False:
                 column.separator()
                 column.operator("hops.helper", text="Modifier Helper", icon="SCRIPTPLUGINS")
                 column.operator("hops.bool_toggle_viewport", text= "Toggle Modifiers", icon_value=get_icon_id("Tris")).all_modifiers = True

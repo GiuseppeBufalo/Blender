@@ -4,8 +4,8 @@ from mathutils import Vector, Matrix, Quaternion, Euler, geometry
 from gpu_extras.batch import batch_for_shader
 from bpy_extras import view3d_utils
 
-from .. preferences import get_preferences
-from .. addon.utility.screen import dpi_factor
+from .. utility import addon
+from ..utility.screen import dpi_factor
 from .. utility import math as hops_math
 from . space_3d import get_3D_point_from_mouse, get_2d_point_from_3d_point, scene_ray_cast
 
@@ -27,7 +27,7 @@ class Grid_Data:
 
         self.boxelize = False
 
-        self.color = get_preferences().color.grid_system_color
+        self.color = addon.preference().color.grid_system_color
         self.shader = gpu.shader.from_builtin(shader_type)
         self.grid_batch = None
         self.border_batch = None

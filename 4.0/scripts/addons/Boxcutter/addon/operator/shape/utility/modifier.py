@@ -85,7 +85,7 @@ def update(op, context, force_edit_mode=True):
 
         bm.from_mesh(cutter_mesh)
 
-        bevel = bm.edges.layers.bevel_weight.verify()
+        bevel = mesh.bevel_weight_verify(bm)
 
         for edge in bm.edges:
             edge[bevel] = False
@@ -141,7 +141,7 @@ def update(op, context, force_edit_mode=True):
 
             bm.from_mesh(cutter_mesh)
 
-            bevel = bm.edges.layers.bevel_weight.verify()
+            bevel = mesh.bevel_weight_verify(bm)
 
             for edge in bm.edges:
                 edge[bevel] = False
@@ -457,7 +457,7 @@ class create:
                             slice_inset = obj.copy()
                             slice_inset.data = obj.data.copy()
 
-                            for mod in slice_inset.modifiers:
+                            for mod in slice_inset.modifiers[:]:
                                 if mod.type == 'BOOLEAN':
                                     if mod.object is new:
                                         mod.operation = 'INTERSECT'

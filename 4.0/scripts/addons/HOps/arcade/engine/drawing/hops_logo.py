@@ -3,7 +3,7 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 from .... utils.blender_ui import get_dpi_factor
-from .... preferences import get_preferences
+from .... utility import addon
 
 
 def draw_arcade_hops_logo(color=(0,0,0,.5), size=100, x=100, y=100):

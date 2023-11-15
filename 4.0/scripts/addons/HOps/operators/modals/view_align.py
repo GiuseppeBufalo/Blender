@@ -2,7 +2,7 @@ import bpy, math, bmesh
 from math import cos, sin, pi, radians, degrees
 from mathutils import Matrix, Vector, geometry, Quaternion
 from ... ui_framework.master import Master
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.bmesh import get_verts_center
@@ -56,7 +56,7 @@ class HOPS_OT_ViewAlign(bpy.types.Operator):
         self.original_selection_set = self.get_original_selection_set(context)
         self.empty_obj_index = 0
         self.empty_objects = []
-        if get_preferences().property.view_align_filter_empties:
+        if addon.preference().property.view_align_filter_empties:
             self.empty_objects = [o for o in context.view_layer.objects if o.name[:11] == "Align_Empty" and o.visible_get() == True]
         else:
             for obj in context.view_layer.objects:
@@ -102,7 +102,7 @@ class HOPS_OT_ViewAlign(bpy.types.Operator):
             if not self.master.is_mouse_over_ui():
                 self.master.run_fade()
                 collapse_3D_view_panels(self.original_tool_shelf, self.original_n_panel)
-                if get_preferences().ui.Hops_extra_info:
+                if addon.preference().ui.Hops_extra_info:
                     bpy.ops.hops.display_notification(info=F'Aligned' )
                 self.select_all_objects(self.original_selection_set)
                 return {'FINISHED'}
@@ -368,7 +368,7 @@ class HOPS_OT_ViewAlign(bpy.types.Operator):
         # Focus
         elif event.type in {'A', 'PERIOD'} and event.value == "PRESS":
             bpy.ops.view3d.view_selected(use_all_regions=False)
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Focused On Selected' )
 
         self.build_ui(context=context)

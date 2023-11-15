@@ -3,7 +3,7 @@ from math import degrees
 from . import operator
 from ... utils.objects import set_active
 from ... utility import modifier
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 
@@ -88,16 +88,16 @@ class HOPS_BOOL_OPERATOR():
         row.prop(self, 'sort', text='Sort Modifiers')
         row = self.layout.row()
         #row.prop(self, 'bstep', text='Bevel Step')
-        row.prop(get_preferences().property, "parent_boolshapes", text='Parent To Target')
+        row.prop(addon.preference().property, "parent_boolshapes", text='Parent To Target')
         if bpy.app.version > (2, 83, 0):
             row = self.layout.row()
-            row.prop(get_preferences().property, "boolean_solver", text = 'Solver')
+            row.prop(addon.preference().property, "boolean_solver", text = 'Solver')
 
     def invoke(self, context, event):
         self.operator = self.operation()
         self.boolshape = not event.shift
         self.sort = not event.ctrl
-        self.bstep = event.ctrl and get_preferences().property.bool_bstep
+        self.bstep = event.ctrl and addon.preference().property.bool_bstep
         return self.execute(context)
 
     def execute(self, context):
@@ -108,14 +108,14 @@ class HOPS_BOOL_OPERATOR():
 
         if len(context.selected_objects) == 1:
             if all(obj.hops.status == 'BOOLSHAPE'for obj in context.selected_objects):
-                operator.shift(context, self.operator, boolshape=self.boolshape, sort=self.sort, outset=self.outset, thickness=self.thickness, keep_bevels=self.keep_bevels, parent=get_preferences().property.parent_boolshapes, inset_slice=self.inset_slice)
+                operator.shift(context, self.operator, boolshape=self.boolshape, sort=self.sort, outset=self.outset, thickness=self.thickness, keep_bevels=self.keep_bevels, parent=addon.preference().property.parent_boolshapes, inset_slice=self.inset_slice)
                 return {'FINISHED'}
             else:
                 return {'CANCELLED'}
         elif len(context.selected_objects) <= 1:
             return {'CANCELLED'}
 
-        operator.add(context, self.operator, boolshape=self.boolshape, sort=self.sort, outset=self.outset, thickness=self.thickness, keep_bevels=self.keep_bevels, parent=get_preferences().property.parent_boolshapes, inset_slice=self.inset_slice)
+        operator.add(context, self.operator, boolshape=self.boolshape, sort=self.sort, outset=self.outset, thickness=self.thickness, keep_bevels=self.keep_bevels, parent=addon.preference().property.parent_boolshapes, inset_slice=self.inset_slice)
 
         if self.bstep:
             set_active(active, only_select=True)
@@ -138,7 +138,7 @@ class HOPS_BOOL_OPERATOR():
             extra_title = ' w/ SortBypass'
         else:
             if bpy.app.version > (2, 83, 0):
-                extra_title = f' ('+ get_preferences().property.boolean_solver +')'
+                extra_title = f' ('+ addon.preference().property.boolean_solver +')'
             else:
                 extra_title = ' '
 
@@ -150,9 +150,9 @@ class HOPS_BOOL_OPERATOR():
 
             draw_data = [
                 [self.operator + extra_title],
-                ["Parent Shapes   -   ",  (get_preferences().property.parent_boolshapes)],
+                ["Parent Shapes   -   ",  (addon.preference().property.parent_boolshapes)],
                 ["Sort Modifiers  -   ",  (self.sort)],
-                ["Workflow        -   ",  (get_preferences().property.workflow)],
+                ["Workflow        -   ",  (addon.preference().property.workflow)],
                 ["Boolean Operation complete"]]
 
             if self.outset:
@@ -160,10 +160,10 @@ class HOPS_BOOL_OPERATOR():
                 draw_data.insert(2, ["Outset          -   ", "ON"])
 
             if bpy.app.version > (2, 83, 0):
-                 draw_data.insert(1, ["2.9X Solver      -   ",  (get_preferences().property.boolean_solver)])
+                 draw_data.insert(1, ["2.9X Solver      -   ",  (addon.preference().property.boolean_solver)])
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 

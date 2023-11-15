@@ -1,5 +1,5 @@
 import bpy, bmesh
-from . preferences import get_preferences
+from . utility import addon
 from bpy.types import PropertyGroup, Operator
 from bpy.props import EnumProperty, StringProperty, BoolProperty, FloatProperty, FloatVectorProperty, IntProperty
 from .operators.modals.material_scroll import random_principled
@@ -596,7 +596,10 @@ class MATERIAL_OT_hops_new(Operator):
             roughness = principled.inputs['Roughness']
             roughness.default_value = random.uniform(0.01, 0.4)
 
-            clearcoat = principled.inputs['Clearcoat']
+            if bpy.app.version[0] < 4:
+                clearcoat = principled.inputs['Clearcoat']
+            else:
+                clearcoat = principled.inputs['Coat Weight']
             if self.clearcoat:
                 clearcoat.default_value = random.randint(0, 1)
             else:
@@ -654,8 +657,12 @@ class MATERIAL_OT_hops_new(Operator):
                 principled_carpaint.name = 'principled_carpaint'
                 principled_carpaint.label = 'principled_carpaint'
             self.socket_connect(tree, principled_carpaint, output, 0, 0, socket_type='SHADER')
-            principled_carpaint.inputs['Clearcoat'].default_value = 1.0 # set clearcoat
-            principled_carpaint.inputs['Clearcoat'].default_value = 0.05 # set clearcoat roughness
+            if bpy.app.version[0] < 4:
+                principled_carpaint.inputs['Clearcoat'].default_value = 1.0 # set clearcoat
+                principled_carpaint.inputs['Clearcoat'].default_value = 0.05 # set clearcoat roughness
+            else:
+                principled_carpaint.inputs['Coat Weight'].default_value = 1.0 # set clearcoat
+                principled_carpaint.inputs['Coat Roughness'].default_value = 0.05 # set clearcoat roughness
 
             if not carpaint_metallic_value:
                 carpaint_metallic_value = self.new_node(
@@ -891,8 +898,12 @@ class MATERIAL_OT_hops_new(Operator):
                 principled_carpaint.name = 'principled_carpaint'
                 principled_carpaint.label = 'principled_carpaint'
             self.socket_connect(tree, principled_carpaint, final_mix_shader, 0, 1, socket_type='SHADER')
-            principled_carpaint.inputs['Clearcoat'].default_value = 1.0 # set clearcoat
-            principled_carpaint.inputs['Clearcoat'].default_value = 0.05 # set clearcoat roughness
+            if bpy.app.version[0] < 4:
+                principled_carpaint.inputs['Clearcoat'].default_value = 1.0 # set clearcoat
+                principled_carpaint.inputs['Clearcoat'].default_value = 0.05 # set clearcoat roughness
+            else:
+                principled_carpaint.inputs['Coat Weight'].default_value = 1.0
+                principled_carpaint.inputs['Coat Roughness'].default_value = 0.05
 
             if not carpaint_metallic_value:
                 carpaint_metallic_value = self.new_node(
@@ -1448,32 +1459,32 @@ class MATERIAL_OT_hops_new(Operator):
 
 
     def invoke(self, context, event):
-        self.copy_view = get_preferences().behavior.mat_viewport
+        self.copy_view = addon.preference().behavior.mat_viewport
 
         if event.ctrl and not event.shift:
             self.unique = True
             self.type = 'PRINCIPLED'
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Blank Material - Principle (unique)')
 
         elif event.shift and not event.ctrl:
             self.type = 'GLASS'
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Blank Material - Glass')
 
         elif event.alt and not event.shift and not event.ctrl:
             self.type = 'EMISSION'
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Blank Material - Emission')
 
         elif self.helper_call:
             self.type = 'PRINCIPLED'
-            # if get_preferences().ui.Hops_extra_info:
+            # if addon.preference().ui.Hops_extra_info:
             #     bpy.ops.hops.display_notification(info=F'Blank Material - Principle' )
 
         else:
             self.type = 'PRINCIPLED'
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=F'Blank Material - Principle')
 
         return self.execute(context)

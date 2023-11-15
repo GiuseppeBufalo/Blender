@@ -9,7 +9,9 @@ def verify(context, mirror, bisect=False):
 
     context.view_layer.update()
 
-    if not sum(list(bc.shape.dimensions)):
+    eval = bc.shape.evaluated_get(context.evaluated_depsgraph_get())
+
+    if not sum(list(eval.dimensions)):
         for i in range(3):
             if bisect:
                 mirror.use_bisect_axis[i] = not mirror.use_bisect_axis[i]
@@ -18,7 +20,7 @@ def verify(context, mirror, bisect=False):
 
             context.view_layer.update()
 
-            if sum(list(bc.shape.dimensions)):
+            if sum(list(eval.dimensions)):
                 preference.shape['mirror_axis'] = mirror.use_axis
                 preference.shape['mirror_bisect_axis'] = mirror.use_bisect_axis
                 preference.shape['mirror_flip_axis'] = mirror.use_bisect_flip_axis
@@ -34,7 +36,7 @@ def verify(context, mirror, bisect=False):
 
     context.view_layer.update()
 
-    if not sum(list(bc.shape.dimensions)):
+    if not sum(list(eval.dimensions)):
         verify(context, mirror, bisect=True)
 
         return
@@ -52,6 +54,9 @@ def shape(op, context, event, init=False, to=None, flip=False):
     bc = context.scene.bc
 
     bc.shape.bc.mirror = True
+
+    if preference.shape.mirror_gizmo:
+        return
 
     if init:
         mirror = bc.shape.modifiers.new(name='Mirror', type='MIRROR')

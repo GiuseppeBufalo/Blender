@@ -5,7 +5,7 @@ import bpy.utils.previews
 from ... operators.utils import update_bevel_modifier_if_necessary
 from ... utils.context import ExecutionContext
 from ... utils.modifiers import apply_modifiers
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 mod_types = [
@@ -77,7 +77,7 @@ Typically used for booleans and should decrement
         layout = self.layout
         col = layout.column()
 
-        if get_preferences().property.workflow_mode == "WEIGHT":
+        if addon.preference().property.workflow_mode == "WEIGHT":
             col.label(text='Apply Mods')
             col.prop(self, 'modifier_types')
             col.separator()
@@ -93,7 +93,7 @@ Typically used for booleans and should decrement
         for obj in selected:
             bpy.context.view_layer.objects.active = obj
 
-            if get_preferences().property.workflow_mode == "WEIGHT":
+            if addon.preference().property.workflow_mode == "WEIGHT":
                 self.step_active_object(
                     object,
                     self.modifier_types)
@@ -121,20 +121,20 @@ Typically used for booleans and should decrement
             HOPS_OT_StepOperator.called_ui = True
 
             ui = Master()
-            if get_preferences().property.workflow_mode == "WEIGHT":
+            if addon.preference().property.workflow_mode == "WEIGHT":
                 draw_data = [
                     ["STEP - Destructive"],
-                    ["Workflow : ", get_preferences().property.workflow_mode],
+                    ["Workflow : ", addon.preference().property.workflow_mode],
                     ["Modifiers Applied : ", iterate_titled_as_string(self.modifier_types)]]
-            if get_preferences().property.workflow_mode == "ANGLE":
+            if addon.preference().property.workflow_mode == "ANGLE":
                 draw_data = [
                     ["STEP - Non-Destructive"],
                     ["No Modifiers Were Applied"],
                     ["New Bevel Added at 50% of previous"],
-                    ["Workflow :", get_preferences().property.workflow_mode]
+                    ["Workflow :", addon.preference().property.workflow_mode]
                     ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 
@@ -163,12 +163,12 @@ Typically used for booleans and should decrement
         bevel.show_in_editmode = False
         bevel.width = bevelwidth
         bevel.profile = profile_value
-        bevel.limit_method = get_preferences().property.workflow_mode
+        bevel.limit_method = addon.preference().property.workflow_mode
         bevel.show_in_editmode = True
         bevel.harden_normals = False
         bevel.miter_outer = 'MITER_ARC'
         bevel.segments = segment_amount
-        bevel.loop_slide = get_preferences().property.bevel_loop_slide
+        bevel.loop_slide = addon.preference().property.bevel_loop_slide
         bevel.angle_limit = math.radians(60)
 
     def titled_list_as_string(list, separator=','):

@@ -50,8 +50,7 @@ def operator(op, context):
 
     context.view_layer.update()
 
-    # TODO: Use lattice coords instead of dimensions, immediate/accurate lazorcut check
-    dim = bc.shape.dimensions[2]
+    dim = bc.lattice.dimensions[2]
     dim -= dim * 0.001 # trim by 0.1%
     if dim < preference.shape.lazorcut_limit * (2 if op.mode in {'MAKE', 'JOIN'} else 1) and not op.repeat:
         utility.accucut(op, context)
@@ -59,7 +58,7 @@ def operator(op, context):
     if not op.repeat:
         utility.data.repeat(op, context, collect=True)
 
-    if not op.repeat and op.mode == 'KNIFE' and preference.surface == 'VIEW' and bc.shape.dimensions[2] < preference.shape.lazorcut_limit:
+    if not op.repeat and op.mode == 'KNIFE' and preference.surface == 'VIEW' and bc.lattice.dimensions[2] < preference.shape.lazorcut_limit:
         op.lazorcut = True
 
     for mod in bc.shape.modifiers:

@@ -3,14 +3,14 @@ from math import cos, sin
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
 from enum import Enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls, numpad_types
 from ... ui_framework.master import Master
 from ... ui_framework.utils.checks import is_mouse_in_quad
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast, get_2d_point_from_3d_point
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 
 
 class Widget:

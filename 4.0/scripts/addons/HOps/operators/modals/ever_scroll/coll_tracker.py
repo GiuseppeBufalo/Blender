@@ -1,5 +1,5 @@
 import bpy
-from .... preferences import get_preferences
+from .... utility import addon
 from .... utility.base_modal_controls import increment_maps, decrement_maps
 
 from . import States, Auto_Scroll, update_local_view, mods_exit_options, turn_on_coll

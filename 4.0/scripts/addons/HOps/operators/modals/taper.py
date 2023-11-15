@@ -2,7 +2,7 @@ import bpy
 from mathutils import Matrix, Vector
 from ...utility import math as hops_math
 
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -11,7 +11,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class wedge_pairs():
@@ -45,7 +45,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         default = 0,
         min = -0.995,
         )
-    
+
     wedge_side_factor: bpy.props.FloatProperty(
         name = "Wedge side factor",
         description = "A relative value of factor",
@@ -86,7 +86,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
     @classmethod
     def poll(cls, context):
         return getattr(context.active_object, "type", "") in cls.valid_objects
-    
+
     def invoke(self, context, event):
 
         self.lattice_back = []
@@ -94,7 +94,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         self.mods_deletable = set()
         self.lattices = set()
         self.wedge_mode = False
-       
+
         objects = [o for o in context.selected_objects if o.type in self.valid_objects]
 
         if event.ctrl:
@@ -106,7 +106,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     self.lattices.add(lattice)
         elif event.shift:
             self.add_lattice_multi(objects)
-        
+
         else:
 
             for obj in objects:
@@ -160,7 +160,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
             'ZC' : 'X',
             'ZD' : 'Y',
 
-        } 
+        }
 
         for index, point in enumerate(list(self.lattices)[0].data.points):
             if point.co.x > 0:
@@ -171,7 +171,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.z > 0:
                     wedge.B.add(index)
                 else:
@@ -186,7 +186,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.z > 0:
                     wedge.B.add(index)
                 else:
@@ -201,7 +201,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.z > 0:
                     wedge.B.add(index)
                 else:
@@ -216,7 +216,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.z > 0:
                     wedge.B.add(index)
                 else:
@@ -232,7 +232,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.y > 0:
                     wedge.B.add(index)
                 else:
@@ -247,7 +247,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                     wedge.A.add(index)
                 else:
                     wedge.C.add(index)
-                        
+
                 if point.co.y > 0:
                     wedge.B.add(index)
                 else:
@@ -257,7 +257,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         self.reset_lattices()
         for lattice in self.lattices:
             self.taper(lattice)
-        
+
         # Base Systems
         self.master = Master(context=context)
         self.master.only_use_fast_ui = True
@@ -270,7 +270,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
 
 
     def modal(self, context, event):
-        
+
         # Base Systems
         self.master.receive_event(event=event)
         self.base_controls.update(context, event)
@@ -294,7 +294,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                 types = [item[0] for item in self.wedge_type_items]
                 self.wedge_type = types[ ( types.index(self.wedge_type) + self.base_controls.scroll ) % len(types) ]
                 self.report({'INFO'}, F"Wedge type:{self.wedge_type}")
-            
+
             else:
                 axes = [item[0] for item in self.axis_items]
                 self.axis = axes[ ( axes.index(self.axis) + self.base_controls.scroll ) % len(axes) ]
@@ -302,7 +302,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
 
             for lattice in self.lattices:
                 for p in lattice.data.points:
-                    p.co_deform = p.co 
+                    p.co_deform = p.co
 
 
         elif event.type == 'ONE' and event.value == 'PRESS':
@@ -315,7 +315,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
             self.wedge_mode = not self.wedge_mode
             for lattice in self.lattices:
                 for p in lattice.data.points:
-                    p.co_deform = p.co 
+                    p.co_deform = p.co
 
         elif event.type == 'X' and event.value == 'PRESS':
             self.reset_lattices()
@@ -331,10 +331,10 @@ LMB+SHIFT - Use single lattice to deform multiple objects
 
         elif event.type == 'Z' and event.value == 'PRESS':
             self.reset_lattices()
-            
+
             self.axis = '+Z' if self.axis != '+Z' else '-Z'
             self.report({'INFO'}, F"Axis:{self.axis}")
-  
+
         elif self.base_controls.confirm:
 
             self.remove_shader()
@@ -364,7 +364,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                 lattice.data.interpolation_type_u = interp[0]
                 lattice.data.interpolation_type_v = interp[1]
                 lattice.data.interpolation_type_w = interp[2]
-                
+
 
             self.remove_shader()
             collapse_3D_view_panels(self.original_tool_shelf, self.original_n_panel)
@@ -376,7 +376,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
 
         for lat in self.lattices:
             deform(lat)
-        
+
         self.draw_ui(context)
         context.area.tag_redraw()
         return {'RUNNING_MODAL'}
@@ -393,9 +393,11 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         lattice_data.interpolation_type_v = 'KEY_LINEAR'
         lattice_data.interpolation_type_w = 'KEY_LINEAR'
 
-        sca = Matrix.Diagonal(obj.dimensions).to_4x4()
-        rot = obj.matrix_world.to_quaternion().to_matrix().to_4x4()        
-        loc = Matrix.Translation(hops_math.coords_to_center( [obj.matrix_world @ Vector(v) for v in obj.bound_box] ))
+        eval = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+
+        sca = Matrix.Diagonal(eval.dimensions).to_4x4()
+        rot = obj.matrix_world.to_quaternion().to_matrix().to_4x4()
+        loc = Matrix.Translation(hops_math.coords_to_center( [obj.matrix_world @ Vector(v) for v in eval.bound_box] ))
 
         lattice_obj.parent = obj
         lattice_obj.matrix_parent_inverse = obj.matrix_world.inverted()
@@ -417,9 +419,9 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         lattice_data.interpolation_type_u = 'KEY_LINEAR'
         lattice_data.interpolation_type_v = 'KEY_LINEAR'
         lattice_data.interpolation_type_w = 'KEY_LINEAR'
-        
+
         bounds = hops_math.coords_to_bounds( [ obj.matrix_world @ Vector(v) for obj in objects for v in obj.bound_box ] )
-        
+
         loc = Matrix.Translation(hops_math.coords_to_center(bounds))
         sca = Matrix.Diagonal(hops_math.dimensions(bounds)).to_4x4()
 
@@ -449,7 +451,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
             lattice.data.points_v,
             lattice.data.points_w
         )
-            
+
         coords = tuple( tuple(p.co_deform) for p in lattice.data.points)
 
         interp =(
@@ -465,7 +467,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
         lattice.data.interpolation_type_u = 'KEY_LINEAR'
         lattice.data.interpolation_type_v = 'KEY_LINEAR'
         lattice.data.interpolation_type_w = 'KEY_LINEAR'
-        
+
         return (lattice, resolution, coords, interp)
 
     def taper(self, lattice):
@@ -485,7 +487,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
 
         wedge_side_axis = 'XYZ'.index(self.wedge_side_map[self.axis[1] + self.wedge_type])
         wedge_indices = getattr(wedge_sides, self.wedge_type)
-        
+
         for index in wedge_indices:
             point = lattice.data.points[index]
             co = point.co.copy()
@@ -502,7 +504,7 @@ LMB+SHIFT - Use single lattice to deform multiple objects
     def reset_lattices(self):
         for lattice in self.lattices:
             for p in lattice.data.points:
-                p.co_deform = p.co 
+                p.co_deform = p.co
 
     def draw_ui(self, context):
 
@@ -514,16 +516,16 @@ LMB+SHIFT - Use single lattice to deform multiple objects
             # Main
             win_list = []
             
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append(self.axis)
                 if self.wedge_mode:
                     win_list.append(self.wedge_type)
                     win_list.append("{:.3f}".format(self.wedge_len_factor) )
                     win_list.append("{:.3f}".format(self.wedge_side_factor) )
-                
+
                 else:
                     win_list.append("{:.3f}".format(self.taper_factor))
-                
+
             else:
                 win_list.append("Wedge" if self.wedge_mode else "Taper")
                 win_list.append(F"Axis: {self.axis}")
@@ -553,14 +555,14 @@ LMB+SHIFT - Use single lattice to deform multiple objects
                 ("RMB  ", "Cancel"),
                 ("Scroll  ", "Cycle Axis")]
                 #("Mouse", "Adjust Taper")]
-            
+
             help_append = help_items["STANDARD"].append
 
             if self.wedge_mode:
                 help_append(['Shift+Scroll ', "Cycle Wedge"])
                 help_append(["Ctrl+Mouse ", "Adjust Factor"])
                 help_append(["Mouse   ", "Adjust Offset"])
-            
+
             if not self.wedge_mode:
                 help_append(["Mouse   ", "Adjust Taper"])
 

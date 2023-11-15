@@ -19,7 +19,7 @@ tool_header = space_view3d.VIEW3D_HT_tool_header
 operator_id = 'bc.shape_draw'
 label = 'BoxCutter'
 
-version = '.'.join(str(bl_info['version'])[1:-1].replace(' ', '').split(','))
+version = '.'.join(str(bl_info['version'])[1:-1].replace(' ', '').replace("'", '').replace('"', '').split(','))
 version_name = bl_info['description'].split(' ')[-1]
 description = F'BC: {version}\n\n{" " * 8}{bl_info["description"]}'
 

@@ -2,7 +2,7 @@ import bpy
 import bmesh
 import math
 import mathutils
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -12,7 +12,7 @@ from ... ui_framework.utils.mods_list import get_mods_list
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_MOD_Twist360(bpy.types.Operator):
@@ -84,7 +84,7 @@ Press H for help"""
 
     def invoke(self, context, event):
 
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.obj = context.active_object
         self.merge = not event.shift
         self.adjusting = 'DISPLACE'
@@ -116,8 +116,8 @@ Press H for help"""
             self.displace_mod_one = self.obj.modifiers.new("Displace One", 'DISPLACE')
             self.displace_mod_one.show_expanded = False
 
-            self.displace_mod_one.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
-            self.displace_mod_one.show_render = get_preferences().property.Hops_twist_radial_sort
+            self.displace_mod_one.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
+            self.displace_mod_one.show_render = addon.preference().property.Hops_twist_radial_sort
 
             self.displace_mod_one.mid_level = 0.0
             self.displace_mod_one.direction = 'X' if self.axis == 'Y' else 'Y'
@@ -128,8 +128,8 @@ Press H for help"""
             self.array_mod = self.obj.modifiers.new("Array", 'ARRAY')
             self.array_mod.show_expanded = False
 
-            self.array_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
-            self.array_mod.show_render = get_preferences().property.Hops_twist_radial_sort
+            self.array_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
+            self.array_mod.show_render = addon.preference().property.Hops_twist_radial_sort
 
             self.array_mod.count = self.count
             self.array_new = True
@@ -138,8 +138,8 @@ Press H for help"""
             self.deform_mod = self.obj.modifiers.new("Simple Deform", 'SIMPLE_DEFORM')
             self.deform_mod.show_expanded = False
 
-            self.deform_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
-            self.deform_mod.show_render = get_preferences().property.Hops_twist_radial_sort
+            self.deform_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
+            self.deform_mod.show_render = addon.preference().property.Hops_twist_radial_sort
 
             self.deform_mod.angle = math.radians(self.angle)
             self.deform_mod.deform_method = 'BEND'
@@ -150,8 +150,8 @@ Press H for help"""
             self.displace_mod_two = self.obj.modifiers.new("Displace Two", 'DISPLACE')
             self.displace_mod_two.show_expanded = False
 
-            self.displace_mod_two.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
-            self.displace_mod_two.show_render = get_preferences().property.Hops_twist_radial_sort
+            self.displace_mod_two.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
+            self.displace_mod_two.show_render = addon.preference().property.Hops_twist_radial_sort
 
             self.displace_mod_two.mid_level = 0.0
             self.displace_mod_two.direction = 'X' if self.axis == 'Y' else 'Y'
@@ -163,8 +163,8 @@ Press H for help"""
                 self.weld_mod = self.obj.modifiers.new("Weld", 'WELD')
                 self.weld_mod.show_expanded = False
 
-                self.weld_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
-                self.weld_mod.show_render = get_preferences().property.Hops_twist_radial_sort
+                self.weld_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
+                self.weld_mod.show_render = addon.preference().property.Hops_twist_radial_sort
 
                 self.weld_new = True
 
@@ -432,7 +432,7 @@ Press H for help"""
         context.space_data.overlay.show_overlays = True
         modifier.sort(self.obj, sort_types=['WEIGHTED_NORMAL'])
 
-        if get_preferences().property.workflow == 'DESTRUCTIVE':
+        if addon.preference().property.workflow == 'DESTRUCTIVE':
             for mod in [self.displace_mod_one, self.array_mod, self.deform_mod, self.displace_mod_two, self.weld_mod]:
                 if mod:
                     modifier.apply(self.obj, mod=mod)

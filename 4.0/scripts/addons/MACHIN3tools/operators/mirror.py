@@ -7,7 +7,7 @@ from .. utils.tools import get_active_tool
 from .. utils.object import parent, unparent, get_eval_bbox
 from .. utils.math import compare_matrix
 from .. utils.mesh import get_coords
-from .. utils.modifier import remove_mod, get_mod_obj
+from .. utils.modifier import remove_mod, get_mod_obj, move_mod
 from .. utils.ui import get_zoom_factor, get_flick_direction, init_status, finish_status
 from .. utils.draw import draw_vector, draw_circle, draw_point, draw_label, draw_bbox, draw_cross_3d
 from .. utils.system import printd
@@ -563,7 +563,8 @@ class Mirror(bpy.types.Operator):
                 nrmtransfer = obj.modifiers.get("NormalTransfer")
 
                 if nrmtransfer:
-                    bpy.ops.object.modifier_move_to_index({'object': obj}, modifier=nrmtransfer.name, index=len(obj.modifiers) - 1)
+                    move_mod(nrmtransfer, len(obj.modifiers) - 1)
+
 
     def mirror_gpencil_obj(self, context, obj, mirror_object=None):
         mirror = obj.grease_pencil_modifiers.new(name="Mirror", type="GP_MIRROR")

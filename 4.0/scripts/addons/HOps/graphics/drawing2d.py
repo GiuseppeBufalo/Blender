@@ -23,7 +23,7 @@ def draw_boolean(state, x, y, size=12, alpha=1):
 def draw_text(text, x, y, align="LEFT", size=12, color=(1, 1, 1, 1)):
     font = 0
     if bpy.app.version[0] >= 4:
-        blf.size(size, int(dpi))
+        blf.size(font, size * (dpi / 72.0))
     else:
         blf.size(font, size, int(dpi))
     blf.color(font, *color)

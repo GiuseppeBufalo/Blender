@@ -2,8 +2,8 @@ import bpy
 import time
 from mathutils import Vector
 from .fast_ui.main_banner import Fast_UI
-from ..addon.utility.screen import dpi_factor
-from ..preferences import get_preferences
+from ..utility.screen import dpi_factor
+from .. utility import addon
 from ..utility.base_modal_controls import Base_Modal_Controls
 
 #from .. utils.blender_ui import get_dpi_factor, get_dpi
@@ -23,7 +23,7 @@ class DB():
         self.windows = {}
 
         # Prefs
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
         self.scale_factor = dpi_factor(min=.25) * self.prefs.ui.Hops_modal_size
         if bpy.context.preferences.system.pixel_size == 2:
             self.scale_factor *= .75

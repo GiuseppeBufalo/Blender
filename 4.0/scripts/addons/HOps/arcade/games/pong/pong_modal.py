@@ -1,10 +1,10 @@
 import bpy, time, random
 from mathutils import Vector
 import random
-from .... addon.utility.screen import dpi_factor
-from .... preferences import get_preferences
+from ....utility.screen import dpi_factor
+from .... utility import addon
 from .... utility.base_modal_controls import Base_Modal_Controls
-from .... addon.utility import method_handler
+from .... utility import method_handler
 from .... import bl_info
 
 # Video
@@ -32,8 +32,8 @@ class HOPS_OT_Arcade_Pong(bpy.types.Operator):
         ###########################
         # <--- Video Window ---> #
         ###########################
-        get_preferences().ui.Hops_modal_video_window_bottom_left = (20,30)
-        get_preferences().ui.Hops_modal_video_window_scale = (462,100)
+        addon.preference().ui.Hops_modal_video_window_bottom_left = (20,30)
+        addon.preference().ui.Hops_modal_video_window_scale = (462,100)
         self.video = Video_Controller(context)
         self.scroll_time = time.time()
         self.scroll_duration = .725

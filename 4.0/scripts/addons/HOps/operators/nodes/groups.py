@@ -1,6 +1,6 @@
 import bpy
 from enum import Enum
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... ui_framework import form_ui as form
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master

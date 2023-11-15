@@ -1,6 +1,6 @@
 import bpy
 import time
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class Shader():

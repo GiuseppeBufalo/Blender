@@ -4,8 +4,8 @@ from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
-from ... preferences import get_preferences
-from ... addon.utility import method_handler
+from ... utility import addon
+from ... utility import method_handler
 from . import infobar
 
 class HOPS_OT_TwoDBevelOperator(bpy.types.Operator):
@@ -24,7 +24,7 @@ Press H for help"""
         self.objects = [o for o in context.selected_objects if o.type == 'MESH']
         self.object = context.active_object if context.active_object.type == 'MESH' else self.objects[0]
 
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         bpy.ops.view3d.clean_mesh()
         self.bevel = self.get_bevel_modifier()
@@ -99,7 +99,7 @@ Press H for help"""
             self.report({'INFO'}, F'Bevel Segments : {self.bevel.segments}')
 
         if event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
         if event.type in ("ESC", "RIGHTMOUSE"):
             self.reset_object()
@@ -173,7 +173,7 @@ Press H for help"""
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)
 
         shader.bind()
-        shader.uniform_float("color", get_preferences().color.Hops_hud_color)
+        shader.uniform_float("color", addon.preference().color.Hops_hud_color)
         gpu.state.blend_set('ALPHA')
         batch.draw(shader)
         gpu.state.blend_set('NONE')
@@ -181,35 +181,35 @@ Press H for help"""
         shader2 = gpu.shader.from_builtin(built_in_shader)
         batch2 = batch_for_shader(shader2, 'TRIS', {"pos": vertices2}, indices=indices2)
         shader2.bind()
-        shader2.uniform_float("color", get_preferences().color.Hops_hud_help_color)
+        shader2.uniform_float("color", addon.preference().color.Hops_hud_help_color)
 
         gpu.state.blend_set('ALPHA')
         batch2.draw(shader2)
         gpu.state.blend_set('NONE')
 
         draw_text("{}".format(self.bevel.segments),
-                  x + 27 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 27 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         draw_text(" B-Width: {:.3f}".format(self.bevel.width),
-                  x + 50 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 50 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         draw_text("Profile:{:.2f}".format(self.bevel.profile),
-                  x + 154 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 154 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         draw_text("{}".format(self.bevel.offset_type),
-                  x + 227 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 227 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         self.draw_help(context, x, y, factor)
 
 
     def draw_help(self, context, x, y, factor):
 
-        color_text1 = get_preferences().color.Hops_text_color
-        color_text2 = get_preferences().color.Hops_hud_help_color
-        color_border = get_preferences().color.Hops_border_color
-        color_border2 = get_preferences().color.Hops_border2_color
+        color_text1 = addon.preference().color.Hops_text_color
+        color_text2 = addon.preference().color.Hops_hud_help_color
+        color_border = addon.preference().color.Hops_border_color
+        color_border2 = addon.preference().color.Hops_border2_color
 
-        if get_preferences().property.hops_modal_help:
+        if addon.preference().property.hops_modal_help:
 
             draw_text(" scroll - set segment",
                       x + 45 * factor, y - 14 * factor, size=11, color=color_text2)

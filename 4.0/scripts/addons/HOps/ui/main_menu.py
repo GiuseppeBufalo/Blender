@@ -2,8 +2,8 @@ import bpy
 from .. icons import get_icon_id
 from .. utils.addons import addon_exists
 from .. utils.objects import get_current_selected_status
-from .. addon.utility import active_tool
-from .. preferences import get_preferences
+from .. src.utilityremove import active_tool
+from .. utility import addon
 from .. import bl_info
 
 
@@ -85,16 +85,16 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         #if bpy.context.object.type == 'MESH' and active_object.mode == "OBJECT":
         if asset_loader_unlock():
             layout.separator()
-            layout.operator("view3d.insertpopup", text ="(Z) Asset Loader" if get_preferences().property.add_prefix else "Asset Loader", icon_value=get_icon_id("QGui"))
+            layout.operator("view3d.insertpopup", text ="(Z) Asset Loader" if addon.preference().property.add_prefix else "Asset Loader", icon_value=get_icon_id("QGui"))
             layout.separator()
                 #layout.operator("hops.kit_ops_window", text = "KitOps_ST3", icon_value=get_icon_id("kit_ops"))
         layout.separator()
         layout.menu("SCREEN_MT_user_menu", text="Quick Favorites", icon_value=get_icon_id("QuickFav"))
 
-        # if get_preferences().needs_update:
+        # if addon.preference().needs_update:
         #     layout.separator()
-        #     #layout.label(text=get_preferences().needs_update, icon='ERROR')
-        #     layout.operator("wm.url_open", text=get_preferences().needs_update, icon="ERROR").url = "https://hardops-manual.readthedocs.io/en/latest/faq/#how-do-i-update-hard-ops-boxcutter"
+        #     #layout.label(text=addon.preference().needs_update, icon='ERROR')
+        #     layout.operator("wm.url_open", text=addon.preference().needs_update, icon="ERROR").url = "https://hardops-manual.readthedocs.io/en/latest/faq/#how-do-i-update-hard-ops-boxcutter"
 
         # self.draw_always(layout)
 
@@ -107,7 +107,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.operator("hops.blank_light", text="Add Lights", icon='LIGHT')
         #layout.operator("hops.sculpt_primitives", text="Add Primitive", icon_value=get_icon_id("QGui"))
         layout.separator()
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             layout.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else:
             layout.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))
@@ -181,7 +181,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
 
         layout.operator_context = "INVOKE_DEFAULT"
         layout.operator("hops.sharpen", text="Sharpen", icon_value=get_icon_id("SSharpen"))
-        layout.operator("hops.adjust_bevel", text="(W) Bevel" if get_preferences().property.add_prefix else "Bevel", icon_value=get_icon_id("AdjustBevel"))
+        layout.operator("hops.adjust_bevel", text="(W) Bevel" if addon.preference().property.add_prefix else "Bevel", icon_value=get_icon_id("AdjustBevel"))
         if object.hops.is_pending_boolean:
             layout.operator_context = "INVOKE_DEFAULT"
             #layout.operator("hops.adjust_bevel", text="Bevel", icon_value=get_icon_id("AdjustBevel"))
@@ -197,7 +197,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
             layout.operator_context = "INVOKE_DEFAULT"
             #layout.operator("hops.sharpen", text="Sharpen", icon_value=get_icon_id("SSharpen"))
             #layout.operator("hops.adjust_bevel", text="Bevel", icon_value=get_icon_id("AdjustBevel"))
-            layout.operator("hops.st3_array", text="(E) Array V2" if get_preferences().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
+            layout.operator("hops.st3_array", text="(E) Array V2" if addon.preference().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
             if object.hops.is_pending_boolean:
                 layout.operator_context = "INVOKE_DEFAULT"
                 #layout.operator("hops.adjust_bevel", text="Bevel", icon_value=get_icon_id("AdjustBevel"))
@@ -212,7 +212,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
                 #layout.operator("hops.adjust_tthick", text="(T) Thick", icon_value=get_icon_id("Tthick"))
                 layout.operator_context = "INVOKE_DEFAULT"
                 #layout.operator("hops.adjust_bevel", text="Bevel", icon_value=get_icon_id("AdjustBevel"))
-                #layout.operator("hops.mirror_array", text="(R) Mirror / Array" if get_preferences().property.add_prefix else "Mirror / Array", icon_value=get_icon_id("Mirror"))
+                #layout.operator("hops.mirror_array", text="(R) Mirror / Array" if addon.preference().property.add_prefix else "Mirror / Array", icon_value=get_icon_id("Mirror"))
                 layout.operator("hops.mirror_gizmo", text="Mirror", icon_value=get_icon_id("Mirror"))
         #layout.operator("hops.mirror_gizmo", text="Mirror", icon_value=get_icon_id("Mirror"))
         #layout.operator("hops.array_gizmo", text="Array", icon_value=get_icon_id("Array"))
@@ -237,7 +237,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         #layout.operator("hops.mirror_array", text="Mirror / Array", icon_value=get_icon_id("Mirror"))
         layout.operator("hops.mirror_gizmo", text="Mirror", icon_value=get_icon_id("Mirror"))
         layout.separator()
-        layout.menu("HOPS_MT_BoolSumbenu", text="(W) Booleans" if get_preferences().property.add_prefix else "Booleans", icon="MOD_BOOLEAN")
+        layout.menu("HOPS_MT_BoolSumbenu", text="(W) Booleans" if addon.preference().property.add_prefix else "Booleans", icon="MOD_BOOLEAN")
         layout.separator()
         layout.menu("HOPS_MT_ModSubmenu", text="Add Modifier", icon_value=get_icon_id("Diagonal"))
 
@@ -285,17 +285,17 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.operator("hops.edge2curve", text="Curve/Extract", icon_value=get_icon_id("Curve"))
         layout.operator("view3d.vertcircle", text="Circle" if addon_exists("mesh_looptools") else "Circle (E)", icon_value=get_icon_id("NthCircle"))
         layout.operator("hops.bool_dice_v2", text="Dice V2", icon_value=get_icon_id("Dice"))
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
         layout.separator()
 
-        #if get_preferences().property.st3_meshtools:
+        #if addon.preference().property.st3_meshtools:
         layout.operator("hops.edit_mesh_macro", text="EM_Macro", icon_value=get_icon_id("FaceGrate"))
-        layout.menu("HOPS_MT_ST3MeshToolsSubmenu", text="(M) Mesh Tools" if get_preferences().property.add_prefix else ("Mesh Tools"), icon="MESH_ICOSPHERE")
+        layout.menu("HOPS_MT_ST3MeshToolsSubmenu", text="(M) Mesh Tools" if addon.preference().property.add_prefix else ("Mesh Tools"), icon="MESH_ICOSPHERE")
         layout.separator()
 
         layout.menu("HOPS_MT_MeshOperatorsSubmenu", text="Operations", icon_value=get_icon_id("StatusOveride"))
@@ -328,9 +328,9 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
             layout.separator()
 
     def draw_edit_mode_curve_menu(self, layout, object):
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
@@ -358,16 +358,16 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.separator()
         layout.label(text='Mesh Adjustments', icon='MESH_GRID')
         layout.operator_context = "INVOKE_DEFAULT"
-        layout.operator("sculpt.decimate_mesh", text="(W) Decimate" if get_preferences().property.add_prefix else "Decimate")
+        layout.operator("sculpt.decimate_mesh", text="(W) Decimate" if addon.preference().property.add_prefix else "Decimate")
         #if context.sculpt_object.use_dynamic_topology_sculpting == False:
             #layout.prop(context.active_object.data, 'remesh_voxel_size', text='Voxel Size')
-        layout.operator("view3d.voxelizer", text = "(E) Voxelize" if get_preferences().property.add_prefix else "Voxelize")
+        layout.operator("view3d.voxelizer", text = "(E) Voxelize" if addon.preference().property.add_prefix else "Voxelize")
         #layout.operator_context = "EXEC_DEFAULT"
-        layout.operator("object.quadriflow_remesh", text = "(R) Quadriflow" if get_preferences().property.add_prefix else "Quadriflow")
+        layout.operator("object.quadriflow_remesh", text = "(R) Quadriflow" if addon.preference().property.add_prefix else "Quadriflow")
 
         layout.separator()
         layout.operator_context = "INVOKE_DEFAULT"
-        layout.operator("view3d.sculpt_ops_window", text="(Q) Brush" if get_preferences().property.add_prefix else "Brush", icon="BRUSH_DATA")
+        layout.operator("view3d.sculpt_ops_window", text="(Q) Brush" if addon.preference().property.add_prefix else "Brush", icon="BRUSH_DATA")
         layout.separator()
 
     # Lamp Menu
@@ -449,9 +449,9 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.prop(bpy.context.object.data, "use_outside")
         layout.operator("hops.simplify_lattice", text="Simplify", icon_value=get_icon_id("StarConnect"))
         layout.separator()
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
@@ -463,9 +463,9 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.operator_context = "INVOKE_DEFAULT"
         # layout.operator("hops.sharpen", text="Sharpen", icon_value=get_icon_id("SSharpen"))
         # layout.separator()
-        layout.operator("hops.adjust_bevel", text="(E) Bevel" if get_preferences().property.add_prefix else "Bevel", icon_value=get_icon_id("AdjustBevel"))
+        layout.operator("hops.adjust_bevel", text="(E) Bevel" if addon.preference().property.add_prefix else "Bevel", icon_value=get_icon_id("AdjustBevel"))
         layout.operator("hops.adjust_tthick", text="(T) Solidify ", icon_value=get_icon_id("Tthick"))
-        layout.operator("hops.st3_array", text="(W) Array V2" if get_preferences().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
+        layout.operator("hops.st3_array", text="(W) Array V2" if addon.preference().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
         layout.separator()
         is_displace = len([mod for mod in bpy.context.active_object.modifiers if mod.type == 'DISPLACE'])
         is_boolean = len([mod for mod in bpy.context.active_object.modifiers if mod.type == 'BOOLEAN'])
@@ -482,7 +482,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
                 layout.operator("hops.ever_scroll_v2", text="Ever Scroll", icon_value=get_icon_id("StatusReset"))
             else:
                 layout.separator()
-                #layout.operator("hops.st3_array", text="(W) Array V2" if get_preferences().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
+                #layout.operator("hops.st3_array", text="(W) Array V2" if addon.preference().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
                 #layout.operator("clean1.objects", text="Demote", icon_value=get_icon_id("Demote")).clearsharps = False
             #layout.operator("hops.boolshape_status_swap", text="Red", icon_value=get_icon_id("Red")).red = True
             #layout.operator("hops.boolshape_status_swap", text="Green", icon_value=get_icon_id("Green")).red = False
@@ -530,16 +530,19 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
 
         layout.operator("hops.to_gpstroke", text="To_Stroke", icon="GREASEPENCIL")
 
+        if addon.preference().property.radial_array_type != 'CLASSIC':
+            layout.separator()
+            layout.operator("hops.radial_array_nodes", text="Radial Array V2", icon_value=get_icon_id("ArrayCircle"))
         layout.separator()
 
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             layout.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else:
             layout.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))
 
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
@@ -586,7 +589,10 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         layout.operator("hops.empty_position_modal", text="Change Offset")
         layout.separator()
         layout.operator("hops.set_origin", text="Set Origin", icon_value=get_icon_id("CircleSetup"))
-        layout.operator("hops.radial_array", text="Radial Array", icon_value=get_icon_id("ArrayCircle")).from_empty = True
+        if addon.preference().property.radial_array_type == 'CLASSIC':
+            layout.operator("hops.radial_array", text="Radial Array", icon_value=get_icon_id("ArrayCircle"))
+        else:
+            layout.operator("hops.radial_array_nodes", text="Radial Array V2", icon_value=get_icon_id("ArrayCircle")).from_empty = True
         layout.separator()
         layout.operator("view3d.view_align", text="Align View", icon_value=get_icon_id("Xslap"))
         layout.operator("hops.blank_light", text="Add Lights", icon='LIGHT')
@@ -603,7 +609,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         #layout.operator('hops.2d_bevel', text = '2d Bevel', icon_value=get_icon_id("AdjustBevel"))
         layout.operator("hops.adjust_bevel", text="Bevel ", icon_value=get_icon_id("AdjustBevel"))
         layout.operator("hops.adjust_tthick", text="Solidify ", icon_value=get_icon_id("Tthick"))
-        layout.operator("hops.st3_array", text="(W) Array V2" if get_preferences().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
+        layout.operator("hops.st3_array", text="(W) Array V2" if addon.preference().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
         if bpy.context.active_object.modifiers[:]:
             layout.separator()
             layout.operator("hops.ever_scroll_v2", text="Ever Scroll", icon_value=get_icon_id("StatusReset"))
@@ -628,7 +634,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
         obj = bpy.context.object
         layout.operator_context = "INVOKE_DEFAULT"
 
-        layout.operator("hops.st3_array", text="(W) Array V2" if get_preferences().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
+        layout.operator("hops.st3_array", text="(W) Array V2" if addon.preference().property.add_prefix else "Array V2", icon_value=get_icon_id("GreyArrayX"))
         layout.operator("hops.mirror_gizmo", text="Mirror", icon_value=get_icon_id("Mirror"))
         layout.operator("hops.mod_lattice", text="Lattice", icon="MOD_LATTICE")
         if bpy.context.space_data.show_region_tool_header == False:
@@ -672,7 +678,7 @@ class HOPS_MT_MainMenu(bpy.types.Menu):
 
         layout.separator()
 
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             layout.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else:
             layout.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))

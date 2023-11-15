@@ -4,6 +4,7 @@ import bmesh
 from .. items import bridge_interpolation_items, smartedge_sharp_mode_items, smartedge_select_mode_items
 from .. utils.modifier import add_bevel
 from .. utils.ui import popup_message
+from .. utils.bmesh import ensure_custom_data_layers
 
 
 
@@ -28,7 +29,7 @@ class SmartEdge(bpy.types.Operator):
 
     is_knife_projectable: BoolProperty(name="Can be Knife Projected", default=False)
     is_knife_project: BoolProperty(name="Is Knife Project", default=False)
-    cut_through: BoolProperty(name="Cut Trough", default=False)
+    cut_through: BoolProperty(name="Cut Through", default=False)
 
     select_mode: EnumProperty(name="Select Mode", items=smartedge_select_mode_items, default='BOUNDS')
 
@@ -128,7 +129,7 @@ class SmartEdge(bpy.types.Operator):
         bm.normal_update()
         bm.verts.ensure_lookup_table()
 
-        bw = bm.edges.layers.bevel_weight.verify()
+        bw = ensure_custom_data_layers(bm)[1]
 
         verts = [v for v in bm.verts if v.select]
         faces = [f for f in bm.faces if f.select]

@@ -1,5 +1,5 @@
 import bpy
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_bool_options(bpy.types.Panel):
@@ -11,7 +11,7 @@ class HOPS_PT_bool_options(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         column = layout.column(align=True)
-        preference = get_preferences().property
+        preference = addon.preference().property
         #self.layout.row().prop(preference, 'boolean_solver', expand=True)
         row = column.row(align=True)
         row.label(text = "Behavior")

@@ -15,7 +15,7 @@ class shape:
 
         original_active = bpy.context.view_layer.objects.active
 
-        if bc.shape.dimensions[2] > 0.001:
+        if bc.lattice.dimensions[2] > 0.001:
             for obj in op.datablock['targets']:
                 if op.mode == 'INSET':
                     for mod in reversed(obj.modifiers):

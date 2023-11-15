@@ -2,7 +2,7 @@ import bpy
 from bpy.types import Panel
 
 from math import radians
-from ... preferences import get_preferences
+from ... utility import addon
 from ... icons import get_icon_id
 
 

@@ -3,8 +3,8 @@ import gpu, time
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 from math import sin, cos
-from ... addon.utility.screen import dpi_factor
-from ... preferences import get_preferences
+from ...utility.screen import dpi_factor
+from ... utility import addon
 from ... utils.cursor_warp import get_screen_warp_padding
 from .. graphics.draw import draw_border_lines
 from .. graphics.draw import render_quad
@@ -26,7 +26,7 @@ class Row:
 
 class DB:
     def __init__(self, context, event):
-        prefs = get_preferences()
+        prefs = addon.preference()
         # Colors
         self.color = Color()
         # Screen
@@ -76,7 +76,7 @@ class DB:
 
 class Color:
     def __init__(self):
-        c = get_preferences().color
+        c = addon.preference().color
         self.text            = c.Hops_UI_text_color
         self.secondary_text  = c.Hops_UI_secondary_text_color
         self.highlight       = c.Hops_UI_highlight_color
@@ -103,7 +103,7 @@ class Form:
         self.clamped_first_launch = False
         self.menu_tollerance = 8 * dpi_factor(min=0.5)
         self.set_FAS = False
-        self.FAS_OG_option = get_preferences().ui.Hops_modal_fast_ui_loc_options
+        self.FAS_OG_option = addon.preference().ui.Hops_modal_fast_ui_loc_options
         self.stats = None
 
     # --- ROW --- #
@@ -249,7 +249,7 @@ class Form:
             x = self.db.form_bot_left[0]
             y = self.db.form_bot_left[1]
             diff = top_left_y - self.dims.top_left[1]
-            get_preferences().ui.form_pos = (x, y + diff)
+            addon.preference().ui.form_pos = (x, y + diff)
             self.build()
 
 
@@ -264,7 +264,7 @@ class Form:
             # FAS
             if self.set_FAS:
                 self.set_FAS = False
-                get_preferences().ui.Hops_modal_fast_ui_loc_options = self.FAS_OG_option
+                addon.preference().ui.Hops_modal_fast_ui_loc_options = self.FAS_OG_option
             # DOT
             self.dot.update(event, self.db)
             return
@@ -298,7 +298,7 @@ class Form:
         # Change FAS UI Loc
         if self.db.dot_open:
             self.set_FAS = True
-            get_preferences().ui.Hops_modal_fast_ui_loc_options = 1
+            addon.preference().ui.Hops_modal_fast_ui_loc_options = 1
 
         if return_on_timer:
             if event.type == 'TIMER': return
@@ -416,16 +416,16 @@ class Move_Bracket:
 
         x = db.mouse_pos[0] + self.mouse_move_offset[0]
         y = db.mouse_pos[1] + self.mouse_move_offset[1]
-        get_preferences().ui.form_pos = (x, y)
+        addon.preference().ui.form_pos = (x, y)
 
 
     def clamp(self, db, dims):
 
-        x, y = get_preferences().ui.form_pos
+        x, y = addon.preference().ui.form_pos
         new_x = x
         new_y = y
 
-        dot_offset = get_preferences().ui.Hops_form_dot_offset * dpi_factor(min=0.5) 
+        dot_offset = addon.preference().ui.Hops_form_dot_offset * dpi_factor(min=0.5) 
         dot_diam = 20 * dpi_factor(min=0.5) 
 
         max_x = db.screen_width - db.warp_pad - dims.max_width
@@ -446,7 +446,7 @@ class Move_Bracket:
         if y < db.warp_pad:
             new_y = db.warp_pad
 
-        get_preferences().ui.form_pos = (new_x, new_y)
+        addon.preference().ui.form_pos = (new_x, new_y)
 
         if (new_x != x) or (new_y != y):
             return True
@@ -499,8 +499,8 @@ class Dot:
         self.scroll_pos_args = None
         self.scroll_neg_args = None
         # Dot Detection
-        self.dot_detection_padding = get_preferences().ui.Hops_dot_detection_padding
-        self.dot_offset = get_preferences().ui.Hops_form_dot_offset * dpi_factor(min=0.5) 
+        self.dot_detection_padding = addon.preference().ui.Hops_dot_detection_padding
+        self.dot_offset = addon.preference().ui.Hops_form_dot_offset * dpi_factor(min=0.5) 
 
 
     def build(self, db, dims):

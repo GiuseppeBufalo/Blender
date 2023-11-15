@@ -17,7 +17,8 @@ import bpy.utils.previews
 from bpy.props import *
 from bpy.types import Panel, Operator, Menu, Panel
 from bpy_extras.io_utils import ImportHelper
-version = '2.0.1 Beta'
+
+version = '2.0.2 Beta'
 
 #CREATE NODES
 def create_world_nodes():
@@ -151,7 +152,7 @@ def Verify_World_Nodes():
         else:
             return 'Fix'
     if not scn.world.name == 'World':
-        return 'Fix'      
+        return 'Fix'
 
 #CLASS CREATE DOME LIGHT            
 class BUTTON_PT_Create_Dome_Light(Operator):
@@ -264,6 +265,11 @@ class PAINEL_UI_Dome_Light(Panel) :
         
         # Navegation
         scn = context.scene
+        cscene = scn.cycles
+        engine = scn.render.engine
+        view_settings = scn.view_settings
+        
+        # Layout
         col = layout.column()
         box = col.box()
         col = box.column()
@@ -291,6 +297,7 @@ class PAINEL_UI_Dome_Light(Panel) :
                 col.prop(world, "use_scene_world_render", text='Show HDR Light', icon='OUTLINER_OB_LIGHT')
             else:
                 col.prop(world, "use_scene_world_render", text='Show HDR Light', icon='LIGHT_DATA')
+            col.prop(scn.render, "film_transparent", text="Transparent BG")
         elif world.type == 'MATERIAL':
             col.label(text = 'Material Preview:', icon = 'SHADING_TEXTURE')
             if world.use_scene_lights:
@@ -301,6 +308,7 @@ class PAINEL_UI_Dome_Light(Panel) :
                 col.prop(world, "use_scene_world", text='Show HDR Light', icon='OUTLINER_OB_LIGHT')
             else:
                 col.prop(world, "use_scene_world", text='Show HDR Light', icon='LIGHT_DATA')
+            col.prop(scn.render, "film_transparent", text="Transparent BG")
 
         col = box.column()
         col.label(text = 'Render Engine:', icon = 'RESTRICT_RENDER_OFF')
@@ -372,8 +380,21 @@ class PAINEL_UI_Dome_Light(Panel) :
             if 'Color' in nodes:
                 col.prop(nodes['Color'].inputs[2], "default_value", text = "Tint")        
                 col.prop(nodes['Color'].inputs[0], "default_value", text = "Intensity")
+                
+            col = layout.column()
+            box = col.box()
+            col = box.column(align=True)
+            col.label(text = "Exposure", icon = 'SCENE')
+            if engine == 'CYCLES':
+                col.prop(cscene, "film_exposure", text = "Cycles Exposure")
+            col.prop(view_settings, "exposure", text = "Color Exposure")
           
-            box.prop(nodes["Mapping"].inputs[2], "default_value", text = "Rotation")
+            col = layout.column()
+            box = col.box()
+            col = box.column(align=True) 
+            col.prop(nodes["Mapping"].inputs[2], "default_value", text = "Rotation", icon = 'FILE_REFRESH')
+            col.label(text = "Default rotation shortcut:", icon = 'FILE_REFRESH')
+            col.label(text = "crtl + shift + alt + right mouse")
         
             col = layout.column()
             box = col.box()
@@ -381,6 +402,37 @@ class PAINEL_UI_Dome_Light(Panel) :
         
         col = layout.column()
         col.label(text = f'Version: {version}', icon = 'INFO')
+        
+class WORLD_OT_RotateMapping(Operator):
+    bl_idname = "world.rotate_hdri_mapping"
+    bl_label = "Rotate HDRI Mapping"
+
+    ctrl_shift_pressed: bpy.props.BoolProperty(default=False)
+    middlemouse_dragging: bpy.props.BoolProperty(default=False)
+    prev_x: bpy.props.FloatProperty(default=0)
+    delta_x: bpy.props.FloatProperty(default=0)
+
+    def modal(self, context, event):
+        if event.type == 'MOUSEMOVE':
+            delta_x = event.mouse_x - self.prev_x
+            mapping_node = bpy.context.scene.world.node_tree.nodes.get("Mapping")
+            if mapping_node:
+                mapping_node.inputs[2].default_value[2] += delta_x * 0.01
+            self.prev_x = event.mouse_x
+
+        elif event.value == 'RELEASE':
+            return {'CANCELLED'}
+
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        self.ctrl_shift_pressed = False
+        self.middlemouse_dragging = False
+        self.prev_x = event.mouse_x
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+    
+addon_keymaps = []
 
 # Update MIX HDR When Change Status        
 def update_hdr_2(self, context):
@@ -398,6 +450,12 @@ def register():
     bpy.utils.register_class(OBJECT_OT_Open_HDR_1)
     bpy.utils.register_class(OBJECT_OT_Open_HDR_2)
     bpy.utils.register_class(WORLD_OT_Remove_Unused_Images)
+    bpy.utils.register_class(WORLD_OT_RotateMapping)
+    
+    wm = bpy.context.window_manager
+    km = wm.keyconfigs.addon.keymaps.new(name="3D View", space_type='VIEW_3D')
+    kmi = km.keymap_items.new('world.rotate_hdri_mapping', 'RIGHTMOUSE', 'PRESS', ctrl=True, shift=True, alt=True)
+    addon_keymaps.append((km, kmi))
     
     bpy.types.Scene.enable_mix_hdr = bpy.props.BoolProperty(
         name = 'Enable Mix HDR',
@@ -413,6 +471,13 @@ def unregister():
     bpy.utils.unregister_class(OBJECT_OT_Open_HDR_1)
     bpy.utils.unregister_class(OBJECT_OT_Open_HDR_2)
     bpy.utils.unregister_class(WORLD_OT_Remove_Unused_Images)
+    bpy.utils.unregister_class(WORLD_OT_RotateMapping)
+    
+    wm = bpy.context.window_manager
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
+    
     del bpy.types.Scene.enable_mix_hdr
 
 

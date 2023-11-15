@@ -1,5 +1,5 @@
 from ... import bl_info
-from ... preferences import get_preferences
+from ... utility import addon
 
 '''
 Make sure to have 2 or more items per list item.

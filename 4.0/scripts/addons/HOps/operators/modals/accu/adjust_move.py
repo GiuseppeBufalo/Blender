@@ -14,8 +14,8 @@ class Move:
 
 
     def __setup(self, op):
-        built_in_shader = 'UNIFORM_COLOR' if bpy.app.version[0] >=4 else '3D_UNIFORM_COLOR'
-        shader = gpu.shader.from_builtin(built_in_shader)
+        built_in_shader = 'UNIFORM_COLOR' if bpy.app.version[0] >= 4 else '3D_UNIFORM_COLOR'
+        self.shader = gpu.shader.from_builtin(built_in_shader)
         self.face_batch = None
         self.point_batch = None
 

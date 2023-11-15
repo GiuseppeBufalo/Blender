@@ -1,7 +1,7 @@
 import bpy, bmesh
 from mathutils import Matrix, Vector, geometry
 import math
-from .... preferences import get_preferences
+from .... utility import addon
 
 from .interface import alter_form_layout
 from .dice_line import mouse_vector
@@ -201,8 +201,8 @@ class Edit_2D:
             bpy.ops.object.mode_set(mode='EDIT')
 
         if self.clean_faces:
-            bpy.ops.mesh.remove_doubles(threshold=get_preferences().property.meshclean_remove_threshold)
-            bpy.ops.mesh.dissolve_limited(angle_limit=get_preferences().property.meshclean_dissolve_angle)
+            bpy.ops.mesh.remove_doubles(threshold=addon.preference().property.meshclean_remove_threshold)
+            bpy.ops.mesh.dissolve_limited(angle_limit=addon.preference().property.meshclean_dissolve_angle)
 
         mesh = obj.data
         bm = bmesh.from_edit_mesh(mesh)

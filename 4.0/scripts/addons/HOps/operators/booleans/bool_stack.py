@@ -4,7 +4,7 @@ import bpy
 from bpy.props import BoolProperty, CollectionProperty, EnumProperty, StringProperty
 from bpy.types import BooleanModifier, Context, Event, Modifier, Object, Operator, PropertyGroup, UILayout
 
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master as UIMaster
 from ...utility.modifier import new as modifier_new
 from ...utility.modifier import stored as modifier_stored
@@ -220,7 +220,7 @@ class HOPS_OT_BoolStack(Operator):
 
         ui = UIMaster()
         ui.receive_draw_data(draw_data=draw_data)
-        ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+        ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
     def execute(self, context: Context) -> set:
         object: Object = context.active_object

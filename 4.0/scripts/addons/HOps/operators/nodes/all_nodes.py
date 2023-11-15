@@ -12,7 +12,7 @@ class HOPS_OT_All_Nodes(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.area:
-            if context.area.ui_type in {'GeometryNodeTree', 'ShaderNodeTree'}:
+            if context.area.ui_type in {'ShaderNodeTree'} or (bpy.app.version < (3, 4) and context.area.ui_type =='GeometryNodeTree'):
                 return True
         return False
 
@@ -36,7 +36,7 @@ def place_nodes(context):
     # Current Graph
     all_nodes = node_categories(context)
     tree = context.area.spaces.active.edit_tree
-    
+
     # Bounds
     min_x = 0
     max_y = 0
@@ -56,7 +56,7 @@ def place_nodes(context):
     # Place Nodes
     offset_y = pad_y
     for cat_name, node_types in all_nodes.items():
-        
+
         if cat_name == 'Layout': continue
         if cat_name == 'Group': continue
 
@@ -88,13 +88,13 @@ def place_nodes(context):
 
         for node in frame_children:
             node.parent = frame
-        
+
         # Color
         pick += 1
 
         # Offset Up
         offset_y += pad_y
-    
+
     context.view_layer.update()
     bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=2)
 
@@ -107,6 +107,6 @@ def place_nodes(context):
 
         frame.location.y = offset_y + frame.height
         offset_y = frame.location.y + 20
-        
+
 
     bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)

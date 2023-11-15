@@ -4,7 +4,7 @@ from mathutils import Color
 from . import infobar
 from . materials.capaint import carpaint_material
 from . materials.emission_glow import emission_glow_material
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... utility.base_modal_controls import Base_Modal_Controls
 
@@ -12,7 +12,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_MaterialScroll(bpy.types.Operator):
@@ -38,7 +38,7 @@ Press H for help
 
     def invoke(self, context, event):
         
-        self.copy_view = get_preferences().behavior.mat_viewport
+        self.copy_view = addon.preference().behavior.mat_viewport
 
         #self.scroll_modes = {'NORMAL', 'BLANK', 'DESTRUCTIVE'} enum prop placeholder
         self.scroll_mode = 'NORMAL'
@@ -418,7 +418,7 @@ Press H for help
             
             #Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(len(self.materials))
                 if self.scroll_mode != 'NORMAL':
                     win_list.append(self.material_type)
@@ -532,8 +532,12 @@ def random_principled (material = None,  name = 'Material', metal_prob = 0.8, ro
     principled.inputs['Base Color'].default_value = color
     principled.inputs['Metallic'].default_value = metal
     principled.inputs['Roughness'].default_value = roughness
-    principled.inputs['Clearcoat'].default_value = clearcoat
-    principled.inputs['Clearcoat Roughness'].default_value = clearcoat_rough
+    if bpy.app.version[0] < 4:
+        principled.inputs['Clearcoat'].default_value = clearcoat
+        principled.inputs['Clearcoat Roughness'].default_value = clearcoat_rough
+    else:
+        principled.inputs['Coat Weight'].default_value = clearcoat
+        principled.inputs['Coat Roughness'].default_value = clearcoat_rough
 
     return material
 

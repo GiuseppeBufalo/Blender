@@ -5,8 +5,8 @@ from math import radians
 from bl_ui.space_view3d import VIEW3D_HT_header
 from bl_ui.space_toolsystem_toolbar import VIEW3D_PT_tools_active as view3d_tools
 from bl_ui.space_statusbar import STATUSBAR_HT_header
-from ... preferences import get_preferences
-from ... addon.utility import modifier
+from ... utility import addon
+from ... utility import modifier
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
@@ -24,7 +24,7 @@ class HOPS_OT_MirrorExecuteFinal(Operator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def execute(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         preference.operator.mirror.running = False
         return {'FINISHED'}
 
@@ -39,7 +39,7 @@ class HOPS_OT_MirrorOperator():
 
         self.draw_wire = True # Display wire mesh
         self.flip_obj = None # For wire fade on flip
-        preference = get_preferences()
+        preference = addon.preference()
         self.active = context.active_object
         selected = context.selected_objects
 
@@ -107,7 +107,7 @@ class HOPS_OT_MirrorOperator():
                     else:
                         self.mirror_mod(context, selected, obj, *self.data(), mirror_object=mirror_object, new=new)
 
-                    if obj.type == "MESH":
+                    if obj.type == "MESH" and not preference.operator.mirror.mode in {"SYMMETRY", "MODIFIERAPPLY"}:
                         modifier.sort(obj, sort_types=['WEIGHTED_NORMAL'])
 
         # SYMMETRY
@@ -124,7 +124,7 @@ class HOPS_OT_MirrorOperator():
         self.finish(context)
 
     def finish(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         if preference.operator.mirror.close is True:
             preference.operator.mirror.running = False
 
@@ -140,7 +140,7 @@ class HOPS_OT_MirrorOperator():
         return {'FINISHED'}
 
     def xform(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         active = context.active_object
         selected = context.selected_objects
 
@@ -173,7 +173,7 @@ class HOPS_OT_MirrorOperator():
         return loc, rot
 
     def symmetry(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
 
         normal = self.data()[0]
         if normal == Vector((1, 0, 0)):
@@ -200,7 +200,7 @@ class HOPS_OT_MirrorOperator():
             bpy.ops.object.mode_set(mode=mode)
 
     def flip(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         normal = self.data()[0]
 
         if normal == Vector((1, 0, 0)):
@@ -231,7 +231,7 @@ class HOPS_OT_MirrorOperator():
         context.scene.tool_settings.transform_pivot_point = saved_pivot
 
     def bisect(self, context, fill=False):
-        preference = get_preferences()
+        preference = addon.preference()
 
         loc, rot = self.xform(context)
         position = loc
@@ -253,12 +253,12 @@ class HOPS_OT_MirrorOperator():
         if not self.edit_mode:
             bpy.ops.object.mode_set(mode='OBJECT')
 
-        if get_preferences().ui.Hops_extra_draw:
+        if addon.preference().ui.Hops_extra_draw:
             if obj:
                 self.draw_wire = False
 
                 mods = [mod for mod in obj.modifiers if mod.type == 'MIRROR']
-                activemod = [mod for mod in mods if mod.name == get_preferences().operator.mirror.modifier]
+                activemod = [mod for mod in mods if mod.name == addon.preference().operator.mirror.modifier]
                 mod = None
                 if len(activemod) > 0:
                     mod = activemod[0]
@@ -274,7 +274,7 @@ class HOPS_OT_MirrorOperator():
 
     def create_empty(self, context):
 
-        preference = get_preferences()
+        preference = addon.preference()
         active = context.active_object
         add_empty = False
         if preference.operator.mirror.mode == "NEWMODIFIER" and preference.operator.mirror.mode != "MODIFIERAPPLY":
@@ -312,7 +312,7 @@ class HOPS_OT_MirrorOperator():
         return empty
 
     def mirror_mod(self, context, selected, object, normal, axisv, axism, axisx, axisy, axisz, mirror_object=None, new=False):
-        preference = get_preferences()
+        preference = addon.preference()
 
         # GPENCIL
         if object.type == "GPENCIL":
@@ -450,7 +450,7 @@ class HOPS_OT_MirrorExecuteXGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 0
         x = (True, True, True)
@@ -473,7 +473,7 @@ class HOPS_OT_MirrorExecuteXmGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 0
         x = (True, True, False)
@@ -496,7 +496,7 @@ class HOPS_OT_MirrorExecuteYGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 1
         x = (False, False, False)
@@ -519,7 +519,7 @@ class HOPS_OT_MirrorExecuteYmGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 1
         x = (False, False, False)
@@ -542,7 +542,7 @@ class HOPS_OT_MirrorExecuteZGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 2
         x = (False, False, False)
@@ -565,7 +565,7 @@ class HOPS_OT_MirrorExecuteZmGizmo(Operator, HOPS_OT_MirrorOperator):
     bl_options = {'REGISTER', 'UNDO', 'INTERNAL'}
 
     def data(self):
-        preference = get_preferences()
+        preference = addon.preference()
 
         value = 2
         x = (False, False, False)
@@ -607,14 +607,13 @@ class HOPS_OT_MirrorGizmo(Operator):
 
     def invoke(self, context, event):
 
-        self.preference = get_preferences()
+        self.preference = addon.preference()
         self.preference.property.toolshelf = 'MIRROR'
 
         active = context.active_object
         if len(context.selected_objects) == 2:
             others = [obj for obj in context.selected_objects if obj != context.active_object]
             active = others[0]
-
 
         self.display_msg = self.preference.operator.mirror.mode
         bpy.ops.hops.display_notification(info=self.display_msg)
@@ -671,10 +670,13 @@ class HOPS_OT_MirrorGizmo(Operator):
             self.display_msg = self.preference.operator.mirror.mode
             bpy.ops.hops.display_notification(info=self.display_msg)
 
-        active = context.active_object
-        overlap = 0 if context.preferences.system.use_region_overlap else 22 * context.preferences.system.ui_scale
-        within_region_3d_x = event.mouse_region_x > 0 and event.mouse_region_x < context.region.width
-        within_region_3d = within_region_3d_x and event.mouse_region_y > 0 - overlap and event.mouse_region_y < context.region.height + overlap
+        within_region_3d = False
+        regions = get_3d_viewport_regions(context)
+
+        if regions:
+            for region in regions:
+                if is_mouse_in_region(event, region):
+                    within_region_3d = is_mouse_in_region(event, region)
 
         if within_region_3d:
 
@@ -685,7 +687,7 @@ class HOPS_OT_MirrorGizmo(Operator):
                         self.close = True
                         context.area.tag_redraw()
                 if self.base_controls.cancel:
-                        self.preference.operator.mirror.close = True
+                    self.preference.operator.mirror.close = True
             else:
                 if self.close:
                     self.preference.operator.mirror.close = True
@@ -754,7 +756,7 @@ class HOPS_OT_MirrorGizmo(Operator):
 
             if event.type == "H":
                 if event.value == "PRESS":
-                    get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+                    addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
             if event.type in {'WHEELUPMOUSE', 'WHEELDOWNMOUSE'}:
                 if event.ctrl or event.alt:
@@ -787,7 +789,7 @@ class HOPS_OT_MirrorGizmo(Operator):
         if self.master.should_build_fast_ui():
 
             # Help
-            preference = get_preferences()
+            preference = addon.preference()
             help_items = {"GLOBAL" : [], "STANDARD" : []}
 
             help_items["GLOBAL"] = [
@@ -957,7 +959,7 @@ class HOPS_OT_MirrorGizmoGroup(GizmoGroup):
         self.draw_arrow(context, self.arrow_y_n, "hops.mirror_execute_ym_gizmo", (0.545, 0.863, 0))
 
     def draw_prepare(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
 
         active = context.active_object
         if len(context.selected_objects) == 2:
@@ -1096,7 +1098,7 @@ class HOPS_OT_MirrorGizmoGroup(GizmoGroup):
         # cross.alpha_highlight = 0.8
 
     def draw_arrow(self, context, arrow, operaotr, color,):
-        preference = get_preferences()
+        preference = addon.preference()
         arrow.target_set_operator(operaotr)
 
         arrow.line_width = preference.operator.mirror.width
@@ -1110,7 +1112,7 @@ class HOPS_OT_MirrorGizmoGroup(GizmoGroup):
         arrow.alpha_highlight = 0.8
 
     def redraw_arrow(self, context, matrix, angle, axis):
-        preference = get_preferences()
+        preference = addon.preference()
         obloc, obrot, obscale = matrix.decompose()
         selected = context.selected_objects
 
@@ -1156,7 +1158,7 @@ class HOPS_MT_MirrorMenu(bpy.types.Menu):
     bl_label = "Mirror Menu"
 
     def draw(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         layout = self.layout
         layout.label(text="Mode")
         layout.prop(preference.operator.mirror, 'mode', expand=True)
@@ -1177,7 +1179,7 @@ class HOPS_PT_MirrorOptions(Panel):
     bl_label = "Mirror Options"
 
     def draw(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         layout = self.layout
         layout.label(text="Mirror Settings")
         layout.separator()
@@ -1200,7 +1202,7 @@ class HOPS_PT_mirror_mode(Panel):
     bl_ui_units_x = 8
 
     def draw(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         layout = self.layout
         layout.label(text="Mirror Mode")
 
@@ -1216,7 +1218,7 @@ class HOPS_PT_mirror_transform_orientations(Panel):
     bl_ui_units_x = 8
 
     def draw(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         layout = self.layout
         layout.label(text="Transform Orientations")
 
@@ -1232,7 +1234,7 @@ class HOPS_PT_mirror_pivot(Panel):
     bl_ui_units_x = 8
 
     def draw(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         layout = self.layout
         layout.label(text="Mirror Pivot Point")
 
@@ -1242,7 +1244,7 @@ class HOPS_PT_mirror_pivot(Panel):
 
 
 def draw_header(ht, context):
-    preference = get_preferences()
+    preference = addon.preference()
     mir = preference.operator.mirror
     selected = context.selected_objects
     layout = ht.layout
@@ -1276,7 +1278,7 @@ def draw_header(ht, context):
 def infobar(self, context):
     layout = self.layout
     row = self.layout.row(align=True)
-    preference = get_preferences()
+    preference = addon.preference()
 
     row.label(text="", icon='MOUSE_LMB')
     row.label(text="Mirror")
@@ -1356,7 +1358,24 @@ def infobar(self, context):
         layout.label(text=scene.statistics(view_layer), translate=False)
 
 
+def get_3d_viewport_regions(context):
+    regions = []
+    for area in context.screen.areas:
+        if area.type == 'VIEW_3D':
+            for region in area.regions:
+                if region.type == 'WINDOW':
+                    regions.append(region)
+    return regions
 
+
+def is_mouse_in_region(event, region):
+    mouse_x = event.mouse_x
+    mouse_y = event.mouse_y
+    within_region = (
+        region.x < mouse_x < region.x + region.width and
+        region.y < mouse_y < region.y + region.height
+    )
+    return within_region
 
 # ------------- Not In Use -------------
 
@@ -1371,7 +1390,7 @@ class HOPS_OT_MirrorRemoveGizmo(Operator):
         return getattr(ob, "type", "") in {"MESH", "EMPTY", "CURVE"}
 
     def execute(self, context):
-        preference = get_preferences()
+        preference = addon.preference()
         preference.property.Hops_gizmo_mirror = False
         context.area.tag_redraw()
         bpy.types.WindowManager.gizmo_group_type_remove("Hops_mirror_gizmo")

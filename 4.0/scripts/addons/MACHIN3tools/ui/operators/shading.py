@@ -8,19 +8,12 @@ from ... utils.view import sync_light_visibility
 from ... utils.material import adjust_bevel_shader
 
 
-show_overlays = {'SOLID': True,
-                 'MATERIAL': False,
-                 'RENDERED': False,
-                 'WIREFRAME': True}
-
-
 render_visibility = []
 
 
 class SwitchShading(bpy.types.Operator):
     bl_idname = "machin3.switch_shading"
     bl_label = "MACHIN3: Switch Shading"
-    bl_description = ""
     bl_options = {'REGISTER', 'UNDO'}
 
     shading_type: StringProperty(name="Shading Type", default='SOLID')
@@ -36,19 +29,20 @@ class SwitchShading(bpy.types.Operator):
         if shading.type == shading_type:
             return f"{'Disable' if overlay.show_overlays else 'Enable'} Overlays for {shading_type.capitalize()} Shading"
         else:
-            return f"Switch to {shading_type.capitalize()} shading"
+            return f"Switch to {shading_type.capitalize()} shading, and restore previously set Overlay Visibility"
 
     def execute(self, context):
-        global show_overlays
-
         scene = context.scene
 
-        overlay = context.space_data.overlay
         shading = context.space_data.shading
+        overlay = context.space_data.overlay
+
+        self.initiate_overlay_settings(context, shading, overlay)
+
 
         if shading.type == self.shading_type:
-            show_overlays[self.shading_type] = not show_overlays[self.shading_type]
-            self.toggled_overlays = 'Enable' if show_overlays[self.shading_type] else 'Disable'
+            self.prefs[self.shading_type] = not self.prefs[self.shading_type]
+            self.toggled_overlays = 'Enable' if self.prefs[self.shading_type] else 'Disable'
 
         else:
             shading.type = self.shading_type
@@ -68,9 +62,28 @@ class SwitchShading(bpy.types.Operator):
             if get_prefs().activate_render and get_prefs().activate_shading_pie and get_prefs().render_enforce_hide_render and scene.M3.enforce_hide_render:
                 self.enforce_render_visibility(context, shading.type, debug=True)
 
-
-        overlay.show_overlays = show_overlays[self.shading_type]
+        overlay.show_overlays = self.prefs[self.shading_type]
         return {'FINISHED'}
+
+
+
+    def initiate_overlay_settings(self, context, shading, overlay, debug=False):
+        
+        if not context.scene.M3.get('show_overlay_prefs', False):
+            if debug:
+                print("initiating overlays prefs on scene object")
+
+            context.scene.M3['show_overlay_prefs'] = {'SOLID': True,
+                                                      'MATERIAL': False,
+                                                      'RENDERED': False,
+                                                      'WIREFRAME': True}
+
+        self.prefs = context.scene.M3['show_overlay_prefs']
+
+        if overlay.show_overlays != self.prefs[shading.type]:
+            self.prefs[shading.type] = overlay.show_overlays
+            print("INFO: Corrected out-of-sync Overlay Visibility setting!")
+
 
     def adjust_lights(self, scene, new_shading_type, debug=False):
         m3 = scene.M3

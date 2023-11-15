@@ -111,3 +111,12 @@ def get_mod_obj(mod):
         return mod.mirror_object
     elif mod.type == 'ARRAY':
         return mod.offset_object
+
+
+
+def move_mod(mod, index=0):
+    obj = mod.id_data
+    current_index = list(obj.modifiers).index(mod)
+
+    if current_index != index:
+        obj.modifiers.move(current_index, index)

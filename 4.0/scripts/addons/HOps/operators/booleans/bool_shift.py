@@ -1,7 +1,7 @@
 import bpy
 from ... utils.objects import set_active
 from ... material import assign_material
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import collections, modifier
 from ... utility.renderer import cycles
 from ... ui_framework.master import Master
@@ -180,7 +180,7 @@ class HOPS_OT_BoolShift(bpy.types.Operator):
 
         # H opens the help
         if event.type == 'H' and event.value == 'PRESS':
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
             context.area.tag_redraw()
 
         self.draw_modal(context)
@@ -588,7 +588,7 @@ class HOPS_OT_BoolShift(bpy.types.Operator):
 
         # Main
         win_list = []
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
             win_list.append(operation)
             if self.operation in ('INSET', 'OUTSET'):
                 win_list.append(f"{self.thickness:.2f}")

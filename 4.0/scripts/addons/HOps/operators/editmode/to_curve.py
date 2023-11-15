@@ -1,6 +1,6 @@
 import bpy, bmesh
 from ...ui_framework.operator_ui import Master
-from ... preferences import get_preferences, get_addon_name
+from ... utility import addon
 
 
 class HOPS_OT_Edge2Curve(bpy.types.Operator):
@@ -216,6 +216,6 @@ ALT+SHIFT - Destructive to_plate
             draw_data.extend(result)
             draw_data.append( [F"Conversion to {self.mode}"])
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}

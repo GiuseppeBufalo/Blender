@@ -7,9 +7,20 @@ from .. utils.registration import get_prefs
 
 
 
+
+def get_builtin_shader_name(name, prefix='3D'):
+    
+    if bpy.app.version >= (4, 0, 0):
+        return name
+    else:
+        return f"{prefix}_{name}"
+
+
+
+
 def draw_point(co, mx=Matrix(), color=(1, 1, 1), size=6, alpha=1, xray=True, modal=True, screen=False):
     def draw():
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(get_builtin_shader_name('UNIFORM_COLOR'))
         shader.bind()
         shader.uniform_float("color", (*color, alpha))
 
@@ -32,13 +43,14 @@ def draw_point(co, mx=Matrix(), color=(1, 1, 1), size=6, alpha=1, xray=True, mod
 
 def draw_points(coords, indices=None, mx=Matrix(), color=(1, 1, 1), size=6, alpha=1, xray=True, modal=True, screen=False):
     def draw():
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(get_builtin_shader_name('UNIFORM_COLOR'))
         shader.bind()
         shader.uniform_float("color", (*color, alpha))
 
         gpu.state.depth_test_set('NONE' if xray else 'LESS_EQUAL')
         gpu.state.blend_set('ALPHA' if alpha < 1 else 'NONE')
         gpu.state.point_size_set(size)
+
         if indices:
             if mx != Matrix():
                 batch = batch_for_shader(shader, 'POINTS', {"pos": [mx @ co for co in coords]}, indices=indices)
@@ -161,7 +173,7 @@ def draw_tris(coords, indices=None, mx=Matrix(), color=(1, 1, 1), alpha=1, xray=
     def draw():
 
 
-        shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+        shader = gpu.shader.from_builtin(get_builtin_shader_name('UNIFORM_COLOR'))
         shader.bind()
         shader.uniform_float("color", (*color, alpha))
 
@@ -184,13 +196,7 @@ def draw_tris(coords, indices=None, mx=Matrix(), color=(1, 1, 1), alpha=1, xray=
 
 
 
-def update_HUD_location(self, event, offsetx=20, offsety=20):
-
-    self.HUD_x = event.mouse_x - self.region_offset_x + offsetx
-    self.HUD_y = event.mouse_y - self.region_offset_y + offsety
-
-
-def draw_init(self, event):
+def draw_init(self):
     self.font_id = 1
     self.offset = 0
 
@@ -209,7 +215,7 @@ def draw_label(context, title='', coords=None, offset=0, center=True, size=12, c
     font = 1
     fontsize = int(size * scale)
 
-    blf.size(font, fontsize, 72)
+    blf.size(font, fontsize)
     blf.color(font, *color, alpha)
 
     if center:
@@ -222,3 +228,23 @@ def draw_label(context, title='', coords=None, offset=0, center=True, size=12, c
     blf.draw(font, title)
 
     return blf.dimensions(font, title)
+
+
+
+def draw_split_row(self, layout, prop='prop', text='', label='Label', factor=0.2, align=True, toggle=True, expand=True, info=None, warning=None):
+
+    row = layout.row(align=align)
+    split = row.split(factor=factor, align=align)
+    
+    text = text if text else str(getattr(self, prop)) if str(getattr(self, prop)) in ['True', 'False'] else ''
+    split.prop(self, prop, text=text, toggle=toggle, expand=expand)
+
+    if label:
+        split.label(text=label)
+
+    if info:
+        split.label(text=info, icon='INFO')
+
+    if warning:
+        split.label(text=warning, icon='ERROR')
+    return row

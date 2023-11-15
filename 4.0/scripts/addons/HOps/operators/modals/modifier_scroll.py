@@ -3,12 +3,11 @@ from math import radians, degrees
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon, modifier
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utility.collections import turn_on_parent_collections
-from ... addon.utility import modifier as mod_utils
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 
 
@@ -220,7 +219,7 @@ class HOPS_OT_ModifierScroll(Operator):
 
         if self.base_controls.confirm or event.type in { 'RET', 'NUMPAD_ENTER'}:
             if event.ctrl and self.all:
-                mod_utils.apply(self.original_obj, visible=True)
+                modifier.apply(self.original_obj, visible=True)
 
                 for mod in self.original_obj.modifiers:
                     mod.show_viewport = True
@@ -237,7 +236,7 @@ class HOPS_OT_ModifierScroll(Operator):
                     if col not in duplicate.users_collection:
                         col.objects.link(duplicate)
 
-                mod_utils.apply(duplicate, visible=True)
+                modifier.apply(duplicate, visible=True)
                 duplicate.modifiers.clear()
 
                 for mod in self.original_obj.modifiers:
@@ -299,7 +298,7 @@ class HOPS_OT_ModifierScroll(Operator):
             # Main
             win_list = []
             active_mod = ""
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 #win_list.append("Modifier Scroll")
 
                 if self.index == 0:

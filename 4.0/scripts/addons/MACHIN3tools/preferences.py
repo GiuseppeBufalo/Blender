@@ -4,12 +4,15 @@ import os
 import shutil
 from . utils.ui import get_icon, draw_keymap_items, get_keymap_item
 from . utils.registration import activate, get_path, get_name, get_addon
+from . utils.draw import draw_split_row
 from . items import preferences_tabs, matcap_background_type_items
 
 
 decalmachine = None
 meshmachine = None
 punchit = None
+curvemachine = None
+hypercursor = None
 
 has_sidebar = ['OT_smart_drive',
                'OT_group',
@@ -62,6 +65,8 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     path = get_path()
     bl_idname = get_name()
 
+    registration_debug: BoolProperty(name="Addon Terminal Registration Output", default=True)
+
 
 
     def update_switchmatcap1(self, context):
@@ -85,6 +90,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             self.switchmatcap2 = "NOT FOUND"
 
     def update_custom_preferences_keymap(self, context):
+        
         if self.custom_preferences_keymap:
             kc = context.window_manager.keyconfigs.user
 
@@ -169,6 +175,9 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     def update_activate_mesh_cut(self, context):
         activate(self, register=self.activate_mesh_cut, tool="mesh_cut")
 
+    def update_activate_region(self, context):
+        activate(self, register=self.activate_region, tool="region")
+
     def update_activate_thread(self, context):
         activate(self, register=self.activate_thread, tool="thread")
 
@@ -234,7 +243,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     group_remove_empty: BoolProperty(name="Remove Empty Groups", description="Automatically remove Empty Groups in each Cleanup Pass", default=True)
 
 
-    assetbrowser_show: BoolProperty(name="Show Assetbrowser Tools Preferences", default=False)
+    assetbrowser_show: BoolProperty(name="Show Asset Browser Tools Preferences", default=False)
 
     preferred_default_catalog: StringProperty(name="Preferred Default Catalog", default="Model")
     preferred_assetbrowser_workspace_name: StringProperty(name="Preferred Workspace for Assembly Asset Creation", default="General.alt")
@@ -242,6 +251,19 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     show_instance_collection_assembly_in_modes_pie: BoolProperty(name="Show Collection Instance Assembly in Modes Pie", default=True)
     hide_wire_objects_when_creating_assembly_asset: BoolProperty(name="Hide Wire Objects when creating Assembly Asset", default=True)
     hide_wire_objects_when_assembling_instance_collection: BoolProperty(name="Hide Wire Objects when assembling Collection Instance", default=True)
+
+
+
+    region_show: BoolProperty(name="Show Region Preferences", default=False)
+
+    region_prefer_left_right: BoolProperty(name="Prefer Left/Right over Bottom/Top", default=True)
+    region_close_range: FloatProperty(name="Close Range", subtype='PERCENTAGE', default=30, min=1, max=50)
+
+    region_toggle_assetshelf: BoolProperty(name="Toggle the Asset Shelf, instead of the Browser", default=False)
+    region_toggle_assetbrowser_top: BoolProperty(name="Toggle the Asset Browser at the Top", default=True)
+    region_toggle_assetbrowser_bottom: BoolProperty(name="Toggle the Asset Browser at the Bottom", default=True)
+
+    region_warp_mouse_to_asset_border: BoolProperty(name="Warp Mouse to Asset Browser Border", default=False)
 
 
 
@@ -269,7 +291,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
 
 
-    customize_show: BoolProperty(name="Show Cuatomize Preferences", default=False)
+    customize_show: BoolProperty(name="Show Customize Preferences", default=False)
 
     custom_startup: BoolProperty(name="Startup Scene", default=False)
     custom_theme: BoolProperty(name="Theme", default=True)
@@ -279,7 +301,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     custom_outliner: BoolProperty(name="Outliner", default=False)
     custom_preferences_interface: BoolProperty(name="Preferences: Interface", default=False)
     custom_preferences_viewport: BoolProperty(name="Preferences: Viewport", default=False)
-    custom_preferences_navigation: BoolProperty(name="Preferences: Navigation", default=False)
+    custom_preferences_input_navigation: BoolProperty(name="Preferences: Input & Navigation", default=False)
     custom_preferences_keymap: BoolProperty(name="Preferences: Keymap", default=False, update=update_custom_preferences_keymap)
     custom_preferences_system: BoolProperty(name="Preferences: System", default=False)
     custom_preferences_save: BoolProperty(name="Preferences: Save & Load", default=False)
@@ -294,17 +316,13 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
 
 
-    save_pie_versioned_show: BoolProperty(name="Show Save Pie: Versioned Startup File Preferences", default=False)
-    save_pie_undo_save_show: BoolProperty(name="Show Save Pie: Undo Save Preferences", default=False)
-    save_pie_import_show: BoolProperty(name="Show Save Pie: Import/Export Preferences", default=False)
-    save_pie_screencast_show: BoolProperty(name="Show Save Pie: ScreenCast Preferences", default=False)
-
-    save_pie_use_undo_save: BoolProperty(name="Make Pre-Undo Saving available in the Pie", default=False)
+    save_pie_show: BoolProperty(name="Show Save Pie", default=False)
 
     save_pie_show_obj_export: BoolProperty(name="Show .obj Export", default=True)
     save_pie_show_plasticity_export: BoolProperty(name="Show Plasticity Export", default=True)
     save_pie_show_fbx_export: BoolProperty(name="Show .fbx Export", default=True)
     save_pie_show_usd_export: BoolProperty(name="Show .usd Export", default=True)
+    save_pie_show_stl_export: BoolProperty(name="Show .stl Export", default=False)
 
     fbx_export_apply_scale_all: BoolProperty(name="Use 'Fbx All' for Applying Scale", description="This is useful for Unity, but bad for Unreal Engine", default=False)
 
@@ -313,15 +331,21 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     screencast_fontsize: IntProperty(name="Font Size", default=12, min=2)
     screencast_highlight_machin3: BoolProperty(name="Highlight MACHIN3 operators", description="Highlight Operators from MACHIN3 addons", default=True)
     screencast_show_addon: BoolProperty(name="Display Operator's Addons", description="Display Operator's Addon", default=True)
-    screencast_show_idname: BoolProperty(name="Display Operator's idnames", description="Display Operator's bl_idname properties", default=False)
+    screencast_show_idname: BoolProperty(name="Display Operator's idnames", description="Display Operator's bl_idname", default=False)
 
     screencast_use_skribe: BoolProperty(name="Use SKRIBE (dedicated, preferred)", default=True)
     screencast_use_screencast_keys: BoolProperty(name="Use Screencast Keys (addon)", default=True)
 
+    save_pie_use_undo_save: BoolProperty(name="Make Pre-Undo Saving available in the Pie", default=False)
 
 
-    shading_pie_autosmooth_show: BoolProperty(name="Show Shading Pie: Autosmooth Preferences", default=False)
-    shading_pie_matcap_show: BoolProperty(name="Show Shading Pie: Matcap Switch Preferences", default=False)
+
+    shading_pie_show: BoolProperty(name="Show Shading Pie", default=False)
+
+    overlay_solid: BoolProperty(name="Show Overlays in Solid Shading by default", description="For a newly created scene, or a .blend file where where it wasn't set before, show Overlays for Solid shaded 3D views", default=True)
+    overlay_material: BoolProperty(name="Show Overlays in Material Shading by default", description="For a newly created scene, or a .blend file where where it wasn't set before, show Overlays for Material shaded 3D views", default=False)
+    overlay_rendered: BoolProperty(name="Show Overlays in Rendered Shading by default", description="For a newly created scene, or a .blend file where where it wasn't set before, show Overlays for Rendered shaded 3D views", default=False)
+    overlay_wire: BoolProperty(name="Show Overlays in Wire Shading by default", description="For a newly created scene, or a .blend file where where it wasn't set before, show Overlays for Wire shaded 3D views", default=True)
 
     switchmatcap1: StringProperty(name="Matcap 1", update=update_switchmatcap1)
     switchmatcap2: StringProperty(name="Matcap 2", update=update_switchmatcap2)
@@ -419,8 +443,9 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
     activate_align: BoolProperty(name="Align", default=False, update=update_activate_align)
     activate_group: BoolProperty(name="Group", default=False, update=update_activate_group)
     activate_smart_drive: BoolProperty(name="Smart Drive", default=False, update=update_activate_smart_drive)
-    activate_assetbrowser_tools: BoolProperty(name="Assetbrowser Tools", default=False, update=update_activate_assetbrowser_tools)
-    activate_filebrowser_tools: BoolProperty(name="Filebrowser Tools", default=False, update=update_activate_filebrowser_tools)
+    activate_filebrowser_tools: BoolProperty(name="File Browser Tools", default=False, update=update_activate_filebrowser_tools)
+    activate_assetbrowser_tools: BoolProperty(name="Asset Browser Tools", default=False, update=update_activate_assetbrowser_tools)
+    activate_region: BoolProperty(name="Toggle Region", default=True, update=update_activate_region)
     activate_render: BoolProperty(name="Render", default=False, update=update_activate_render)
     activate_smooth: BoolProperty(name="Smooth", default=False, update=update_activate_smooth)
     activate_clipping_toggle: BoolProperty(name="Clipping Toggle", default=False, update=update_activate_clipping_toggle)
@@ -519,98 +544,33 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
         column = bb.column(align=True)
 
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_smart_vert", toggle=True)
-        row.label(text="Smart Vertex Merging, Connecting and Sliding.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_smart_edge", toggle=True)
-        row.label(text="Smart Edge Creation, Manipulation, Projection and Selection Conversion.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_smart_face", toggle=True)
-        row.label(text="Smart Face Creation and Object-from-Face Creation.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_clean_up", toggle=True)
-        row.label(text="Quick Geometry Clean-up.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_extrude", toggle=True)
-        row.label(text="Fixing Blender's Extrude Manifold and Spin Operators")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_focus", toggle=True)
-        row.label(text="Object Focus and Multi-Level Isolation.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_mirror", toggle=True)
-        row.label(text="Object Mirroring and Un-Mirroring.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_align", toggle=True)
-        row.label(text="Object per-axis Location, Rotation and Scale Alignment, as well as Object Relative Alignments.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_group", toggle=True)
-        row.label(text="Group Objects using Empties as Parents.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_smart_drive", toggle=True)
-        row.label(text="Use one Object to drive another.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_assetbrowser_tools", toggle=True)
-        row.label(text="Easy Assemly Asset Creation and Import via the Assetbrowser.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_filebrowser_tools", toggle=True)
-        row.label(text="Additional Tools/Shortcuts for the Filebrowser.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_render", toggle=True)
-        row.label(text="Tools for efficient, iterative rendering.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_smooth", toggle=True)
-        row.label(text="Toggle Smoothing in Korean Bevel and SubD workflows.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_clipping_toggle", toggle=True)
-        row.label(text="Viewport Clipping Plane Toggle.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_surface_slide", toggle=True)
-        row.label(text="Easily modify Mesh Topology, while maintaining Form.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_material_picker", toggle=True)
-        row.label(text="Pick Materials from the Material Workspace's 3D View.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_apply", toggle=True)
-        row.label(text="Apply Transformations while keeping the Bevel Width as well as the Child Transformations unchanged.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_select", toggle=True)
-        row.label(text="Select Center Objects or Wire Objects.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_mesh_cut", toggle=True)
-        row.label(text="Knife Intersect a Mesh-Object, using another one.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_thread", toggle=True)
-        row.label(text="Easily turn Cylinder Faces into Thread.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_unity", toggle=True)
-        row.label(text="Unity related Tools.")
+        draw_split_row(self, column, prop='activate_smart_vert', text='Smart Vert', label='Smart Vertex Merging, Connecting and Sliding', factor=0.25)
+        draw_split_row(self, column, prop='activate_smart_edge', text='Smart Edge', label='Smart Edge Creation, Manipulation, Projection and Selection Conversion', factor=0.25)
+        draw_split_row(self, column, prop='activate_smart_face', text='Smart Face', label='Smart Face Creation and Object-from-Face Creation', factor=0.25)
+        draw_split_row(self, column, prop='activate_clean_up', text='Clean Up', label='Quick Geometry Clean-up', factor=0.25)
+        draw_split_row(self, column, prop='activate_extrude', text='Extrude', label="(Simple) PunchIt Manifold Extrusion and Cursor Spin", factor=0.25)
+        draw_split_row(self, column, prop='activate_focus', text='Focus', label='Object Focus and Multi-Level Isolation', factor=0.25)
+        draw_split_row(self, column, prop='activate_mirror', text='Mirror', label='Flick Object Mirroring and Un-Mirroring', factor=0.25)
+        draw_split_row(self, column, prop='activate_align', text='Align', label='Object per-axis Location, Rotation and Scale Alignment, as well as Object-Inbetween-Alignment', factor=0.25)
+        draw_split_row(self, column, prop='activate_group', text='Group', label='Group Objects using Empties as Parents', factor=0.25)
+        draw_split_row(self, column, prop='activate_smart_drive', text='Smart Drive', label='Use one Object to drive another', factor=0.25)
+        draw_split_row(self, column, prop='activate_assetbrowser_tools', text='Assetbrowser Tools', label='Easy Assemly Asset Creation and Import via the Asset Browser', factor=0.25)
+        draw_split_row(self, column, prop='activate_filebrowser_tools', text='Filebrowser Tools', label='Additional Tools/Shortcuts for the Filebrowser', factor=0.25)
+        draw_split_row(self, column, prop='activate_region', text='Toggle Region', label='Toggle 3D View Toolbar, Sidebar and Asset Browsers using a single T keymap, depending on mouse position', factor=0.25)
+        draw_split_row(self, column, prop='activate_render', text='Render', label='Tools for efficient, iterative rendering', factor=0.25)
+        draw_split_row(self, column, prop='activate_smooth', text='Smooth', label='Toggle Smoothing in Korean Bevel and SubD workflows', factor=0.25)
+        draw_split_row(self, column, prop='activate_clipping_toggle', text='Clipping Toggle', label='Viewport Clipping Plane Toggle', factor=0.25)
+        draw_split_row(self, column, prop='activate_surface_slide', text='Surface Slide', label='Easily modify Mesh Topology, while maintaining Form', factor=0.25)
+        draw_split_row(self, column, prop='activate_material_picker', text='Material Picker', label="Pick Materials from the Material Workspace's 3D View", factor=0.25)
+        draw_split_row(self, column, prop='activate_apply', text='Apply', label='Apply Transformations while keeping the Bevel Width as well as the Child Transformations unchanged', factor=0.25)
+        draw_split_row(self, column, prop='activate_select', text='Select', label='Select Center Objects or Wire Objects', factor=0.25)
+        draw_split_row(self, column, prop='activate_mesh_cut', text='Mesh Cut', label='Knife Intersect a Mesh-Object, using another one', factor=0.25)
+        draw_split_row(self, column, prop='activate_thread', text='Thread', label='Easily turn Cylinder Faces into Thread', factor=0.25)
+        draw_split_row(self, column, prop='activate_unity', text='Unity', label='Unity related Tools', factor=0.25)
 
         column.separator()
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_customize", toggle=True)
-        row.label(text="Customize various Blender preferences, settings and keymaps.")
+
+        draw_split_row(self, column, prop='activate_customize', text='Customize', label='Customize various Blender preferences, settings and keymaps', factor=0.25)
 
 
 
@@ -619,57 +579,31 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
         column = bb.column(align=True)
 
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_modes_pie", toggle=True)
-        row.label(text="Quick mode changing.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_save_pie", toggle=True)
-        row.label(text="Save, Open, Append and Link. Load Recent, Previous and Next. Purge and Clean Out. ScreenCast.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_shading_pie", toggle=True)
-        row.label(text="Control shading, overlays, eevee and some object properties.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_views_pie", toggle=True)
-        row.label(text="Control views. Create and manage cameras.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_align_pie", toggle=True)
-        row.label(text="Edit mesh and UV alignments.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_cursor_pie", toggle=True)
-        row.label(text="Cursor and Origin manipulation.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_transform_pie", toggle=True)
-        row.label(text="Transform Orientations and Pivots.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_snapping_pie", toggle=True)
-        row.label(text="Snapping.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_collections_pie", toggle=True)
-        row.label(text="Collection management.")
-
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_workspace_pie", toggle=True)
-        r = row.split(factor=0.4)
-        r.label(text="Switch Workplaces.")
-        r.label(text="If enabled, customize it in ui/pies.py", icon="INFO")
+        draw_split_row(self, column, prop='activate_modes_pie', text='Modes Pie', label='Quick mode changing', factor=0.25)
+        draw_split_row(self, column, prop='activate_save_pie', text='Save Pie', label='Save, Open, Append and Link. Load Recent, Previous and Next. Purge and Clean Out. ScreenCast and Versioned Startup file', factor=0.25)
+        draw_split_row(self, column, prop='activate_shading_pie', text='Shading Pie', label='Control shading, overlays, eevee and some object properties', factor=0.25)
+        draw_split_row(self, column, prop='activate_views_pie', text='Views Pie', label='Control views. Create and manage cameras', factor=0.25)
+        draw_split_row(self, column, prop='activate_align_pie', text='Alignments Pie', label='Edit mesh and UV alignments', factor=0.25)
+        draw_split_row(self, column, prop='activate_cursor_pie', text='Cursor and Origin Pie', label='Cursor and Origin manipulation', factor=0.25)
+        draw_split_row(self, column, prop='activate_transform_pie', text='Transform Pie', label='Transform Orientations and Pivots', factor=0.25)
+        draw_split_row(self, column, prop='activate_snapping_pie', text='Snapping Pie', label='Snapping', factor=0.25)
+        draw_split_row(self, column, prop='activate_collections_pie', text='Collections Pie', label='Collection management', factor=0.25)
+        draw_split_row(self, column, prop='activate_workspace_pie', text='Workspace Pie', label='Switch Workplaces. If enabled, customize it in ui/pies.py', factor=0.25)
 
         column.separator()
-        row = column.split(factor=0.25, align=True)
-        row.prop(self, "activate_tools_pie", toggle=True)
-        row.label(text="Switch Tools, useful with BoxCutter/HardOps and HyperCursor.")
+
+        draw_split_row(self, column, prop='activate_tools_pie', text='Tools Pie', label='Switch Tools, useful with BoxCutter/HardOps and HyperCursor', factor=0.25)
 
 
 
         b = split.box()
         b.label(text="Settings")
+
+        bb = b.box()
+        bb.label(text="Addon")
+
+        column = bb.column()
+        draw_split_row(self, column, prop='registration_debug', label='Print Addon Registration Output in System Console')
 
 
 
@@ -679,25 +613,21 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
             if any([getattr(bpy.types, f'MACHIN3_{name}', False) for name in has_sidebar]):
                 column = bb.column()
-                row = column.split(factor=0.2, align=True)
-                row.prop(self, "show_sidebar_panel", text=str(self.show_sidebar_panel), toggle=True)
-                row.label(text="Show Sidebar Panel.")
+                draw_split_row(self, column, prop='show_sidebar_panel', label='Show Sidebar Panel')
+
 
 
         if any([getattr(bpy.types, f'MACHIN3_{name}', False) for name in has_hud]):
             bb = b.box()
             bb.label(text="HUD")
 
-            column = bb.column()
-            row = column.row()
-            r = row.split(factor=0.2)
-            r.prop(self, "modal_hud_scale", text="")
-            r.label(text="HUD Scale")
+            column = bb.column(align=True)
+            factor = 0.4 if getattr(bpy.types, 'MACHIN3_OT_mirror', False) else 0.2
+
+            row = draw_split_row(self, column, prop='modal_hud_scale', label='HUD Scale', factor=factor)
 
             if getattr(bpy.types, "MACHIN3_OT_mirror", False):
-                r = row.split(factor=0.3)
-                r.prop(self, "mirror_flick_distance", text="")
-                r.label(text="Mirror Flick Distance")
+                draw_split_row(self, row, prop='mirror_flick_distance', label='Mirror Flick distance Scale', factor=factor)
 
             if any([getattr(bpy.types, f'MACHIN3_{name}', False) for name in is_fading]):
                 column = bb.column()
@@ -725,11 +655,10 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             bb.prop(self, 'focus_show', text="Focus", icon='TRIA_DOWN' if self.focus_show else 'TRIA_RIGHT', emboss=False)
 
             if self.focus_show:
-                column = bb.column()
-                column.prop(self, "focus_view_transition")
+                column = bb.column(align=True)
 
-                column = bb.column()
-                column.prop(self, "focus_lights")
+                draw_split_row(self, column, prop='focus_view_transition', label='Viewport Tweening')
+                draw_split_row(self, column, prop='focus_lights', label='Ignore Lights (keep them always visible)')
 
 
 
@@ -740,18 +669,12 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             if self.group_show:
                 column = bb.column(align=True)
 
-                row = column.split(factor=0.2, align=True)
-                row.prop(self, "use_group_sub_menu", text='Sub Menu', toggle=True)
-                row.label(text="Use Group Sub Menu in Object Context Menu.")
+                draw_split_row(self, column, prop='use_group_sub_menu', text='Sub Menu', label='Use Group Sub Menu in Object Context Menu')
+                draw_split_row(self, column, prop='use_group_outliner_toggles', text='Outliner Toggles', label='Show Group Toggles in Outlienr Header')
+                draw_split_row(self, column, prop='group_remove_empty', text='Remove Empty', label='Automatically remove Empty Groups in each Cleanup Pass')
 
-                row = column.split(factor=0.2, align=True)
-                row.prop(self, "use_group_outliner_toggles", text='Outliner Toggles', toggle=True)
-                row.label(text="Show Group Toggles in Outliner Header.")
-
-                row = column.split(factor=0.2, align=True)
-                row.prop(self, "group_remove_empty", text='Remove Empty', toggle=True)
-                row.label(text="Automatically remove Empty Groups in each Cleanup Pass.")
-
+                column.separator()
+                column.separator()
                 column.separator()
 
                 row = column.row()
@@ -770,12 +693,9 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
                 column.separator()
 
-                row = column.row()
-                r = row.split(factor=0.2)
-                r.prop(self, "group_size", text="")
-                r.label(text="Default Empty Draw Size")
+                r = draw_split_row(self, column, prop='group_size', label='Default Empty Draw Size', factor=0.4)
+                draw_split_row(self, r, prop='group_fade_sizes', label='Fade Sub Group Sizes', factor=0.4)
 
-                r.prop(self, "group_fade_sizes", text='Fade Sub Group Sizes')
                 rr = r.row()
                 rr.active = self.group_fade_sizes
                 rr.prop(self, "group_fade_factor", text='Factor')
@@ -788,37 +708,42 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
             if self.assetbrowser_show:
                 column = bb.column(align=True)
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "preferred_default_catalog", text="")
-                r.label(text="Preferred Default Catalog (must exist alredy)")
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "preferred_assetbrowser_workspace_name", text="")
-                r.label(text="Preferred Workspace for Assembly Asset Creation")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "hide_wire_objects_when_creating_assembly_asset", text="True" if self.hide_wire_objects_when_creating_assembly_asset else "False", toggle=True)
-                r.label(text="Hide Wire Objects when creating Assembly Asset")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "hide_wire_objects_when_assembling_instance_collection", text="True" if self.hide_wire_objects_when_assembling_instance_collection else "False", toggle=True)
-                r.label(text="Hide Wire Objects when assembling Instance Collection")
+                draw_split_row(self, column, prop='preferred_default_catalog', label='Preferred Default Catalog (must exist already)')
+                draw_split_row(self, column, prop='preferred_assetbrowser_workspace_name', label='Preferred Workspace for Assembly Asset Creation')
+                draw_split_row(self, column, prop='hide_wire_objects_when_creating_assembly_asset', label='Hide Wire Objects when creatinng Assembly Asset')
+                draw_split_row(self, column, prop='hide_wire_objects_when_assembling_instance_collection', label='Hide Wire Objects when assemgling Instance Collection')
 
                 if getattr(bpy.types, "MACHIN3_MT_modes_pie", False):
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(self, "show_instance_collection_assembly_in_modes_pie", text="True" if self.show_instance_collection_assembly_in_modes_pie else "False", toggle=True)
-                    r.label(text="Show Instance Collection Assembly in Modes Pie")
+                    draw_split_row(self, column, prop='show_instance_collection_assembly_in_modes_pie', label='Show Instance Colection Assembly in Modes Pie')
 
                 if getattr(bpy.types, "MACHIN3_MT_save_pie", False):
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(self, "show_assembly_asset_creation_in_save_pie", text="True" if self.show_assembly_asset_creation_in_save_pie else "False", toggle=True)
-                    r.label(text="Show Assembly Asset Creation in Save Pie")
+                    draw_split_row(self, column, prop='show_assembly_asset_creation_in_save_pie', label='Show Assembly Asset Creation in Save Pie')
+
+
+
+        if getattr(bpy.types, "MACHIN3_OT_toggle_view3d_region", False):
+            bb = b.box()
+            bb.prop(self, 'region_show', text="Toggle Region", icon='TRIA_DOWN' if self.region_show else 'TRIA_RIGHT', emboss=False)
+
+            if self.region_show:
+                column = bb.column(align=True)
+
+                draw_split_row(self, column, prop='region_prefer_left_right', label='Prefer Left/Right toggle, over Bottom/Top, before Close Range is used to determine whether the other pair is toggled')
+                draw_split_row(self, column, prop='region_close_range', label='Close Range - Proximity to Boundary as Percetange of the Area Width/Height')
+
+                if bpy.app.version >= (4, 0, 0):
+                    column.separator()
+
+                    draw_split_row(self, column, prop='region_toggle_assetshelf', label='If available toggle the Asset Shelf instead of the Browser', info='This is still extremely limited in Blender 4.0, and practically unusable')
+
+                column.separator()
+
+                draw_split_row(self, column, prop='region_toggle_assetbrowser_top', label='Toggle Asset Browser at Top of 3D View')
+                draw_split_row(self, column, prop='region_toggle_assetbrowser_bottom', label='Toggle Asset Browser at Bottom of 3D View')
+
+                if any([self.region_toggle_assetbrowser_top, self.region_toggle_assetbrowser_bottom]):
+                    draw_split_row(self, column, prop='region_warp_mouse_to_asset_border', label='Warp Mouse to Asset Browser Border')
 
 
 
@@ -828,58 +753,28 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
             if self.render_show:
                 column = bb.column(align=True)
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_folder_name", text="")
-                r.label(text="Folder Name (relative to the .blend file)")
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_seed_count", text="")
-                r.label(text="Seed Render Count")
+                draw_split_row(self, column, prop='render_folder_name', label='Folder Name (relative to the .blend file)')
+                draw_split_row(self, column, prop='render_seed_count', label='Seed Render Count')
+                draw_split_row(self, column, prop='render_keep_seed_renderings', label='Keep Individual Seed Renderings')
+                draw_split_row(self, column, prop='render_use_clownmatte_naming', label='Use Clownmatte Naming')
+                draw_split_row(self, column, prop='render_show_buttons_in_light_properties', label='Show Render Buttons in Light Properties Panel')
+                draw_split_row(self, column, prop='render_sync_light_visibility', label='Sync Light visibility/renderability')
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_keep_seed_renderings", text="True" if self.render_keep_seed_renderings else "False", toggle=True)
-                r.label(text="Keep Individual Seed Renderings")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_use_clownmatte_naming", text="True" if self.render_use_clownmatte_naming else "False", toggle=True)
-                r.label(text="Use Clownmatte Naming")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_show_buttons_in_light_properties", text="True" if self.render_show_buttons_in_light_properties else "False", toggle=True)
-                r.label(text="Show Render Butttons in Light Properties Panel")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "render_sync_light_visibility", text="True" if self.render_sync_light_visibility else "False", toggle=True)
-                r.label(text="Sync Light visibility/renderability")
-
+                column.separator()
+                column.separator()
                 column.separator()
 
                 if self.activate_shading_pie:
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(self, "render_adjust_lights_on_render", text="True" if self.render_adjust_lights_on_render else "False", toggle=True)
-                    r.label(text="Adjust Area Lights when Rendering in Cycles, controlled from the Shading Pie")#
+                    column.label(text="NOTE: The following are all controlled from the Shading Pie", icon='INFO')
+                    column.separator()
 
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(self, "render_enforce_hide_render", text="True" if self.render_enforce_hide_render else "False", toggle=True)
-                    r.label(text="Enforce hide_render setting when Viewport Rendering, controlled from the Shading Pie")
-
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(self, "render_use_bevel_shader", text="True" if self.render_use_bevel_shader else "False", toggle=True)
-                    r.label(text="Automatically Set Up Bevel Shader, controlled from the Shading Pie")
+                    draw_split_row(self, column, prop='render_adjust_lights_on_render', label='Adjust Area Lights when Rendering in Cycles')
+                    draw_split_row(self, column, prop='render_enforce_hide_render', label='Enforce hide_render settign when Viewport Rendering')
+                    draw_split_row(self, column, prop='render_use_bevel_shader', label='Automatically Set Up Bevel Shader')
 
                 else:
-                    row = column.row(align=True)
-                    row.separator()
-                    row.label(text="Enable the Shading Pie for additional options", icon='INFO')
+                    column.label(text="Enable the Shading Pie for additional options", icon='INFO')
 
 
 
@@ -889,30 +784,12 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
             if self.matpick_show:
                 column = bb.column(align=True)
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "matpick_workspace_names", text="")
-                r.label(text="Show Material Picker in these Workspaces")
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "matpick_shading_type_material", text=str(self.matpick_shading_type_material), toggle=True)
-                r.label(text="Show Material Picker in Views set to Material Shading")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "matpick_shading_type_render", text=str(self.matpick_shading_type_render), toggle=True)
-                r.label(text="Show Material Picker in Views set to Rendered Shading")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "matpick_spacing_obj", text="")
-                r.label(text="Object Mode Spacing")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "matpick_spacing_edit", text="")
-                r.label(text="Edit Mode Spacing")
+                draw_split_row(self, column, prop='matpick_workspace_names', label='Show Material Picker in these Workspaces')
+                draw_split_row(self, column, prop='matpick_shading_type_material', label='Show Material Picker in Views set to Material Shading')
+                draw_split_row(self, column, prop='matpick_shading_type_render', label='Show Material Picker in Views set to Rendered Shading')
+                draw_split_row(self, column, prop='matpick_spacing_obj', label='Object Mode Header Spacing')
+                draw_split_row(self, column, prop='matpick_spacing_edit', label='Edit Mode Header Spacing')
 
 
 
@@ -922,45 +799,47 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             bb.prop(self, 'customize_show', text="Customize", icon='TRIA_DOWN' if self.customize_show else 'TRIA_RIGHT', emboss=False)
 
             if self.customize_show:
-                bbb = bb.box()
-                column = bbb.column()
 
-                row = column.row()
-                row.prop(self, "custom_theme")
-                row.prop(self, "custom_matcaps")
-                row.prop(self, "custom_shading")
 
-                row = column.row()
-                row.prop(self, "custom_overlays")
-                row.prop(self, "custom_outliner")
-                row.prop(self, "custom_startup")
+                bb.label(text='General')
 
-                bbb = bb.box()
-                column = bbb.column()
+                column = bb.column(align=True)
 
-                row = column.row()
+                row = draw_split_row(self, column, prop='custom_theme', label='Theme', factor=0.4)
+                row = draw_split_row(self, row, prop='custom_matcaps', label='Matcaps', factor=0.4)
+                draw_split_row(self, row, prop='custom_shading', label='Shading', factor=0.4)
 
-                col = row.column()
-                col.prop(self, "custom_preferences_interface")
-                col.prop(self, "custom_preferences_keymap")
+                row = draw_split_row(self, column, prop='custom_overlays', label='Overlays', factor=0.4)
+                row = draw_split_row(self, row, prop='custom_outliner', label='Outliner', factor=0.4)
+                draw_split_row(self, row, prop='custom_startup', label='Startup', factor=0.4)
 
-                col = row.column()
-                col.prop(self, "custom_preferences_viewport")
-                col.prop(self, "custom_preferences_system")
 
-                col = row.column()
-                col.prop(self, "custom_preferences_navigation")
-                col.prop(self, "custom_preferences_save")
+
+                bb.separator()
+                bb.label(text='Preferences')
+
+                column = bb.column(align=True)
+
+                row = draw_split_row(self, column, prop='custom_preferences_interface', label='Interface', factor=0.4)
+                draw_split_row(self, row, prop='custom_preferences_keymap', label='Keymaps', factor=0.4)
+                draw_split_row(self, row, prop='custom_preferences_viewport', label='Viewport', factor=0.4)
+
+                row = draw_split_row(self, column, prop='custom_preferences_system', label='System', factor=0.4)
+                draw_split_row(self, row, prop='custom_preferences_input_navigation', label='Input & Navigation', factor=0.4)
+                draw_split_row(self, row, prop='custom_preferences_save', label='Save', factor=0.4)
 
                 if self.dirty_keymaps:
+                    column.separator()
+
                     row = column.row()
                     row.label(text="Keymaps have been modified, restore them first.", icon="ERROR")
                     row.operator("machin3.restore_keymaps", text="Restore now")
                     row.label()
 
+                bb.separator()
+
                 column = bb.column()
                 row = column.row()
-
                 row.label()
                 row.operator("machin3.customize", text="Customize")
                 row.label()
@@ -977,59 +856,23 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             if self.modes_pie_show:
                 column = bb.column(align=True)
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "toggle_cavity", text="True" if self.toggle_cavity else "False", toggle=True)
-                r.label(text="Toggle Cavity/Curvature OFF in Edit Mode, ON in Object Mode")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "toggle_xray", text="True" if self.toggle_xray else "False", toggle=True)
-                r.label(text="Toggle X-Ray ON in Edit Mode, OFF in Object Mode, if Pass Through or Wireframe was enabled in Edit Mode")
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "sync_tools", text="True" if self.sync_tools else "False", toggle=True)
-                r.label(text="Sync Tool if possible, when switching Modes")
+                draw_split_row(self, column, prop='toggle_cavity', label='Toggle Cavity/Curvature OFF in Edit Mode, ON in Object Mode')
+                draw_split_row(self, column, prop='toggle_xray', label='Toggle X-Ray ON in Edit Mode, OFF in Object Mode, if Pass Through or Wireframe was enabled in Edit Mode')
+                draw_split_row(self, column, prop='sync_tools', label='Sync Tool if possible, when switching Modes')
 
 
 
         if getattr(bpy.types, "MACHIN3_MT_save_pie", False):
 
-
-            kmi = get_keymap_item('Window', 'machin3.save_versioned_startup_file')
-
-            if kmi:
-                bb = b.box()
-                bb.prop(self, 'save_pie_versioned_show', text="Save Pie: Versioned Startup File", icon='TRIA_DOWN' if self.save_pie_versioned_show else 'TRIA_RIGHT', emboss=False)
-
-                if self.save_pie_versioned_show:
-                    column = bb.column(align=True)
-                    row = column.row(align=True)
-                    r = row.split(factor=0.2, align=True)
-                    r.prop(kmi, "active", text='Enabled' if kmi.active else 'Disabled')
-                    r.label(text="Use CTRL + U keymap override")
-
-
-
             bb = b.box()
-            bb.prop(self, 'save_pie_undo_save_show', text="Save Pie: Pre-Undo Save", icon='TRIA_DOWN' if self.save_pie_undo_save_show else 'TRIA_RIGHT', emboss=False)
+            bb.prop(self, 'save_pie_show', text="Save Pie", icon='TRIA_DOWN' if self.save_pie_show else 'TRIA_RIGHT', emboss=False)
 
-            if self.save_pie_undo_save_show:
-                column = bb.column(align=True)
-
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-
-                r.prop(self, "save_pie_use_undo_save", text="True" if self.save_pie_use_undo_save else "False", toggle=True)
-                r.label(text="Make Pre-Undo Saving available in the Pie")
-                r.label(text="Useful if you notice Undoing causing crashes", icon='INFO')
+            if self.save_pie_show:
 
 
-            bb = b.box()
-            bb.prop(self, 'save_pie_import_show', text="Save Pie: Import/Export", icon='TRIA_DOWN' if self.save_pie_import_show else 'TRIA_RIGHT', emboss=False)
 
-            if self.save_pie_import_show:
+                bb.label(text='Import / Export')
+
                 column = bb.column(align=True)
 
 
@@ -1037,7 +880,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
                 split = row.split(factor=0.5, align=True)
 
                 r = split.split(factor=0.42, align=True)
-                r.prop(self, "save_pie_show_obj_export", text="True" if self.save_pie_show_obj_export else "False", toggle=True)
+                r.prop(self, "save_pie_show_obj_export", text=str(self.save_pie_show_obj_export), toggle=True)
                 r.label(text="Show .obj Import/Export")
 
                 split.separator()
@@ -1048,7 +891,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
                 split = row.split(factor=0.5, align=True)
 
                 r = split.split(factor=0.42, align=True)
-                r.prop(self, "save_pie_show_plasticity_export", text="True" if self.save_pie_show_plasticity_export else "False", toggle=True)
+                r.prop(self, "save_pie_show_plasticity_export", text=str(self.save_pie_show_plasticity_export), toggle=True)
                 r.label(text="Show Plasticity Import/Export")
 
                 if self.save_pie_show_plasticity_export:
@@ -1063,12 +906,12 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
                 split = row.split(factor=0.5, align=True)
 
                 r = split.split(factor=0.42, align=True)
-                r.prop(self, "save_pie_show_fbx_export", text="True" if self.save_pie_show_fbx_export else "False", toggle=True)
+                r.prop(self, "save_pie_show_fbx_export", text=str(self.save_pie_show_fbx_export), toggle=True)
                 r.label(text="Show .fbx Import/Export")
 
                 if self.save_pie_show_fbx_export:
                     r = split.split(factor=0.42, align=True)
-                    r.prop(self, "fbx_export_apply_scale_all", text="True" if self.fbx_export_apply_scale_all else "False", toggle=True)
+                    r.prop(self, "fbx_export_apply_scale_all", text=str(self.fbx_export_apply_scale_all), toggle=True)
                     r.label(text="Use 'Fbx All' for Applying Scale")
 
                 else:
@@ -1079,51 +922,71 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
                 split = row.split(factor=0.5, align=True)
 
                 r = split.split(factor=0.42, align=True)
-                r.prop(self, "save_pie_show_usd_export", text="True" if self.save_pie_show_usd_export else "False", toggle=True)
+                r.prop(self, "save_pie_show_usd_export", text=str(self.save_pie_show_usd_export), toggle=True)
                 r.label(text="Show .usd Import/Export")
 
                 split.separator()
 
 
 
-            bb = b.box()
-            bb.prop(self, 'save_pie_screencast_show', text="Save Pie: Screen Cast", icon='TRIA_DOWN' if self.save_pie_screencast_show else 'TRIA_RIGHT', emboss=False)
+                row = column.row(align=True)
+                split = row.split(factor=0.5, align=True)
 
-            if self.save_pie_screencast_show:
+                r = split.split(factor=0.42, align=True)
+                r.prop(self, "save_pie_show_stl_export", text=str(self.save_pie_show_stl_export), toggle=True)
+                r.label(text="Show .stl Import/Export")
+
+                split.separator()
+
+
+
+                bb.separator()
+                bb.label(text='Screen Cast')
 
                 column = bb.column(align=True)
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.prop(self, "show_screencast", text="True" if self.show_screencast else "False", toggle=True)
-                r.label(text="Show Screencast in Save Pie")
+
+                draw_split_row(self, column, prop='show_screencast', label='Show Screencast in Save Pie')
 
                 if self.show_screencast:
                     split = bb.split(factor=0.5)
                     col = split.column(align=True)
 
-                    row = col.row(align=True)
-                    r = row.split(factor=0.4, align=True)
-                    r.prop(self, "screencast_operator_count", text="")
-                    r.label(text="Operator Count")
+                    draw_split_row(self, col, prop='screencast_operator_count', label='Operator Count', factor=0.4)
+                    draw_split_row(self, col, prop='screencast_fontsize', label='Font Size', factor=0.4)
 
-                    row = col.row(align=True)
-                    r = row.split(factor=0.4, align=True)
-                    r.prop(self, "screencast_fontsize", text="")
-                    r.label(text="Font Size")
+                    col = split.column(align=True)
 
-                    col = split.column()
-                    col.prop(self, "screencast_highlight_machin3")
-                    col.prop(self, "screencast_show_addon")
-                    col.prop(self, "screencast_show_idname")
+                    draw_split_row(self, col, prop='screencast_highlight_machin3', label='Highlight Operators from MACHIN3 addons', factor=0.3)
+                    draw_split_row(self, col, prop='screencast_show_addon', label="Display Operator's Addon", factor=0.3)
+                    draw_split_row(self, col, prop='screencast_show_idname', label="Display Operator's bl_idname", factor=0.3)
 
                     if has_skribe or has_screencast_keys:
                         col.separator()
 
                         if has_skribe:
-                            col.prop(self, "screencast_use_skribe")
+                            draw_split_row(self, col, prop='screencast_use_skribe', label='Use SKRIBE (dedicated, preferred)', factor=0.3)
 
                         if has_screencast_keys:
-                            col.prop(self, "screencast_use_screencast_keys")
+                            draw_split_row(self, col, prop='screencast_use_screencast_keys', label='Use Screencast Keys (addon)', factor=0.3)
+
+
+
+                bb.separator()
+                bb.label(text='Pre-Undo Save')
+
+                column = bb.column(align=True)
+                draw_split_row(self, column, prop='save_pie_use_undo_save', label='Make Pre-Undo Saving available in the Pie', info='Useful if you notice Undo causing crashes')
+
+
+
+                kmi = get_keymap_item('Window', 'machin3.save_versioned_startup_file')
+
+                if kmi:
+                    bb.separator()
+                    bb.label(text='Versioned Startup File')
+
+                    column = bb.column(align=True)
+                    draw_split_row(kmi, column, prop='active', text='Enabled' if kmi.active else 'Disabled', label='Use CTRL + U keymap override')
 
 
 
@@ -1131,34 +994,47 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
 
             bb = b.box()
-            bb.prop(self, 'shading_pie_autosmooth_show', text="Shading Pie: Autosmooth", icon='TRIA_DOWN' if self.shading_pie_autosmooth_show else 'TRIA_RIGHT', emboss=False)
+            bb.prop(self, 'shading_pie_show', text="Shading Pie", icon='TRIA_DOWN' if self.shading_pie_show else 'TRIA_RIGHT', emboss=False)
 
-            if self.shading_pie_autosmooth_show:
+            if self.shading_pie_show:
+
+
+                bb.label(text='Overlay Visibility (per-shading type)')
                 column = bb.column(align=True)
 
-                row = column.row(align=True)
-                r = row.split(factor=0.2, align=True)
-                r.label(text="Angle Presets")
-                r.prop(self, "auto_smooth_angle_presets", text='')
+                row = draw_split_row(self, column, prop='overlay_solid', label='Solid Shading', factor=0.5)
+                draw_split_row(self, row, prop='overlay_material', label='Material Shading', factor=0.5)
+                draw_split_row(self, row, prop='overlay_rendered', label='Rendered Shading', factor=0.5)
+                draw_split_row(self, row, prop='overlay_wire', label='Wire Shading', factor=0.5)
 
 
 
-            bb = b.box()
-            bb.prop(self, 'shading_pie_matcap_show', text="Shading Pie: Matcap Switch", icon='TRIA_DOWN' if self.shading_pie_matcap_show else 'TRIA_RIGHT', emboss=False)
+                bb.separator()
+                bb.label(text='Autosmooth')
 
-            if self.shading_pie_matcap_show:
+                column = bb.column(align=True)
+
+                draw_split_row(self, column, prop='auto_smooth_angle_presets', label='Auto Smooth Angle Presets shown in the Shading Pie as buttons', factor=0.25)
+
+
+
+                bb.separator()
+                bb.label(text='Matcap Switch')
+
                 column = bb.column()
 
                 row = column.row()
                 row.prop(self, "switchmatcap1")
                 row.prop(self, "switchmatcap2")
 
-                row = column.split(factor=0.5)
-                row.prop(self, "matcap_switch_background")
+                split = column.split(factor=0.5)
 
-                col = row.column()
-                col.prop(self, "matcap2_force_single")
-                col.prop(self, "matcap2_disable_overlays")
+                draw_split_row(self, split, prop='matcap_switch_background', label='Switch Background too', factor=0.25)
+
+                col = split.column(align=True)
+
+                draw_split_row(self, col, prop='matcap2_force_single', label='Force Single Color Shading for Matcap 2', factor=0.25)
+                draw_split_row(self, col, prop='matcap2_disable_overlays', label='Disable Overlays for Matcap 2', factor=0.25)
 
                 if self.matcap_switch_background:
                     row = column.row()
@@ -1188,14 +1064,15 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
             if self.views_pie_show:
 
-                column = bb.column()
-                column.prop(self, "custom_views_use_trackball")
+                column = bb.column(align=True)
+
+                draw_split_row(self, column, prop='custom_views_use_trackball', label='Force Trackball Navigation when using Custom Views')
 
                 if self.activate_transform_pie:
-                    column.prop(self, "custom_views_set_transform_preset")
+                    draw_split_row(self, column, prop='custom_views_set_transform_preset', label='Set Transform Preset when using Custom Views')
 
-                column.prop(self, "show_orbit_selection")
-                column.prop(self, "show_orbit_method")
+                draw_split_row(self, column, prop='show_orbit_selection', label='Show Orbit around Active')
+                draw_split_row(self, column, prop='show_orbit_method', label='Show Turntable/Trackball Orbit Method Selection')
 
 
 
@@ -1204,12 +1081,13 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             bb.prop(self, 'cursor_pie_show', text="Cursor and Origin Pie", icon='TRIA_DOWN' if self.cursor_pie_show else 'TRIA_RIGHT', emboss=False)
 
             if self.cursor_pie_show:
-                column = bb.column()
-                column.prop(self, "cursor_show_to_grid")
+                column = bb.column(align=True)
+
+                draw_split_row(self, column, prop='cursor_show_to_grid', label='Show Cursor and Selected to Grid')
 
                 if self.activate_transform_pie or self.activate_shading_pie:
                         if self.activate_transform_pie:
-                            column.prop(self, "cursor_set_transform_preset")
+                            draw_split_row(self, column, prop='cursor_set_transform_preset', label='Set Transform Preset when Setting Cursor')
 
 
 
@@ -1218,10 +1096,10 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             bb.prop(self, 'snapping_pie_show', text="Snapping Pie", icon='TRIA_DOWN' if self.snapping_pie_show else 'TRIA_RIGHT', emboss=False)
 
             if self.snapping_pie_show:
-                column = bb.column()
+                column = bb.column(align=True)
 
-                column.prop(self, "snap_show_absolute_grid")
-                column.prop(self, "snap_show_volume")
+                draw_split_row(self, column, prop='snap_show_absolute_grid', label='Show Absolute Grid Snapping')
+                draw_split_row(self, column, prop='snap_show_volume', label='Show Volume Snapping')
 
 
 
@@ -1380,18 +1258,20 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             if self.tools_pie_show:
                 split = bb.split(factor=0.5)
 
-                col = split.column()
-                col.prop(self, "tools_show_boxcutter_presets")
-                col.prop(self, "tools_show_hardops_menu")
+                col = split.column(align=True)
 
-                col = split.column()
-                col.prop(self, "tools_show_quick_favorites")
-                col.prop(self, "tools_show_tool_bar")
+                draw_split_row(self, col, prop='tools_show_boxcutter_presets', label='Show BoxCutter Presets', factor=0.4)
+                draw_split_row(self, col, prop='tools_show_hardops_menu', label='Show Hard Ops Menu', factor=0.4)
+
+                col = split.column(align=True)
+
+                draw_split_row(self, col, prop='tools_show_quick_favorites', label='Show Quick Favorites', factor=0.4)
+                draw_split_row(self, col, prop='tools_show_tool_bar', label='Show Tool Bar', factor=0.4)
 
 
 
         if not any([getattr(bpy.types, f'MACHIN3_{name}', False) for name in has_settings]):
-            b.label(text="No tools or pie menus with settings have been activated.")
+            b.label(text="No tools or pie menus with settings have been activated.", icon='ERROR')
 
     def draw_keymaps(self, box):
         wm = bpy.context.window_manager
@@ -1405,17 +1285,17 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
         b.label(text="Tools")
 
         if not self.draw_tool_keymaps(kc, keys, b):
-            b.label(text="No keymappings available, because none of the tools have been activated.")
+            b.label(text="No keymappings available, because none of the tools have been activated.", icon='ERROR')
 
 
         b = split.box()
         b.label(text="Pie Menus")
 
         if not self.draw_pie_keymaps(kc, keys, b):
-            b.label(text="No keymappings created, because none of the pies have been activated.")
+            b.label(text="No keymappings created, because none of the pies have been activated.", icon='ERROR')
 
     def draw_about(self, box):
-        global decalmachine, meshmachine, punchit
+        global decalmachine, meshmachine, punchit, curvemachine, hypercursor
 
         if decalmachine is None:
             decalmachine = get_addon('DECALmachine')[0]
@@ -1425,6 +1305,12 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
 
         if punchit is None:
             punchit = get_addon('PUNCHit')[0]
+
+        if curvemachine is None:
+            curvemachine = get_addon('CURVEmachine')[0]
+
+        if hypercursor is None:
+            hypercursor = get_addon('HyperCursor')[0]
 
         column = box.column(align=True)
 
@@ -1449,6 +1335,8 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
         row.operator("wm.url_open", text='DECALmachine', icon_value=get_icon('save' if decalmachine else 'cancel_grey')).url = 'https://decal.machin3.io'
         row.operator("wm.url_open", text='MESHmachine', icon_value=get_icon('save' if meshmachine else 'cancel_grey')).url = 'https://mesh.machin3.io'
         row.operator("wm.url_open", text='PUNCHit', icon_value=get_icon('save' if punchit else 'cancel_grey')).url = 'https://machin3.io/PUNCHit'
+        row.operator("wm.url_open", text='CURVEmachine', icon_value=get_icon('save' if curvemachine else 'cancel_grey')).url = 'https://machin3.io/CURVEmachine'
+        row.operator("wm.url_open", text='HyperCursor', icon_value=get_icon('save' if hypercursor else 'cancel_grey')).url = 'https://www.youtube.com/playlist?list=PLcEiZ9GDvSdWs1w4ZrkbMvCT2R4F3O9yD'
 
     def draw_tool_keymaps(self, kc, keysdict, layout):
         drawn = False
@@ -1457,7 +1345,7 @@ class MACHIN3toolsPreferences(bpy.types.AddonPreferences):
             if "PIE" not in name:
                 keylist = keysdict.get(name)
 
-                if draw_keymap_items(kc, name, keylist, layout):
+                if draw_keymap_items(kc, name, keylist, layout) and not drawn:
                     drawn = True
 
         return drawn

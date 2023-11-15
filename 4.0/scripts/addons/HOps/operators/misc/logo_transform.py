@@ -1,12 +1,12 @@
 import bpy, math
 from enum import Enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... arcade.engine.drawing import draw_2D_geo, draw_2D_lines
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 
 
 class Edit_Mode(Enum):
@@ -26,11 +26,11 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
     def invoke(self, context, event):
 
         # Setup
-        get_preferences().color.Hops_display_logo = True
+        addon.preference().color.Hops_display_logo = True
         self.edit_mode = Edit_Mode.Move
         self.screen_width = context.area.width
         self.screen_height = context.area.height
-        self.alpha = get_preferences().color.Hops_logo_color[3]
+        self.alpha = addon.preference().color.Hops_logo_color[3]
         self.color_dot_radius = 20 * dpi_factor()
 
         # Base Systems
@@ -77,22 +77,22 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
             self.edit_mode = Edit_Mode.Alpha
 
         elif event.type == 'W':
-            get_preferences().color.Hops_logo_color[0] = 1
-            get_preferences().color.Hops_logo_color[1] = 1
-            get_preferences().color.Hops_logo_color[2] = 1
+            addon.preference().color.Hops_logo_color[0] = 1
+            addon.preference().color.Hops_logo_color[1] = 1
+            addon.preference().color.Hops_logo_color[2] = 1
 
         elif event.type == 'X' and event.value == "PRESS":
-            get_preferences().color.Hops_display_logo = not get_preferences().color.Hops_display_logo
+            addon.preference().color.Hops_display_logo = not addon.preference().color.Hops_display_logo
         
         elif event.type == 'MOUSEMOVE':
             if self.edit_mode == Edit_Mode.Move:
-                get_preferences().color.Hops_logo_x_position = event.mouse_x - self.screen_width
-                get_preferences().color.Hops_logo_y_position = event.mouse_y - self.screen_height
+                addon.preference().color.Hops_logo_x_position = event.mouse_x - self.screen_width
+                addon.preference().color.Hops_logo_y_position = event.mouse_y - self.screen_height
 
             elif self.edit_mode == Edit_Mode.Scale:
-                get_preferences().color.Hops_logo_size += (event.mouse_x - event.mouse_prev_x) * .25
-                if get_preferences().color.Hops_logo_size < 1:
-                    get_preferences().color.Hops_logo_size = 1
+                addon.preference().color.Hops_logo_size += (event.mouse_x - event.mouse_prev_x) * .25
+                if addon.preference().color.Hops_logo_size < 1:
+                    addon.preference().color.Hops_logo_size = 1
 
             elif self.edit_mode == Edit_Mode.Color:
                 '''
@@ -115,19 +115,19 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
                 blue /= self.screen_width * .5
                 blue -= .5
 
-                get_preferences().color.Hops_logo_color = (red, green, blue, self.alpha)
+                addon.preference().color.Hops_logo_color = (red, green, blue, self.alpha)
                 self.check_mouse_over_dot(event)
 
             elif self.edit_mode == Edit_Mode.Alpha:
                 self.alpha += (event.mouse_x - event.mouse_prev_x) * .015625
                 self.alpha = max(min(self.alpha, 1), .0625)
-                get_preferences().color.Hops_logo_color[3] = self.alpha
+                addon.preference().color.Hops_logo_color[3] = self.alpha
 
         elif event.type == 'WHEELDOWNMOUSE':
-            get_preferences().color.Hops_logo_size -= 1
+            addon.preference().color.Hops_logo_size -= 1
 
         elif event.type == 'WHEELUPMOUSE':
-            get_preferences().color.Hops_logo_size += 1
+            addon.preference().color.Hops_logo_size += 1
 
         self.draw_master(context=context)
         context.area.tag_redraw()
@@ -144,14 +144,14 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
             win_list = []
             win_list.append(self.edit_mode.name)
             if self.edit_mode == Edit_Mode.Move:
-                win_list.append(f'X: {get_preferences().color.Hops_logo_x_position:.1f}')
-                win_list.append(f'Y: {get_preferences().color.Hops_logo_y_position:.1f}')
+                win_list.append(f'X: {addon.preference().color.Hops_logo_x_position:.1f}')
+                win_list.append(f'Y: {addon.preference().color.Hops_logo_y_position:.1f}')
             elif self.edit_mode == Edit_Mode.Scale:
-                win_list.append(f'Scale: {get_preferences().color.Hops_logo_size:.1f}')
+                win_list.append(f'Scale: {addon.preference().color.Hops_logo_size:.1f}')
             elif self.edit_mode == Edit_Mode.Color:
-                r = f'{get_preferences().color.Hops_logo_color[0]:.2f}'
-                g = f'{get_preferences().color.Hops_logo_color[1]:.2f}'
-                b = f'{get_preferences().color.Hops_logo_color[2]:.2f}'
+                r = f'{addon.preference().color.Hops_logo_color[0]:.2f}'
+                g = f'{addon.preference().color.Hops_logo_color[1]:.2f}'
+                b = f'{addon.preference().color.Hops_logo_color[2]:.2f}'
                 win_list.append(f'Color: {r}  {g}  {b}')
             elif self.edit_mode == Edit_Mode.Alpha:
                 win_list.append(f'Alpha: {self.alpha:.3f}')
@@ -193,9 +193,9 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
             if mouse_pos[0] >= red_loc[0] - self.color_dot_radius:
                 if mouse_pos[1] <= red_loc[1] + self.color_dot_radius:
                     if mouse_pos[1] >= red_loc[1] - self.color_dot_radius:
-                        get_preferences().color.Hops_logo_color[0] = 1
-                        get_preferences().color.Hops_logo_color[1] = 0
-                        get_preferences().color.Hops_logo_color[2] = 0
+                        addon.preference().color.Hops_logo_color[0] = 1
+                        addon.preference().color.Hops_logo_color[1] = 0
+                        addon.preference().color.Hops_logo_color[2] = 0
                         return
 
         # Check Green
@@ -203,9 +203,9 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
             if mouse_pos[0] >= green_loc[0] - self.color_dot_radius:
                 if mouse_pos[1] <= green_loc[1]:
                     if mouse_pos[1] >= green_loc[1] - self.color_dot_radius * 2:
-                        get_preferences().color.Hops_logo_color[0] = 0
-                        get_preferences().color.Hops_logo_color[1] = 1
-                        get_preferences().color.Hops_logo_color[2] = 0
+                        addon.preference().color.Hops_logo_color[0] = 0
+                        addon.preference().color.Hops_logo_color[1] = 1
+                        addon.preference().color.Hops_logo_color[2] = 0
                         return
 
         # Check Blue
@@ -213,9 +213,9 @@ class HOPS_OT_AdjustLogo(bpy.types.Operator):
             if mouse_pos[0] >= blue_loc[0] - self.color_dot_radius:
                 if mouse_pos[1] <= blue_loc[1]:
                     if mouse_pos[1] >= blue_loc[1] - self.color_dot_radius * 2:
-                        get_preferences().color.Hops_logo_color[0] = 0
-                        get_preferences().color.Hops_logo_color[1] = 0
-                        get_preferences().color.Hops_logo_color[2] = 1
+                        addon.preference().color.Hops_logo_color[0] = 0
+                        addon.preference().color.Hops_logo_color[1] = 0
+                        addon.preference().color.Hops_logo_color[2] = 1
                         return
     ####################################################
     #   SHADERS

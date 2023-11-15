@@ -1,0 +1,17 @@
+
+* support numeric input mode via `TAB` key
+* support `ESC`ing out of *Finalizing* mode, going back to the extrusion adjustment
+* draw some of the extrusion outlines in finalizing mode
+  - helps to see occluded parts of the extrusion
+* ensure HUD is only drawn on active 3D view, not others
+
+* addon preferences
+	- introduce registration_debug setting to control whether (un)registration confirmation is written to the terminal
+	- simplify and refactor how the various settings are drawn
+	- add option to hide 3d view sidebar panel
+  - add HyperCursor to about section in addon prefs
+
+* fully support Blender 4.0
+	- drop dpi arg in blf.size()
+	- support new shader names
+

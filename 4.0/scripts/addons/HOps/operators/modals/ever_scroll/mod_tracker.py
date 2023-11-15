@@ -1,5 +1,5 @@
 import bpy
-from .... preferences import get_preferences
+from .... utility import addon
 from .... utility.base_modal_controls import increment_maps, decrement_maps
 
 from . import States, Auto_Scroll, update_local_view, mods_exit_options, turn_on_coll, get_mod_object, get_node_graph_objects
@@ -107,7 +107,7 @@ class Mod_Tracker:
                     if mod.show_render: # Protect shading
                         mod.show_viewport = False
 
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
 
         show = True if step > 0 else False

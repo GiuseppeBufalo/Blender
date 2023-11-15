@@ -4,10 +4,9 @@ import os
 from mathutils import Vector
 from .. utils.registration import get_addon, get_prefs, get_path
 from .. utils.ui import popup_message
-from .. utils.asset import update_asset_catalogs
+from .. utils.asset import get_asset_library_reference, set_asset_library_reference, update_asset_catalogs
 from .. utils.object import parent
 from .. utils.math import average_locations
-from .. utils.draw import draw_point
 from .. items import create_assembly_asset_empty_location_items, create_assembly_asset_empty_collection_items
 
 import time
@@ -155,9 +154,18 @@ class CreateAssemblyAsset(bpy.types.Operator):
                 thumbpath = os.path.join(get_path(), 'resources', 'thumb.png')
                 self.render_viewport(context, thumbpath)
 
-                if os.path.exists(thumbpath):
-                    bpy.ops.ed.lib_id_load_custom_preview({'id': instance}, filepath=thumbpath)
-                    os.unlink(thumbpath)
+
+
+
+                thumb = bpy.data.images.load(filepath=thumbpath)
+
+                instance.preview_ensure()
+                instance.preview.image_size = thumb.size
+                instance.preview.image_pixels_float[:] = thumb.pixels  # CodeManX is a legend
+
+                bpy.data.images.remove(thumb)
+                bpy.data.images.remove(bpy.data.images['Render Result'])
+                os.unlink(thumbpath)
 
             return {'FINISHED'}
 
@@ -165,6 +173,8 @@ class CreateAssemblyAsset(bpy.types.Operator):
             popup_message("The chosen asset name can't be empty", title="Illegal Name")
 
             return {'CANCELLED'}
+
+
 
     def get_assembly_asset_objects(self, context):
 
@@ -309,6 +319,7 @@ class CreateAssemblyAsset(bpy.types.Operator):
                 return
 
         ws = context.workspace
+
         self.switch_asset_browser_to_LOCAL(ws)
 
     def switch_asset_browser_to_LOCAL(self, workspace):
@@ -317,8 +328,8 @@ class CreateAssemblyAsset(bpy.types.Operator):
                 if area.type == 'FILE_BROWSER' and area.ui_type == 'ASSETS':
                     for space in area.spaces:
                         if space.type == 'FILE_BROWSER':
-                            if space.params.asset_library_ref != 'LOCAL':
-                                space.params.asset_library_ref = 'LOCAL'
+                            if get_asset_library_reference(space.params) != 'LOCAL':
+                                set_asset_library_reference(space.params, 'LOCAL')
 
                             space.show_region_tool_props = True
 
@@ -329,8 +340,8 @@ class CreateAssemblyAsset(bpy.types.Operator):
         lens = context.space_data.lens
         show_overlays = context.space_data.overlay.show_overlays
 
-        context.scene.render.resolution_x = 500
-        context.scene.render.resolution_y = 500
+        context.scene.render.resolution_x = 128
+        context.scene.render.resolution_y = 128
         context.scene.render.image_settings.file_format = 'JPEG'
 
         context.space_data.lens = self.thumbnail_lens
@@ -539,13 +550,17 @@ class CollectAssets(bpy.types.Operator):
 
                     if os.path.exists(jpgpath):
                         print(" using existing .jpg thumbnail")
-                        bpy.ops.ed.lib_id_load_custom_preview({'id': mat}, filepath=jpgpath)
+                        with context.temp_override(id=mat):
+                            bpy.ops.ed.lib_id_load_custom_preview(filepath=jpgpath)
                     elif os.path.exists(pngpath):
                         print(" using existing .png thumbnail")
-                        bpy.ops.ed.lib_id_load_custom_preview({'id': mat}, filepath=pngpath)
+                        with context.temp_override(id=mat):
+                            bpy.ops.ed.lib_id_load_custom_preview(filepath=pngpath)
                     else:
                         print(" generating new preview")
-                        bpy.ops.ed.lib_id_generate_preview({'id': mat})
+                        with context.temp_override(id=mat):
+                            bpy.ops.ed.lib_id_generate_preview()
+
                         time.sleep(0.1)
 
         return {'FINISHED'}

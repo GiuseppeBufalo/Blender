@@ -6,7 +6,7 @@ from . editmode_difference import edit_bool_difference
 from . editmode_slash import edit_bool_slash
 from . editmode_inset import edit_bool_inset
 from . editmode_knife import edit_bool_knife
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -208,27 +208,27 @@ class HOPS_OT_BoolModal(bpy.types.Operator):
 
         elif context.active_object.mode == 'EDIT':
             if self.operation == 'INTERSECT':
-                edit_bool_intersect(context, False, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_intersect(context, False, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'UNION':
-                edit_bool_union(context, False, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_union(context, False, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'DIFFERENCE':
-                edit_bool_difference(context, False, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_difference(context, False, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'SLASH':
-                edit_bool_slash(context, False, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_slash(context, False, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'INSET':
-                edit_bool_inset(context, False, False, self.thickness, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_inset(context, False, False, self.thickness, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'OUTSET':
-                edit_bool_inset(context, False, True, self.thickness, False, False, 0.0, get_preferences().property.boolean_solver)
+                edit_bool_inset(context, False, True, self.thickness, False, False, 0.0, addon.preference().property.boolean_solver)
                 self.reset_overlays(context)
 
             elif self.operation == 'KNIFE_BOOLEAN':
@@ -282,7 +282,7 @@ class HOPS_OT_BoolModal(bpy.types.Operator):
 
         # Main
         win_list = []
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
             win_list.append(operation)
             if self.operation in ('INSET', 'OUTSET'):
                 win_list.append(f"{self.thickness:.3f}")

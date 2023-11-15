@@ -4,11 +4,11 @@ from enum import Enum
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
 from bpy_extras import view3d_utils
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utils.space_3d import ray_cast_objects
 from ... ui_framework import form_ui as form
 

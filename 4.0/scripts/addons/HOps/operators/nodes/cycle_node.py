@@ -2,7 +2,7 @@ import bpy
 import nodeitems_builtins
 from enum import Enum
 from mathutils import Vector
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... ui_framework import form_ui as form
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -84,8 +84,8 @@ class Graph:
         del nodes
 
         # Capture Node Connections
-        self.output_links = {} # KEY = Socket : VAL = list ( to socket ) 
-        self.input_links = {} # KEY = Socket : VAL = list ( to socket ) 
+        self.output_links = {} # KEY = Socket : VAL = list ( to socket )
+        self.input_links = {} # KEY = Socket : VAL = list ( to socket )
 
         for output in self.active_node.outputs:
             connections = []
@@ -119,7 +119,7 @@ class Graph:
         for output in self.active_node.outputs:
             for link in output.links:
                 self.tree.links.remove(link)
-        
+
         for n_input in self.active_node.inputs:
             for link in n_input.links:
                 self.tree.links.remove(link)
@@ -160,7 +160,7 @@ class Related_Nodes:
                 self.types = [n.bl_idname for n in datas]
                 self.category_title = category
                 break
-        
+
         if not self.types:
             self.valid = False
 
@@ -209,7 +209,7 @@ class Category_Nodes:
         if 'Group' in self.categories:
             del self.categories['Group']
 
-        self.keys = list(self.categories.keys()) 
+        self.keys = list(self.categories.keys())
         self.current_category_name = self.keys[self.index]
 
 
@@ -410,7 +410,7 @@ class Append_Nodes:
                     if n_input.enabled:
                         self.active_socket_index = index
                         break
-        
+
         else:
             for index, output in enumerate(graph.active_node.outputs):
                 if output.enabled:
@@ -424,7 +424,7 @@ class Append_Nodes:
                     if output.enabled:
                         self.active_socket_index = index
                         break
-        
+
         # Recalc Types
         self.build_types(graph)
 
@@ -510,7 +510,7 @@ class Append_Nodes:
                 for node_data in datas:
                     if active_out in node_data.inputs:
                         self.types.append(node_data.bl_idname)
-                    
+
                     elif active_out in {'VECTOR', 'RGBA'}:
                         if 'VECTOR' in node_data.inputs or 'RGBA' in node_data.inputs:
                             self.types.append(node_data.bl_idname)
@@ -536,13 +536,13 @@ class Append_Nodes:
             for index, n_input in enumerate(active.inputs):
                 if n_input.enabled:
                     valid_sockets.append(index)
-        
+
         # Valid Output Sockets
         else:
             for index, outputs in enumerate(active.outputs):
                 if outputs.enabled:
                     valid_sockets.append(index)
-        
+
         # Set to valid socket
         if self.active_socket_index not in valid_sockets:
             if valid_sockets:
@@ -641,7 +641,7 @@ class IO_Filter:
 class All_Nodes:
 
     def __init__(self, context, graph):
-        
+
         self.index = 0
         self.all_types = []
         self.types = []
@@ -731,7 +731,7 @@ class All_Nodes:
                 self.ctrl_scroll_index = 0
             elif self.ctrl_scroll_index < 0:
                 self.ctrl_scroll_index = len(self.cat_group) - 1
-        
+
         # Scroll Types
         else:
             self.index += scroll
@@ -784,7 +784,7 @@ class All_Nodes:
 
 
     def set_io_filter_types(self):
-        
+
         self.index = 0
         self.__filter_str = ""
         self.cat_key = None
@@ -812,11 +812,11 @@ class All_Nodes:
         if not self.types:
             self.types = self.all_types[:]
             bpy.ops.hops.display_notification(info='Nothing Found')
-        
+
         else:
             bpy.ops.hops.display_notification(info=f'Found : {len(self.types)}')
 
-    
+
     def reset_to_all(self):
         self.index = 0
         self.types = self.all_types[:]
@@ -825,7 +825,7 @@ class All_Nodes:
 
 DESC = """Scroll Geo Nodes
 
-Shift : Append Mode 
+Shift : Append Mode
 
 Press H for help"""
 
@@ -839,7 +839,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         if context.area:
-            if context.area.ui_type in {'GeometryNodeTree', 'ShaderNodeTree'}:
+            if context.area.ui_type in {'ShaderNodeTree'} or (bpy.app.version < (3, 4) and context.area.ui_type =='GeometryNodeTree'):
                 return True
         return False
 
@@ -946,13 +946,13 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
         # Tool Shelf
         if event.type == 'N' and event.value == 'PRESS':
             return {'PASS_THROUGH'}
-        
+
         # All Mode
         elif event.type == 'E' and event.value == 'PRESS':
             self.remove_all_created()
             self.mode = Modes.ALL
             self.alter_form_layout()
-        
+
         # Cycle Nodes
         elif self.base_controls.scroll:
             scroll = self.base_controls.scroll
@@ -975,7 +975,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
                     bpy.ops.hops.display_notification(info=F'Mode : {self.mode.name}')
             else:
                 bpy.ops.hops.display_notification(info="Invalid Active Node")
-            
+
             self.alter_form_layout()
 
         # Cycle Modes
@@ -993,7 +993,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
             # Clear Filters
             if event.type == 'R' and event.value == 'PRESS':
                 self.append_nodes.build_types(self.graph, display_count=True)
-            
+
             # Flip side
             if event.type == 'F' and event.value == 'PRESS':
                 self.append_nodes.set_flip(self.graph)
@@ -1007,7 +1007,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
         # Main
         win_list = []
         w_append = win_list.append
-            
+
         # Help
         help_items = {"GLOBAL" : [], "STANDARD" : []}
 
@@ -1028,7 +1028,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
                 w_append(self.related_nodes.current_node.name)
 
             h_append(('Scroll', 'Cycle Relative'))
-            
+
         elif self.mode == Modes.CATEGORIES:
             w_append('Category Mode')
             w_append(self.category_nodes.current_category_name)
@@ -1058,7 +1058,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
         if self.mode != Modes.APPEND:
             if self.append_nodes.valid:
                 h_append(('A', 'Append Mode'))
-        
+
         h_append(('E' , 'Every Node'))
         h_append(('C' , 'Cycle Modes'))
 
@@ -1074,7 +1074,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
                     nodes_list.append([t_name, ""])
                     if current_node == t_name:
                         active_node = t_name
-        
+
             elif self.mode == Modes.APPEND:
                 current_node = None if self.append_nodes.current_node == None else self.append_nodes.current_node.bl_rna.name
                 for t in self.append_nodes.types:
@@ -1082,7 +1082,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
                     nodes_list.append([t_name, ""])
                     if current_node == t_name:
                         active_node = t_name
-            
+
             elif self.mode == Modes.CATEGORIES:
                 current_node = self.category_nodes.current_category_name
                 for t in self.category_nodes.keys:
@@ -1176,7 +1176,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
                 width=95, height=20, use_padding=False,
                 callback=self.all_nodes.set_cat_key, pos_args=(cat,), neg_args=(cat,),
                 highlight_hook=self.all_nodes.cat_highlight, highlight_hook_args=(cat,)))
-            
+
             group.row_insert(row)
             index += 1
 
@@ -1207,7 +1207,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
         self.form.build(preserve_top_left=True)
 
         if self.mode != Modes.ALL:
-            if self.form.is_dot_open(): 
+            if self.form.is_dot_open():
                 self.form.close_dot()
 
     # --- UTILS --- #
@@ -1238,7 +1238,7 @@ class HOPS_OT_Cycle_Geo_Nodes(bpy.types.Operator):
             self.mode = Modes.ALL
         elif self.mode == Modes.ALL:
             self.mode = Modes.RELATED
-                
+
         if self.mode == Modes.APPEND:
             if not self.append_nodes.valid:
                 self.mode = Modes.CATEGORIES

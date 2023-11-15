@@ -1,5 +1,5 @@
 import bpy
-from .. import bl_info
+from .. import bl_info, get_prefs
 from .. utils.ui import get_icon
 
 
@@ -10,6 +10,10 @@ class PanelPUNCHit(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "MACHIN3"
     bl_order = 30
+
+    @classmethod
+    def poll(cls, context):
+        return get_prefs().show_sidebar_panel
 
     def draw(self, context):
         layout = self.layout

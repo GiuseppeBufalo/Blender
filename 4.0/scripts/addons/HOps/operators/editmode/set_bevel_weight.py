@@ -1,7 +1,7 @@
 import bpy
 import bmesh
 from bpy.props import BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_SetEditSharpen(bpy.types.Operator):
@@ -60,7 +60,12 @@ class HOPS_OT_SetEditSharpen(bpy.types.Operator):
                 else:
                     bw = bm.edges.layers.bevel_weight.verify()
 
-                cr = bm.edges.layers.crease.verify()
+                if bpy.app.version[0] >= 4:
+                    cr = bm.edges.layers.float.get('crease_edge')
+                    if cr is None:
+                        cr = bm.edges.layers.float.new('crease_edge')
+                else:
+                    cr = bm.edges.layers.crease.verify()
 
                 selected = [e for e in bm.edges if e.select]
 
@@ -77,67 +82,67 @@ class HOPS_OT_SetEditSharpen(bpy.types.Operator):
 
                 if not mselected:
                     for e in bm.edges:
-                        if e.calc_face_angle(0) >= get_preferences().property.sharpness:
-                            if get_preferences().property.sharp_use_crease:
+                        if e.calc_face_angle(0) >= addon.preference().property.sharpness:
+                            if addon.preference().property.sharp_use_crease:
                                 e[cr] = 1
-                            if get_preferences().property.sharp_use_sharp:
+                            if addon.preference().property.sharp_use_sharp:
                                 e.smooth = False
-                            if get_preferences().property.sharp_use_seam:
+                            if addon.preference().property.sharp_use_seam:
                                 e.seam = True
-                            if get_preferences().property.sharp_use_bweight:
+                            if addon.preference().property.sharp_use_bweight:
                                 if e[bw] == 0:
                                     e[bw] = 1
                 else:
                     if any(e[bw] == 1 for e in selected):
                         for e in selected:
                             if self.dont_affect_bevel:
-                                if get_preferences().property.sharp_use_bweight:
+                                if addon.preference().property.sharp_use_bweight:
                                     if e[bw] == 1:
                                         e[bw] = 0
-                                if get_preferences().property.sharp_use_crease:
+                                if addon.preference().property.sharp_use_crease:
                                     e[cr] = 0
-                                if get_preferences().property.sharp_use_sharp:
+                                if addon.preference().property.sharp_use_sharp:
                                     e.smooth = True
-                                if get_preferences().property.sharp_use_seam:
+                                if addon.preference().property.sharp_use_seam:
                                     e.seam = False
 
                             else:
-                                if get_preferences().property.sharp_use_bweight:
+                                if addon.preference().property.sharp_use_bweight:
                                     e[bw] = 0
-                                if get_preferences().property.sharp_use_crease:
+                                if addon.preference().property.sharp_use_crease:
                                     e[cr] = 0
-                                if get_preferences().property.sharp_use_sharp:
+                                if addon.preference().property.sharp_use_sharp:
                                     e.smooth = True
-                                if get_preferences().property.sharp_use_seam:
+                                if addon.preference().property.sharp_use_seam:
                                     e.seam = False
                     else:
                         for e in selected:
                             if self.dont_affect_bevel:
-                                if get_preferences().property.sharp_use_bweight:
+                                if addon.preference().property.sharp_use_bweight:
                                     if e[bw] == 0:
                                         e[bw] = 1
                                     else:
                                         e[bw] = 0
-                                if get_preferences().property.sharp_use_crease:
+                                if addon.preference().property.sharp_use_crease:
                                     if e[cr] == 1:
                                         e[cr] = 0
                                     else:
                                         e[cr] = 1
-                                if get_preferences().property.sharp_use_sharp:
+                                if addon.preference().property.sharp_use_sharp:
                                     e.smooth = not e.smooth
-                                if get_preferences().property.sharp_use_seam:
+                                if addon.preference().property.sharp_use_seam:
                                     e.seam = not e.seam
                             else:
-                                if get_preferences().property.sharp_use_bweight:
+                                if addon.preference().property.sharp_use_bweight:
                                     e[bw] = 1
-                                if get_preferences().property.sharp_use_crease:
+                                if addon.preference().property.sharp_use_crease:
                                     if e[cr] == 1:
                                         e[cr] = 0
                                     else:
                                         e[cr] = 1
-                                if get_preferences().property.sharp_use_sharp:
+                                if addon.preference().property.sharp_use_sharp:
                                     e.smooth = not e.smooth
-                                if get_preferences().property.sharp_use_seam:
+                                if addon.preference().property.sharp_use_seam:
                                     e.seam = not e.seam
 
         self.update_mbs(bms)
@@ -150,10 +155,10 @@ class HOPS_OT_SetEditSharpen(bpy.types.Operator):
     def sync_apply_seam(self, me, edges):
         '''Sync the seams instead of toggle.'''
 
-        if not get_preferences().property.sharp_use_bweight:
-            if not get_preferences().property.sharp_use_crease:
-                if not get_preferences().property.sharp_use_sharp:
-                    if get_preferences().property.sharp_use_seam:
+        if not addon.preference().property.sharp_use_bweight:
+            if not addon.preference().property.sharp_use_crease:
+                if not addon.preference().property.sharp_use_sharp:
+                    if addon.preference().property.sharp_use_seam:
 
                         mark_seams = True
                         if any(e for e in edges if e.seam):
@@ -172,10 +177,10 @@ class HOPS_OT_SetEditSharpen(bpy.types.Operator):
     def sync_apply_crease(self, me, cr, edges):
         '''Sync the seams instead of toggle.'''
 
-        if not get_preferences().property.sharp_use_bweight:
-            if not get_preferences().property.sharp_use_seam:
-                if not get_preferences().property.sharp_use_sharp:
-                    if get_preferences().property.sharp_use_crease:
+        if not addon.preference().property.sharp_use_bweight:
+            if not addon.preference().property.sharp_use_seam:
+                if not addon.preference().property.sharp_use_sharp:
+                    if addon.preference().property.sharp_use_crease:
 
                         mark_crease = True
                         if any(e for e in edges if e[cr] == 1):
@@ -194,10 +199,10 @@ class HOPS_OT_SetEditSharpen(bpy.types.Operator):
     def sync_apply_sharps(self, me, edges):
         '''Sync the seams instead of toggle.'''
 
-        if not get_preferences().property.sharp_use_bweight:
-            if not get_preferences().property.sharp_use_seam:
-                if not get_preferences().property.sharp_use_crease:
-                    if get_preferences().property.sharp_use_sharp:
+        if not addon.preference().property.sharp_use_bweight:
+            if not addon.preference().property.sharp_use_seam:
+                if not addon.preference().property.sharp_use_crease:
+                    if addon.preference().property.sharp_use_sharp:
 
                         mark_sharp = True
                         if any(e for e in edges if e.smooth == False):

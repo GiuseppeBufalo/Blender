@@ -1,7 +1,7 @@
 import bpy, math, bmesh, mathutils
 from mathutils import Vector, Matrix, Quaternion
 from bpy.props import EnumProperty, IntProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ...utility import math as hops_math
 
 

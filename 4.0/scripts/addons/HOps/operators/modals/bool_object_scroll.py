@@ -1,6 +1,6 @@
 import bpy
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -23,7 +23,7 @@ class HOPS_OT_BoolObjectScroll(bpy.types.Operator):
         self.original_visible = context.visible_objects[:]
         self.active = context.active_object
         self.modifiers = [mod for mod in context.active_object.modifiers if mod.type == "BOOLEAN"]
-        if get_preferences().property.bool_scroll == 'ADDITIVE':
+        if addon.preference().property.bool_scroll == 'ADDITIVE':
             def vis_check(obj):
                 if not obj:
                     return
@@ -172,7 +172,7 @@ class HOPS_OT_BoolObjectScroll(bpy.types.Operator):
             self.report({'INFO'}, F'Modifier Visibility Re-enabled : {len(self.modifiers)}')
 
         if event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
         if self.base_controls.confirm or event.type in { 'RET', 'NUMPAD_ENTER'}:
             self.finish(context)
@@ -237,7 +237,7 @@ class HOPS_OT_BoolObjectScroll(bpy.types.Operator):
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append("{}".format(self.obj_index + 1))
             else:
                 win_list.append("Bool Scroll (Classic)")

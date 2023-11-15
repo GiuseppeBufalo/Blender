@@ -1,5 +1,5 @@
 import bpy
-from .. preferences import get_preferences
+from .. utility import addon
 
 
 def unlink_obj(context, obj):
@@ -20,7 +20,7 @@ def link_obj(context, obj, name="Cutters"):
     # if name not in bpy.data.collections:
     #     new_col = bpy.data.collections.new(name='Cutters')
     #     if hasattr(new_col, 'color_tag'):
-    #         new_col.color_tag = get_preferences().color.colection_color
+    #         new_col.color_tag = addon.preference().color.colection_color
     #     context.scene.collection.children.link(new_col)
 
     # bpy.data.collections[name].objects.link(obj)
@@ -185,7 +185,7 @@ def hops_col_get(context):
     context.scene.collection.children.link(new_col)
 
     if hasattr(new_col, 'color_tag'):
-        new_col.color_tag = get_preferences().color.colection_color
+        new_col.color_tag = addon.preference().color.colection_color
 
     return new_col
 

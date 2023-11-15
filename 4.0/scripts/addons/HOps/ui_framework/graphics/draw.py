@@ -4,7 +4,7 @@ import blf
 from gpu_extras.batch import batch_for_shader
 
 from .. utils.geo import bevel_verts
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 
 
@@ -88,7 +88,7 @@ def draw_border_lines(vertices=[], width=1, color=(0,0,0,1), bevel_corners=True,
 def render_image(image, verts):
     '''bottom left, bottom right, top right, top left'''
 
-    if not get_preferences().ui.Hops_modal_image: return
+    if not addon.preference().ui.Hops_modal_image: return
 
     built_in_shader = 'IMAGE' if bpy.app.version[0] >=4 else '2D_IMAGE'
     shader = gpu.shader.from_builtin(built_in_shader)
@@ -118,7 +118,7 @@ def render_image(image, verts):
 def draw_text(text, x, y, align="LEFT", size=12, color=(1, 1, 1, 1), dpi=None):
 
     #Prefs
-    prefs = get_preferences()
+    prefs = addon.preference()
     prefs_ui_scale = prefs.ui.Hops_modal_size
 
     if dpi == None:
@@ -126,7 +126,7 @@ def draw_text(text, x, y, align="LEFT", size=12, color=(1, 1, 1, 1), dpi=None):
 
     font = 0
     if bpy.app.version[0] >= 4:
-        blf.size(size, int(dpi))
+        blf.size(font, size * (dpi / 72.0))
     else:
         blf.size(font, size, int(dpi))
     blf.color(font, *color)

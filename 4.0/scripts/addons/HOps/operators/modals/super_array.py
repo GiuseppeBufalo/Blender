@@ -11,8 +11,8 @@ from gpu_extras.batch import batch_for_shader
 from bpy.props import IntProperty, FloatProperty
 from mathutils import Matrix, Vector, geometry, Quaternion
 from ... graphics.drawing2d import draw_text
-from ... addon.utility import method_handler
-from ... preferences import get_preferences
+from ... utility import method_handler
+from ... utility import addon
 from ... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast #get_3D_raycast_from_mouse
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
@@ -974,11 +974,11 @@ class Radial_Behavior():
         self.segments = self.radial_array_mod.count
         self.displace = self.displace_mod.strength
 
-        self.radial_array_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.radial_array_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+        self.radial_array_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.radial_array_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
 
-        self.displace_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.displace_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+        self.displace_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.displace_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
 
         self.radial_array_mod.show_expanded = False
         self.displace_mod.show_expanded = False
@@ -1266,20 +1266,20 @@ class Twist_Behavior():
             self.array_mod.count = self.count
 
 
-        self.array_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.displace_mod_two.show_render = not get_preferences().property.Hops_twist_radial_sort
+        self.array_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.displace_mod_two.show_render = not addon.preference().property.Hops_twist_radial_sort
         self.array_mod.show_expanded = False
 
-        self.displace_mod_two.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.displace_mod_two.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+        self.displace_mod_two.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.displace_mod_two.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
         self.displace_mod_two.show_expanded = False
 
-        self.displace_mod_one.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.displace_mod_one.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+        self.displace_mod_one.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.displace_mod_one.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
         self.displace_mod_one.show_expanded = False
 
-        self.deform_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-        self.deform_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+        self.deform_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+        self.deform_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
         self.deform_mod.show_expanded = False
 
 
@@ -1734,7 +1734,7 @@ Opt In available for Array V2 via hops dropdown
             if props.logic_state == Logic_States.VANILLA_ARRAY:
 
                 # Main
-                if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+                if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                     win_list.append(self.controller.vanilla_behavior.ui_data["mod_name"])
                     win_list.append(self.controller.vanilla_behavior.ui_data["count"])
                     win_list.append(self.controller.vanilla_behavior.axis.name)
@@ -1776,7 +1776,7 @@ Opt In available for Array V2 via hops dropdown
             elif props.logic_state == Logic_States.RADIAL_ARRAY:
 
                 # Main
-                if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+                if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                     win_list.append(self.controller.radial_behavior.ui_data["segments"])
                     win_list.append(self.controller.radial_behavior.ui_data["direction"])
                     win_list.append(self.controller.radial_behavior.ui_data["displace"])
@@ -1807,7 +1807,7 @@ Opt In available for Array V2 via hops dropdown
             elif props.logic_state == Logic_States.TWIST_ARRAY:
 
                 # Main
-                if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+                if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                     win_list.append(self.controller.twist_behavior.ui_data["count"])
                     win_list.append(self.controller.twist_behavior.ui_data["axis"])
                     win_list.append(self.controller.twist_behavior.ui_data["offset"])
@@ -1986,7 +1986,7 @@ Opt In available for Array V2 via hops dropdown
     def _draw_intersection(self, context):
 
         radius = props.start_dims_magnitude * .5
-        if get_preferences().property.array_type == "DOT":
+        if addon.preference().property.array_type == "DOT":
             radius = .0125
             width = 12
         else:

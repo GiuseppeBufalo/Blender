@@ -1,5 +1,5 @@
 import bpy
-from ..preferences import get_preferences
+from .. utility import addon
 from ..utils.blender_ui import get_dpi_factor
 
 def mod_list_template(layout, object):
@@ -118,7 +118,7 @@ class HOPS_OT_ModListPopover(bpy.types.Operator):
 
     def execute(self, context):
         HOPS_UL_Modlist.allow_removal = self.allow_removal
-        preference = get_preferences().ui
+        preference = addon.preference().ui
         self._object = bpy.data.objects[self.object_name] if self.object_name else context.active_object
         self.object_name = ''
         self.allow_removal = False

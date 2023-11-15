@@ -1,7 +1,6 @@
 import bpy
-from ... utility import modifier
 from bpy.props import EnumProperty
-from ... preferences import get_preferences
+from ... utility import addon, modifier, operator_override
 from ...ui_framework.operator_ui import Master
 
 
@@ -29,7 +28,7 @@ class HOPS_OT_LateParen_t(bpy.types.Operator):
         for obj in targets:
             context_override = context.copy()
             context_override['object'] = obj
-            bpy.ops.object.parent_set(context_override, keep_transform=True)
+            operator_override(context, bpy.ops.object.parent_set, context_override, keep_transform=True)
 
             for _ in targets[obj]:
                 count += 1
@@ -47,12 +46,12 @@ class HOPS_OT_LateParent(bpy.types.Operator):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'WINDOW'
     bl_options = {"REGISTER", "UNDO"}
-    bl_description = '''Late Parent 
-    
+    bl_description = '''Late Parent
+
     Connects cutters as children to parent.
     *Used to retroactively connect cutters to parent*
     Now supporting recursion. (cutters of cutters)
-    
+
     '''
 
     called_ui = False
@@ -77,7 +76,7 @@ class HOPS_OT_LateParent(bpy.types.Operator):
                 ["Booleans Total", lst[2]]
                 ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 
@@ -108,7 +107,7 @@ def late_parent(context):
 def late_parent_recursive(obj, out = [0,0,0], process_parents = False, rec_filter = None):
     if not rec_filter:
         rec_filter = set()
-    
+
     if obj in rec_filter: return
     rec_filter.add(obj)
 
@@ -125,7 +124,7 @@ def late_parent_recursive(obj, out = [0,0,0], process_parents = False, rec_filte
                     mod_obj.matrix_parent_inverse = obj.matrix_world.inverted()
                     out[0] = 1
                     out[1] += 1
-                
+
                 elif process_parents:
                     parent_mod = mod_obj.parent
                     current = mod_obj
@@ -133,7 +132,7 @@ def late_parent_recursive(obj, out = [0,0,0], process_parents = False, rec_filte
                     while parent_mod:
                         current = parent_mod
                         parent_mod = current.parent
-                    
+
                     if current is not obj:
                         current.parent = obj
                         current.matrix_parent_inverse = obj.matrix_world.inverted()

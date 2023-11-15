@@ -1,7 +1,7 @@
 import bpy
 from .. meshtools.applymod import apply_mod
-from ... addon.utility import modifier
-from ... preferences import get_preferences
+from ... utility import modifier
+from ... utility import addon
 from bpy.props import EnumProperty
 
 
@@ -70,6 +70,6 @@ CTRL - Smart Apply
                 modifier.apply(object)
                 #bpy.ops.mesh.customdata_custom_splitnormals_clear()
                 bpy.ops.hops.draw_wire_mesh_launcher('INVOKE_DEFAULT', target='SELECTED')
-                if get_preferences().ui.Hops_extra_info:
+                if addon.preference().ui.Hops_extra_info:
                     bpy.ops.hops.display_notification(info=f"Applied {count} Modifiers")
         return {"FINISHED"}

@@ -1,6 +1,6 @@
 import bpy, math
 from mathutils import Vector
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -9,7 +9,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_MOD_Cast(bpy.types.Operator):
@@ -38,7 +38,7 @@ Press H for help"""
         self.snap_buffer = 0
         self.size_mode = False
         self.radius_mode = False
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.cast_objects = {}
         self.snap_break = 0.1
 
@@ -235,7 +235,7 @@ Press H for help"""
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(self.active_cast_modifier.factor)
                 win_list.append(self.active_cast_modifier.radius)
                 win_list.append(self.active_cast_modifier.size)

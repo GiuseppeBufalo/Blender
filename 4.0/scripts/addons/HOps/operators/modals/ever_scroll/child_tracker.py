@@ -1,5 +1,5 @@
 import bpy
-from .... preferences import get_preferences
+from .... utility import addon, operator_override
 from .... utility.base_modal_controls import increment_maps, decrement_maps
 from .... utility.collections import unhide_layers
 from . import States, Auto_Scroll, update_local_view, turn_on_coll
@@ -52,7 +52,7 @@ class Child_Tracker:
         if context.space_data.local_view:
             override = {'selected_objects': self.children + context.visible_objects[:]}
             bpy.ops.view3d.localview(frame_selected=False)
-            bpy.ops.view3d.localview(override, frame_selected=False)
+            operator_override(context, bpy.ops.view3d.localview, override, frame_selected=False)
 
 
     def cycle_children(self, context, step=0):
@@ -63,7 +63,7 @@ class Child_Tracker:
         for obj in self.children:
             obj.select_set(False)
 
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
 
         self.index += step

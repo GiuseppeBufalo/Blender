@@ -1,7 +1,7 @@
 bl_info = {
     "name": "PUNCHit",
     "author": "MACHIN3",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (3, 6, 0),
     "location": "",
     "description": "Manifold Extrude that works.",
@@ -11,7 +11,7 @@ bl_info = {
 
 
 import bpy
-from . utils.registration import get_core, get_ops
+from . utils.registration import get_core, get_ops, get_prefs
 from . utils.registration import register_classes, unregister_classes, register_keymaps, unregister_keymaps, register_icons, unregister_icons
 from . ui.menus import extrude_menu
 
@@ -42,11 +42,14 @@ def register():
 
 
 
-    print("Registered %s %s" % (bl_info["name"], ".".join([str(i) for i in bl_info['version']])))
+    if get_prefs().registration_debug:
+        print("Registered %s %s" % (bl_info["name"], ".".join([str(i) for i in bl_info['version']])))
 
 
 def unregister():
     global classes, keymaps, icons
+
+    debug = get_prefs().registration_debug
 
 
 
@@ -59,4 +62,5 @@ def unregister():
 
     unregister_icons(icons)
 
-    print("Unregistered %s %s" % (bl_info["name"], ".".join([str(i) for i in bl_info['version']])))
+    if debug:
+        print("Unregistered %s %s" % (bl_info["name"], ".".join([str(i) for i in bl_info['version']])))

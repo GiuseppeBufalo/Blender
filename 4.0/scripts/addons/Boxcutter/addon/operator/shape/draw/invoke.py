@@ -222,6 +222,9 @@ def operator(op, context, event):
     op.last['wedge_axis_map'] = {False : 'X', True : 'Y'}
     op.last['wedge_points'] = [0, 1]
     op.input_plane = Vector()
+    op.mirror_gizmo_higlight = False
+
+    preference.shape['mirror_gizmo'] = False
 
     if preference.behavior.show_wire:
         for obj in op.datablock['targets']:
@@ -397,7 +400,6 @@ def operator(op, context, event):
     utility.modal.operation.change(op, context, event, to='DRAW', modified=False, init=True)
 
     bc.lattice.hide_set(True)
-    bc.bound_object.hide_set(True)
     bc.shape.hide_set(True)
     bc.empty.hide_set(True)
 

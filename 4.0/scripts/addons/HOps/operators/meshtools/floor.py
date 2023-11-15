@@ -2,7 +2,7 @@ import bpy, mathutils, math, bmesh
 from math import cos, sin
 from mathutils import Vector, Matrix, Quaternion, geometry
 from sys import float_info
-from ... preferences import get_preferences
+from ... utility import addon
 
 DESC = """Floor \nMake sure to have and active face selected"""
 
@@ -117,7 +117,7 @@ class HOPS_OT_FLOOR_OBJECT(bpy.types.Operator):
 
             obj.matrix_world.translation -= Vector((0, 0, distance))
 
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=F'To_Floor', subtext=f'Objects floored: {len(context.selected_objects)}')
 
         return {'FINISHED'}

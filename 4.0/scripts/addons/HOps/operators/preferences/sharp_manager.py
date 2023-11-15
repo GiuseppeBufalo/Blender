@@ -129,7 +129,13 @@ class HOPS_OT_SharpManager(bpy.types.Operator):
             else:
                 bw = bm.edges.layers.bevel_weight.verify()
 
-            cr = bm.edges.layers.crease.verify()
+            if bpy.app.version[0] >= 4:
+                cr = bm.edges.layers.float.get('crease_edge')
+                if cr is None:
+                    cr = bm.edges.layers.float.new('crease_edge')
+            else:
+                cr = bm.edges.layers.crease.verify()
+
             # me.show_edge_bevel_weight = True
             # me.show_edge_crease = True
             # me.show_edge_sharp = True
@@ -207,7 +213,13 @@ class HOPS_OT_SharpManager(bpy.types.Operator):
         else:
             bw = bm.edges.layers.bevel_weight.verify()
 
-        cr = bm.edges.layers.crease.verify()
+        if bpy.app.version[0] >= 4:
+            cr = bm.edges.layers.float.get('crease_edge')
+            if cr is None:
+                cr = bm.edges.layers.float.new('crease_edge')
+        else:
+            cr = bm.edges.layers.crease.verify()
+
         for e in selection:
             if option == "CREASE":
                 e[cr] = crease

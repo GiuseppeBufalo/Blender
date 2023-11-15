@@ -3,7 +3,7 @@ import bmesh
 from mathutils import Vector, Matrix
 from ... utils.objects import set_active
 from ... material import assign_material, blank_cutting_mat
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import collections, modifier
 from ... utility.renderer import cycles
 from . editmode_knife import edit_bool_knife
@@ -20,7 +20,7 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
 
     cutters = [swap_cutter(context, o) if o.type!='MESH' else o  for o in cutters ]
 
-    if get_preferences().property.workflow == "NONDESTRUCTIVE":
+    if addon.preference().property.workflow == "NONDESTRUCTIVE":
         for cutter in cutters:
             if active_object.data.use_auto_smooth:
                 cutter.data.use_auto_smooth = True
@@ -124,7 +124,7 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
                     mod.operation = 'INTERSECT'
                     mod.object = new_obj
 
-                    # if get_preferences().property.workflow == "DESTRUCTIVE":
+                    # if addon.preference().property.workflow == "DESTRUCTIVE":
                     #     override = {'object': slice_inset, 'active_object': slice_inset}
                     #     bpy.ops.object.modifier_apply(override, modifier = mod.name)
 
@@ -135,11 +135,11 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
 
             modifier_new_obj.operation = "INTERSECT"
             if hasattr(modifier_new_obj, 'solver'):
-                modifier_new_obj.solver = get_preferences().property.boolean_solver
+                modifier_new_obj.solver = addon.preference().property.boolean_solver
             modifier_new_obj.object = cutter
 
             if operation == 'SLASH':
-                if get_preferences().property.workflow == "DESTRUCTIVE":
+                if addon.preference().property.workflow == "DESTRUCTIVE":
                     set_active(new_obj)
                     modifier.apply(new_obj, types={"BOOLEAN"})
 
@@ -154,7 +154,7 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
                 boolean.show_in_editmode = True
 
             if hasattr(boolean, 'solver'):
-                boolean.solver = get_preferences().property.boolean_solver
+                boolean.solver = addon.preference().property.boolean_solver
             if operation in {'SLASH', 'INSET'}:
 
                 boolean.operation = 'DIFFERENCE'
@@ -184,7 +184,7 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
         modifier.sort(new_obj, sort_types=['WEIGHTED_NORMAL'])
     modifier.sort(active_object, sort_types=['WEIGHTED_NORMAL'])
 
-    if get_preferences().property.workflow == "DESTRUCTIVE":
+    if addon.preference().property.workflow == "DESTRUCTIVE":
         if operation == 'INSET':
             set_active(new_obj, select=True, only_select=True)
         else:
@@ -202,7 +202,7 @@ def add(context, operation='DIFFERENCE', collection='Cutters', boolshape=True, s
         if not col.objects:
             bpy.data.collections.remove(col)
 
-    elif get_preferences().property.workflow == "NONDESTRUCTIVE":
+    elif addon.preference().property.workflow == "NONDESTRUCTIVE":
         to_select = new_obj if operation == 'INSET' and inset_ative else cutters[0]
         set_active(to_select, select=True, only_select=True)
 
@@ -430,11 +430,11 @@ def knife(context, knife_project, material_cut = False, cut_through=True, projec
         for o in selected:
             o.select_set(False)
 
-    if get_preferences().property.workflow == 'DESTRUCTIVE':
+    if addon.preference().property.workflow == 'DESTRUCTIVE':
         for cutter in cutters:
             bpy.data.objects.remove(cutter, do_unlink=True)
 
-    elif get_preferences().property.workflow == 'NONDESTRUCTIVE':
+    elif addon.preference().property.workflow == 'NONDESTRUCTIVE':
         context.active_object.select_set(False) # Can't change active object due to edit mode switch unfortunately
 
         for cutter in cutters:

@@ -24,6 +24,8 @@ def register():
 
 
 def unregister():
+    utility.cleanup_operators(None)
+
     property.preference.unregister()
     property.unregister()
 

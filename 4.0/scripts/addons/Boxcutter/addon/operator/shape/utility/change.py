@@ -190,8 +190,7 @@ def bevel_both(option, context):
         op = bc.operator
         preference = addon.preference()
         for index in op.geo['indices']['top_edge']:
-            edge = bc.shape.data.edges[index]
-            edge.bevel_weight = bc.shape.data.bc.q_beveled and op.flip_z and preference.shape.bevel_both
+            mesh.index_weight(index, value=bc.shape.data.bc.q_beveled and op.flip_z and preference.shape.bevel_both)
 
 
 def quad_bevel(option, context):
@@ -545,3 +544,15 @@ def box_grid(option, context):
                 bc.shape.bc.solidify  = True
                 event = type('fake_event', (), {'ctrl' : False, 'shift' : False, 'alt' : False})
                 solidify.shape(bc.operator, context, event)
+
+
+def mirror_gizmo(option, context):
+    bc = context.scene.bc
+    op = bc.__class__.operator
+    event = type('fake_event', (), {'ctrl' : False, 'shift' : False, 'alt' : False})
+
+    if option.mirror_gizmo:
+        operation.change(op, context, event, to='MIRROR')
+
+    else:
+        operation.change(op, context, event, to=op.last['operation'])

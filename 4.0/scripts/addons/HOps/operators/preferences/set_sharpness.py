@@ -1,7 +1,7 @@
 import bpy
 from math import degrees, radians
 from bpy.props import FloatProperty
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_SetSharpness30(bpy.types.Operator):
@@ -14,8 +14,8 @@ class HOPS_OT_SetSharpness30(bpy.types.Operator):
 
     def execute(self, context):
 
-        get_preferences().property.sharpness = self.sharpness
-        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(get_preferences().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
+        addon.preference().property.sharpness = self.sharpness
+        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(addon.preference().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
 
         return {"FINISHED"}
 
@@ -30,8 +30,8 @@ class HOPS_OT_SetSharpness45(bpy.types.Operator):
 
     def execute(self, context):
 
-        get_preferences().property.sharpness = self.sharpness
-        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(get_preferences().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
+        addon.preference().property.sharpness = self.sharpness
+        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(addon.preference().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
 
         return {"FINISHED"}
 
@@ -46,8 +46,8 @@ class HOPS_OT_SetSharpness60(bpy.types.Operator):
 
     def execute(self, context):
 
-        get_preferences().property.sharpness = self.sharpness
-        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(get_preferences().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
+        addon.preference().property.sharpness = self.sharpness
+        bpy.ops.hops.display_notification(info=f'Pre-Sharp : {degrees(addon.preference().property.sharpness):.0f} ', subtext="To be used with next Sharpening operation")
 
         return {"FINISHED"}
 

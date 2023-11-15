@@ -2,15 +2,15 @@ import bpy, mathutils, math
 from mathutils import Matrix, Vector
 from enum import Enum
 from ... meshtools.applymod import apply_mod
-from .... addon.utility.screen import dpi_factor
-from .... preferences import get_preferences
+from ....utility.screen import dpi_factor
+from .... utility import addon
 from .... ui_framework.master import Master
 from .... utility.base_modal_controls import Base_Modal_Controls
 from .... utils.toggle_view3d_panels import collapse_3D_view_panels
 from .... utils.modal_frame_drawing import draw_modal_frame
 from .... utils.objects import set_active
 from .... utils.cursor_warp import mouse_warp
-from .... addon.utility import method_handler
+from .... utility import method_handler
 from .... utility import math as hops_math
 
 from .struct import Axis, Dice_Box_3D, selection_boundary, get_boxelize_ref
@@ -28,7 +28,7 @@ class Edit_3D:
     def __init__(self, op, context, event):
 
         # States
-        self.knife_method = "Knife" if get_preferences().property.dice_method == 'KNIFE_PROJECT' else "Intersect"
+        self.knife_method = "Knife" if addon.preference().property.dice_method == 'KNIFE_PROJECT' else "Intersect"
 
         # Dice Structs
         self.x_dice = Dice_Box_3D(Axis.X, active=True, segments=MEM_X_COUNT)
@@ -51,12 +51,12 @@ class Edit_3D:
         # Controls
         self.presets = [3,5,7,11,15,18,20,23,26,29,33,42,45,49,52,63]
         self.preset_index = 0
-        self.prefs = get_preferences().property
+        self.prefs = addon.preference().property
         self.dpi = dpi_factor(min=.5)
         self.exit_to_twist = False
         self.mouse_buffer = 0
         self.mouse_mode_segments = max(MEM_X_COUNT, MEM_Y_COUNT, MEM_Z_COUNT)
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.cut_active_only = event.shift
 
         # Updates
@@ -239,11 +239,11 @@ class Edit_3D:
         self.curves = [o for o in context.selected_objects if o.type == 'CURVE']
 
         # Smart Apply
-        if event.alt or get_preferences().property.smart_apply_dice == 'SMART_APPLY':
+        if event.alt or addon.preference().property.smart_apply_dice == 'SMART_APPLY':
             self.smart_apply(context)
 
         # Convert to mesh
-        elif get_preferences().property.smart_apply_dice == 'APPLY':
+        elif addon.preference().property.smart_apply_dice == 'APPLY':
             obj = context.active_object
             if obj.mode != 'EDIT':
                 for obj in self.selected:

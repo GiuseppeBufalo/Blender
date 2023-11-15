@@ -4,7 +4,7 @@ from . pizza_ops_data import get_pizza_ops_data
 from ... icons import icons_directory
 from ... utils.addons import addon_exists
 from ... ui_framework.master import Master
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 
 
@@ -25,7 +25,7 @@ class HOPS_OT_Pizza_Ops_Window(bpy.types.Operator):
 
     def invoke(self, context, event):
         
-        self.preference = get_preferences()
+        self.preference = addon.preference()
         self.pizza_data = get_pizza_ops_data()
 
         if self.pizza_data == {} or self.pizza_data == None:

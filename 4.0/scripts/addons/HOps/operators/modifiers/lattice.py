@@ -3,11 +3,11 @@ import bmesh
 import statistics
 from mathutils import Vector, Matrix
 from ... utility import collections, object, math
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from ...utils.objects import set_active
 
-from ... addon.utility import modifier
+from ... utility import modifier
 
 
 class HOPS_OT_MOD_Lattice(bpy.types.Operator):
@@ -129,7 +129,7 @@ CTRL - Force new lattice modifier
                 ["LATTICE"],
                 ["Modified", self.modified]]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 
@@ -172,8 +172,7 @@ CTRL - Force new lattice modifier
 
 
     def lattice_transform (self, obj, lattice_obj, coords = None  ):
-        if coords != None:
-
+        if coords:
             box = math.coords_to_bounds(coords)
             lattice_obj.location =  math.coords_to_center(box)
             lattice_obj.dimensions = math.dimensions(box)
@@ -187,7 +186,7 @@ CTRL - Force new lattice modifier
         else:
             lattice_obj.location = obj.matrix_world @ math.coords_to_center(obj.bound_box)
             lattice_obj.dimensions = obj.dimensions
-            lattice_obj.rotation_euler = obj.matrix_world.to_euler() 
+            lattice_obj.rotation_euler = obj.matrix_world.to_euler()
 
         lattice_obj.scale *=1.01 #increase lattice szize a bit to avoid potential with bounding verts
 
@@ -197,32 +196,38 @@ CTRL - Force new lattice modifier
                 lattice_obj.scale[index] = 1
                 setattr(lattice_obj.data, name, 1)
 
+    def set_vert_groups(self, obj):
+        lattice_verts = obj.vertex_groups.new(name='HardOps_Lattice')
+        group_idx = lattice_verts.index
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.verts.layers.deform.verify()
+
+        bm_deform = bm.verts.layers.deform.active
+
+        selected_vert = [v for v in bm.verts if v.select]
+
+        if not selected_vert:
+            return None
+
+        for v in selected_vert:
+            v[bm_deform][group_idx] = 1
+
+        obj.update_from_editmode()
+
 
     def get_vert_coords(self, obj, context, matrix = Matrix()):
         if obj.type == 'MESH' and obj.mode == 'EDIT':
             coords = []
-            lattice_verts = obj.vertex_groups.new(name='HardOps_Lattice')
-            group_idx = lattice_verts.index
-
-            bm = bmesh.from_edit_mesh(obj.data)
-            bm.verts.layers.deform.verify()
-
-            bm_deform = bm.verts.layers.deform.active
-            
-            selected_vert = [v for v in bm.verts if v.select]
-            if not selected_vert:
-                return None
-            for v in selected_vert:
-                v[bm_deform][group_idx] = 1
-                    
-            obj.update_from_editmode()
+            self.set_vert_groups(obj)
 
             if self.modified :
-                coords = self.mod_coord(context,obj,group_idx, matrix)
+                coords = self.mod_coord(context, obj, -1, matrix)
 
             else:
+                group_idx = len(obj.vertex_groups) - 1
                 coords = [ matrix @ v.co for v in obj.data.vertices if group_idx in [ vg.group for vg in v.groups]]
-               
+
             return coords
 
         elif obj.type == 'GPENCIL' and obj.mode == 'EDIT_GPENCIL':
@@ -251,12 +256,10 @@ CTRL - Force new lattice modifier
     #return vertex coordinates from final vertex groups
     def mod_coord (context, obj, group_idx, matrix = Matrix()):
         depsgraph = context.evaluated_depsgraph_get()
-        bm = bmesh.new()
-        bm.from_object(obj,depsgraph, True)
-
-        vert_deform = bm.verts.layers.deform.active
-        coords_b = [matrix @ v.co for v in bm.verts if group_idx in v[vert_deform ]]
-
-        bm.free()
+        eval = obj.evaluated_get(depsgraph)
+        me = eval.to_mesh()
+        group_idx = len(obj.vertex_groups) - 1
+        coords_b = [ matrix @ v.co for v in me.vertices if group_idx in [ vg.group for vg in v.groups]]
+        eval.to_mesh_clear()
 
         return coords_b

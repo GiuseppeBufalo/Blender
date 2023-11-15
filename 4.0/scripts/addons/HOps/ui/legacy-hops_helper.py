@@ -3,7 +3,7 @@ from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, EnumProperty
 from .. utils.blender_ui import get_dpi_factor
 from bl_ui.properties_data_modifier import DATA_PT_modifiers
-from .. preferences import get_preferences
+from .. utility import addon
 
 
 class HopsHelperOptions(PropertyGroup):
@@ -152,16 +152,16 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
         if object is not None:
             if object.type == "MESH":
                 self.status = object.hops.status
-        self.tab = get_preferences().property.helper_tab
+        self.tab = addon.preference().property.helper_tab
         return context.window_manager.invoke_props_dialog(self, width=int(300 * get_dpi_factor(force=False)))
 
     def set_helper_default(self, context):
         if self.tab == "MODIFIERS":
-            get_preferences().property.helper_tab = "MODIFIERS"
+            addon.preference().property.helper_tab = "MODIFIERS"
         elif self.tab == "MATERIALS":
-            get_preferences().property.helper_tab = "MATERIALS"
+            addon.preference().property.helper_tab = "MATERIALS"
         elif self.tab == "MISC":
-            get_preferences().property.helper_tab = "MISC"
+            addon.preference().property.helper_tab = "MISC"
 
     def set_hops_status(self, context):
         object = bpy.context.active_object
@@ -366,13 +366,13 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
 
         col.separator()
         colrow = col.row(align=True)
-        colrow.prop(get_preferences().property, "workflow", expand=True)
+        colrow.prop(addon.preference().property, "workflow", expand=True)
         # colrow = col.row(align=True).split(factor=0.1, align=True)
-        # colrow.prop(get_preferences().property, "add_weighten_normals_mod", toggle=True)
+        # colrow.prop(addon.preference().property, "add_weighten_normals_mod", toggle=True)
         # colrow = col.row(align=True).split(factor=0.1, align=True)
-        # colrow.prop(get_preferences().property, "use_harden_normals", toggle=True)
+        # colrow.prop(addon.preference().property, "use_harden_normals", toggle=True)
         colrow2 = colrow.row(align=True)
-        colrow2.prop(get_preferences().property, "workflow_mode", expand=True)
+        colrow2.prop(addon.preference().property, "workflow_mode", expand=True)
         col.separator()
 
         col = layout.box().column(align=True)
@@ -383,12 +383,12 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
 
             col.separator()
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "sharp_use_crease", text="Apply crease")
-            colrow.prop(get_preferences().property, "sharp_use_bweight", text="Apply bweight")
+            colrow.prop(addon.preference().property, "sharp_use_crease", text="Apply crease")
+            colrow.prop(addon.preference().property, "sharp_use_bweight", text="Apply bweight")
 
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "sharp_use_seam", text="Apply seam")
-            colrow.prop(get_preferences().property, "sharp_use_sharp", text="Apply sharp")
+            colrow.prop(addon.preference().property, "sharp_use_seam", text="Apply seam")
+            colrow.prop(addon.preference().property, "sharp_use_sharp", text="Apply sharp")
 
             col.separator()
             colrow = col.row(align=True)
@@ -396,7 +396,7 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
             colrow.operator("hops.set_sharpness_45", text="45")
             colrow.operator("hops.set_sharpness_60", text="60")
 
-            col.prop(get_preferences().property, "sharpness", text="Sharpness")
+            col.prop(addon.preference().property, "sharpness", text="Sharpness")
             col = layout.box().column(align=True)
 
         col.prop(option, "mirror_options", icon="TRIA_DOWN" if option.mirror_options else "TRIA_RIGHT", text="Mirror Options", emboss=False)
@@ -406,10 +406,10 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
 
             col.separator()
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "Hops_mirror_modes", text="aa", expand=True)
-            if get_preferences().property.property.Hops_mirror_modes in {"BISECT", "SYMMETRY"}:
+            colrow.prop(addon.preference().property, "Hops_mirror_modes", text="aa", expand=True)
+            if addon.preference().property.property.Hops_mirror_modes in {"BISECT", "SYMMETRY"}:
                 colrow = col.row(align=True)
-                colrow.prop(get_preferences().property, "Hops_mirror_direction", text="vv", expand=True)
+                colrow.prop(addon.preference().property, "Hops_mirror_direction", text="vv", expand=True)
 
             col = layout.box().column(align=True)
 
@@ -424,46 +424,46 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
 
             col.separator()
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "Hops_modal_scale", text="Modal Scale")
-            colrow.prop(get_preferences().property, "adaptivewidth", text="Adapitve")
+            colrow.prop(addon.preference().property, "Hops_modal_scale", text="Modal Scale")
+            colrow.prop(addon.preference().property, "adaptivewidth", text="Adapitve")
 
             col.separator()
             colrow = col.row(align=True)
             colrow.label(text='CSharpen :')
             col.separator()
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "bevel_loop_slide", text="use Loop slide")
-            colrow.prop(get_preferences().property, "auto_bweight", text="jump to (B)Width")
+            colrow.prop(addon.preference().property, "bevel_loop_slide", text="use Loop slide")
+            colrow.prop(addon.preference().property, "auto_bweight", text="jump to (B)Width")
 
             col.separator()
             colrow = col.row(align=True)
             colrow.label(text='Mirror :')
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().operator.mirror, "scale", text="Mirror Scale")
-            colrow.prop(get_preferences().operator.mirror, "width", text="Mirror Width")
+            colrow.prop(addon.preference().operator.mirror, "scale", text="Mirror Scale")
+            colrow.prop(addon.preference().operator.mirror, "width", text="Mirror Width")
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, "Hops_mirror_modal_Interface_scale", text="Mirror Interface Scale")
-            colrow.prop(get_preferences().property, "Hops_mirror_modal_revert", text="Revert")
+            colrow.prop(addon.preference().property, "Hops_mirror_modal_Interface_scale", text="Mirror Interface Scale")
+            colrow.prop(addon.preference().property, "Hops_mirror_modal_revert", text="Revert")
             col.separator()
 
             col.separator()
             colrow = col.row(align=True)
             colrow.label(text='CutIn :')
-            colrow.prop(get_preferences().property, "keep_cutin_bevel", expand=True)
+            colrow.prop(addon.preference().property, "keep_cutin_bevel", expand=True)
             col.separator()
 
             colrow = col.row(align=True)
             colrow.label(text='Array :')
-            colrow.prop(get_preferences().property, "force_array_reset_on_init", expand=True)
+            colrow.prop(addon.preference().property, "force_array_reset_on_init", expand=True)
             colrow = col.row(align=True)
             colrow.label(text='')
-            colrow.prop(get_preferences().property, "force_array_apply_scale_on_init", expand=True)
+            colrow.prop(addon.preference().property, "force_array_apply_scale_on_init", expand=True)
             col.separator()
 
             col.separator()
             colrow = col.row(align=True)
             colrow.label(text='Thick :')
-            colrow.prop(get_preferences().property, "force_thick_reset_solidify_init", expand=True)
+            colrow.prop(addon.preference().property, "force_thick_reset_solidify_init", expand=True)
             col.separator()
 
             col = layout.box().column(align=True)
@@ -528,15 +528,15 @@ class HOPS_OT_HelperPopup(bpy.types.Operator):
 
             col.separator()
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, 'meshclean_mode', expand=True)
+            colrow.prop(addon.preference().property, 'meshclean_mode', expand=True)
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, 'meshclean_dissolve_angle', text="Limited Dissolve Angle")
+            colrow.prop(addon.preference().property, 'meshclean_dissolve_angle', text="Limited Dissolve Angle")
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, 'meshclean_remove_threshold', text="Remove Threshold")
+            colrow.prop(addon.preference().property, 'meshclean_remove_threshold', text="Remove Threshold")
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, 'meshclean_unhide_behavior', text="Unhide Mesh")
+            colrow.prop(addon.preference().property, 'meshclean_unhide_behavior', text="Unhide Mesh")
             colrow = col.row(align=True)
-            colrow.prop(get_preferences().property, 'meshclean_delete_interior', text="Delete Interior Faces")
+            colrow.prop(addon.preference().property, 'meshclean_delete_interior', text="Delete Interior Faces")
 
 
         layout.separator()

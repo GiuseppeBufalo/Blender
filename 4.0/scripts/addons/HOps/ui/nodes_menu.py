@@ -2,8 +2,8 @@ import bpy
 from .. icons import get_icon_id
 from .. utils.addons import addon_exists
 from .. utils.objects import get_current_selected_status
-from .. addon.utility import active_tool
-from .. preferences import get_preferences
+from .. src.utilityremove import active_tool
+from .. utility import addon
 from .. import bl_info
 
 

@@ -6,7 +6,7 @@ from ... utils.objects import get_current_selected_status
 from ... utils.context import ExecutionContext
 
 from ... utils.modifiers import apply_modifiers
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 def iterate_titled_as_string(iter, separator=','):
@@ -63,7 +63,7 @@ Last refers to mods within 3 modifiers of the end of stack
     def invoke(self, context, event):
 
         applied = None
-        original_remove_setting = get_preferences().property.Hops_smartapply_remove_cutters
+        original_remove_setting = addon.preference().property.Hops_smartapply_remove_cutters
 
         if event.shift and not event.ctrl and not event.alt:
             bpy.ops.object.duplicate()
@@ -75,9 +75,9 @@ Last refers to mods within 3 modifiers of the end of stack
                     continue
 
                 if original_remove_setting:
-                    get_preferences().property.Hops_smartapply_remove_cutters = False
+                    addon.preference().property.Hops_smartapply_remove_cutters = False
                 applied = apply_mod(self, obj, clear_last=event.shift)
-            get_preferences().property.Hops_smartapply_remove_cutters = original_remove_setting
+            addon.preference().property.Hops_smartapply_remove_cutters = original_remove_setting
             self.text_header = "Clone Smart Apply"
 
         elif event.ctrl and not event.shift and not event.alt:
@@ -128,10 +128,10 @@ Last refers to mods within 3 modifiers of the end of stack
                 before_mod_count = len(context.active_object.modifiers[:])
                 if len(selected) > 1:
                     if original_remove_setting:
-                        get_preferences().property.Hops_smartapply_remove_cutters = False
+                        addon.preference().property.Hops_smartapply_remove_cutters = False
                     self.extra_text = "Remove cutters bypassed for multi-selection"
                 applied = apply_mod(self, obj, clear_last=event.shift)
-                get_preferences().property.Hops_smartapply_remove_cutters = original_remove_setting
+                addon.preference().property.Hops_smartapply_remove_cutters = original_remove_setting
                 self.report({'INFO'}, F'Modifiers Applied')
                 self.text_header = "Smart Apply"
 
@@ -158,9 +158,9 @@ Last refers to mods within 3 modifiers of the end of stack
                 else:
                     draw_data.insert(-1, ["Remaining Modifiers ", "0"]),
                 if len(selected[:]) == 1:
-                    if get_preferences().property.Hops_smartapply_remove_cutters:
+                    if addon.preference().property.Hops_smartapply_remove_cutters:
                         #draw_data.insert(-2, ["Cutters Removed", f'{(len[cutters])}']),
-                        draw_data.insert(-2, ["Cutters Removed", (get_preferences().property.Hops_smartapply_remove_cutters)]),
+                        draw_data.insert(-2, ["Cutters Removed", (addon.preference().property.Hops_smartapply_remove_cutters)]),
                 else:
                     draw_data.insert(-2, ["Cutters Removed", "False / multi-select"]),
 
@@ -172,7 +172,7 @@ Last refers to mods within 3 modifiers of the end of stack
                 ]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         del applied
         return {"FINISHED"}
@@ -200,17 +200,17 @@ def apply_mod(self, obj, clear_last=False):
     #             if mod.limit_method == 'VGROUP':
     #                 excluded.append(mod)
 
-    if get_preferences().property.Hops_smartapply_remove_cutters:
+    if addon.preference().property.Hops_smartapply_remove_cutters:
         cutters = [mod.object for mod in obj.modifiers if mod.type == 'BOOLEAN']
 
     modifier.apply(obj, ignore=excluded)
 
-    if get_preferences().property.Hops_smartapply_remove_cutters:
+    if addon.preference().property.Hops_smartapply_remove_cutters:
         for cutter in cutters:
             try:
                 bpy.data.objects.remove(cutter)
             except:
-                get_preferences().property.Hops_smartapply_remove_cutters = False
+                addon.preference().property.Hops_smartapply_remove_cutters = False
                 self.report({'ERROR_INVALID_INPUT'}, F'Cannot remove same Cutter from multiple objects')
 
     if clear_last:

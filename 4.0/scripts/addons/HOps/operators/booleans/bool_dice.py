@@ -4,7 +4,7 @@ from mathutils import Vector, Matrix
 from . import operator
 from .. meshtools.applymod import apply_mod
 from ... utils.blender_ui import get_dpi, get_dpi_factor
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... ui_framework.master import Master
 from ... utility.renderer import cycles
@@ -15,7 +15,7 @@ from ... utils.objects import set_active
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 ##############################################################################
 # Draw Data
@@ -142,17 +142,17 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
             return {'CANCELLED'}
 
         # ---------- Controls ----------
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.base_controls = Base_Modal_Controls(context, event)
-        self.smart_apply = event.alt or get_preferences().property.smart_apply_dice != 'NONE'
-        self.adjusting = 'NONE' if event.ctrl and event.type == 'LEFTMOUSE' else get_preferences().property.dice_adjust
+        self.smart_apply = event.alt or addon.preference().property.smart_apply_dice != 'NONE'
+        self.adjusting = 'NONE' if event.ctrl and event.type == 'LEFTMOUSE' else addon.preference().property.dice_adjust
         self.to_twist = False
         self.mouse_prev_x = event.mouse_region_x
         self.mouse_start_x = event.mouse_region_x
         self.mouse_start_y = event.mouse_region_y
 
         # ---------- Props ----------
-        self.prefs = get_preferences().property
+        self.prefs = addon.preference().property
         self.obj = context.active_object
         self.mode = self.obj.mode
         self.selected = [o for o in context.selected_objects if o.type == 'MESH']
@@ -162,7 +162,7 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
         self.size = tuple
         self.axis_buffer = float("XYZ".find(self.axis))
         self.count_buffer = self.count
-        self.use_knife_project = get_preferences().property.dice_method == 'KNIFE_PROJECT'
+        self.use_knife_project = addon.preference().property.dice_method == 'KNIFE_PROJECT'
         self.update_draw_data = True
         self.curves = [o for o in context.selected_objects if o.type == 'CURVE']
         self.joined = False
@@ -195,7 +195,7 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
         self.obj.select_set(True)
 
         # Smart apply mods
-        if event.alt or get_preferences().property.smart_apply_dice == 'SMART_APPLY':
+        if event.alt or addon.preference().property.smart_apply_dice == 'SMART_APPLY':
             mode = context.mode
             bpy.ops.object.mode_set(mode='OBJECT', toggle=False)
             for obj in self.selected:
@@ -206,7 +206,7 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
                 bpy.ops.object.mode_set(mode='EDIT', toggle=False)
 
         # Convert to mesh
-        elif get_preferences().property.smart_apply_dice == 'APPLY':
+        elif addon.preference().property.smart_apply_dice == 'APPLY':
             for obj in self.selected:
                 bpy.ops.object.convert(target='MESH')
                 bpy.ops.mesh.customdata_custom_splitnormals_clear()
@@ -268,7 +268,7 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
         self.master.receive_event(event=event)
         self.base_controls.update(context, event)
         mouse_warp(context, event)
-        original_remove_setting = get_preferences().property.Hops_sharp_remove_cutters
+        original_remove_setting = addon.preference().property.Hops_sharp_remove_cutters
 
         # Free navigation
         if event.type == 'MIDDLEMOUSE':
@@ -392,9 +392,9 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
         # Smart apply
         elif event.type == 'S' and event.value == 'PRESS':
             if original_remove_setting:
-                get_preferences().property.Hops_sharp_remove_cutters = False
+                addon.preference().property.Hops_sharp_remove_cutters = False
             bpy.ops.hops.apply_modifiers('INVOKE_DEFAULT')
-            get_preferences().property.Hops_sharp_remove_cutters = original_remove_setting
+            addon.preference().property.Hops_sharp_remove_cutters = original_remove_setting
 
             # Rest modal
             self.remove_plane(context, self.plane_x)
@@ -415,10 +415,10 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
                 for mod in obj.modifiers:
                     if mod.type == 'BOOLEAN':
                         if original_remove_setting:
-                            get_preferences().property.Hops_sharp_remove_cutters = False
+                            addon.preference().property.Hops_sharp_remove_cutters = False
                         for obj in bpy.context.selected_objects:
                             apply_mod(self, obj, clear_last=False)
-                        get_preferences().property.Hops_sharp_remove_cutters = original_remove_setting
+                        addon.preference().property.Hops_sharp_remove_cutters = original_remove_setting
             else:
                 self.to_twist = not self.to_twist
             self.report({'INFO'}, f"To_Twist {self.to_twist}")
@@ -570,7 +570,7 @@ class HOPS_OT_BoolDice(bpy.types.Operator):
             active_mod = ""
 
             # Main
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 axes = ", ".join(a for i,a in enumerate("XYZ") if self.axes[i])
                 win_list.append(axes)
                 win_list.append(str(self.count))
@@ -1065,11 +1065,11 @@ class Shader():
         self.should_be_fading = False
         self.fade_complete = False
         self.alpha_dice = .75
-        self.fade_duration = .25 #get_preferences().ui.Hops_extra_draw_time
+        self.fade_duration = .25 #addon.preference().ui.Hops_extra_draw_time
         self.fade_start_time = 0
         self.fade_start_time_set = False
         self.__setup_handle(context)
-        self.prefs = get_preferences().property
+        self.prefs = addon.preference().property
 
 
     def __setup_handle(self, context):

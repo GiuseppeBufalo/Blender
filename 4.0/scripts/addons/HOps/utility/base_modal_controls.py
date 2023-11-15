@@ -1,6 +1,6 @@
 import bpy
 from mathutils import Vector
-from .. preferences import get_preferences
+from .. utility import addon
 from .. utils.blender_ui import get_dpi_factor
 
 
@@ -108,7 +108,7 @@ class Base_Modal_Controls():
 
         # Toggle help
         if event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
         # Toggle overlays
         if self.tilde and event.shift == True:
@@ -119,11 +119,11 @@ class Base_Modal_Controls():
     def __alter_keymaps(self):
 
         # Popover
-        if get_preferences().keymap.spacebar_accept:
+        if addon.preference().keymap.spacebar_accept:
             if 'SPACE' in self.popover_keys:
                 self.popover_keys.remove('SPACE')
 
-        if not get_preferences().keymap.rmb_cancel:
+        if not addon.preference().keymap.rmb_cancel:
             self.cancel_events.remove('RIGHTMOUSE')
             self.pass_through_events.append('RIGHTMOUSE')
 
@@ -132,7 +132,7 @@ class Base_Modal_Controls():
         if event.type not in {'MOUSEMOVE', 'TRACKPADPAN'}:
             return 0
 
-        modal_scale = get_preferences().ui.Hops_modal_scale
+        modal_scale = addon.preference().ui.Hops_modal_scale
         delta = event.mouse_x - event.mouse_prev_x
 
         if bpy.app.version > (2, 91, 0):
@@ -143,7 +143,7 @@ class Base_Modal_Controls():
         if event.shift:
             delta = modal_scale * delta / divisor_shift / get_dpi_factor()
 
-        if get_preferences().property.modal_handedness == 'LEFT':
+        if addon.preference().property.modal_handedness == 'LEFT':
             return -delta
 
         return delta

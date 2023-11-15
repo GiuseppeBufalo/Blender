@@ -3,7 +3,7 @@ from .... ui_framework.master import Master
 from .... utility.base_modal_controls import Base_Modal_Controls
 from .... utils.toggle_view3d_panels import collapse_3D_view_panels
 from .... utils.modal_frame_drawing import draw_modal_frame
-from .... addon.utility import method_handler
+from .... utility import method_handler
 
 from . import Mode
 from . dice_3d import Edit_3D

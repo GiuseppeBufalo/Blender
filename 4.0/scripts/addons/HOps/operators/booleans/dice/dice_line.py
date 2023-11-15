@@ -3,8 +3,8 @@ from mathutils import Matrix, Vector
 from gpu_extras.batch import batch_for_shader
 from bpy_extras import view3d_utils
 from math import sin, cos
-from .... addon.utility.screen import dpi_factor
-from .... preferences import get_preferences
+from ....utility.screen import dpi_factor
+from .... utility import addon
 from ....utils.grid import surface_normal
 from ....utils.space_3d import ray_cast_objects, get_3D_point_from_mouse
 

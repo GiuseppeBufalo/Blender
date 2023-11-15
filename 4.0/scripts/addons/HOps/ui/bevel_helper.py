@@ -1,7 +1,7 @@
 import bpy
 from .. icons import get_icon_id, icons
 from math import radians, degrees
-from .. preferences import get_preferences
+from .. utility import addon
 from .. utils.blender_ui import get_dpi_factor
 from .. utility.collections import turn_on_parent_collections
 from bpy.props import BoolProperty, StringProperty
@@ -28,7 +28,7 @@ class HOPS_OT_bevel_helper(bpy.types.Operator):
         return True
 
     def invoke(self, context, event):
-        preference = get_preferences().ui
+        preference = addon.preference().ui
 
         for obj in context.selected_objects:
             for mod in obj.modifiers:
@@ -45,7 +45,7 @@ class HOPS_OT_bevel_helper(bpy.types.Operator):
         return {'FINISHED'}
 
     def draw(self, context):
-        preference = get_preferences().ui
+        preference = addon.preference().ui
         layout = self.layout
 
         if self.label:
@@ -146,7 +146,7 @@ class HOPS_OT_bevel_helper(bpy.types.Operator):
         # column.separator()
 
     def draw_bevel(self, context, obj, mod):
-        preference = get_preferences().property
+        preference = addon.preference().property
         layout = self.layout
 
         split = layout.split(factor=0.5)
@@ -232,7 +232,7 @@ class HOPS_OT_bevel_helper(bpy.types.Operator):
         layout.separator()
 
     def label_row(self, context, layout, obj, path, prop, label='Label'):
-        preference = get_preferences().property
+        preference = addon.preference().property
         column = layout.column(align=True)
         split = column.split(factor=0.5, align=True)
 

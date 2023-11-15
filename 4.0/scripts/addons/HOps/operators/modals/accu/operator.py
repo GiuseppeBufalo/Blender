@@ -1,12 +1,12 @@
 import bpy, bmesh
 from mathutils import Vector
-from .... preferences import get_preferences
+from .... utility import addon
 from .... utility.base_modal_controls import Base_Modal_Controls
 from .... ui_framework.master import Master
 from .... ui_framework import form_ui as form
 from .... utils.toggle_view3d_panels import collapse_3D_view_panels
 from .... utils.modal_frame_drawing import draw_modal_frame
-from .... addon.utility import method_handler
+from .... utility import method_handler
 from .... utility import math as hops_math
 
 from . import State, Bounds, confirmed_exit, unit_scale
@@ -206,7 +206,7 @@ class HOPS_OT_Accu_Shape_V2(bpy.types.Operator):
     # --- EXIT --- #
 
     def common_exit(self, context):
-        get_preferences().property.accu_length = self.unit_length
+        addon.preference().property.accu_length = self.unit_length
         collapse_3D_view_panels(self.original_tool_shelf, self.original_n_panel)
         self.remove_shaders()
         self.master.run_fade()
@@ -352,7 +352,7 @@ class HOPS_OT_Accu_Shape_V2(bpy.types.Operator):
 
 
     def accu_length_indexes(self):
-        length = get_preferences().property.accu_length
+        length = addon.preference().property.accu_length
 
         metric_lengths = ['Kilometers', 'Meters', 'Centimeters', 'Millimeters', 'Micrometers']
         imperial_lengths = ['Miles', 'Feet', 'Inches', 'Thousandth']

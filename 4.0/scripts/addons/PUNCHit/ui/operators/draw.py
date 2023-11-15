@@ -30,22 +30,23 @@ class DrawLabels(bpy.types.Operator):
         return context.space_data.type == 'VIEW_3D'
 
     def draw_HUD(self, context):
-        progress = get_timer_progress(self)
-        alpha = progress * self.alpha
-        alpha2 = progress * self.alpha2
-        alpha3 = progress * self.alpha3
+        if context.area == self.area:
+            progress = get_timer_progress(self)
+            alpha = progress * self.alpha
+            alpha2 = progress * self.alpha2
+            alpha3 = progress * self.alpha3
 
-        draw_init(self, None)
+            draw_init(self)
 
-        draw_label(context, title=self.text, coords=self.coords, center=True, color=self.color, alpha=alpha)
+            draw_label(context, title=self.text, coords=self.coords, center=True, color=self.color, alpha=alpha)
 
-        if self.text2:
-            self.offset += 18
-            draw_label(context, title=self.text2, coords=self.coords, offset=self.offset, center=True, color=self.color2, alpha=alpha2)
+            if self.text2:
+                self.offset += 18
+                draw_label(context, title=self.text2, coords=self.coords, offset=self.offset, center=True, color=self.color2, alpha=alpha2)
 
-        if self.text3:
-            self.offset += 18
-            draw_label(context, title=self.text3, coords=self.coords, offset=self.offset, center=True, color=self.color3, alpha=alpha3)
+            if self.text3:
+                self.offset += 18
+                draw_label(context, title=self.text3, coords=self.coords, offset=self.offset, center=True, color=self.color3, alpha=alpha3)
 
     def modal(self, context, event):
         if context.area:
@@ -76,6 +77,7 @@ class DrawLabels(bpy.types.Operator):
 
         init_timer_modal(self)
 
+        self.area = context.area
         self.HUD = bpy.types.SpaceView3D.draw_handler_add(self.draw_HUD, (context, ), 'WINDOW', 'POST_PIXEL')
         self.TIMER = context.window_manager.event_timer_add(0.1, window=context.window)
 

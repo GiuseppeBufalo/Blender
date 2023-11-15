@@ -1,7 +1,7 @@
 import bpy
 from enum import Enum
 from ...utility.collections import link_obj, unlink_obj
-from ... preferences import get_preferences
+from ... utility import addon, operator_override
 from ...ui_framework.operator_ui import Master
 from os import path
 
@@ -198,7 +198,7 @@ CTRL + SHIFT - Wash invalid modifiers
                                             synced += 1
                                         mod.render_levels = mod.levels
         elif self.mode == 'PURIFY':
-            purify_conut = purify(hops_coll)
+            purify_conut = purify(context, hops_coll)
 
         if self.mode == 'UNIFY':
             text = 'Unify'
@@ -235,7 +235,7 @@ CTRL + SHIFT - Wash invalid modifiers
                 [text],
                 [info, substat]]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}
 
@@ -293,7 +293,7 @@ def collect(collect_mode = 'Rendered', collection_name = '', collection_link = F
 
     return len(objects)
 
-def purify(col_name = 'Cutters', obj_keep_names = ('Extraction', 'Slice')):
+def purify(context, col_name = 'Cutters', obj_keep_names = ('Extraction', 'Slice')):
     boolean_objects = set()
     obj_keep_names = tuple(obj_keep_names)
     ret_counter = 0
@@ -327,13 +327,11 @@ def purify(col_name = 'Cutters', obj_keep_names = ('Extraction', 'Slice')):
                 objects.append(obj)
                 ret_counter +=1
 
-        if hasattr(bpy.context, 'temp_override'):
-            with bpy.context.temp_override(active_object=None, object=None, selected_objects=objects):
-                bpy.ops.object.delete(use_global=False)
-
-        else:
-            override = {'active_object': None, 'object' : None, 'selected_objects' : objects}
-            bpy.ops.object.delete(override, use_global=False)
+        override = context.copy()
+        override['active_object'] = None
+        override['object'] = None
+        override['selected_objects'] = objects
+        operator_override(context, bpy.ops.object.delete, override, use_global=False)
 
     return ret_counter
 
@@ -445,6 +443,6 @@ able to be named in the F9 panel
                 [text],
                 [info, substat]]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}

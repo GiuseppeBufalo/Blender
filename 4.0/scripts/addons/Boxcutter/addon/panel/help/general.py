@@ -420,6 +420,9 @@ class BC_PT_help_general(Panel):
         else:
             layout.label(text=F'1 2 3   Mirror Axis (shift - flip)')
 
+            row = layout.row(align=True)
+            row.label(text=F'; (SEMI COLON) {sep}Mirror Gizmo')
+
         layout.label(text='. (PERIOD)    Change origin')
 
 

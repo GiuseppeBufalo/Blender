@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_operator_options(Panel):
@@ -13,9 +13,9 @@ class HOPS_PT_operator_options(Panel):
 
     def draw(self, context):
         layout = self.layout
-        preference = get_preferences().property
-        color = get_preferences().color
-        ui = get_preferences().ui
+        preference = addon.preference().property
+        color = addon.preference().color
+        ui = addon.preference().ui
 
         column = layout.column(align=True)
         row = column.row(align=True)

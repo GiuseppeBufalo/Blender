@@ -2,8 +2,8 @@ import bpy, time
 from math import sin
 import mathutils
 from mathutils import Vector
-from .... preferences import get_preferences
-from .... addon.utility.screen import dpi_factor
+from .... utility import addon
+from ....utility.screen import dpi_factor
 from ... graphics.load import load_image_file
 from ... graphics.draw import render_text, draw_border_lines, render_quad, draw_2D_lines
 from ... utils.geo import get_blf_text_dims
@@ -76,11 +76,11 @@ class Color:
             if db.clicked:
                 context.window_manager.popover(self.__color_popup_draw)
 
-                color = get_preferences().color.form_color_prop_1
+                color = addon.preference().color.form_color_prop_1
                 if self.pref_color == 2:
-                    color = get_preferences().color.form_color_prop_2
+                    color = addon.preference().color.form_color_prop_2
                 elif self.pref_color == 3:
-                    color = get_preferences().color.form_color_prop_3
+                    color = addon.preference().color.form_color_prop_3
 
                 setattr(self.obj, self.attr, color)
 
@@ -124,11 +124,11 @@ class Color:
         self.color = getattr(self.obj, self.attr)
 
         if self.pref_color == 1:
-            get_preferences().color.form_color_prop_1 = self.color
+            addon.preference().color.form_color_prop_1 = self.color
         elif self.pref_color == 2:
-            get_preferences().color.form_color_prop_2 = self.color
+            addon.preference().color.form_color_prop_2 = self.color
         elif self.pref_color == 3:
-            get_preferences().color.form_color_prop_3 = self.color
+            addon.preference().color.form_color_prop_3 = self.color
 
 
     def draw(self, db):
@@ -148,8 +148,8 @@ class Color:
     def __color_popup_draw(self, op, context):
         self.just_ran_popover = True
         if self.pref_color == 1:
-            op.layout.prop(get_preferences().color, 'form_color_prop_1', text='')
+            op.layout.prop(addon.preference().color, 'form_color_prop_1', text='')
         elif self.pref_color == 2:
-            op.layout.prop(get_preferences().color, 'form_color_prop_2', text='')
+            op.layout.prop(addon.preference().color, 'form_color_prop_2', text='')
         elif self.pref_color == 3:
-            op.layout.prop(get_preferences().color, 'form_color_prop_3', text='')
+            op.layout.prop(addon.preference().color, 'form_color_prop_3', text='')

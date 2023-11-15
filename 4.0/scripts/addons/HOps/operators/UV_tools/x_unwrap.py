@@ -1,7 +1,7 @@
 import bpy, bmesh
 from bpy.props import FloatProperty, BoolProperty, EnumProperty
 from ... utils.bmesh import selectSmoothEdges
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from math import radians, degrees, pi
 
@@ -90,7 +90,13 @@ class HOPS_OT_XUnwrapF(bpy.types.Operator):
                 me.auto_smooth_angle = pi
 
                 bm = bmesh.from_edit_mesh(me)
-                crease = bm.edges.layers.crease.verify()
+
+                if bpy.app.version[0] >= 4:
+                    crease = bm.edges.layers.float.get('crease_edge')
+                    if crease is None:
+                        crease = bm.edges.layers.float.new('crease_edge')
+                else:
+                    crease = bm.edges.layers.crease.verify()
                 
                 if bpy.app.version[0] >= 4:
                     bevel = bm.edges.layers.float.get('bevel_weight_edge')
@@ -131,7 +137,7 @@ class HOPS_OT_XUnwrapF(bpy.types.Operator):
                     ["Angle", self.angle_limit],
                     ["Weight", self.user_area_weight],
                     ["Margin", self.rmargin]])
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         # Call UV Draw op
         bpy.ops.hops.draw_uv_launcher(use_selected_meshes=True, hops_use=True)

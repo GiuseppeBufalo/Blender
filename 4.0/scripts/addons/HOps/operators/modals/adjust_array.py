@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -11,7 +11,7 @@ from ... ui_framework.utils.mods_list import get_mods_list
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
@@ -50,7 +50,7 @@ class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
 
         self.objects = [o for o in context.selected_objects if o.type == 'MESH']
         self.object = context.active_object if context.active_object in context.selected_objects else self.objects[0]
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
 
         obj = bpy.context.active_object
         if obj.dimensions[2] == 0 or obj.dimensions[1] == 0 or obj.dimensions[0] == 0:
@@ -58,7 +58,7 @@ class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
             self.y = False
             self.z = True
 
-        if get_preferences().property.force_array_apply_scale_on_init:
+        if addon.preference().property.force_array_apply_scale_on_init:
             for obj in self.objects:
                 bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
@@ -81,7 +81,7 @@ class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
         self.offset_y = 0
         self.offset_z = 0
 
-        if get_preferences().property.force_array_reset_on_init:
+        if addon.preference().property.force_array_reset_on_init:
             for obj in self.arrays:
                 mods = self.arrays[obj]["arrays"]
                 mod.use_constant_offset = True
@@ -143,7 +143,7 @@ class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
             return {'PASS_THROUGH'}
 
         active_object = bpy.context.active_object
-        if get_preferences().property.modal_handedness == 'LEFT':
+        if addon.preference().property.modal_handedness == 'LEFT':
             self.offset_x -= self.base_controls.mouse
             self.offset_y -= self.base_controls.mouse
             self.offset_z -= self.base_controls.mouse
@@ -347,7 +347,7 @@ class HOPS_OT_AdjustArrayOperator(bpy.types.Operator):
             relative = self.array.relative_offset_displace
             constant = self.array.constant_offset_displace
 
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(str(self.array.count))
                 if self.is_relative:
                     win_list.append(" {:.2f} {:.2f} {:.2f} ".format(relative[0], relative[1], relative[2]))

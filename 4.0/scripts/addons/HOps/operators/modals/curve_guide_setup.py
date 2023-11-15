@@ -4,7 +4,7 @@ from bpy.types import Operator
 from bpy.props import IntProperty, FloatProperty
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
-from ... preferences import get_preferences
+from ... utility import addon
 from . import infobar
 
 deformtypes = ["Deform", "Twist", "Shear", "Scale", "Stretch"]

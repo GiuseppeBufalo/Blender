@@ -6,7 +6,7 @@ from math import radians
 from bmesh.types import BMFace
 from mathutils import Vector, Matrix, Euler
 from bpy.props import IntProperty, FloatProperty, BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from ...utils.bmesh import get_edges_center, is_an_edge_selected
 from ...utils.curve import copy_curve, convert_curve_to_mesh
@@ -81,7 +81,7 @@ class HOPS_OT_Curve_Extrude(bpy.types.Operator):
                     ["Select a Face(s) or Edge(s)", "ERROR"]]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         if cancel_due_to_bad_selection:
             return {'CANCELLED'}

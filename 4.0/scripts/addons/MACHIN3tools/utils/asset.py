@@ -4,6 +4,46 @@ from . system import printd
 from . registration import get_prefs
 
 
+
+def get_asset_library_reference(params):
+    if bpy.app.version >= (4, 0, 0):
+        return params.asset_library_reference
+    else:
+        return params.asset_library_ref
+
+
+def set_asset_library_reference(params, name):
+    if bpy.app.version >= (4, 0, 0):
+        params.asset_library_reference = name
+    else:
+        params.asset_library_ref = name
+
+
+def get_asset_import_method(params):
+    if bpy.app.version >= (4, 0, 0):
+        return params.import_method
+    else:
+        return params.import_type
+
+
+def set_asset_import_method(params, name):
+    if bpy.app.version >= (4, 0, 0):
+        params.import_method = name
+    else:
+        params.import_type = name
+
+
+def get_asset_ids(context):
+    if bpy.app.version >= (4, 0, 0):
+        active = context.asset
+
+    else:
+        active = context.active_file
+
+    return active, active.id_type, active.local_id
+
+
+
 def get_catalogs_from_asset_libraries(context, debug=False):
 
     asset_libraries = context.preferences.filepaths.asset_libraries
@@ -53,35 +93,38 @@ def update_asset_catalogs(self, context):
     bpy.types.WindowManager.M3_asset_catalogs = bpy.props.EnumProperty(name="Asset Categories", items=items, default=default)
 
 
+
 def get_asset_details_from_space(context, space, debug=False):
 
 
-    libref = space.params.asset_library_ref
+    lib_reference = get_asset_library_reference(space.params)
     catalog_id = space.params.catalog_id
-    libname = '' if libref == 'ALL' else libref
+    libname = '' if lib_reference == 'ALL' else lib_reference
     libpath = space.params.directory.decode('utf-8')
     filename = space.params.filename
-    import_type = space.params.import_type
+    import_method = get_asset_import_method(space.params)
 
     if debug:
         print()
-        print("asset_library_ref:", libref)
-        print("catalog_id:", catalog_id)
-        print("libname:", libname)
-        print("libpath:", libpath)
-        print("filename:", filename)
-        print("import_type:", import_type)
+        print("get_asset_details_from_space()")
+        print(" asset_library_reference:", lib_reference)
+        print(" catalog_id:", catalog_id)
+        print(" libname:", libname)
+        print(" libpath:", libpath)
+        print(" filename:", filename)
+        print(" import_method:", import_method)
+        print()
 
     if libname == 'LOCAL':
         if 'Object/' in filename:
-            return libname, libpath, filename, import_type
+            return libname, libpath, filename, import_method
 
     elif libname == 'ESSENTIALS':
         return None, None, None, None
 
     elif not libname and not libpath:
         if debug:
-            print("WARNING: asset library ref is ALL and directory is not set!")
+            print(" WARNING: asset library ref is ALL and directory is not set!")
 
         catalogs = get_catalogs_from_asset_libraries(context, debug=False)
 
@@ -91,12 +134,15 @@ def get_asset_details_from_space(context, space, debug=False):
                 libpath = catdata['libpath']
 
                 if debug:
-                    print("INFO: found libname and libpath via asset catalogs:", libname, "at", libpath)
+                    print(" INFO: found libname and libpath via asset catalogs:", libname, "at", libpath)
 
                 break
 
+    if debug:
+        print()
+
     if libpath:
-        return libname, libpath, filename, import_type
+        return libname, libpath, filename, import_method
 
     else:
         return None, None, None, None

@@ -151,10 +151,10 @@ class widgets:
         draw_index = op.draw_dot_index
 
         vert_locations = [Vector((round(w.location.x, 1), round(w.location.y, 1), round(w.location.z, 1))) for w in handler.widgets.handler if w.type == 'VERT']
-        draw_point = Vector(bc.bound_object.bound_box[draw_index])
-        max_dimension = max(bc.bound_object.dimensions[:-1])
+        draw_point = Vector(bc.lattice.bound_box[draw_index])
+        max_dimension = max(bc.lattice.dimensions[:-1])
 
-        if type == 'DRAW': # and (op.shape_type != 'NGON' or op.ngon_fit):
+        if type == 'DRAW':
             if Vector((round(draw_point.x, 1), round(draw_point.y, 1), round(draw_point.z, 1))) in vert_locations:
                 offset = 0.05 * max_dimension
 
@@ -165,17 +165,17 @@ class widgets:
 
         elif type in {'OFFSET', 'EXTRUDE'}:
             side = [(1, 2, 5, 6), (0, 3, 4, 7)][::-1 if type != 'OFFSET' else 1]
-            return 0.25 * math.vector_sum([Vector(bc.bound_object.bound_box[i]) for i in side[op.inverted_extrude]])
+            return 0.25 * math.vector_sum([Vector(bc.lattice.bound_box[i]) for i in side[op.inverted_extrude]])
 
         elif type == 'DISPLACE':
             indices = (4, 5, 6, 7) if draw_index in {5, 6} else (0, 1, 2, 3)
-            return 0.25 * math.vector_sum([Vector(bc.bound_object.bound_box[i]) for i in indices])
+            return 0.25 * math.vector_sum([Vector(bc.lattice.bound_box[i]) for i in indices])
 
         elif type == 'BEVEL':
             index_keys = {1: 7, 2: 4, 5: 3, 6: 0}
             offset = 0.05 * max_dimension
 
-            location = Vector(bc.bound_object.bound_box[index_keys[draw_index if draw_index in index_keys.keys() else 1]])
+            location = Vector(bc.lattice.bound_box[index_keys[draw_index if draw_index in index_keys.keys() else 1]])
             location.x -= offset if draw_index in {5, 6} else -offset
             location.y -= offset if draw_index in {2, 6} else -offset
 
@@ -272,10 +272,10 @@ class widgets:
 
             if intersect:
                 intersect_location = matrix @ Vector((intersect.x, intersect.y, location.z))
-                position = view3d.location3d_to_location2d(intersect_location)# , persp_matrix_invert=True)
+                position = view3d.location3d_to_location2d(intersect_location)
 
                 point = matrix @ Vector((projection.x, projection.y, location.z))
-                point_position = view3d.location3d_to_location2d(point)# , persp_matrix_invert=True)
+                point_position = view3d.location3d_to_location2d(point)
 
                 if (point_position - position).length < preference.keymap.ngon_last_line_threshold * screen.dpi_factor() * 6:
                     return Vector((intersect.x, intersect.y, location.z))
@@ -372,7 +372,7 @@ class widgets:
         self.active = None
         self.operation = 'NONE'
 
-        self.handler = [w for w in self.handler if w.handler] # flush
+        self.handler = [w for w in self.handler if w.handler] # flushes
         self.fade = bool(len(self.handler))
 
         if self.exit:
@@ -484,8 +484,8 @@ class point:
             self._outline = preference.color.snap_point[:-1] if not self.highlight else preference.color.snap_point_highlight[:-1]
 
         else:
-            self._color = self._dot_color if not self.highlight else preference.color.dot_highlight[:] # if not self.type == 'VERT' else preference.color.dot[:]
-            self._outline = [0.0, 0.0, 0.0] if not self.highlight else self._color[:-1] # if not self.type == 'VERT' else preference.color.snap_point_highlight[:-1]
+            self._color = self._dot_color if not self.highlight else preference.color.dot_highlight[:]
+            self._outline = [0.0, 0.0, 0.0] if not self.highlight else self._color[:-1]
 
         handler.update_alpha(self, (self._color[-1] / (1 if not self.highlight else 2)) if self.type == 'VERT' else self._color[-1], preference.display.dot_fade_time_out)
 
@@ -505,12 +505,10 @@ class point:
 
         self._shader.bind()
 
-        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix)
-        self._shader.uniform_float('transform', self.transform)
+        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix @ self.transform)
 
-        self._shader.uniform_float('color', self._color[:-1])
+        self._shader.uniform_float('color', [*self._color[:-1], self.alpha])
         self._shader.uniform_float('outline', self._outline)
-        self._shader.uniform_float('alpha', self.alpha)
 
         if self.build_batch:
             self._batch = shader.batch(self._shader, 'POINTS', {'vert': [self.location]})

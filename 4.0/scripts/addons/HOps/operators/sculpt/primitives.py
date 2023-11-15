@@ -2,14 +2,14 @@ import bpy, mathutils, math, gpu, bmesh
 from math import cos, sin
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... ui_framework.utils.checks import is_mouse_in_quad
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast, get_3D_point_from_mouse
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 
 
 class Widget:
@@ -227,7 +227,7 @@ class HOPS_OT_Sculpt_Primitives(bpy.types.Operator):
         self.switch_sculpt = True
         self.sculpt_start = False
         self.created_target = False
-        self.separate = get_preferences().property.add_primitive_newobject
+        self.separate = addon.preference().property.add_primitive_newobject
         self.target_obj = context.active_object
         self.mode = context.mode
         self.shape = 'SPHERE'
@@ -240,7 +240,7 @@ class HOPS_OT_Sculpt_Primitives(bpy.types.Operator):
         self.graphics = True
         self.transitional_point = Vector((0,0,0))
         self.dyno_exit = bpy.context.active_object.use_dynamic_topology_sculpting #if self.sculpt_start else False
-        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if get_preferences().ui.Hops_extra_info else lambda val: None
+        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if addon.preference().ui.Hops_extra_info else lambda val: None
 
         self.use_mirror_x = False
         self.use_mirror_y = False
@@ -253,7 +253,7 @@ class HOPS_OT_Sculpt_Primitives(bpy.types.Operator):
             context.view_layer.objects.active = self.target_obj
             self.target_obj.hide_set(True)
             self.created_target = True
-            self.separate = get_preferences().property.add_primitive_newobject
+            self.separate = addon.preference().property.add_primitive_newobject
             self.switch_sculpt = True
 
         else:

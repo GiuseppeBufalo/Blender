@@ -1,6 +1,6 @@
 import bpy
 import mathutils
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.context import ExecutionContext
 from ... utility import modifier as modsort
 
@@ -14,9 +14,9 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
         if(len(bpy.context.selected_objects)) == 1:  # one is selected , add mirror mod immediately to that object#
             if object.type in {"MESH", "CURVE"}:
                 if object.type in {"CURVE"}:
-                    if get_preferences().property.Hops_mirror_modes != "MODIFIER":
+                    if addon.preference().property.Hops_mirror_modes != "MODIFIER":
                         bpy.ops.object.convert(target='MESH')
-                if get_preferences().property.Hops_mirror_modes == "MODIFIER":
+                if addon.preference().property.Hops_mirror_modes == "MODIFIER":
                     with ExecutionContext(mode="OBJECT", active_object=object):
                         mirror_mod = None
                         for modifier in object.modifiers:
@@ -29,16 +29,16 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                             mirror_mod.use_axis[1] = False
                             mirror_mod.use_axis[2] = False
 
-                            mirror_mod.use_mirror_u = get_preferences().property.Hops_gizmo_mirror_u
-                            mirror_mod.use_mirror_v = get_preferences().property.Hops_gizmo_mirror_v
+                            mirror_mod.use_mirror_u = addon.preference().property.Hops_gizmo_mirror_u
+                            mirror_mod.use_mirror_v = addon.preference().property.Hops_gizmo_mirror_v
 
 
-                elif get_preferences().property.Hops_mirror_modes == "BISECT":
+                elif addon.preference().property.Hops_mirror_modes == "BISECT":
                     with ExecutionContext(mode="OBJECT", active_object=object):
-                        if get_preferences().property.Hops_mirror_direction == "+":
+                        if addon.preference().property.Hops_mirror_direction == "+":
                             clear_inner = True
                             clear_outer = False
-                        elif get_preferences().property.Hops_mirror_direction == "-":
+                        elif addon.preference().property.Hops_mirror_direction == "-":
                             clear_inner = False
                             clear_outer = True
 
@@ -49,7 +49,7 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                         bpy.ops.object.mode_set(mode='OBJECT')
                         object = bpy.context.active_object
                         mirror_mod = None
-                        if get_preferences().property.Hops_mirror_modal_mod_on_bisect:
+                        if addon.preference().property.Hops_mirror_modal_mod_on_bisect:
                             for modifier in object.modifiers:
                                 if modifier.name == "hops_mirror":
                                     mirror_mod = modifier
@@ -60,43 +60,43 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                                 mirror_mod.use_axis[1] = False
                                 mirror_mod.use_axis[2] = False
 
-                                mirror_mod.use_mirror_u = get_preferences().property.Hops_gizmo_mirror_u
-                                mirror_mod.use_mirror_v = get_preferences().property.Hops_gizmo_mirror_v
+                                mirror_mod.use_mirror_u = addon.preference().property.Hops_gizmo_mirror_u
+                                mirror_mod.use_mirror_v = addon.preference().property.Hops_gizmo_mirror_v
 
-                elif get_preferences().property.Hops_mirror_modes == "SYMMETRY":
+                elif addon.preference().property.Hops_mirror_modes == "SYMMETRY":
                     with ExecutionContext(mode="EDIT", active_object=object):
                         bpy.ops.mesh.select_all(action='SELECT')
                         bpy.ops.mesh.symmetrize(direction=direction)
                         bpy.ops.mesh.select_all(action='DESELECT')
 
-                if get_preferences().property.Hops_mirror_modal_mod_on_bisect:
+                if addon.preference().property.Hops_mirror_modal_mod_on_bisect:
                     mods = {"BISECT", "MODIFIER"}
                 else:
                     mods = {"MODIFIER"}
-                if get_preferences().property.Hops_mirror_modes in mods:
+                if addon.preference().property.Hops_mirror_modes in mods:
                     if _operation == "MIRROR_X":
                         mirror_mod.use_axis[0] = True
-                        if get_preferences().property.Hops_mirror_modes == "MODIFIER":
+                        if addon.preference().property.Hops_mirror_modes == "MODIFIER":
                             mirror_mod.use_bisect_axis[0] = True
-                            if get_preferences().property.Hops_mirror_direction == "-":
+                            if addon.preference().property.Hops_mirror_direction == "-":
                                 mirror_mod.use_bisect_flip_axis[0] = True
                             else:
                                 mirror_mod.use_bisect_flip_axis[0] = False
                             mirror_mod.show_on_cage = True
                     elif _operation == "MIRROR_Y":
                         mirror_mod.use_axis[1] = True
-                        if get_preferences().property.Hops_mirror_modes == "MODIFIER":
+                        if addon.preference().property.Hops_mirror_modes == "MODIFIER":
                             mirror_mod.use_bisect_axis[1] = True
-                            if get_preferences().property.Hops_mirror_direction == "-":
+                            if addon.preference().property.Hops_mirror_direction == "-":
                                 mirror_mod.use_bisect_flip_axis[1] = True
                             else:
                                 mirror_mod.use_bisect_flip_axis[1] = False
                             mirror_mod.show_on_cage = True
                     elif _operation == "MIRROR_Z":
                         mirror_mod.use_axis[2] = True
-                        if get_preferences().property.Hops_mirror_modes == "MODIFIER":
+                        if addon.preference().property.Hops_mirror_modes == "MODIFIER":
                             mirror_mod.use_bisect_axis[2] = True
-                            if get_preferences().property.Hops_mirror_direction == "-":
+                            if addon.preference().property.Hops_mirror_direction == "-":
                                 mirror_mod.use_bisect_flip_axis[2] = True
                             else:
                                 mirror_mod.use_bisect_flip_axis[2] = False
@@ -120,7 +120,7 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                     mirror_mod.z_axis = not mirror_mod.z_axis
 
         else:
-            if get_preferences().property.Hops_mirror_modes_multi == "VIA_ACTIVE":
+            if addon.preference().property.Hops_mirror_modes_multi == "VIA_ACTIVE":
                 with ExecutionContext(mode="OBJECT", active_object=object):
                     mirror_ob = bpy.context.active_object  # last ob selected
                     for obj in bpy.context.selected_objects:
@@ -143,13 +143,13 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                                     mirror_mod_multi.use_clip = True
                                     mirror_mod_multi.mirror_object = mirror_ob
 
-                                    mirror_mod_multi.use_mirror_u = get_preferences().property.Hops_gizmo_mirror_u
-                                    mirror_mod_multi.use_mirror_v = get_preferences().property.Hops_gizmo_mirror_v
+                                    mirror_mod_multi.use_mirror_u = addon.preference().property.Hops_gizmo_mirror_u
+                                    mirror_mod_multi.use_mirror_v = addon.preference().property.Hops_gizmo_mirror_v
 
 
                                 if _operation == "MIRROR_X":
                                     mirror_mod_multi.use_axis[0] = True
-                                    if get_preferences().property.Hops_mirror_direction == "-":
+                                    if addon.preference().property.Hops_mirror_direction == "-":
                                         mirror_mod_multi.use_bisect_axis[0] = True
                                         mirror_mod_multi.use_bisect_flip_axis[0] = True
                                     else:
@@ -157,7 +157,7 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                                         mirror_mod_multi.use_bisect_flip_axis[0] = False
                                 elif _operation == "MIRROR_Y":
                                     mirror_mod_multi.use_axis[1] = True
-                                    if get_preferences().property.Hops_mirror_direction == "-":
+                                    if addon.preference().property.Hops_mirror_direction == "-":
                                         mirror_mod_multi.use_bisect_axis[1] = True
                                         mirror_mod_multi.use_bisect_flip_axis[1] = True
                                     else:
@@ -165,14 +165,14 @@ def operation(context, _operation, x, y, z, zx, zy, zz, direction, used_axis):
                                         mirror_mod_multi.use_bisect_flip_axis[1] = False
                                 elif _operation == "MIRROR_Z":
                                     mirror_mod_multi.use_axis[2] = True
-                                    if get_preferences().property.Hops_mirror_direction == "-":
+                                    if addon.preference().property.Hops_mirror_direction == "-":
                                         mirror_mod_multi.use_bisect_axis[2] = True
                                         mirror_mod_multi.use_bisect_flip_axis[2] = True
                                     else:
                                         mirror_mod_multi.use_bisect_axis[2] = True
                                         mirror_mod_multi.use_bisect_flip_axis[2] = False
 
-            elif get_preferences().property.Hops_mirror_modes_multi == "SYMMETRY":
+            elif addon.preference().property.Hops_mirror_modes_multi == "SYMMETRY":
                 selected = bpy.context.selected_objects
                 for obj in selected:
                     bpy.context.view_layer.objects.active = obj
@@ -201,8 +201,8 @@ class HOPS_OT_MirrorX(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(get_preferences(), "Hops_mirror_direction")
-        layout.prop(get_preferences(), "Hops_mirror_modes")
+        layout.prop(addon.preference(), "Hops_mirror_direction")
+        layout.prop(addon.preference(), "Hops_mirror_modes")
 
     @classmethod
     def poll(cls, context):
@@ -216,9 +216,9 @@ class HOPS_OT_MirrorX(bpy.types.Operator):
         x, y, z = bpy.context.object.location
         zx, zy, zz = bpy.context.object.rotation_euler
 
-        if get_preferences().property.Hops_mirror_direction == "+":
+        if addon.preference().property.Hops_mirror_direction == "+":
             direction = "POSITIVE_X"
-        elif get_preferences().property.Hops_mirror_direction == "-":
+        elif addon.preference().property.Hops_mirror_direction == "-":
             direction = "NEGATIVE_X"
         used_axis = "X"
 
@@ -247,8 +247,8 @@ class HOPS_OT_MirrorY(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(get_preferences(), "Hops_mirror_direction")
-        layout.prop(get_preferences(), "Hops_mirror_modes")
+        layout.prop(addon.preference(), "Hops_mirror_direction")
+        layout.prop(addon.preference(), "Hops_mirror_modes")
 
     @classmethod
     def poll(cls, context):
@@ -262,9 +262,9 @@ class HOPS_OT_MirrorY(bpy.types.Operator):
         x, y, z = bpy.context.object.location
         zx, zy, zz = bpy.context.object.rotation_euler
 
-        if get_preferences().property.Hops_mirror_direction == "+":
+        if addon.preference().property.Hops_mirror_direction == "+":
             direction = "POSITIVE_Y"
-        elif get_preferences().property.Hops_mirror_direction == "-":
+        elif addon.preference().property.Hops_mirror_direction == "-":
             direction = "NEGATIVE_Y"
         used_axis = "Y"
 
@@ -294,8 +294,8 @@ class HOPS_OT_MirrorZ(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(get_preferences(), "Hops_mirror_direction")
-        layout.prop(get_preferences(), "Hops_mirror_modes")
+        layout.prop(addon.preference(), "Hops_mirror_direction")
+        layout.prop(addon.preference(), "Hops_mirror_modes")
 
     @classmethod
     def poll(cls, context):
@@ -308,9 +308,9 @@ class HOPS_OT_MirrorZ(bpy.types.Operator):
         x, y, z = bpy.context.object.location
         zx, zy, zz = bpy.context.object.rotation_euler
 
-        if get_preferences().property.Hops_mirror_direction == "+":
+        if addon.preference().property.Hops_mirror_direction == "+":
             direction = "POSITIVE_Z"
-        elif get_preferences().property.Hops_mirror_direction == "-":
+        elif addon.preference().property.Hops_mirror_direction == "-":
             direction = "NEGATIVE_Z"
         used_axis = "Z"
 

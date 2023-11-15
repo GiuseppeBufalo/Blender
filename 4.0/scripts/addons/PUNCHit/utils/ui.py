@@ -1,4 +1,5 @@
 import bpy
+from mathutils import Vector
 import rna_keymap_ui
 from bl_ui.space_statusbar import STATUSBAR_HT_header as statusbar
 from time import time
@@ -17,15 +18,15 @@ def get_icon(name):
 
 
 
-def init_cursor(self, event, offsetx=0, offsety=20):
-    self.last_mouse_x = event.mouse_x
-    self.last_mouse_y = event.mouse_y
+def get_mouse_pos(self, context, event, hud=True, hud_offset=(20, 20)):
 
-    self.region_offset_x = event.mouse_x - event.mouse_region_x
-    self.region_offset_y = event.mouse_y - event.mouse_region_y
+    self.mouse_pos = Vector((event.mouse_region_x, event.mouse_region_y))
 
-    self.HUD_x = event.mouse_x - self.region_offset_x + offsetx
-    self.HUD_y = event.mouse_y - self.region_offset_y + offsety
+    if hud:
+        scale = context.preferences.system.ui_scale * get_prefs().modal_hud_scale
+
+        self.HUD_x = self.mouse_pos.x + hud_offset[0] * scale
+        self.HUD_y = self.mouse_pos.y + hud_offset[1] * scale
 
 
 
@@ -204,6 +205,21 @@ def get_timer_progress(self, debug=False):
         print("progress:", progress)
 
     return progress
+
+
+def ignore_events(event, none=True, timer=True, timer_report=True):
+    ignore = ['INBETWEEN_MOUSEMOVE', 'WINDOW_DEACTIVATE']
+
+    if none:
+        ignore.append('NONE')
+
+    if timer:
+        ignore.extend(['TIMER', 'TIMER1', 'TIMER2', 'TIMER3'])
+
+    if timer_report:
+        ignore.append('TIMER_REPORT')
+
+    return event.type in ignore
 
 
 

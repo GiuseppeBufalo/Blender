@@ -1,4 +1,4 @@
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 from .. graphics.draw import render_quad, render_geo, render_text, draw_border_lines
 from .. utils.geo import get_blf_text_dims
 

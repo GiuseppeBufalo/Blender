@@ -1,8 +1,7 @@
 import bpy
 from bpy.types import Panel
 
-from ... preferences import get_preferences
-from ...material import blank_cutting_mat
+from ... material import blank_cutting_mat
 
 class HOPS_PT_material_hops(Panel):
     bl_label = 'Cutting Material'
@@ -34,9 +33,8 @@ class HOPS_PT_material_hops(Panel):
         elif option.material_mode == 'BLANK':
             row.prop(option, 'color_prob')
         row.prop(option, 'force', text='', icon='FORCE_FORCE')
+
     #method for bridging with BC
     @staticmethod
     def blank_cut():
-        
         blank_cutting_mat()
-         

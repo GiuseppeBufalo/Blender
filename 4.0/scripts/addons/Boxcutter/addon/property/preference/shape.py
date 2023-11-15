@@ -263,6 +263,12 @@ class bc(PropertyGroup):
         size = 3,
         default = (False, False, False))
 
+    mirror_gizmo: BoolProperty(
+        name = 'Mirror Gizmo',
+        description = 'Mirror Gizmo',
+        update = change.mirror_gizmo,
+        default = False)
+
     array_axis: EnumProperty(
         name = names['array_axis'],
         description = 'Array Axis',
@@ -474,7 +480,7 @@ def draw(preference, context, layout):
         label_row(preference.shape, 'taper', left.row(align=True))
         label_row(preference.behavior, 'persistent_taper', left.row(), toggle=True)
         #label_row(preference.behavior, 'keep_lattice_taper', left.row(), toggle=True)
-        
+
         right = box_split.column(align=True)
         label_split(right, 'Bevel:')
         label_row(preference.shape, 'bevel_width', right.row(align=True), label='Width')

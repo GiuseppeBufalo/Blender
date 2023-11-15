@@ -3,7 +3,7 @@ from math import cos, sin
 from enum import Enum
 from mathutils import Vector, Matrix
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... ui_framework import form_ui as form
@@ -14,8 +14,8 @@ from ... utils.cursor_warp import mouse_warp
 from ... utils.space_3d import get_3D_point_from_mouse
 from ... utils.gizmo_axial import Axial
 from ... utils.mod_controller import Mod_Controller
-from ... addon.utility import method_handler
-from ... addon.utility.screen import dpi_factor
+from ... utility import method_handler
+from ...utility.screen import dpi_factor
 
 
 DESC = """Array V2
@@ -171,10 +171,10 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
         self.setup_offset_sync_data(context, objs)
 
         # OP Prefs settings
-        if get_preferences().property.array_v2_use_2d == '3D':
+        if addon.preference().property.array_v2_use_2d == '3D':
             self.edit_space = Edit_Space.View_3D
 
-        self.popup_style = get_preferences().property.in_tool_popup_style
+        self.popup_style = addon.preference().property.in_tool_popup_style
 
         # Widgets : Deadzone
         self.widget = Widget(event)
@@ -358,11 +358,11 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
         elif event.type == 'X' and event.value == "PRESS":
             if event.ctrl == True:
                 self.toggle_axis(clear_axis_on_change=False)
-                if get_preferences().ui.Hops_extra_info:
+                if addon.preference().ui.Hops_extra_info:
                     bpy.ops.hops.display_notification(info=f"Axis Switched To: {self.axis.name}")
             else:
                 self.toggle_axis(clear_axis_on_change=True)
-                if get_preferences().ui.Hops_extra_info:
+                if addon.preference().ui.Hops_extra_info:
                     bpy.ops.hops.display_notification(info=f"Axis Reset To: {self.axis.name}")
 
         # Toggle snap mode
@@ -400,7 +400,7 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
             else:
                 self.set_arrays_to_one(negative=False)
 
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 if self.edit_space == Edit_Space.View_3D and not self.deadzone_active:
                     bpy.ops.hops.display_notification(info=f"Not Possible In 3D")
                 else:
@@ -424,7 +424,7 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
             if event.alt:
                 self.toggle_axis(clear_axis_on_change=True)
                 self.set_arrays_to_one(negative=False)
-                if get_preferences().ui.Hops_extra_info:
+                if addon.preference().ui.Hops_extra_info:
                     bpy.ops.hops.display_notification(info=f"Axis Reset To: {self.axis.name}")
 
             # Move mod up or down
@@ -508,7 +508,7 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
         mods_list = []
 
         # Main
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: # Micro UI
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: # Micro UI
             win_list.append(str(int(array_count)))
             if self.axis.name == 'X':
                 win_list.append("X : {:.3f}".format(offset[0]))
@@ -1290,13 +1290,13 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
             index = self.axis.value
             constant_offset[index] = obj_data.dims[index]
 
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f"Array Added")
 
 
     def remove_an_array(self):
         self.mod_controller.remove_active_mod(leave_one=True, use_logical_delete=True, remove_if_created=True)
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f"Array Removed")
 
 
@@ -1671,7 +1671,7 @@ class HOPS_OT_ST3_Array(bpy.types.Operator):
         '''Draw the circle where the mouse is in 3D.'''
 
         radius = self.drawing_radius
-        if get_preferences().property.array_type == "DOT":
+        if addon.preference().property.array_type == "DOT":
             radius = .0125
             width = 12
         else:
@@ -1863,7 +1863,7 @@ class HOPS_OT_ST3_Array_Popup(bpy.types.Operator):
         HOPS_OT_ST3_Array.popover_active = False
 
     def execute(self, context):
-        preference = get_preferences().ui
+        preference = addon.preference().ui
         return bpy.context.window_manager.invoke_popup(self, width=int(150 * dpi_factor()))
 
     def draw(self, context):

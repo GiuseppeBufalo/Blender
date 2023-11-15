@@ -4,13 +4,13 @@ import bpy.utils.previews
 from .. utility.base_modal_controls import Base_Modal_Controls
 from .. ui_framework.master import Master
 from .. ui_framework.utils.mods_list import get_mods_list
-from .. preferences import get_preferences
+from .. utility import addon
 
 # Cursor Warp imports
 from .. utils.toggle_view3d_panels import collapse_3D_view_panels
 from .. utils.modal_frame_drawing import draw_modal_frame
 from .. utils.cursor_warp import mouse_warp
-from .. addon.utility import method_handler
+from .. src.utilityremove import method_handler
 
 #############################
 # FaceOps Start Here
@@ -176,7 +176,7 @@ class HOPS_OT_FacegrateOperator(bpy.types.Operator):
             active_mod = ""
 
             # Main
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append("{:.3f}".format(self.inset))
                 if self.shrink_mode:
                     win_list.append("{:.3f}".format(self.shrink))
@@ -380,7 +380,7 @@ class HOPS_OT_FaceknurlOperator(bpy.types.Operator):
             active_mod = ""
 
             # Main
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append("{:.3f}".format(self.inset))
                 win_list.append("{:.3f}".format(self.height))
             else:
@@ -619,7 +619,7 @@ class HOPS_OT_EntrenchOperatorA(bpy.types.Operator):
             active_mod = ""
 
             # Main
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append("{:.3f}".format(self.depth))
                 win_list.append("{:.3f}".format(self.shrink))
                 
@@ -847,7 +847,7 @@ class HOPS_OT_PanelOperatorA(bpy.types.Operator):
             active_mod = ""
 
             # Main
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append("{:.3f}".format(self.inset))
                 win_list.append("{:.3f}".format(self.ridge))
                 

@@ -1,7 +1,7 @@
 import bpy, time, math, numpy
 from math import sin
 from mathutils import Vector
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from ... graphics.load import load_image_file
 from ... graphics.draw import render_text, draw_border_lines, render_quad, draw_2D_lines
 from ... utils.geo import get_blf_text_dims

@@ -2,7 +2,7 @@ import bpy
 from math import radians
 import math
 from . import infobar
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... utility.base_modal_controls import Base_Modal_Controls
 
@@ -10,7 +10,7 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_AdjustViewport(bpy.types.Operator):
@@ -37,7 +37,7 @@ class HOPS_OT_AdjustViewport(bpy.types.Operator):
 #improve it if you want but the goals are the same with this modal.
 
     def invoke(self, context, event):
-        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if get_preferences().ui.Hops_extra_info else lambda val: None
+        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if addon.preference().ui.Hops_extra_info else lambda val: None
         self.shading = context.space_data.shading
         wm = bpy.context.window_manager
         # if hasattr(obj, 'cycles_visibility'):
@@ -71,7 +71,7 @@ class HOPS_OT_AdjustViewport(bpy.types.Operator):
             self.viewmode = True
             bpy.ops.view3d.view_persportho()
 
-        if get_preferences().property.to_render_jump:
+        if addon.preference().property.to_render_jump:
             self.to_render = True
         else:
             self.to_render = 'None'
@@ -315,7 +315,7 @@ class HOPS_OT_AdjustViewport(bpy.types.Operator):
 
             # Micro UI
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 win_list.append(f'{self.mode[11:]}')
 
                 if self.mode == 'Background Rotate':

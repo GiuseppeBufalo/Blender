@@ -32,7 +32,6 @@ from bl_ui.properties_animviz import (
 from .. Panels import cutting_material, workflow, sharp_options, bool_options, dice_options, operator_options, mesh_clean_options, object_props, special_options, opt_ins, operators
 panel_node_draw = None
 
-from ... addon.utility.addon import preference
 from ... utility import active_tool
 from . mods_data import DATA_PT_modifiers, mods_dic
 from . gmods_data import DATA_PT_gpencil_modifiers, gmods_dic
@@ -231,7 +230,7 @@ def init_panels(ot):
                     properties_data_mesh.DATA_PT_texture_space,
                     getattr(properties_data_mesh, 'DATA_PT_remesh', None),
                     properties_data_mesh.DATA_PT_customdata]
-            else:
+            elif bpy.app.version < (4, 0, 0):
                 ot.panels['DATA'] = [
                     properties_data_mesh.DATA_PT_context_mesh,
                     properties_data_mesh.DATA_PT_vertex_groups,
@@ -244,6 +243,20 @@ def init_panels(ot):
                     properties_data_mesh.DATA_PT_texture_space,
                     getattr(properties_data_mesh, 'DATA_PT_remesh', None),
                     properties_data_mesh.DATA_PT_customdata]
+            else:
+                ot.panels['DATA'] = [
+                    properties_data_mesh.DATA_PT_context_mesh,
+                    properties_data_mesh.DATA_PT_vertex_groups,
+                    properties_data_mesh.DATA_PT_shape_keys,
+                    properties_data_mesh.DATA_PT_uv_texture,
+                    properties_data_mesh.DATA_PT_vertex_colors,
+                    # properties_data_mesh.DATA_PT_face_maps,
+                    # properties_data_mesh.DATA_PT_normals,
+                    # properties_data_mesh.DATA_PT_normals_auto_smooth,
+                    properties_data_mesh.DATA_PT_texture_space,
+                    getattr(properties_data_mesh, 'DATA_PT_remesh', None),
+                    properties_data_mesh.DATA_PT_customdata]
+
 
         elif obj.type in {'CURVE', 'SURFACE', 'FONT'}:
             ot.panels['DATA'] = [
@@ -434,7 +447,7 @@ def init_panels(ot):
                     properties_material_gpencil.MATERIAL_PT_gpencil_surface,
                     properties_material_gpencil.MATERIAL_PT_gpencil_strokecolor,
                     properties_material_gpencil.MATERIAL_PT_gpencil_fillcolor,
-                    properties_material_gpencil.MATERIAL_PT_gpencil_options]
+                    properties_material_gpencil.MATERIAL_PT_gpencil_settings]
 
 
 class context_copy:
@@ -624,7 +637,10 @@ class draw_panel:
                 # layout.operator_menu_enum('object.modifier_add', 'type')
 
                 row = layout.row(align=True)
-                row.operator_menu_enum("object.modifier_add", "type")
+                if bpy.app.version < (4, 0, 0):
+                    row.operator_menu_enum("object.modifier_add", "type")
+                else:
+                    row.operator("wm.call_menu", text="Add Modifier", icon='ADD').name = "OBJECT_MT_modifier_add"
                 # row.operator("hops.bool_toggle_viewport", text="", icon="HIDE_OFF")
                 row.operator("hops.bool_toggle_viewport", text= "", icon_value=get_icon_id("Tris")).all_modifiers = True
                 row.operator("hops.apply_modifiers", text="", icon_value=get_icon_id("Applyall"))

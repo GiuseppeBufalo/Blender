@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_DecalMachineFix(bpy.types.Operator):
@@ -12,6 +12,6 @@ class HOPS_OT_DecalMachineFix(bpy.types.Operator):
     option : BoolProperty(name="enable/disable", default=False)
 
     def execute(self, context):
-        get_preferences().property.decalmachine_fix = self.option
+        addon.preference().property.decalmachine_fix = self.option
 
         return {"FINISHED"}

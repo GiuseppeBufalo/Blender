@@ -6,7 +6,7 @@ from gpu_extras.batch import batch_for_shader
 from bpy.props import StringProperty
 from bpy_extras import view3d_utils, mesh_utils
 from bpy.app.handlers import persistent
-from .... preferences import get_preferences
+from .... utility import addon
 from .... utility.base_modal_controls import Base_Modal_Controls
 from .... ui_framework.master import Master
 from .... ui_framework.utils.mods_list import get_mods_list
@@ -17,8 +17,8 @@ from .... utils.toggle_view3d_panels import collapse_3D_view_panels
 from .... utils.modifiers import get_mod_copy, transfer_mod_data
 from .... utils.cursor_warp import mouse_warp
 from .... utils.modal_frame_drawing import draw_modal_frame
-from .... addon.utility import method_handler
-from .... addon.utility.screen import dpi_factor
+from .... utility import method_handler
+from ....utility.screen import dpi_factor
 
 # Selection utils
 from .... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast, ray_cast_objects

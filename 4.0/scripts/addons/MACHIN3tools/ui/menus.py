@@ -94,6 +94,8 @@ class MenuGroupObjectContextMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
+        layout.operator_context = "INVOKE_DEFAULT"
+
         m3 = context.scene.M3
 
         active_group, active_child, group_empties, groupable, ungroupable, addable, removable, selectable, duplicatable, groupifyable = get_group_polls(context)

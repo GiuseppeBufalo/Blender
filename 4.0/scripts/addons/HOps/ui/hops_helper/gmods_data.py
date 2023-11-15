@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 from bpy.app.translations import pgettext_iface as iface_
-from ... preferences import get_preferences
+from ... utility import addon
 
 gmods_dic = {
     'GP_NOISE': 'MOD_NOISE',
@@ -137,9 +137,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "seed")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gnoice_influence", text="Influence")
-        if get_preferences().modifier.gnoice_influence:
+        if addon.preference().modifier.gnoice_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True, True)
 
@@ -161,9 +161,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.prop(md, "step", text="Repeat")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gsmooth_influence", text="Influence")
-        if get_preferences().modifier.gsmooth_influence:
+        if addon.preference().modifier.gsmooth_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True, True)
 
@@ -176,9 +176,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.prop(md, "level", text="Subdivisions")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gsubsurf_influence", text="Influence")
-        if get_preferences().modifier.gsubsurf_influence:
+        if addon.preference().modifier.gsubsurf_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -201,9 +201,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "distance")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gsimplify_influence", text="Influence")
-        if get_preferences().modifier.gsimplify_influence:
+        if addon.preference().modifier.gsimplify_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -222,9 +222,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "thickness_factor")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gthick_influence", text="Influence")
-        if get_preferences().modifier.gthick_influence:
+        if addon.preference().modifier.gthick_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True, True)
 
@@ -250,9 +250,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "fill_scale", text="Scale")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gtex_influence", text="Influence")
-        if get_preferences().modifier.gtex_influence:
+        if addon.preference().modifier.gtex_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True)
 
@@ -276,9 +276,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "radius")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gtint_influence", text="Influence")
-        if get_preferences().modifier.gtint_influence:
+        if addon.preference().modifier.gtint_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True, True)
 
@@ -325,9 +325,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "frame_end")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gtime_influence", text="Influence")
-        if get_preferences().modifier.gtime_influence:
+        if addon.preference().modifier.gtime_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False, use_mat=False)
 
@@ -344,9 +344,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.prop(md, "value", text="V", slider=True)
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gcolor_influence", text="Influence")
-        if get_preferences().modifier.gcolor_influence:
+        if addon.preference().modifier.gcolor_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False, True)
 
@@ -373,9 +373,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             show = True
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gopacity_influence", text="Influence")
-        if get_preferences().modifier.gopacity_influence:
+        if addon.preference().modifier.gopacity_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, show, show)
 
@@ -409,9 +409,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "offset_object", expand=True)
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "garray_random", text="Randomize")
-        if get_preferences().modifier.garray_random:
+        if addon.preference().modifier.garray_random:
             layout.use_property_split = True
             layout.prop(md, "random_offset")
             layout.prop(md, "random_rotation")
@@ -420,9 +420,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.separator()
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "garray_influence", text="Influence")
-        if get_preferences().modifier.garray_influence:
+        if addon.preference().modifier.garray_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -458,9 +458,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "frame_end", text="End")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "build_influence", text="Influence")
-        if get_preferences().modifier.build_influence:
+        if addon.preference().modifier.build_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False, use_mat=False)
 
@@ -485,9 +485,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.prop(md, "strength", slider=True)
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "glattice_influence", text="Influence")
-        if get_preferences().modifier.glattice_influence:
+        if addon.preference().modifier.glattice_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -514,9 +514,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.prop(md, "object")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gmirror_influence", text="Influence")
-        if get_preferences().modifier.gmirror_influence:
+        if addon.preference().modifier.gmirror_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -542,9 +542,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         use_falloff = (md.falloff_type != 'NONE')
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "ghook_falloff", text="Falloff")
-        if get_preferences().modifier.ghook_falloff:
+        if addon.preference().modifier.ghook_falloff:
             layout.use_property_split = True
             layout.prop(md, "falloff_type")
             layout.prop(md, "falloff_radius")
@@ -556,9 +556,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "use_falloff_uniform")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "ghook_influence", text="Influence")
-        if get_preferences().modifier.ghook_influence:
+        if addon.preference().modifier.ghook_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 
@@ -574,9 +574,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
         layout.column().prop(md, "scale")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "goffset_influence", text="Influence")
-        if get_preferences().modifier.goffset_influence:
+        if addon.preference().modifier.goffset_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, True)
 
@@ -627,9 +627,9 @@ class DATA_PT_gpencil_modifiers(ModifierButtonsPanel, Panel):
             layout.prop(md, "fading_opacity", slider=True)
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "gmulistroke_influence", text="Influence")
-        if get_preferences().modifier.gmulistroke_influence:
+        if addon.preference().modifier.gmulistroke_influence:
             layout.use_property_split = True
             self.gpencil_masking(self, layout, ob, md, False)
 

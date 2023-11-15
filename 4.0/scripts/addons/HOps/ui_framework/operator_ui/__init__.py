@@ -5,8 +5,8 @@ from gpu_extras.batch import batch_for_shader
 from ..graphics.draw import render_text, render_quad, draw_border_lines
 from ..utils.geo import get_blf_text_dims
 
-from ...preferences import get_preferences
-from ...addon.utility import method_handler
+from ... utility import addon
+from ...utility import method_handler
 from ...utils.blender_ui import get_dpi_factor
 
 
@@ -76,7 +76,7 @@ class Master():
         
         Data.close_now = False
          
-        prefs = get_preferences()
+        prefs = addon.preference()
 
         if prefs.ui.Hops_operator_display:
             Data.draw_bg = draw_bg
@@ -103,7 +103,7 @@ class HOPS_OT_UI_Draw(bpy.types.Operator):
     def __init__(self):
         self.shader = None
         self.timer = None
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
         self.first_draw = False
 
 
@@ -265,7 +265,7 @@ class Banner():
     def __init__(self, context):
 
         self.context = context
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
         self.scale_factor = get_dpi_factor()
         self.setup_colors()
 

@@ -1,6 +1,6 @@
 import bpy, bmesh
 from collections import OrderedDict
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.master import Master
 from ...ui_framework.utils.mods_list import get_mods_list
 from . import infobar
@@ -217,7 +217,7 @@ class HOPS_OT_ResetAxisModal(bpy.types.Operator):
         if axis == "":
             axis = "None"
 
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
             win_list.append(axis)
             win_list.append(format(", ".join(list(OrderedDict.fromkeys(self.axises)))))
         else:

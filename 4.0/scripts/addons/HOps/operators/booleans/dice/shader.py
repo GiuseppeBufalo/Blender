@@ -1,8 +1,8 @@
 import bpy, bmesh, mathutils, math, gpu, time
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector, Matrix
-from .... preferences import get_preferences
-from .... addon.utility import method_handler
+from .... utility import addon
+from .... utility import method_handler
 from . import Mode
 from . struct import get_boxelize_ref
 
@@ -142,11 +142,11 @@ class Shader():
         self.should_be_fading = False
         self.fade_complete = False
         self.alpha_dice = .75
-        self.fade_duration = .25 #get_preferences().ui.Hops_extra_draw_time
+        self.fade_duration = .25 #addon.preference().ui.Hops_extra_draw_time
         self.fade_start_time = 0
         self.fade_start_time_set = False
         self.__setup_handle(context)
-        self.prefs = get_preferences().property
+        self.prefs = addon.preference().property
 
  
     def __setup_handle(self, context):

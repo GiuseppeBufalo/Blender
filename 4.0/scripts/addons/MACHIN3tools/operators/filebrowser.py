@@ -3,6 +3,10 @@ from bpy.props import StringProperty, BoolProperty
 import os
 from .. utils.system import abspath, open_folder
 from .. utils.property import step_list
+from .. utils.asset import get_asset_library_reference, set_asset_library_reference, get_asset_import_method, set_asset_import_method, get_asset_details_from_space, get_asset_ids
+from .. utils.workspace import get_window_region_from_area, get_3dview_area
+from .. utils.registration import get_prefs
+from .. colors import red
 
 
 class Open(bpy.types.Operator):
@@ -15,24 +19,54 @@ class Open(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.area.type == 'FILE_BROWSER'
+        if context.area:
+            return context.area.type == 'FILE_BROWSER'
 
     def execute(self, context):
-        params = context.space_data.params
+        space = context.space_data
+        params = space.params
+
         directory = abspath(params.directory.decode())
+        active_file = context.active_file
+
+        active, id_type, local_id = get_asset_ids(context)
 
         if self.blend_file:
-            active_file = context.active_file
-
             if active_file.asset_data:
-                bpy.ops.asset.open_containing_blend_file()
+
+                if not get_asset_ids(context)[2]:
+                    bpy.ops.asset.open_containing_blend_file()
+
+                else:
+
+
+                    area = get_3dview_area(context)
+
+                    if area:
+                        region, region_data = get_window_region_from_area(area)
+                        print(area, region, region_data)
+
+                        with context.temp_override(area=area, region=region, region_data=region_data):
+                            scale = context.preferences.system.ui_scale * get_prefs().modal_hud_scale
+                            coords = (context.region.width / 2, 100 * scale)
+                            bpy.ops.machin3.draw_label(text="The blend file containing this asset is already open.", coords=coords, color=red, alpha=1, time=5)
+
 
             else:
                 path = os.path.join(directory, active_file.relative_path)
                 bpy.ops.machin3.open_library_blend(blendpath=path)
 
         else:
-            open_folder(directory)
+
+            if active_file.asset_data:
+                _, libpath, _, _ = get_asset_details_from_space(context, space, debug=False)
+
+                if libpath:
+                    open_folder(libpath)
+
+
+            else:
+                open_folder(directory)
 
         return {'FINISHED'}
 
@@ -46,10 +80,12 @@ class Toggle(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.area.type == 'FILE_BROWSER'
+        if context.area:
+            return context.area.type == 'FILE_BROWSER'
 
     def execute(self, context):
         params = context.space_data.params
+
 
         if self.type == 'SORT':
 
@@ -68,9 +104,12 @@ class Toggle(bpy.types.Operator):
                     base_libs.append('ESSENTIALS')
 
                 asset_libraries = base_libs + [lib.name for lib in context.preferences.filepaths.asset_libraries]
-                current = params.asset_library_ref
 
-                params.asset_library_ref = step_list(current, asset_libraries, 1)
+                current = get_asset_library_reference(params)
+                next = step_list(current, asset_libraries, 1)
+                set_asset_library_reference(params, next)
+
+
 
         elif self.type == 'DISPLAY_TYPE':
 
@@ -83,14 +122,19 @@ class Toggle(bpy.types.Operator):
 
             elif context.area.ui_type == 'ASSETS':
 
-                if params.asset_library_ref != 'LOCAL':
-                    import_types = ['LINK', 'APPEND', 'APPEND_REUSE']
+                current = get_asset_library_reference(params)
+
+                if current != 'LOCAL':
+                    import_methods = ['LINK', 'APPEND', 'APPEND_REUSE']
 
                     if bpy.app.version >= (3, 5, 0):
-                        import_types.insert(0, 'FOLLOW_PREFS')
+                        import_methods.insert(0, 'FOLLOW_PREFS')
 
-                    current = params.import_type
-                    params.import_type = step_list(current, import_types, 1)
+                    current = get_asset_import_method(params)
+                    next = step_list(current, import_methods, 1)
+                    set_asset_import_method(params, next)
+
+
 
         elif self.type == 'HIDDEN':
             if context.area.ui_type == 'FILES':
@@ -110,10 +154,26 @@ class CycleThumbs(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.area.type == 'FILE_BROWSER' and context.space_data.params.display_type == 'THUMBNAIL'
+        if context.area:
+            return context.area.type == 'FILE_BROWSER' and context.space_data.params.display_type == 'THUMBNAIL'
+
 
     def execute(self, context):
         params = context.space_data.params
-        sizes = ['TINY', 'SMALL', 'NORMAL', 'LARGE']
-        params.display_size = step_list(params.display_size, sizes, -1 if self.reverse else 1, loop=True)
+
+        if bpy.app.version >= (4, 0, 0):
+            if params.display_size == 256 and not self.reverse:
+                params.display_size = 16
+
+            elif params.display_size == 16 and self.reverse:
+                params.display_size = 256
+
+            else:
+                params.display_size += -20 if self.reverse else 20
+
+        else:
+            sizes = ['TINY', 'SMALL', 'NORMAL', 'LARGE']
+            params.display_size = step_list(params.display_size, sizes, -1 if self.reverse else 1, loop=True)
+
+
         return {'FINISHED'}

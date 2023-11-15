@@ -2,7 +2,7 @@ import bpy
 from mathutils import Vector
 from . modifiers import get_mod_copy, transfer_mod_data
 from .. utility import modifier
-from .. addon.utility.profile import get_bevel_profile, set_bevel_profile
+from .profile import get_bevel_profile, set_bevel_profile
 
 
 class Mod_Data:

@@ -1,7 +1,7 @@
 import bpy
 from ... utils.addons import addon_exists
 from ... ui_framework.master import Master
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 
 

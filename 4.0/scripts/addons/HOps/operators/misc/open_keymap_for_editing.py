@@ -1,5 +1,5 @@
 import bpy
-from ...  addon.property.preference import keymap
+from ...  src.property.preference import keymap
 
 
 class HOPS_OT_OpenKeymapForEditing(bpy.types.Operator):

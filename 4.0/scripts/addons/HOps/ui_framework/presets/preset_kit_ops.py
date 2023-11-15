@@ -1,7 +1,7 @@
 import bpy
 from ..graphics.load import load_image_file
 from .utils import add_list_items, toggle_help, toggle_mods
-from ...preferences import get_preferences
+from ... utility import addon
 
 class Preset_Kit_Ops():
 
@@ -59,7 +59,7 @@ class Preset_Kit_Ops():
         self.tab_event = self.create.event_call_back(layout=header_layout, func=None)
 
         # Widget
-        split_count = get_preferences().ui.Hops_modal_kit_ops_display_count
+        split_count = addon.preference().ui.Hops_modal_kit_ops_display_count
         self.create.widget_scroll(panel=self.main_window.panels[-1], win_key="Kit_Ops", collapsable=False, split_count_override=True, split_count=split_count)
         self.thumbnails_widget = self.main_window.panels[-1].widget
         self.thumbnails_widget.split_count = split_count
@@ -144,7 +144,7 @@ class Preset_Kit_Ops():
     def add_thumbnails(self, thumbs=[], files=[]):
 
         self.thumbnails_widget.split_count_override = True
-        split_count = get_preferences().ui.Hops_modal_kit_ops_display_count
+        split_count = addon.preference().ui.Hops_modal_kit_ops_display_count
         self.thumbnails_widget.split_count = split_count
 
         row_percent = 100 / len(thumbs) if len(thumbs) > 0 else 100

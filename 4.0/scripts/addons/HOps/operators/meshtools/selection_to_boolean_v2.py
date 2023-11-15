@@ -1,17 +1,17 @@
 import bpy, mathutils, math, bmesh, time
 from enum import Enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utility.collections import view_layer_unhide, hide_all_objects_in_collection
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... ui_framework.graphics.draw import render_text
 from ... ui_framework.flow_ui.flow import Flow_Menu, Flow_Form
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 '''
 OVERVIEW
@@ -61,7 +61,7 @@ class HOPS_OT_Sel_To_Bool_V2(bpy.types.Operator):
 
         # Drawing
         self.mouse_pos = (event.mouse_region_x, event.mouse_region_y)
-        prefs = get_preferences()
+        prefs = addon.preference()
         self.color = (
             prefs.color.Hops_UI_cell_background_color[0],
             prefs.color.Hops_UI_cell_background_color[1],
@@ -354,8 +354,8 @@ class HOPS_OT_Sel_To_Bool_V2(bpy.types.Operator):
         # Assign boolean mod to original object
         self.bool_mod = self.obj.modifiers.new("HOPS Boolean", 'BOOLEAN')
         if hasattr(self.bool_mod, 'solver'):
-            self.bool_mod.solver = 'FAST'#get_preferences().property.boolean_solver
-            #print(get_preferences().property.boolean_solver)
+            self.bool_mod.solver = 'FAST'#addon.preference().property.boolean_solver
+            #print(addon.preference().property.boolean_solver)
         self.bool_mod.show_render = True
         self.simple_mod_sort()
         
@@ -396,8 +396,8 @@ class HOPS_OT_Sel_To_Bool_V2(bpy.types.Operator):
         bmesh.update_edit_mesh(self.bool_obj.data)
 
         # Clean mesh
-        bpy.ops.mesh.remove_doubles(threshold=get_preferences().property.meshclean_remove_threshold)
-        bpy.ops.mesh.dissolve_limited(angle_limit=get_preferences().property.meshclean_dissolve_angle)
+        bpy.ops.mesh.remove_doubles(threshold=addon.preference().property.meshclean_remove_threshold)
+        bpy.ops.mesh.dissolve_limited(angle_limit=addon.preference().property.meshclean_dissolve_angle)
 
         # Setup modal BM
         self.bm_backup = bm.copy()

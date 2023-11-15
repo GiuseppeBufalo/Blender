@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import FloatProperty, BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from .. sculpt.sculpt_tools import exit_sculpt
 
 class HOPS_OT_VoxelizerOperator(bpy.types.Operator):

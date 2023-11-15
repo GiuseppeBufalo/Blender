@@ -18,7 +18,7 @@
 
 # <pep8 compliant>
 from bpy.types import Panel
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 # Parent class for constraint panels, with templates and drawing methods
@@ -578,9 +578,9 @@ class ConstraintButtonsPanel(Panel):
         self.draw_influence(self, layout, con)
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "transformation_map", text="Map From")
-        if get_preferences().modifier.transformation_map:
+        if addon.preference().modifier.transformation_map:
             layout.use_property_split = True
 
             layout.prop(con, "map_from", expand=True)
@@ -611,9 +611,9 @@ class ConstraintButtonsPanel(Panel):
             col.prop(con, "from_max_z" + ext, text="Max")
 
         layout.use_property_split = False
-        pref = get_preferences().modifier
+        pref = addon.preference().modifier
         layout.prop(pref, "transformation_to", text="Map TO")
-        if get_preferences().modifier.transformation_to:
+        if addon.preference().modifier.transformation_to:
             layout.use_property_split = True
 
             layout.prop(con, "map_to", expand=True)

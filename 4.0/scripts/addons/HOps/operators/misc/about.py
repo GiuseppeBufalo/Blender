@@ -1,5 +1,5 @@
 import bpy
-from ... preferences import get_preferences
+from ... utility import addon
 
 from ...ui_framework.operator_ui import Master
 from ... import bl_info
@@ -42,20 +42,20 @@ class HOPS_OT_About(bpy.types.Operator):
                     [f"HOps: {bl_info['version'][0]}.{bl_info['version'][1]}.{bl_info['version'][2]}_{bl_info['version'][3]}", " "]]
 
                 draw_data.append(["..."])
-                addons = bpy.context.preferences.addons.keys()
+                _addons = bpy.context.preferences.addons.keys()
 
-                new_addons = []
-                for addon in addons:
-                    addon = addon.strip()
-                    if addon[:2] != "io":
-                        new_addons.append(addon)
+                _new_addons = []
+                for _addon in _addons:
+                    _addon = _addon.strip()
+                    if _addon[:2] != "io":
+                        _new_addons.append(_addon)
 
                 index = 0
                 error_out_count = 100
                 while True:
-                    if index + 1 < len(new_addons):
-                        left_side = new_addons[index]
-                        right_side = new_addons[index + 1]
+                    if index + 1 < len(_new_addons):
+                        left_side = _new_addons[index]
+                        right_side = _new_addons[index + 1]
                         draw_data.append([left_side, right_side])
                         index += 2
                     else:
@@ -68,7 +68,7 @@ class HOPS_OT_About(bpy.types.Operator):
                 draw_data.append(["Addons Used ", " "])
 
                 ui.receive_draw_data(draw_data=draw_data)
-                ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+                ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         elif event.ctrl:
             bpy.ops.hops.pong('INVOKE_DEFAULT')
@@ -77,9 +77,9 @@ class HOPS_OT_About(bpy.types.Operator):
             bpy.ops.hops.adjust_logo('INVOKE_DEFAULT')
 
         else:
-            if get_preferences().needs_update:# and not 'Connection Failed':
+            if addon.preference().needs_update:  # and not 'Connection Failed':
                 text = "Needs Update"
-            elif get_preferences().needs_update == 'Connection Failed':
+            elif addon.preference().needs_update == 'Connection Failed':
                 text = "Unknown Status"
             else:
                 text = "Current Version"
@@ -102,6 +102,6 @@ class HOPS_OT_About(bpy.types.Operator):
                 draw_data.append(["Authors ", " "])
 
                 ui.receive_draw_data(draw_data=draw_data)
-                ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+                ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {"FINISHED"}

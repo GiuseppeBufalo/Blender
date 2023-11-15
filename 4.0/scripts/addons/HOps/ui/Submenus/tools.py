@@ -1,7 +1,7 @@
 import bpy
 from ... icons import get_icon_id
 from ... utils.addons import addon_exists
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_MT_ObjectToolsSubmenu(bpy.types.Menu):
@@ -13,7 +13,7 @@ class HOPS_MT_ObjectToolsSubmenu(bpy.types.Menu):
 
         row = layout.column().row()
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column =self.layout
@@ -25,7 +25,10 @@ class HOPS_MT_ObjectToolsSubmenu(bpy.types.Menu):
 
         column.operator("hops.bool_dice_v2", text="Dice V2", icon_value=get_icon_id("Dice"))
         column.operator("array.twist", text="Twist 360", icon_value=get_icon_id("ATwist360"))
-        column.operator("hops.radial_array", text="Radial Array", icon_value=get_icon_id("ArrayCircle"))
+        if addon.preference().property.radial_array_type == 'CLASSIC':
+            column.operator("hops.radial_array", text="Radial Array", icon_value=get_icon_id("ArrayCircle"))
+        else:
+            column.operator("hops.radial_array_nodes", text="Radial Array V2", icon_value=get_icon_id("ArrayCircle")).from_empty = True
         column.separator()
         column.operator("hops.taper", text = "Taper / Deform", icon_value=get_icon_id("Tris"))
         column.separator()
@@ -44,7 +47,7 @@ class HOPS_MT_ObjectToolsSubmenu(bpy.types.Menu):
         column.operator("hops.apply_modifiers", text="Smart Apply", icon_value=get_icon_id("Applyall"))
         column.operator("hops.adjust_auto_smooth", text="AutoSmooth", icon_value=get_icon_id("Diagonal"))
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column.separator()

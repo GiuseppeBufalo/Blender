@@ -5,7 +5,7 @@ from mathutils import Vector
 from ... utils.objects import get_current_selected_status
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 from ... graphics.drawing2d import set_drawing_dpi
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_EmptyToImageOperator(bpy.types.Operator):
@@ -122,7 +122,7 @@ class HOPS_OT_EmptyOffsetModal(bpy.types.Operator):
     def modal(self, context, event):
 
         if event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
         if event.type == 'MOUSEMOVE':  # Apply
             self.rx = event.mouse_region_x

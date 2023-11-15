@@ -134,7 +134,6 @@ class option(PropertyGroup):
     slice: PointerProperty(type=Object)
     inset: PointerProperty(type=Object)
     plane: PointerProperty(type=Object)
-    bound_object: PointerProperty(type=Object)
     empty: PointerProperty(type=Object)
 
     snap: PointerProperty(type=snap.option)

@@ -1,6 +1,6 @@
 import bpy, bmesh
 from ... ui_framework.operator_ui import Master
-from ... preferences import get_preferences, get_addon_name
+from ... utility import addon
 
 
 class HOPS_OT_ToRope(bpy.types.Operator):
@@ -158,7 +158,7 @@ CTRL - Alternative Smart Rope'''
             draw_data.append([f'Conversion to Rope'])
             ui.receive_draw_data(draw_data=draw_data)
 
-            prefs = get_preferences()
+            prefs = addon.preference()
             draw_bg = prefs.ui.Hops_operator_draw_bg
             draw_border = prefs.ui.Hops_operator_draw_border
             ui.draw(draw_bg=draw_bg, draw_border=draw_border)

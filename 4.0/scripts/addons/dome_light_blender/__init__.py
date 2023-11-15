@@ -19,11 +19,11 @@ from . dome_light import *
 bl_info = {
     "name": "Dome Light",
     "author": "Wanderson M Pimenta",
-    "version": (2, 0, 1),
+    "version": (2, 0, 2),
     "blender": (2, 90, 0),
     "location": "View3D > Properties > Dome Light",
     "description": "Create a Dome Light", 
     "wiki_url": "",
-    "tracker_url": "",      
+    "tracker_url": "https://blender-addons.gumroad.com/l/dome_light_for_blender",      
     "category": "3D View"
 }

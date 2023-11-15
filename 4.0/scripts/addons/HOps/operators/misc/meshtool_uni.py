@@ -2,7 +2,7 @@ import bpy
 import bmesh
 import bpy.utils.previews
 from math import radians
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.blender_ui import get_dpi_factor
 from ... utils.context import ExecutionContext
 from ... utility import modifier
@@ -107,7 +107,7 @@ CTRL + SHIFT - Add Weld (vgroup)
             text = "Bevel Weight Adjustment"
             bpy.ops.hops.bevel_weight('INVOKE_DEFAULT')
         else:
-            if get_preferences().property.sharp_use_crease == False and get_preferences().property.sharp_use_sharp == False and get_preferences().property.sharp_use_seam == False and get_preferences().property.sharp_use_bweight  == False:
+            if addon.preference().property.sharp_use_crease == False and addon.preference().property.sharp_use_sharp == False and addon.preference().property.sharp_use_seam == False and addon.preference().property.sharp_use_bweight  == False:
                 header = "No Mark"
                 text = "Nothing was set for marking in settings"
             else:
@@ -128,7 +128,7 @@ CTRL + SHIFT - Add Weld (vgroup)
             ]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 
@@ -171,8 +171,8 @@ class HOPS_OT_Bevel_Half_Add(bpy.types.Operator):
         bevel_modifier.use_clamp_overlap = False
         bevel_modifier.harden_normals = False
         bevel_modifier.angle_limit = radians(60)
-        bevel_modifier.loop_slide = get_preferences().property.bevel_loop_slide
-        bevel_modifier.profile = get_preferences().property.bevel_profile
+        bevel_modifier.loop_slide = addon.preference().property.bevel_loop_slide
+        bevel_modifier.profile = addon.preference().property.bevel_profile
 
         modifier.sort(obj, sort_types=['WEIGHTED_NORMAL'])
 
@@ -187,7 +187,7 @@ class HOPS_OT_Bevel_Half_Add(bpy.types.Operator):
                 ["Total Modifiers ", len(context.active_object.modifiers[:])]
                 ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 
@@ -249,7 +249,7 @@ class HOPS_OT_BevBoolMulti(bpy.types.Operator):
         is_bevel = len([mod for mod in bpy.context.active_object.modifiers if mod.type == 'BEVEL'])
         is_bool = len([mod for mod in bpy.context.active_object.modifiers if mod.type == 'BOOLEAN'])
 
-        if not get_preferences().property.bev_bool_helper:
+        if not addon.preference().property.bev_bool_helper:
             try:
                 if len(bpy.context.selected_objects) == 1:
                     if context.active_object.hops.status == 'BOOLSHAPE':
@@ -356,7 +356,7 @@ CTRL + SHIFT - Panel (Face)
             ]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 

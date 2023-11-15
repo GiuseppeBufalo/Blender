@@ -2,7 +2,7 @@ import bpy, webbrowser
 from mathutils import Vector
 from . utils import add_list_items, toggle_help, toggle_mods
 from .. graphics.load import load_image_file
-from ... preferences import get_preferences
+from ... utility import addon
 
 class Preset_Pizza_Ops():
 
@@ -25,7 +25,7 @@ class Preset_Pizza_Ops():
         self.main_window_layout()
 
         # Override colors
-        prefs = get_preferences()
+        prefs = addon.preference()
 
         # Original
         self.prefs_colors = []
@@ -70,7 +70,7 @@ class Preset_Pizza_Ops():
         self.create.element_border(layout=header_layout, line_width=1)
 
         # Widget
-        split_count = get_preferences().ui.Hops_modal_pizza_ops_display_count
+        split_count = addon.preference().ui.Hops_modal_pizza_ops_display_count
         self.create.widget_scroll(panel=self.main_window.panels[-1], win_key="Pizza_Ops", collapsable=False, split_count_override=True, split_count=split_count)
         self.widget = self.main_window.panels[-1].widget
         self.widget.split_count = split_count
@@ -84,7 +84,7 @@ class Preset_Pizza_Ops():
 
     def build_main(self, win_dict, window_name, win_form=None):
 
-        split_count = get_preferences().ui.Hops_modal_pizza_ops_display_count
+        split_count = addon.preference().ui.Hops_modal_pizza_ops_display_count
         self.widget.split_count = split_count
         row_percent = 100 / len(win_dict) if len(win_dict) > 0 else 100
 
@@ -123,7 +123,7 @@ class Preset_Pizza_Ops():
                         pass
 
         # Set color overrides back to original
-        prefs = get_preferences()
+        prefs = addon.preference()
         prefs.color.Hops_UI_background_color      = self.Hops_UI_background_color
         prefs.color.Hops_UI_cell_background_color = self.Hops_UI_cell_background_color
         prefs.color.Hops_UI_border_color          = self.Hops_UI_border_color

@@ -1,6 +1,6 @@
 import bpy
 from bpy.props import BoolProperty
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 
@@ -46,7 +46,7 @@ class HOPS_OT_Shrinkwrap(bpy.types.Operator):
                 ["SHRINKWRAP"],
                 ["Object B shrinkwrapped to Object A"]]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
 
         return {"FINISHED"}

@@ -1,4 +1,4 @@
-import traceback
+import traceback, itertools
 
 import bpy
 import bmesh
@@ -9,7 +9,7 @@ from mathutils import Matrix, Vector
 
 from .... import toolbar
 
-from ..... utility import addon, object, math
+from ..... utility import addon, object, math, operator_override
 from ..... utility import mesh as _mesh
 from ..... utility import modifier as _modifier
 # from .. shape import lattice, mesh, modifier, modal
@@ -99,7 +99,7 @@ def repeat(op, context, collect=False):
                 repeat_obj = bpy.data.objects[repeat_name]
 
                 override = {'object': repeat_obj, 'active_object': repeat_obj, 'selected_editable_objects': [bc.shape], 'selected_objects': [bc.shape]}
-                bpy.ops.object.make_links_data(override, type='MODIFIERS')
+                operator_override(context, bpy.ops.object.make_links_data, override, type='MODIFIER')
 
                 for mod in bc.shape.modifiers: # remap object references or exception
                     if mod.type == 'LATTICE':
@@ -247,19 +247,9 @@ def clean(op, context, clean_all=False):
             else:
                 preference.shape['bevel_segments'] = mod.segments
 
-    for obj in op.datablock['targets']:
+    for obj in itertools.chain(op.datablock['targets'], op.datablock['slices'], op.datablock['insets']):
         for mod in obj.modifiers:
-            if mod.type == 'BOOLEAN' and (mod.object == bc.shape or op.original_mode == 'EDIT_MESH'):
-                mod.show_viewport = True
-
-    for obj in op.datablock['slices']:
-        for mod in obj.modifiers:
-            if mod.type == 'BOOLEAN' and (mod.object == bc.shape or op.original_mode == 'EDIT_MESH'):
-                mod.show_viewport = True
-
-    for obj in op.datablock['insets']:
-        for mod in obj.modifiers:
-            if mod.type == 'BOOLEAN' and (mod.object == bc.shape or op.original_mode == 'EDIT_MESH'):
+            if mod.type == 'BOOLEAN' and mod.object == bc.shape:
                 mod.show_viewport = True
 
     for obj in context.visible_objects:
@@ -385,7 +375,7 @@ def clean(op, context, clean_all=False):
                     if hops_mark:
                         pref = addon.hops().property
 
-                        bevel = bm.edges.layers.bevel_weight.verify()
+                        bevel = _mesh.bevel_weight_verify(bm)
                         crease = bm.edges.layers.crease.verify()
 
                         selected_faces = {face for face in bm.faces if face.select}

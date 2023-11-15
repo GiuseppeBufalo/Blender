@@ -1,5 +1,5 @@
 import bpy
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from ...utility.collections import all_collections_in_view_layer, hops_col_get
 
@@ -201,7 +201,7 @@ def object_and_bool_count(containers):
 
 def draw_ui():
     global object_count, bool_count
-    prefs = get_preferences()
+    prefs = addon.preference()
     ui = Master()
     draw_data = [
         ['Uniquify Cutters'],

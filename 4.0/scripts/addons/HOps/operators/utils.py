@@ -2,7 +2,7 @@ import bpy
 import bmesh
 from .. utils.context import ExecutionContext
 from .. utils.objects import get_modifier_with_type
-from .. preferences import get_preferences
+from .. utility import addon
 
 
 def update_Weight_modifier_if_necessary(object):
@@ -26,16 +26,16 @@ def update_bevel_modifier_if_necessary(object, segment_amount, bevelwidth, profi
         bevel.show_in_editmode = False
         bevel.width = bevelwidth
         bevel.profile = profile_value
-        bevel.limit_method = get_preferences().property.workflow_mode
+        bevel.limit_method = addon.preference().property.workflow_mode
         bevel.show_in_editmode = True
-        bevel.harden_normals = get_preferences().property.use_harden_normals
+        bevel.harden_normals = addon.preference().property.use_harden_normals
         bevel.miter_outer = 'MITER_ARC'
         bevel.segments = segment_amount
-        bevel.loop_slide = get_preferences().property.bevel_loop_slide
+        bevel.loop_slide = addon.preference().property.bevel_loop_slide
 
     # else:
     #     bevel.segments = segment_amount
-    #     bevel.harden_normals = get_preferences().property.use_harden_normals
+    #     bevel.harden_normals = addon.preference().property.use_harden_normals
     #     bevel.width = bevelwidth
 
 
@@ -63,16 +63,16 @@ def mark_ssharps(object, sharpness):
         bpy.context.scene.tool_settings.use_mesh_automerge = False
         only_select_sharp_edges(sharpness)
 
-        if get_preferences().property.sharp_use_crease:
+        if addon.preference().property.sharp_use_crease:
             bpy.ops.transform.edge_crease(value=1)
 
-        if get_preferences().property.sharp_use_sharp:
+        if addon.preference().property.sharp_use_sharp:
             bpy.ops.mesh.mark_sharp(clear=False, use_verts=False)
 
-        if get_preferences().property.sharp_use_seam:
+        if addon.preference().property.sharp_use_seam:
             bpy.ops.mesh.mark_seam(clear=False)
 
-        if get_preferences().property.sharp_use_bweight:
+        if addon.preference().property.sharp_use_bweight:
             obj = bpy.context.object
             me = obj.data
             bm = bmesh.from_edit_mesh(me)
@@ -99,9 +99,14 @@ def mark_ssharps_bmesh(obj, sharpness, reveal_mesh, additive_mode):
     bm = bmesh.new()
     bm.from_mesh(me)
 
-    if get_preferences().property.sharp_use_crease:
-        cr = bm.edges.layers.crease.verify()
-    if get_preferences().property.sharp_use_bweight:
+    if addon.preference().property.sharp_use_crease:
+        if bpy.app.version[0] >= 4:
+            cr = bm.edges.layers.float.get('crease_edge')
+            if cr is None:
+                cr = bm.edges.layers.float.new('crease_edge')
+        else:
+            cr = bm.edges.layers.crease.verify()
+    if addon.preference().property.sharp_use_bweight:
         if bpy.app.version[0] >= 4:
             bw = bm.edges.layers.float.get('bevel_weight_edge')
             if bw is None:
@@ -116,22 +121,22 @@ def mark_ssharps_bmesh(obj, sharpness, reveal_mesh, additive_mode):
 
     for e in alledges:
         if not additive_mode:
-            if get_preferences().property.sharp_use_crease:
+            if addon.preference().property.sharp_use_crease:
                 e[cr] = 0
-            if get_preferences().property.sharp_use_sharp:
+            if addon.preference().property.sharp_use_sharp:
                 e.smooth = True
-            if get_preferences().property.sharp_use_seam:
+            if addon.preference().property.sharp_use_seam:
                 e.seam = False
-            if get_preferences().property.sharp_use_bweight:
+            if addon.preference().property.sharp_use_bweight:
                 e[bw] = 0
         if e.calc_face_angle() >= sharpness:
-            if get_preferences().property.sharp_use_crease:
+            if addon.preference().property.sharp_use_crease:
                 e[cr] = 1
-            if get_preferences().property.sharp_use_sharp:
+            if addon.preference().property.sharp_use_sharp:
                 e.smooth = False
-            if get_preferences().property.sharp_use_seam:
+            if addon.preference().property.sharp_use_seam:
                 e.seam = True
-            if get_preferences().property.sharp_use_bweight:
+            if addon.preference().property.sharp_use_bweight:
                 if e[bw] == 0:
                     e[bw] = 1
 
@@ -140,9 +145,12 @@ def mark_ssharps_bmesh(obj, sharpness, reveal_mesh, additive_mode):
 
 
 def set_smoothing(object, auto_smooth_angle):
-    bpy.ops.object.shade_smooth()
-    object.data.use_auto_smooth = True
-    object.data.auto_smooth_angle = auto_smooth_angle
+    if bpy.app.version[:2] > (3, 2) and bpy.app.version[:2] < (4, 1):
+        bpy.ops.object.shade_smooth(use_auto_smooth=True, auto_smooth_angle=auto_smooth_angle)
+    else:
+        bpy.ops.object.shade_smooth()
+        object.data.use_auto_smooth = True
+        object.data.auto_smooth_angle = auto_smooth_angle
 
 
 def only_select_sharp_edges(sharpness):

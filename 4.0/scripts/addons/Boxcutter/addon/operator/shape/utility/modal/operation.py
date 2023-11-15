@@ -39,7 +39,7 @@ def change(op, context, event, to='NONE', modified=True, init=False, clear_mods=
                 setattr(bc.shape.bc, mod.type.lower(), False)
             bc.shape.modifiers.remove(mod)
 
-    bound_box = bc.shape.bound_box
+    bound_box = bc.lattice.bound_box
 
     op.last['lattice_corner'] = lattice.center(Matrix(), 'front') * 2 - Vector(bc.lattice.bound_box[op.draw_dot_index])
     op.last['lattice_center'] = lattice.center(Matrix(), None)
@@ -49,7 +49,7 @@ def change(op, context, event, to='NONE', modified=True, init=False, clear_mods=
     side = front
     side = back if op.inverted_extrude else front
 
-    op.input_plane = math.vector_sum([(op.bounds[i] if op.shape_type != 'NGON' or op.ngon_fit else Vector(bc.shape.bound_box[i])) for i in side]) / 4
+    op.input_plane = math.vector_sum([(op.bounds[i] if op.shape_type != 'NGON' or op.ngon_fit else Vector(bc.lattice.bound_box[i])) for i in side]) / 4
 
     # op.ray['location'] = math.vector_sum([bc.shape.matrix_world @ op.bounds[i] for i in (1, 2, 5, 6)]) / 4
 
@@ -161,6 +161,16 @@ def change(op, context, event, to='NONE', modified=True, init=False, clear_mods=
                 #break
 
         op.last['mouse'] = op.mouse['location']
+
+        if to == 'NONE' and clear_mods and op.ngon_point_index != -1:
+            indices = op.geo['indices']['offset'] if not op.inverted_extrude else op.geo['indices']['extrusion']
+            for index, vindex in enumerate(indices):
+                if vindex != op.ngon_point_index:
+                    continue
+
+                mesh.index_weight(index, value=0)
+                mesh.index_weight(vindex, vert=True, value=0)
+
         op.ngon_point_index = -1
 
         if modified:
@@ -287,17 +297,34 @@ def change(op, context, event, to='NONE', modified=True, init=False, clear_mods=
 
         if ngon or boxgon:
             for index, vindex in enumerate(op.geo['indices']['offset']):
-                op.last['vert_weight'][index] = bc.shape.data.vertices[vindex].bevel_weight
-            op.last['edge_weight'] = [edge.bevel_weight for edge in bc.shape.data.edges]
-            # if op.ngon_point_index != -1:
-            #     op.ngon_point_bevel_reset = True
-            #     # op.last['vert_weight'][op.ngon_point_index] = bc.shape.data.vertices[op.ngon_point_index].bevel_weight
-            # else:
+                op.last['vert_weight'][index] = mesh.index_weight(vindex, vert=True)
+
+            op.last['edge_weight'] = [mesh.index_weight(edge.index) for edge in bc.shape.data.edges]
+
             from . bevel import clamp_and_visual_weight
             clamp_and_visual_weight(op, bc, preference, clamp, set=op.shape_type == 'NGON' and op.ngon_point_index == -1 and not op.ngon_point_bevel)
 
     else:
         op.ngon_point_index = -1
+
+    if to != 'MIRROR':
+        preference.shape['mirror_gizmo'] = False
+
+    elif preference.shape.mirror_gizmo:
+        context.window_manager.gizmo_group_type_ensure("BC_GGT_mirror")
+        mod = None
+
+        for m in reversed(bc.shape.modifiers):
+            if m.type == 'MIRROR':
+                mod = m
+                break
+
+        if mod and any(mod.use_axis):
+            eval = bc.shape.evaluated_get(context.evaluated_depsgraph_get())
+
+            if not len(eval.data.vertices):
+                    bc.shape.modifiers.remove(mod)
+                    bc.shape.data.update()
 
     if to == 'DRAW':
         if dot:
@@ -308,7 +335,6 @@ def change(op, context, event, to='NONE', modified=True, init=False, clear_mods=
 
     else:
         op.mouse['offset'] = Vector((0, 0))
-
 
     value = to
 

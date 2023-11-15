@@ -39,7 +39,6 @@ def cutter(op, context, index=1, custom=None):
     bc.shape.select_set(True)
 
     matrix = bc.shape.matrix_world.copy()
-    # dimension = Vector(bc.shape.dimensions)
 
     if not custom and not bc.shape.bc.applied and not bc.shape.bc.applied_cycle:
         bc.shape.bc.applied_cycle = True
@@ -126,14 +125,15 @@ def cutter(op, context, index=1, custom=None):
         bc.collection.objects.link(bc.shape)
 
     bc.shape.data.use_auto_smooth = True
-    bc.bound_object.parent = bc.shape
 
     if bc.empty:
         bc.empty.parent = bc.shape
 
     shape_2d = False
 
-    if True in [dimension < 0.00001 for dimension in bc.shape.dimensions] and len(bc.shape.data.polygons[:]):
+    eval = bc.shape.evaluated_get(context.evaluated_depsgraph_get())
+
+    if True in [dimension < 0.00001 for dimension in eval.dimensions] and len(bc.shape.data.polygons[:]):
         mod = bc.shape.modifiers.new('Solidify', type='SOLIDIFY')
         mod.thickness = 1
         mod.offset = 0
@@ -149,11 +149,11 @@ def cutter(op, context, index=1, custom=None):
 
     modifier.apply(bc.shape, ignore=[mod for mod in bc.shape.modifiers if mod.type == 'BEVEL'] if not shape_2d else [])
 
-    center = 0.125 * sum((Vector(point) for point in bc.shape.bound_box), Vector())
+    center = 0.125 * sum((Vector(point) for point in eval.bound_box), Vector())
     bc.shape.data.transform(Matrix.Translation(-center))
 
     scale = bc.shape.matrix_world.to_scale()
-    dimensions = bc.shape.dimensions.copy()
+    dimensions = eval.dimensions
     bc.shape.data.transform(Matrix.Diagonal((scale.x, scale.y, scale.z, 1)))
     bc.shape.matrix_world = Matrix()
 

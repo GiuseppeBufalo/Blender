@@ -1,5 +1,5 @@
 import bpy, bmesh, math, enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier, object
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -10,7 +10,7 @@ from ... utils.objects import apply_scale
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from mathutils import Vector, Matrix
 
 class origin_modes(enum.Enum):
@@ -102,7 +102,7 @@ class HOPS_OT_RadialArray(bpy.types.Operator):
     def invoke(self, context, event):
 
         # Set internal variables
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.obj = context.active_object
 
         self.index = 0
@@ -197,8 +197,8 @@ class HOPS_OT_RadialArray(bpy.types.Operator):
             self.displace_mod = self.obj.modifiers.new("Radial Displace", 'DISPLACE')
             self.displace_mod.show_expanded = False
 
-            self.displace_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-            self.displace_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+            self.displace_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+            self.displace_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
 
             self.displace_mod.mid_level = 0.0
             self.displace_mod.direction = self.direction
@@ -208,8 +208,8 @@ class HOPS_OT_RadialArray(bpy.types.Operator):
             self.array_mod = self.obj.modifiers.new("Radial Array", 'ARRAY')
             self.array_mod.show_expanded = False
 
-            self.array_mod.show_render = get_preferences().property.Hops_twist_radial_sort
-            self.array_mod.show_in_editmode = not get_preferences().property.Hops_twist_radial_sort
+            self.array_mod.show_render = addon.preference().property.Hops_twist_radial_sort
+            self.array_mod.show_in_editmode = not addon.preference().property.Hops_twist_radial_sort
 
             self.array_mod.use_constant_offset = False
             self.array_mod.use_relative_offset = False
@@ -476,7 +476,7 @@ class HOPS_OT_RadialArray(bpy.types.Operator):
     def confirm(self, context):
         modifier.sort(self.obj, sort_types=['WEIGHTED_NORMAL'])
 
-        if get_preferences().property.workflow == 'DESTRUCTIVE':
+        if addon.preference().property.workflow == 'DESTRUCTIVE':
             modifier.apply(self.obj, self.displace_mod)
             modifier.apply(self.obj, self.array_mod)
             bpy.data.objects.remove(self.empty)
@@ -541,7 +541,7 @@ class HOPS_OT_RadialArray(bpy.types.Operator):
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(f"{self.axis}")
                 win_list.append(f"{self.segments}")
                 win_list.append(f"{self.displace:.2f}")

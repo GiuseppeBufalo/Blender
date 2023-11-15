@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 
 class HOPS_PT_workflow(Panel):
@@ -10,12 +10,17 @@ class HOPS_PT_workflow(Panel):
     bl_category = 'HardOps'
     bl_region_type = 'UI'
 
+    def column(self, context):
+        layout = self.layout
+        column = layout.column(align=True)
+
+        return column
 
     def draw(self, context):
-        layout = self.layout
-        preference = get_preferences().property
 
-        column = layout.column(align=True)
+        column = self.column(context)
+
+        preference = addon.preference().property
 
         row = column.row(align=True)
         row.label(text = "Behavior / Boolean Solver ")
@@ -71,8 +76,8 @@ class HOPS_PT_workflow(Panel):
         # sub = row.row(align=True)
         # sub.alignment = 'RIGHT'
 
-        # if get_preferences().property.sort_bevel:
-        #     sub.prop(get_preferences().property, 'sort_bevel_last', text='', icon='SORT_ASC')
+        # if addon.preference().property.sort_bevel:
+        #     sub.prop(addon.preference().property, 'sort_bevel_last', text='', icon='SORT_ASC')
         #     sub.separator()
         # sub.prop(preference, 'sort_bevel', text='', icon='MOD_BEVEL')
         # sub.prop(preference, 'sort_array', text='', icon='MOD_ARRAY')

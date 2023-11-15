@@ -269,6 +269,13 @@ class bc(PropertyGroup):
         description = '\n Use a simple pie menu (D-KEY)',
         default = False)
 
+    mirror_gizmo_loc: EnumProperty(
+        name = 'Mirro Gizmo Location',
+        description = 'Where to draw mirror gizmo',
+        items = [
+            ('CENTER', 'Center', 'Center of the shape'),
+            ('MIRROR_POINT', 'Mirror Point', 'Point relative to which shape is mirrored')],
+        default = 'MIRROR_POINT')
 
 def draw(preference, context, layout):
     column = layout.column(align=True)
@@ -340,6 +347,8 @@ def draw(preference, context, layout):
         label_row(preference.display, 'grid_fade_time_out', right.row(align=True), label='Out')
         right.separator()
 
+        label_row(preference.display, 'mirror_gizmo_loc', right.row(align=True), label='Mirror Gizmo')
+
     # tool interface
     column.separator()
     header(preference, column.box(), 'display_tool_interface')
@@ -398,7 +407,7 @@ def draw(preference, context, layout):
         label_row(preference.display, 'statusbar_display', right.row(), 'Error Position')
         label_row(preference.keymap, 'enable_toolsettings', right.row(), 'Display Topbar', toggle=True)
         right.separator()
-        
+
     column.separator()
 
     split = column.split(align=True, factor=0.5)

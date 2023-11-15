@@ -24,7 +24,7 @@ def shape(op, context, event):
 
     straight_edge = preference.shape.straight_edges or bc.q_back_only
 
-    max_dimension = max(bc.bound_object.dimensions[:-1])
+    max_dimension = max(bc.lattice.dimensions[:-1])
     clamped = False
 
     clamp_offset = clamp(op)
@@ -79,12 +79,13 @@ def shape(op, context, event):
                 bc.shape.data.use_customdata_vertex_bevel = True
 
             for v in bc.shape.data.vertices:
-                v.bevel_weight = v.bevel_weight if op.ngon_point_bevel else 1
+                value = mesh.index_weight(v.index, vert=True)
+                mesh.index_weight(v.index, vert=True, value=value if op.ngon_point_bevel else 1)
 
             mod = bc.shape.modifiers.new(name='Bevel Weld', type='WELD')
             mod.show_render = False
             mod.show_expanded = False
-            mod.merge_threshold = max(bc.shape.dimensions) * 0.001
+            mod.merge_threshold = max(bc.lattice.dimensions) * 0.001
 
             modifier.sort(bc.shape, sort_types=['LATTICE', 'BEVEL'], first=True, ignore_hidden=False, use_index_operator=False)
 
@@ -106,7 +107,7 @@ def shape(op, context, event):
             mod = bc.shape.modifiers.new(name='Bevel Weld', type='WELD')
             mod.show_render = False
             mod.show_expanded = False
-            mod.merge_threshold = max(bc.shape.dimensions) * 0.001
+            mod.merge_threshold = max(bc.lattice.dimensions) * 0.001
 
             if (op.shape_type == 'NGON' or op.ngon_fit) and not preference.shape.cyclic:
                 modifier.sort(bc.shape, sort_types=['LATTICE', 'BEVEL'], first=True, ignore_hidden=False, use_index_operator=False)
@@ -141,7 +142,7 @@ def shape(op, context, event):
                 mod = bc.shape.modifiers.new(name='Quad Bevel Weld', type='WELD')
                 mod.show_render = False
                 mod.show_expanded = False
-                mod.merge_threshold = max(bc.shape.dimensions) * 0.001
+                mod.merge_threshold = max(bc.lattice.dimensions) * 0.001
 
         if front_bevel:
             mesh.mesh.recalc_normals(bc.shape, face_indices=op.geo['indices']['top_face'], inside=not op.inverted_extrude)
@@ -169,7 +170,7 @@ def shape(op, context, event):
             mod = bc.shape.modifiers.new(name='Front Bevel Weld', type='WELD')
             mod.show_render = False
             mod.show_expanded = False
-            mod.merge_threshold = max(bc.shape.dimensions) * 0.001
+            mod.merge_threshold = max(bc.lattice.dimensions) * 0.001
 
         elif not bc.q_bevel:
             mesh.mesh.recalc_normals(bc.shape, inside=op.inverted_extrude)
@@ -192,7 +193,7 @@ def shape(op, context, event):
                     if mod.type != 'BEVEL':
                         continue
 
-                    if not vert.bevel_weight:
+                    if not mesh.index_weight(vert.index, vert=True):
                         continue
 
                     weighted_width = op.last['vert_weight'][index] + width_input * factor
@@ -211,9 +212,10 @@ def shape(op, context, event):
                         op.width_state = False
 
             if vert.index == op.ngon_point_index or op.ngon_point_index == -1:
-                vert.bevel_weight = op.last['vert_weight'][index] + width_input * factor
 
-                update = True
+                mesh.index_weight(index, vert=True, value=op.last['vert_weight'][index] + width_input * factor)
+
+                # update = True
                 for eindex in op.geo['indices']['top_edge']:
                     edge = bc.shape.data.edges[eindex]
 
@@ -225,29 +227,27 @@ def shape(op, context, event):
 
                     weight = 0
                     if vert.index != vert1.index:
-                        weight = bc.shape.data.vertices[vert1.index].bevel_weight
+                        weight = mesh.index_weight(vert1.index, vert=True)
 
                     if vert.index != vert2.index:
-                        weight = bc.shape.data.vertices[vert2.index].bevel_weight
+                        weight = mesh.index_weight(vert2.index, vert=True)
 
                     length = (vert1.co - vert2.co).length
 
                     if op.ngon_point_index != -1:
                         length = length - (length * weight)
 
-                    if clamp_offset * vert.bevel_weight > length:
-                        update = False
-                        continue
+                    vert_weight = mesh.index_weight(vert.index, vert=True)
 
-                        # if op.ngon_point_index == -1:
-                        #     vert.bevel_weight = length * vert.bevel_weight
-                        # update = False
+                    # if clamp_offset * vert_weight > length:
+                    #   update = False
+                    #   continue
 
-                    elif op.ngon_point_index == -1 and not vert.bevel_weight:
-                        op.last['vert_weight'][index] = preference.shape.bevel_width - (clamp_offset * vert.bevel_weight)
+                    if op.ngon_point_index == -1 and not vert_weight:
+                        op.last['vert_weight'][index] = preference.shape.bevel_width - (clamp_offset * vert_weight)
 
-                if update:
-                    vert.bevel_weight = op.last['vert_weight'][index] + width_input * factor
+                # if update:
+                mesh.index_weight(vindex, vert=True, value=op.last['vert_weight'][index] + width_input * factor)
 
                 for eindex in op.geo['indices']['mid_edge']:
                     edge = bc.shape.data.edges[eindex]
@@ -255,17 +255,19 @@ def shape(op, context, event):
                     if vert.index not in edge.vertices:
                         continue
 
-                    edge.bevel_weight = vert.bevel_weight
-                    bc.shape.data.vertices[edge.vertices[0]].bevel_weight = vert.bevel_weight
-                    bc.shape.data.vertices[edge.vertices[1]].bevel_weight = vert.bevel_weight
+                    value = mesh.index_weight(vert.index, vert=True)
+                    mesh.index_weight(eindex, value=value)
+                    mesh.index_weight(edge.vertices[0], vert=True, value=value)
+                    mesh.index_weight(edge.vertices[1], vert=True, value=value)
 
         if not preference.shape.quad_bevel and op.extruded and op.ngon_point_index == -1 and bc.q_bevel:
             if not op.last['edge_weight']:
-                op.last['edge_weight'] = [edge.bevel_weight for edge in bc.shape.data.edges]
+                op.last['edge_weight'] = [mesh.index_weight(edge.index) for edge in bc.shape.data.edges]
 
             for index in op.geo['indices']['bot_edge']:
                 edge = bc.shape.data.edges[index]
-                edge.bevel_weight = op.last['edge_weight'][index] + width_input * factor
+
+                mesh.index_weight(edge.index, value=op.last['edge_weight'][index] + width_input * factor)
 
         op.last['bevel_width'] = clamp_offset
 
@@ -346,15 +348,15 @@ def clamp(op, q = False):
 
         return dist * taper - offset
 
-    vector1 = Vector(bc.bound_object.bound_box[0][:])
-    vector2 = Vector(bc.bound_object.bound_box[1][:])
-    vector3 = Vector(bc.bound_object.bound_box[5][:])
-    vector4 = Vector(bc.bound_object.bound_box[6][:])
+    vector1 = Vector(bc.lattice.bound_box[0][:])
+    vector2 = Vector(bc.lattice.bound_box[1][:])
+    vector3 = Vector(bc.lattice.bound_box[5][:])
+    vector4 = Vector(bc.lattice.bound_box[6][:])
 
     distances = [vector4 - vector3, vector3 - vector2]
 
     if op.shape_type == 'CIRCLE' and not preference.shape.circle_type == 'STAR':
-        z_height = bc.bound_object.dimensions[2]
+        z_height = bc.lattice.dimensions[2]
 
         if not op.flip_z and max(min(distances)) * 0.5 <= z_height:
             return max(min(distances)) * 0.7037037037037 * taper - offset
@@ -381,14 +383,15 @@ def clamp_and_visual_weight(op, bc, pref, clamp, set=True):
         if op.last['modifier']['bevel_width'] > clamp:
             op.last['modifier']['bevel_width'] = clamp
 
-        if vert.bevel_weight == 1.0:
-            vert.bevel_weight = clamp * (prev / 100) * 100
+        if mesh.index_weight(vert.index, vert=True) == 1.0:
+            mesh.index_weight(vert.index, vert=True, value=clamp * (prev / 100) * 100)
 
         elif set:
-            vert.bevel_weight = pref.shape.bevel_width * (clamp / 100) * 100
+            mesh.index_weight(vert.index, vert=True, value=pref.shape.bevel_width * (clamp / 100) * 100)
 
         # if vert.index == op.ngon_point_index:
-        op.last['vert_weight'][index] = vert.bevel_weight
+
+        op.last['vert_weight'][index] = mesh.index_weight(vindex, vert=True)
 
         for eindex in eindices:
             edge = bc.shape.data.edges[eindex]
@@ -396,4 +399,5 @@ def clamp_and_visual_weight(op, bc, pref, clamp, set=True):
             if vert.index not in edge.vertices:
                 continue
 
-            edge.bevel_weight = vert.bevel_weight
+            mesh.index_weight(edge.index, value=mesh.index_weight(vert.index, vert=True))
+

@@ -2,7 +2,7 @@ import bpy, webbrowser
 from mathutils import Vector
 from . utils import add_list_items, toggle_help, toggle_mods
 from .. graphics.load import load_image_file
-from ... preferences import get_preferences
+from ... utility import addon
 
 class Preset_Brush_Ops():
 
@@ -32,7 +32,7 @@ class Preset_Brush_Ops():
         self.main_window_layout()
 
         # Override colors
-        prefs = get_preferences()
+        prefs = addon.preference()
 
     ########################
     #   Create Skeletons

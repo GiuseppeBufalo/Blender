@@ -1,23 +1,24 @@
 import bpy
-from bpy.props import FloatProperty, BoolProperty, EnumProperty, IntProperty
+from bpy.props import FloatProperty, BoolProperty, EnumProperty, IntProperty, StringProperty
 from bpy_extras.view3d_utils import region_2d_to_origin_3d, region_2d_to_vector_3d
+from typing import Set, Tuple, Union
 import bmesh
 from mathutils import Vector
 from mathutils.geometry import intersect_line_line, intersect_point_line
 from math import sqrt
 from .. utils.selection import get_selection_islands, get_boundary_edges, get_edges_vert_sequences, get_selected_vert_sequences
-from .. utils.property import rotate_list
+from .. utils.property import rotate_list, shorten_float_string
 from .. utils.math import average_normals, average_locations, get_center_between_verts, dynamic_format
 from .. utils.system import printd
-from .. utils.draw import draw_vector, draw_point, draw_line, draw_tris, draw_label, update_HUD_location, draw_init, draw_lines
+from .. utils.draw import draw_vector, draw_point, draw_line, draw_tris, draw_label, draw_init, draw_lines
 from .. utils.bmesh import get_loop_triangles
-from .. utils.ui import navigation_passthrough, init_cursor, init_status, finish_status, force_ui_update
+from .. utils.ui import navigation_passthrough, init_status, finish_status, force_ui_update, get_mouse_pos, ignore_events
 from .. utils.snap import Snap
 from .. utils.registration import get_prefs
 from .. utils.raycast import cast_bvh_ray_from_point
 from .. utils.graph import get_shortest_path
 from .. colors import green, red, blue, yellow, white, normal, orange
-from .. items import extrude_mode_items, ctrl
+from .. items import extrude_mode_items, ctrl, numbers, input_mappings
 
 
 
@@ -31,56 +32,85 @@ def draw_punchit_status(op):
         text = "Punch It"
         row.label(text=text)
 
-
         if not op.finalizing:
-            row.label(text="", icon='MOUSE_MOVE')
-            row.label(text="Set Amount")
+            if op.is_numeric_input:
+                row.label(text="", icon='EVENT_RETURN')
+                row.label(text="Finalize")
 
-            row.separator(factor=2)
+                row.label(text="", icon='MOUSE_MMB_DRAG')
+                row.label(text="Navigation")
 
-            row.label(text="", icon='MOUSE_LMB')
-            row.label(text="Finalize")
+                row.label(text="", icon='EVENT_ESC')
+                row.label(text="Cancel")
 
-            row.label(text="", icon='MOUSE_MMB_DRAG')
-            row.label(text="Navigation")
+                row.label(text="", icon='EVENT_TAB')
+                row.label(text="Abort Numeric Input")
 
-            row.label(text="", icon='MOUSE_RMB')
-            row.label(text="Cancel")
+                row.separator(factor=10)
 
-            row.separator(factor=10)
+                row.label(text="Numeric Input...")
 
-            row.label(text=f"Extrusion Mode:")
+            else:
 
-            row.separator(factor=1)
+                row.label(text="", icon='MOUSE_LMB')
+                row.label(text="Finalize")
 
-            row.label(text="", icon='EVENT_A')
-            row.label(text=f"Averaged")
+                row.label(text="", icon='MOUSE_MMB_DRAG')
+                row.label(text="Navigation")
 
-            row.separator(factor=1)
+                row.label(text="", icon='MOUSE_RMB')
+                row.label(text="Cancel")
 
-            row.label(text="", icon='EVENT_E')
-            row.label(text=f"Edge")
+                row.label(text="", icon='EVENT_TAB')
+                row.label(text="Enter Numeric Input")
 
-            row.separator(factor=1)
+                row.separator(factor=10)
 
-            row.label(text="", icon='EVENT_N')
-            row.label(text=f"Normal")
+                row.label(text="", icon='MOUSE_MOVE')
+                row.label(text="Set Amount")
 
-            row.separator(factor=2)
+                row.separator(factor=2)
 
-            row.label(text="", icon='EVENT_R')
-            row.label(text="Reset Amount")
+                row.label(text=f"Extrusion Mode:")
+
+                row.separator(factor=1)
+
+                row.label(text="", icon='EVENT_A')
+                row.label(text=f"Averaged")
+
+                row.separator(factor=1)
+
+                row.label(text="", icon='EVENT_E')
+                row.label(text=f"Edge")
+
+                row.separator(factor=1)
+
+                row.label(text="", icon='EVENT_N')
+                row.label(text=f"Normal")
+
+                row.separator(factor=2)
+
+                row.label(text="", icon='EVENT_R')
+                row.label(text="Reset Amount")
 
         else:
             row.label(text="", icon='MOUSE_LMB')
             row.label(text="Finish")
 
+            row.label(text="", icon='MOUSE_MMB_DRAG')
+            row.label(text="Navigation")
+
             row.label(text="", icon='MOUSE_RMB')
-            row.label(text="Cancel")
+            row.label(text="Go Back")
 
             row.separator(factor=10)
             row.label(text="", icon='EVENT_S')
-            row.label(text=f"Self-Boolean")
+            row.label(text=f"Self-Boolean: {op.self_boolean}")
+
+            row.separator(factor=2)
+
+            row.label(text="", icon='EVENT_A')
+            row.label(text=f"Auto Mesh Cleanup: {op.auto_cleanup}")
 
             row.separator(factor=2)
 
@@ -90,27 +120,28 @@ def draw_punchit_status(op):
             row.separator(factor=2)
 
             row.label(text="", icon='EVENT_Q')
-            row.label(text=f"Pull")
+            row.label(text=f"Just Pull")
 
             row.separator(factor=2)
 
             row.label(text="", icon='EVENT_E')
-            row.label(text=f"Push")
+            row.label(text=f"Just Push")
 
             row.separator(factor=2)
 
             row.label(text="", icon='EVENT_R')
-            row.label(text=f"Reset")
+            row.label(text=f"Reset Push/Pull")
 
             row.separator(factor=2)
 
             row.label(text="", icon='EVENT_SHIFT')
-            row.label(text=f"Invert")
+            row.label(text=f"Invert Push/Pull")
 
             row.separator(factor=2)
 
             row.label(text="", icon='EVENT_CTRL')
             row.label(text=f"Push/Pull x 100")
+
 
     return draw
 
@@ -120,10 +151,14 @@ class PunchIt(bpy.types.Operator):
     bl_description = "Manifold Extruding that works"
     bl_options = {'REGISTER', 'UNDO'}
 
-    use_self: BoolProperty(name="Use Self Intersection", description="Magically fix issues (slower)\nIf disabled, you'll often need bigger Push and Pull values (faster)", default=True)
+    self_boolean: BoolProperty(name="Use Self Intersection", description="Magically fix issues (slower)\nIf disabled, you'll often need bigger Push and Pull values (faster)", default=True)
     mode: EnumProperty(name="Mode", items=extrude_mode_items, default='AVERAGED')
 
     amount: FloatProperty(name="Amount", description="Extrusion Depth", default=0.4, min=0, precision=4, step=0.1)
+
+    is_numeric_input: BoolProperty()
+    is_numeric_input_marked: BoolProperty()
+    numeric_input_amount: StringProperty(name="Numeric Amount to Move Face", description="Amount to Move the Face Selection by", default='0')
 
     pushed: IntProperty(name="Pushed", description="Push Side Faces out", default=0)
     pulled: IntProperty(name="Pulled", description="Pull Front Face back", default=0)
@@ -153,262 +188,166 @@ class PunchIt(bpy.types.Operator):
         r.prop(self, 'pushed', text="Push", expand=True)
         r.prop(self, 'pulled', text="Pull", expand=True)
 
-    def draw_HUD(self, args):
-        context, event = args
+    def draw_HUD(self, context):
+        if context.area == self.area:
 
-        draw_init(self, event)
+            draw_init(self)
 
-        if self.finalizing:
-            dims = draw_label(context, title=f"Finalizing ", coords=Vector((self.HUD_x, self.HUD_y)), center=False, color=white, alpha=1)
+            if self.finalizing:
+                dims = draw_label(context, title=f"Finalizing ", coords=Vector((self.HUD_x, self.HUD_y)), center=False, color=white, alpha=1)
 
-            if self.use_self:
-                draw_label(context, title="self-boolean", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), center=False, color=white, alpha=0.5)
+                if self.self_boolean:
+                    draw_label(context, title="self-boolean", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), center=False, color=white, alpha=0.5)
 
-            self.offset += 18
-            dims = draw_label(context, title=f"Pushed: {self.pushed}  ", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=blue, alpha=0.75)
-            draw_label(context, title=f"Pulled: {self.pulled}", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, color=green, alpha=0.75)
-
-
-            if self.auto_cleanup:
                 self.offset += 18
-                dims = draw_label(context, title=f"Auto-Cleanup ", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
+                dims = draw_label(context, title=f"Pushed: {self.pushed}  ", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=blue, alpha=0.75)
+                draw_label(context, title=f"Pulled: {self.pulled}", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, color=green, alpha=0.75)
 
-                if self.cleaned_up:
-                    draw_label(context, title=f"{self.cleaned_up} Verts Removed ✔️", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, size=10, color=white, alpha=1)
+
+                if self.auto_cleanup:
+                    self.offset += 18
+                    dims = draw_label(context, title=f"Auto-Cleanup ", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
+
+                    if self.cleaned_up:
+                        draw_label(context, title=f"{self.cleaned_up} Verts Removed ✔️", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, size=10, color=white, alpha=1)
+
+                    else:
+                        draw_label(context, title=f"Nothing", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, size=10, color=white, alpha=0.5)
+
+                elif self.is_mesh_non_manifold:
+                    self.offset += 18
+                    draw_label(context, title=f"Non-manifold meshes tend to require higher", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=orange, alpha=1)
+
+                    self.offset += 18
+                    draw_label(context, title=f"values with Auto-Cleanup disabled", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=orange, alpha=1)
+
+
+            else:
+
+                dims = draw_label(context, title='Punch ', coords=Vector((self.HUD_x, self.HUD_y)), center=False, color=white, alpha=1)
+                dims2 = draw_label(context, title='along ', coords=Vector((self.HUD_x + dims[0], self.HUD_y)), center=False, size=10, color=white, alpha=0.5)
+
+                if self.mode == 'EDGE':
+                    draw_label(context, title='Edge', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=yellow, alpha=1)
+
+                elif self.mode in ['AVERAGED', 'NORMAL']:
+                    if self.mode == 'AVERAGED':
+                        dims3 = draw_label(context, title='Averaged ', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=blue, alpha=1)
+
+                    else:
+                        dims3 = draw_label(context, title='Individual ', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=normal, alpha=1)
+
+                    draw_label(context, title='Normals', coords=Vector((self.HUD_x + dims[0] + dims2[0] + dims3[0], self.HUD_y)), center=False, color=white, alpha=0.5)
+
+
+
+
+                self.offset += 18
+                dims = draw_label(context, title="Amount:", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=white, alpha=0.5)
+      
+                title = "🖩" if self.is_numeric_input else " "
+                dims2 = draw_label(context, title=title, coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset + 3, center=False, size=20, color=green, alpha=0.5)
+      
+                if self.is_numeric_input:
+                    dims3 = draw_label(context, title=self.numeric_input_amount, coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), offset=self.offset, center=False, color=green, alpha=1)
+
+                    if self.is_numeric_input_marked:
+                        scale = context.preferences.system.ui_scale * get_prefs().modal_hud_scale
+                        coords = [Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y - (self.offset - 5) * scale, 0)), Vector((self.HUD_x + dims[0] + dims2[0] + dims3[0], self.HUD_y - (self.offset - 5) * scale, 0))]
+                        draw_line(coords, width=12 + 8 * scale, color=green, alpha=0.1, screen=True)
 
                 else:
-                    draw_label(context, title=f"Nothing", coords=Vector((self.HUD_x + dims[0], self.HUD_y)), offset=self.offset, center=False, size=10, color=white, alpha=0.5)
-
-            elif self.is_mesh_non_manifold:
-                self.offset += 18
-                draw_label(context, title=f"Non-manifold meshes tend to require higher", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=orange, alpha=1)
-
-                self.offset += 18
-                draw_label(context, title=f"values with Auto-Cleanup disabled", coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=orange, alpha=1)
+                    draw_label(context, title=dynamic_format(self.amount, decimal_offset=1), coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), offset=self.offset, center=False, color=white, alpha=1)
 
 
-        else:
 
-            dims = draw_label(context, title='Punch ', coords=Vector((self.HUD_x, self.HUD_y)), center=False, color=white, alpha=1)
-            dims2 = draw_label(context, title='along ', coords=Vector((self.HUD_x + dims[0], self.HUD_y)), center=False, size=10, color=white, alpha=0.5)
+                if self.pick_edge_dir:
+                    self.offset += 18
+                    edge_dir = self.data['edge_dir']
 
-            if self.mode == 'EDGE':
-                draw_label(context, title='Edge', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=yellow, alpha=1)
+                    if self.edge_coords and edge_dir:
+                        draw_label(context, title='valid', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=yellow, alpha=1)
 
-            elif self.mode in ['AVERAGED', 'NORMAL']:
-                if self.mode == 'AVERAGED':
-                    dims3 = draw_label(context, title='Averaged ', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=blue, alpha=1)
+                    elif self.edge_coords:
+                        draw_label(context, title='invalid', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
 
-                else:
-                    dims3 = draw_label(context, title='Individual ', coords=Vector((self.HUD_x + dims[0] + dims2[0], self.HUD_y)), center=False, color=normal, alpha=1)
-
-                draw_label(context, title='Normals', coords=Vector((self.HUD_x + dims[0] + dims2[0] + dims3[0], self.HUD_y)), center=False, color=white, alpha=0.5)
-
-            self.offset += 18
-            draw_label(context, title=dynamic_format(self.amount, 1), coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=white, alpha=0.5)
-
-            if self.pick_edge_dir:
-                self.offset += 18
-                edge_dir = self.data['edge_dir']
-
-                if self.edge_coords and edge_dir:
-                    draw_label(context, title='valid', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=yellow, alpha=1)
-
-                elif self.edge_coords:
-                    draw_label(context, title='invalid', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
-
-                else:
-                    draw_label(context, title='none', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
+                    else:
+                        draw_label(context, title='none', coords=Vector((self.HUD_x, self.HUD_y)), offset=self.offset, center=False, color=red, alpha=1)
 
     def draw_VIEW3D(self, context):
-        data = self.data
-        orig_verts = data['original_verts']
-        extr_verts = data['extruded_verts']
-
-        if self.finalizing:
-            tri_coords = [orig_verts[idx]['co'] for idx in data['original_tri_indices']]
-            draw_tris(tri_coords, mx=self.mx, color=green, alpha=0.05, xray=False)
-
-            tri_coords = [(orig_verts | extr_verts)[idx]['co'] for idx in data['side_tri_indices']]
-            draw_tris(tri_coords, mx=self.mx, color=blue, alpha=0.05, xray=False)
-
-        else:
+        if context.area == self.area:
             data = self.data
             orig_verts = data['original_verts']
             extr_verts = data['extruded_verts']
 
-            avg_co = self.mx @ data['avg_co']
-            edge_dir = data['edge_dir']
+            if self.finalizing:
+                tri_coords = [orig_verts[idx]['co'] for idx in data['original_tri_indices']]
+                draw_tris(tri_coords, mx=self.mx, color=green, alpha=0.05, xray=False)
 
+                tri_coords = [(orig_verts | extr_verts)[idx]['co'] for idx in data['side_tri_indices']]
+                draw_tris(tri_coords, mx=self.mx, color=blue, alpha=0.05, xray=False)
 
-            draw_point(avg_co, color=red if self.amount == 0 else white)
-
-            if self.amount:
-                extr_dir = self.loc - self.init_loc
-                draw_vector(extr_dir, origin=avg_co, fade=True, alpha=0.5)
-                draw_point(avg_co + extr_dir, size=4, alpha=0.5)
-
-                tri_coords = [(orig_verts | extr_verts)[idx]['co'] for idx in data['original_tri_indices'] + data['extruded_tri_indices'] + data['side_tri_indices']]
-                draw_tris(tri_coords, mx=self.mx, color=green, alpha=0.1)
+                coords = [orig_verts[vidx]['co'] for vidx in data['sorted_boundary']]
+                draw_line(coords, indices=data['sorted_boundary_indices'], mx=self.mx, color=white, alpha=0.05)
 
                 coords = [extr_verts[data['vert_map'][vidx]]['co'] for vidx in data['sorted_boundary']]
-                draw_line(coords, indices=data['sorted_boundary_indices'], mx=self.mx, color=green, alpha=0.2)
+                draw_line(coords, indices=data['sorted_boundary_indices'], mx=self.mx, color=white, alpha=0.05)
 
-                color, alpha = (yellow, 0.5) if self.mode == 'EDGE' else (blue, 1) if self.mode == 'AVERAGED' else (normal, 1)
                 coords = [(orig_verts | extr_verts)[idx]['co'] for vidx in data['sorted_boundary'] for idx in [vidx, data['vert_map'][vidx]]]
-                draw_lines(coords, mx=self.mx, color=color, alpha=alpha)
+                draw_lines(coords, mx=self.mx, color=white, alpha=0.05)
 
-            if self.pick_edge_dir and self.edge_coords:
-                color = yellow if self.edge_coords and edge_dir else red
-                draw_line(self.edge_coords, color=color, width=2, alpha=0.99)
 
-            exit_coords = [orig_verts[vidx]['exit_co'] for vidx in data['sorted_boundary'] if orig_verts[vidx]['exit_co']]
+            else:
+                data = self.data
+                orig_verts = data['original_verts']
+                extr_verts = data['extruded_verts']
 
-            if exit_coords:
-                exit_coords.append(exit_coords[0])
-                draw_line(exit_coords, mx=self.mx, alpha=0.1)
+                avg_co = self.mx @ data['avg_co']
+                edge_dir = data['edge_dir']
+
+
+                draw_point(avg_co, color=red if self.amount == 0 else white)
+
+                if self.amount:
+                    extr_dir = self.loc - self.init_loc
+                    draw_vector(extr_dir, origin=avg_co, fade=True, alpha=0.5)
+                    draw_point(avg_co + extr_dir, size=4, alpha=0.5)
+
+                    tri_coords = [(orig_verts | extr_verts)[idx]['co'] for idx in data['original_tri_indices'] + data['extruded_tri_indices'] + data['side_tri_indices']]
+                    draw_tris(tri_coords, mx=self.mx, color=green, alpha=0.1)
+
+                    coords = [extr_verts[data['vert_map'][vidx]]['co'] for vidx in data['sorted_boundary']]
+                    draw_line(coords, indices=data['sorted_boundary_indices'], mx=self.mx, color=green, alpha=0.2)
+
+                    color, alpha = (yellow, 0.5) if self.mode == 'EDGE' else (blue, 1) if self.mode == 'AVERAGED' else (normal, 1)
+                    coords = [(orig_verts | extr_verts)[idx]['co'] for vidx in data['sorted_boundary'] for idx in [vidx, data['vert_map'][vidx]]]
+                    draw_lines(coords, mx=self.mx, color=color, alpha=alpha)
+
+                if self.pick_edge_dir and self.edge_coords:
+                    color = yellow if self.edge_coords and edge_dir else red
+                    draw_line(self.edge_coords, color=color, width=2, alpha=0.99)
+
+                exit_coords = [orig_verts[vidx]['exit_co'] for vidx in data['sorted_boundary'] if orig_verts[vidx]['exit_co']]
+
+                if exit_coords:
+                    exit_coords.append(exit_coords[0])
+                    draw_line(exit_coords, mx=self.mx, alpha=0.1)
 
     def modal(self, context, event):
+        if ignore_events(event):
+            return {'RUNNING_MODAL'}
+
         context.area.tag_redraw()
 
-        if event.type == 'MOUSEMOVE':
-            self.mousepos = Vector((event.mouse_region_x, event.mouse_region_y))
-            update_HUD_location(self, event, offsetx=20, offsety=20)
-
-            if self.passthrough:
-                self.passthrough = False
-
-                i = self.get_mouse_intersection(context)
-                self.init_loc = i - self.amount_dir * self.amount
 
 
-
-        if not self.finalizing:
-            events = ['MOUSEMOVE', 'A', 'E', *ctrl, 'N', 'X', 'R']
-
-            if event.type in events:
-
-                if event.type == 'MOUSEMOVE':
-
-                    if self.pick_edge_dir:
-                        self.get_edge_dir(context)
-
-                    else:
-                        self.loc = self.get_mouse_intersection(context)
-                        self.set_extrusion_amount(context)
-
-                elif event.type in ['E', *ctrl]:
-                    if event.value == 'PRESS':
-                        self.pick_edge_dir = True
-                        self.get_edge_dir(context)
-
-                    elif event.value == 'RELEASE':
-                        self.pick_edge_dir = False
-
-                elif event.type == 'A' and event.value == 'PRESS':
-                    self.setup_extrusion_direction(context, direction='AVERAGED')
-                    self.set_extrusion_amount(context)
-
-                elif event.type in ['X', 'N'] and event.value == 'PRESS':
-                    self.setup_extrusion_direction(context, direction='NORMAL')
-                    self.set_extrusion_amount(context)
-
-                elif event.type == 'R' and event.value == 'PRESS':
-                    self.init_loc = self.get_mouse_intersection(context)
-                    self.set_extrusion_amount(context)
-
-
-
-            elif navigation_passthrough(event, alt=True, wheel=True):
-                self.passthrough = True
-                return {'PASS_THROUGH'}
-
-
-
-            if self.amount and event.type in {'LEFTMOUSE', 'SPACE'}:
-
-                self.set_push_and_pull_amount(context)
-
-                self.create_extruded_geo(self.active, self.bm)
-
-                bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.use_self, solver='EXACT')
-
-                if self.auto_cleanup:
-                    self.cleanup()
-
-                self.active.update_from_editmode()
-
-                self.finalizing = True
-                return {'RUNNING_MODAL'}
-
-
-
-            elif event.type in {'RIGHTMOUSE', 'ESC'}:
-                self.finish(context)
-
-                return {'CANCELLED'}
+        if ret := self.numeric_input(context, event):
+            return ret
 
 
 
         else:
-            if event.type in ['Q', 'W', 'E', 'R', 'S', 'A'] and event.value == 'PRESS':
-                bm = self.reset_mesh(self.init_bm, return_new=True)
-
-                factor = 100 if event.ctrl else 1
-
-                if event.type == 'W':
-                    self.pushed += -factor if event.shift else factor
-                    self.pulled += -factor if event.shift else factor
-
-                elif event.type == 'E':
-                    self.pushed += -factor if event.shift else factor
-
-                elif event.type == 'Q':
-                    self.pulled += -factor if event.shift else factor
-
-                elif event.type == 'R':
-                    self.pushed = get_prefs().push_default
-                    self.pulled = get_prefs().pull_default
-
-                elif event.type == 'S':
-                    self.use_self = not self.use_self
-
-                elif event.type in ['A', 'C']:
-                    self.auto_cleanup = not self.auto_cleanup
-
-                self.set_push_and_pull_amount(context)
-
-                self.create_extruded_geo(self.active, bm)
-
-                bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.use_self, solver='EXACT')
-
-                if self.auto_cleanup:
-                    self.cleanup()
-
-                self.active.update_from_editmode()
-
-                return {'RUNNING_MODAL'}
-
-
-
-            elif navigation_passthrough(event, alt=True, wheel=True):
-                return {'PASS_THROUGH'}
-
-
-
-            elif event.type in {'LEFTMOUSE', 'SPACE'} and event.value == 'PRESS':
-                self.finish(context)
-
-                return {'FINISHED'}
-
-
-            elif event.type in {'RIGHTMOUSE', 'ESC'} and event.value == 'PRESS':
-                self.reset_mesh(self.init_bm)
-                self.finish(context)
-
-                return {'CANCELLED'}
-
-        return {'RUNNING_MODAL'}
+            return self.interactive_input(context, event)
 
     def finish(self, context):
         bpy.types.SpaceView3D.draw_handler_remove(self.VIEW3D, 'WINDOW')
@@ -453,7 +392,8 @@ class PunchIt(bpy.types.Operator):
             if not context.region_data:
                 return self.execute(context)
 
-            self.mousepos = Vector((event.mouse_region_x, event.mouse_region_y))
+            get_mouse_pos(self, context, event)
+
 
             self.amount = 0
             self.setup_extrusion_direction(context, 'AVERAGED')
@@ -470,15 +410,18 @@ class PunchIt(bpy.types.Operator):
 
                 self.prev_mode = 'AVERAGED'
 
+                self.is_numeric_input = False
+                self.is_numeric_input_marked = False
+                self.numeric_input_amount = '0'
+
                 self.S = Snap(context, debug=False)
 
-                init_cursor(self, event)
-
                 init_status(self, context, func=draw_punchit_status(self))
+
                 force_ui_update(context)
 
-                args = (context, event)
-                self.HUD = bpy.types.SpaceView3D.draw_handler_add(self.draw_HUD, (args, ), 'WINDOW', 'POST_PIXEL')
+                self.area = context.area
+                self.HUD = bpy.types.SpaceView3D.draw_handler_add(self.draw_HUD, (context, ), 'WINDOW', 'POST_PIXEL')
                 self.VIEW3D = bpy.types.SpaceView3D.draw_handler_add(self.draw_VIEW3D, (context, ), 'WINDOW', 'POST_VIEW')
 
                 context.window_manager.modal_handler_add(self)
@@ -496,21 +439,21 @@ class PunchIt(bpy.types.Operator):
             self.bm = bmesh.from_edit_mesh(self.active.data)
             self.bm.normal_update()
 
-            self.set_extrusion_amount(context, amount=self.amount)
+            self.set_extrusion_amount(context, interactive=False)
 
             self.set_push_and_pull_amount(context)
 
             self.create_extruded_geo(self.active, self.bm)
 
-            bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.use_self, solver='EXACT')
+            bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.self_boolean, solver='EXACT')
 
         return {'FINISHED'}
 
 
 
     def get_mouse_intersection(self, context):
-        view_origin = region_2d_to_origin_3d(context.region, context.region_data, self.mousepos)
-        view_dir = region_2d_to_vector_3d(context.region, context.region_data, self.mousepos)
+        view_origin = region_2d_to_origin_3d(context.region, context.region_data, self.mouse_pos)
+        view_dir = region_2d_to_vector_3d(context.region, context.region_data, self.mouse_pos)
 
         i = intersect_line_line(self.amount_origin, self.amount_origin + self.amount_dir, view_origin, view_origin + view_dir)
 
@@ -518,7 +461,7 @@ class PunchIt(bpy.types.Operator):
             return i[0]
 
     def get_edge_dir(self, context):
-        self.S.get_hit(self.mousepos)
+        self.S.get_hit(self.mouse_pos)
 
         if self.mode != 'EDGE':
             self.prev_mode = self.mode
@@ -587,9 +530,9 @@ class PunchIt(bpy.types.Operator):
 
         self.get_exit_coords(direction=direction)
 
-    def set_extrusion_amount(self, context, amount=None):
+    def set_extrusion_amount(self, context, interactive=True):
 
-        if not amount:
+        if interactive:
             amount_vector = (self.loc - self.init_loc)
             self.amount = amount_vector.length if amount_vector.dot(self.amount_dir) > 0 else 0
 
@@ -633,13 +576,13 @@ class PunchIt(bpy.types.Operator):
 
             vdata['co'] = co
 
-    def reset_mesh(self, init_bm, return_new=False):
+    def reset_mesh(self, init_bm, return_bmesh=False):
 
         bpy.ops.object.mode_set(mode='OBJECT')
         init_bm.to_mesh(self.active.data)
         bpy.ops.object.mode_set(mode='EDIT')
 
-        if return_new:
+        if return_bmesh:
             bm = bmesh.from_edit_mesh(self.active.data)
             bm.normal_update()
 
@@ -1015,6 +958,238 @@ class PunchIt(bpy.types.Operator):
             draw_tris(coords, mx=self.mx, color=yellow, alpha=0.1, modal=False)
 
         context.area.tag_redraw()
+
+
+
+    def numeric_input(self, context, event) -> Union[Set[str], None]:
+
+        if not self.finalizing:
+
+            
+            if event.type == "TAB" and event.value == 'PRESS':
+                self.is_numeric_input = not self.is_numeric_input
+
+                force_ui_update(context)
+
+                if self.is_numeric_input:
+                    self.numeric_input_amount = str(self.amount)
+                    self.is_numeric_input_marked = True
+
+                else:
+                    return
+
+
+
+            if self.is_numeric_input:
+                events = [*numbers, 'BACK_SPACE', 'DELETE', 'PERIOD', 'COMMA', 'NUMPAD_PERIOD', 'NUMPAD_COMMA']
+
+                if event.type in events and event.value == 'PRESS':
+
+                    if self.is_numeric_input_marked:
+                        self.is_numeric_input_marked = False
+
+                        if event.type == 'BACK_SPACE':
+
+                            if event.alt:
+                                self.numeric_input_amount = self.numeric_input_amount[:-1]
+
+                            else:
+                                self.numeric_input_amount = shorten_float_string(self.numeric_input_amount, 4)
+
+                        else:
+                            self.numeric_input_amount = input_mappings[event.type]
+
+                    else:
+                        if event.type in numbers:
+                            self.numeric_input_amount += input_mappings[event.type]
+
+                        elif event.type == 'BACK_SPACE':
+                            self.numeric_input_amount = self.numeric_input_amount[:-1]
+
+                        elif event.type in ['COMMA', 'PERIOD', 'NUMPAD_COMMA', 'NUMPAD_PERIOD'] and '.' not in self.numeric_input_amount:
+                            self.numeric_input_amount += '.'
+
+
+
+                    try:
+                        self.amount = float(self.numeric_input_amount)
+
+                    except:
+                        return {'RUNNING_MODAL'}
+
+                    self.set_extrusion_amount(context, interactive=False)
+
+
+
+                elif navigation_passthrough(event, alt=True, wheel=True):
+                    return {'PASS_THROUGH'}
+
+
+
+                elif event.type in {'RET', 'NUMPAD_ENTER'}:
+                    self.set_push_and_pull_amount(context)
+
+                    self.create_extruded_geo(self.active, self.bm)
+
+                    bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.self_boolean, solver='EXACT')
+
+                    if self.auto_cleanup:
+                        self.cleanup()
+
+                    self.active.update_from_editmode()
+
+                    self.finalizing = True
+                    return {'RUNNING_MODAL'}
+
+
+
+                elif event.type in {'ESC', 'RIGHTMOUSE'} and event.value == 'PRESS':
+                    self.finish(context)
+
+                    return {'CANCELLED'}
+
+                return {'RUNNING_MODAL'}
+
+    def interactive_input(self, context, event) -> Set[str]:
+
+        if event.type == 'MOUSEMOVE':
+            get_mouse_pos(self, context, event)
+
+
+            if self.passthrough:
+                self.passthrough = False
+
+                i = self.get_mouse_intersection(context)
+                self.init_loc = i - self.amount_dir * self.amount
+
+
+
+        if not self.finalizing:
+            events = ['MOUSEMOVE', 'A', 'E', *ctrl, 'N', 'X', 'R']
+
+            if event.type in events:
+
+                if event.type == 'MOUSEMOVE':
+
+                    if self.pick_edge_dir:
+                        self.get_edge_dir(context)
+
+                    else:
+                        self.loc = self.get_mouse_intersection(context)
+                        self.set_extrusion_amount(context)
+
+                elif event.type in ['E', *ctrl]:
+                    if event.value == 'PRESS':
+                        self.pick_edge_dir = True
+                        self.get_edge_dir(context)
+
+                    elif event.value == 'RELEASE':
+                        self.pick_edge_dir = False
+
+                elif event.type == 'A' and event.value == 'PRESS':
+                    self.setup_extrusion_direction(context, direction='AVERAGED')
+                    self.set_extrusion_amount(context)
+
+                elif event.type in ['X', 'N'] and event.value == 'PRESS':
+                    self.setup_extrusion_direction(context, direction='NORMAL')
+                    self.set_extrusion_amount(context)
+
+                elif event.type == 'R' and event.value == 'PRESS':
+                    self.init_loc = self.get_mouse_intersection(context)
+                    self.set_extrusion_amount(context)
+
+
+
+            elif navigation_passthrough(event, alt=True, wheel=True):
+                self.passthrough = True
+                return {'PASS_THROUGH'}
+
+
+
+            if self.amount and event.type in {'LEFTMOUSE', 'SPACE'} and event.value == 'PRESS':
+
+                self.set_push_and_pull_amount(context)
+
+                self.create_extruded_geo(self.active, self.bm)
+
+                bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.self_boolean, solver='EXACT')
+
+                if self.auto_cleanup:
+                    self.cleanup()
+
+                self.active.update_from_editmode()
+
+                self.finalizing = True
+                return {'RUNNING_MODAL'}
+
+
+
+            elif event.type in {'RIGHTMOUSE', 'ESC'} and event.value == 'PRESS':
+                self.finish(context)
+
+                return {'CANCELLED'}
+
+
+
+        else:
+            if event.type in ['Q', 'W', 'E', 'R', 'S', 'A'] and event.value == 'PRESS':
+                bm = self.reset_mesh(self.init_bm, return_bmesh=True)
+
+                factor = 100 if event.ctrl else 1
+
+                if event.type == 'W':
+                    self.pushed += -factor if event.shift else factor
+                    self.pulled += -factor if event.shift else factor
+
+                elif event.type == 'E':
+                    self.pushed += -factor if event.shift else factor
+
+                elif event.type == 'Q':
+                    self.pulled += -factor if event.shift else factor
+
+                elif event.type == 'R':
+                    self.pushed = get_prefs().push_default
+                    self.pulled = get_prefs().pull_default
+
+                elif event.type == 'S':
+                    self.self_boolean = not self.self_boolean
+
+                elif event.type in ['A', 'C']:
+                    self.auto_cleanup = not self.auto_cleanup
+
+                self.set_push_and_pull_amount(context)
+
+                self.create_extruded_geo(self.active, bm)
+
+                bpy.ops.mesh.intersect_boolean(operation='DIFFERENCE', use_self=self.self_boolean, solver='EXACT')
+
+                if self.auto_cleanup:
+                    self.cleanup()
+
+                self.active.update_from_editmode()
+
+                return {'RUNNING_MODAL'}
+
+
+
+            elif navigation_passthrough(event, alt=True, wheel=True):
+                return {'PASS_THROUGH'}
+
+
+
+            elif event.type in {'LEFTMOUSE', 'SPACE'} and event.value == 'PRESS':
+                self.finish(context)
+                return {'FINISHED'}
+
+
+
+            elif event.type in {'RIGHTMOUSE', 'ESC'} and event.value == 'PRESS':
+                self.bm = self.reset_mesh(self.init_bm, return_bmesh=True)
+                self.finalizing = False
+                self.passthrough = True
+                return {'RUNNING_MODAL'}
+
+        return {'RUNNING_MODAL'}
 
 
 

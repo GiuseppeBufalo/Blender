@@ -328,6 +328,8 @@ def collect(obj, full_match=False, types={}, **props):
 
 
 def move_to_index(mod, index=0, rebuild=False):
+    from . import operator_override
+
     count = len(mod.id_data.modifiers)
 
     if index < 0:
@@ -338,7 +340,7 @@ def move_to_index(mod, index=0, rebuild=False):
 
     if bpy.app.version[:2] >= (2, 90) and not rebuild:
         override = {'object' : mod.id_data, 'active_object' : mod.id_data}
-        bpy.ops.object.modifier_move_to_index(override, modifier= mod.name, index=index)
+        operator_override(bpy.context, bpy.ops.object.modifier_mode_to_index, override, modifier=mod.name, index=index)
 
     else:
         obj = mod.id_data

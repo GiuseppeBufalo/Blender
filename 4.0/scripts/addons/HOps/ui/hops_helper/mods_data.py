@@ -1,6 +1,6 @@
 import bpy
 from bpy.types import Panel
-from ... preferences import get_preferences
+from ... utility import addon
 
 mods_dic = {
     'ARMATURE': 'MOD_ARMATURE',
@@ -162,9 +162,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "offset_object", text="Object")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "array1", text="UVs:")
-        if get_preferences().modifier.array1:
+        if pref.array1:
             col.use_property_split = True
             col.prop(md, "offset_u")
             col.prop(md, "offset_v")
@@ -209,10 +209,11 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             sub.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
+
         col.prop(pref, "bevel1", text="Profile:")
-        if get_preferences().modifier.bevel1:
-            col.row().prop(md, "profile_type", expand = True)
+        if pref.bevel1:
+            col.row().prop(md, "profile_type", expand=True)
             col.use_property_split = True
 
             if bpy.app.version < (2, 90, 0):
@@ -237,9 +238,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
                     op.obj, op.mod = ob.name, md.name
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "bevel2", text="Geometry:")
-        if get_preferences().modifier.bevel2:
+        if pref.bevel2:
             col.use_property_split = True
             col.row().prop(md, "miter_outer", text="Outer")
             col.row().prop(md, "miter_inner", text="Inner")
@@ -252,9 +253,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "loop_slide")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "bevel3", text="Shading:")
-        if get_preferences().modifier.bevel3:
+        if pref.bevel3:
             col.use_property_split = True
             col.prop(md, "harden_normals")
             col.separator()
@@ -541,7 +542,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             row.operator("object.hook_assign", text="Assign")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "hook_falloff", text="Falloff")
         if pref.hook_falloff:
             col.use_property_split = True
@@ -554,7 +555,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
                     col.template_curve_mapping(md, "falloff_curve")
 
             col.prop(md, "use_falloff_uniform")
-
 
     def LAPLACIANDEFORM(self, layout, ob, md):
         is_bind = md.is_bind
@@ -683,11 +683,10 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.active = md.use_mirror_merge
         row.prop(md, "merge_threshold", text="")
 
-
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "mirrordata", text="Data:")
-        if get_preferences().modifier.mirrordata:
+        if pref.mirrordata:
             col.use_property_split = True
 
             col.prop(md, "offset_u", text="Offset U")
@@ -730,9 +729,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
         col.separator()
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "multires_subdivision", text="Subdivision:")
-        if get_preferences().modifier.multires_subdivision:
+        if pref.multires_subdivision:
             col.use_property_split = True
 
             col.operator("object.multires_subdivide", text="Subdivide").modifier = md.name
@@ -751,9 +750,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
         col.separator()
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "multires_shape", text="Shape:")
-        if get_preferences().modifier.multires_shape:
+        if pref.multires_shape:
             col.use_property_split = True
             row = col.row(align=False)
             row.operator("object.multires_reshape", text="Reshape").modifier = md.name
@@ -761,9 +760,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
         col.separator()
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "multires_generate", text="Generate:")
-        if get_preferences().modifier.multires_generate:
+        if pref.multires_generate:
             col.use_property_split = True
             col.operator("object.multires_rebuild_subdiv", text="Rebuild Subdivisions")
             col.operator_context = "EXEC_DEFAULT"
@@ -785,9 +784,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         # col.separator()
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "multires_advanced", text="Advanced:")
-        if get_preferences().modifier.multires_advanced:
+        if pref.multires_advanced:
             col.use_property_split = True
 
             col.prop(md, "quality")
@@ -810,7 +809,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         for input in md.node_group.inputs:
             if input.type == 'GEOMETRY': continue
 
-            id =  f'["{input.identifier}"]'
+            id = f'["{input.identifier}"]'
             use_attr_id = f'{input.identifier}_use_attribute'
 
             row = layout.row(align=True)
@@ -819,7 +818,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             if use_attr_id in md:
 
                 op = row.operator("object.geometry_nodes_input_attribute_toggle", text='', icon='SPREADSHEET')
-                op.prop_path=f"[\"{input.identifier}_use_attribute\"]"
+                op.prop_path = f"[\"{input.identifier}_use_attribute\"]"
                 op.modifier_name = md.name
 
                 if md[use_attr_id]:
@@ -836,13 +835,13 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
             layout.separator()
 
-        mod_pref = get_preferences().modifier
+        mod_pref = bpy.context.scene.hops.modifiers
         row = layout.split(align=True)
         row.use_property_split = False
 
         row.prop(mod_pref, 'node_outputs', text='Output Attributes')
 
-        if not mod_pref.node_outputs : return
+        if not mod_pref.node_outputs: return
 
         for output in md.node_group.outputs:
             id_name = f'{output.identifier}_attribute_name'
@@ -1043,9 +1042,9 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
         col.separator()
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "screw_normals", text="Normals:")
-        if get_preferences().modifier.screw_normals:
+        if pref.screw_normals:
             col.use_property_split = True
             col.prop(md, "use_smooth_shade")
             col.prop(md, "use_normal_calculate")
@@ -1105,7 +1104,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "deform_axis", expand=True)
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "simpledeform_restrictions", text="Restrictions:")
         if pref.simpledeform_restrictions:
             col.use_property_split = True
@@ -1186,7 +1185,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col.separator()
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "solidify_normals", text='Normals')
         if pref.solidify_normals:
             col.use_property_split = True
@@ -1196,7 +1195,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
                 col.prop(md, "use_quality_normals")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "solidify_materials", text='Materials')
         if pref.solidify_materials:
             col.use_property_split = True
@@ -1204,7 +1203,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "material_offset_rim", text="Rim")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "solidify_edgedata", text='Edge Data')
         if pref.solidify_edgedata:
             col.use_property_split = True
@@ -1216,7 +1215,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "bevel_convex")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "solidify_thicknes", text='Thickness Clamp')
         if pref.solidify_thicknes:
             col.use_property_split = True
@@ -1224,7 +1223,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "use_thickness_angle_clamp")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "solidify_output", text='Output Vertex Groups')
         if pref.solidify_output:
             col.use_property_split = True
@@ -1267,7 +1266,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col.separator()
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "subsurf_advanced", text="Advanced")
         if pref.subsurf_advanced:
             col.use_property_split = True
@@ -1347,7 +1346,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "warp_falloff", text="Falloff:")
         if pref.warp_falloff:
             col.use_property_split = True
@@ -1358,7 +1357,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
                 col.template_curve_mapping(md, "falloff_curve")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "warp_textures", text="Texture:")
         if pref.warp_textures:
             col.use_property_split = True
@@ -1401,7 +1400,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "wave_start", text="Start position")
         if pref.wave_start:
             col.use_property_split = True
@@ -1410,7 +1409,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "start_position_y", text="Y")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "wave_time", text="Time")
         if pref.wave_time:
             col.use_property_split = True
@@ -1420,7 +1419,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "speed", slider=True)
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "wave_texture", text="Texture")
         if pref.wave_texture:
             col.use_property_split = True
@@ -1434,7 +1433,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
                 obj = md.texture_coords_object
                 if obj and obj.type == 'ARMATURE':
                     col.prop_search(md, "texture_coords_bone", obj.data, "bones")
-
 
     def REMESH(self, layout, _ob, md):
 
@@ -1659,7 +1657,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "uvwarp_transform", text="Transform")
         if pref.uvwarp_transform:
             col.use_property_split = True
@@ -1692,7 +1690,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col.separator()
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "wireframe_vgroup", text="Profile:")
         if pref.wireframe_vgroup:
             col.use_property_split = True
@@ -1750,7 +1748,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.use_property_split = True
             col.prop(md, "vert_mapping")
 
-            pref = get_preferences().modifier
+            pref = bpy.context.scene.hops.modifiers
             col.prop(pref, "datatransfer_vgroups", text="Vertex Groups")
             if pref.datatransfer_vgroups:
 
@@ -1773,13 +1771,13 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.use_property_split = True
             col.prop(md, "loop_mapping", text="Mapping")
 
-            pref = get_preferences().modifier
+            pref = bpy.context.scene.hops.modifiers
             col.prop(pref, "datatransfer_vcolors", text="Vertex Colors")
             if pref.datatransfer_vcolors:
                 col.prop(md, "layers_vcol_select_src", text="Layer Selection")
                 col.prop(md, "layers_vcol_select_dst", text="Layer Mapping")
 
-            pref = get_preferences().modifier
+            pref = bpy.context.scene.hops.modifiers
             col.prop(pref, "datatransfer_uv", text="UVs")
             if pref.datatransfer_uv:
                 col.prop(md, "layers_uv_select_src", text="Layer Selection")
@@ -1795,7 +1793,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             col.prop(md, "poly_mapping")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "datatransfer_toplogy", text="Topology Mapping")
         if pref.datatransfer_toplogy:
             col.use_property_split = True
@@ -1821,7 +1819,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "use_direction_parallel")
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "normaledit_mix", text="Mix")
         if pref.normaledit_mix:
             col.use_property_split = True
@@ -1838,7 +1836,7 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
             row.prop(md, "no_polynors_fix", text="", icon='UNLOCKED' if do_polynors_fix else 'LOCKED')
 
         col.use_property_split = False
-        pref = get_preferences().modifier
+        pref = bpy.context.scene.hops.modifiers
         col.prop(pref, "normaledit_offset", text="Offset")
         if pref.normaledit_offset:
             col.use_property_split = True

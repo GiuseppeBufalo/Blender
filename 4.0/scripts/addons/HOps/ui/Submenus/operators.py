@@ -2,7 +2,7 @@ import bpy
 import math
 from ... icons import get_icon_id
 from ... utils.addons import addon_exists
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_MT_ObjectsOperatorsSubmenu(bpy.types.Menu):
@@ -24,7 +24,7 @@ class HOPS_MT_ObjectsOperatorsSubmenu(bpy.types.Menu):
         row = layout.column().row()
         row.operator_context = 'INVOKE_DEFAULT'
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
                 column = row.column()
         else:
             column =self.layout
@@ -71,19 +71,19 @@ class HOPS_MT_ObjectsOperatorsSubmenu(bpy.types.Menu):
         #         column.separator()
         #     column.operator("hops.late_paren_t", text="Late Parent", icon_value=get_icon_id("Tris"))
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
                 column = row.column()
         else:
             column.separator()
 
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             column.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             column.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             column.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
 
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             column.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else:
             column.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))
@@ -108,7 +108,7 @@ class HOPS_MT_ObjectsOperatorsSubmenu(bpy.types.Menu):
             column.separator()
 
         column.operator_context = "INVOKE_DEFAULT"
-        column.operator("view3d.sculpt_ops_window", text="(Q) Brush" if get_preferences().property.add_prefix else "Brush ", icon="BRUSH_DATA")
+        column.operator("view3d.sculpt_ops_window", text="(Q) Brush" if addon.preference().property.add_prefix else "Brush ", icon="BRUSH_DATA")
         #column.operator("hops.sculpt_primitives", text="Add Primitive", icon_value=get_icon_id("QGui"))
         #column.separator()
 
@@ -154,14 +154,14 @@ class HOPS_MT_MeshOperatorsSubmenu(bpy.types.Menu):
         #else:
         #    pass
         #layout.operator("hops.edge2curve", text="Curve/Extract", icon_value=get_icon_id("Curve"))
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             layout.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else:
             layout.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))
 
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
@@ -314,15 +314,15 @@ class HOPS_MT_EditModePie(bpy.types.Menu):
         layout.operator("hops.edge2curve", text="Curve/Extract", icon_value=get_icon_id("Curve"))
         layout.operator("view3d.vertcircle", text="Circle" if addon_exists("mesh_looptools") else "Circle (E)", icon_value=get_icon_id("NthCircle"))
         layout.operator("hops.bool_dice_v2", text="Dice V2", icon_value=get_icon_id("Dice"))
-        if get_preferences().property.to_shape_type == 'CLASSIC':
+        if addon.preference().property.to_shape_type == 'CLASSIC':
             layout.operator("hops.to_shape", text="To_Shape", icon_value=get_icon_id("Display_boolshapes"))
-        elif get_preferences().property.to_shape_type == 'CLASSIC+':
+        elif addon.preference().property.to_shape_type == 'CLASSIC+':
             layout.operator("hops.to_shape_1_5", text="To_Shape v1.5", icon_value=get_icon_id("Display_boolshapes"))
         else:
             layout.operator("hops.to_shape_v2", text="To_Shape V2", icon_value=get_icon_id("Frame"))
         layout.separator()
 
-        #if get_preferences().property.st3_meshtools:
+        #if addon.preference().property.st3_meshtools:
         layout.operator("hops.edit_mesh_macro", text="EM_Macro", icon_value=get_icon_id("FaceGrate"))
         layout.menu("HOPS_MT_ST3MeshToolsSubmenu", text="ST3 Mesh Tools", icon="MESH_ICOSPHERE")
         layout.separator()

@@ -2,7 +2,7 @@ import bpy, webbrowser
 from mathutils import Vector
 from . utils import add_list_items, toggle_help, toggle_mods
 from .. graphics.load import load_image_file
-from ... preferences import get_preferences
+from ... utility import addon
 from ..window.panel.widget.layout.grid.elements.call_back import Call_Back_Event
 
 class Preset_Every_Scroll():

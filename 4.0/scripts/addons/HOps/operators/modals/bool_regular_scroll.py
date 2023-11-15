@@ -5,8 +5,8 @@ from bpy.types import Operator
 from bpy.props import BoolProperty
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
-from ... preferences import get_preferences
-from ... addon.utility import method_handler
+from ... utility import addon
+from ... utility import method_handler
 from . import infobar
 from ... utility.base_modal_controls import Base_Modal_Controls
 
@@ -120,7 +120,7 @@ class HOPS_OT_BoolScroll(Operator):
                     current_bool.object.select_set(True)
 
         if event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
 
         if self.base_controls.confirm or event.type in { 'RET', 'NUMPAD_ENTER'}:
             self.finish()
@@ -204,7 +204,7 @@ class HOPS_OT_BoolScroll(Operator):
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)
 
         shader.bind()
-        shader.uniform_float("color", get_preferences().color.Hops_hud_color)
+        shader.uniform_float("color", addon.preference().color.Hops_hud_color)
         gpu.state.blend_set('ALPHA')
         batch.draw(shader)
         gpu.state.blend_set('NONE')
@@ -212,7 +212,7 @@ class HOPS_OT_BoolScroll(Operator):
         shader2 = gpu.shader.from_builtin(built_in_shader)
         batch2 = batch_for_shader(shader2, 'TRIS', {"pos": vertices2}, indices=indices2)
         shader2.bind()
-        shader2.uniform_float("color", get_preferences().color.Hops_hud_help_color)
+        shader2.uniform_float("color", addon.preference().color.Hops_hud_help_color)
 
         gpu.state.blend_set('ALPHA')
         batch2.draw(shader2)
@@ -221,17 +221,17 @@ class HOPS_OT_BoolScroll(Operator):
         red = [1, 0.15, 0.15, 0.9]
 
         draw_text("{}".format(self.bool_index),
-                  x + 25 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 25 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         if list(self.bools.keys())[self.bool_index] is not None:
             mod = list(self.bools.keys())[self.bool_index]
-            name_color = get_preferences().color.Hops_hud_help_color
+            name_color = addon.preference().color.Hops_hud_help_color
             if not mod.show_viewport and self.additive:
                 name_color = red
 
             if hasattr(mod, "object"):
                 draw_text("{}".format(mod.object.name),
-                          x + 50 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                          x + 50 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
             draw_text("{}".format(mod.name),
                       x + 50 * factor, y + 28 * factor, size=12, color=(name_color))
@@ -241,9 +241,9 @@ class HOPS_OT_BoolScroll(Operator):
 
     def draw_help(self, context, x, y, factor):
 
-        color_text2 = get_preferences().color.Hops_hud_help_color
+        color_text2 = addon.preference().color.Hops_hud_help_color
 
-        if get_preferences().property.hops_modal_help:
+        if addon.preference().property.hops_modal_help:
 
             draw_text(" scroll - change boolean visibility",
                       x + 45 * factor, y - 14 * factor, size=11, color=color_text2)

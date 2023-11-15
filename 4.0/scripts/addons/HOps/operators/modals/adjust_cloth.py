@@ -1,7 +1,7 @@
 import bpy
 from mathutils import Matrix, Vector
 from ...utility import math as hops_math
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework import form_ui as form
 from ... ui_framework.utils.mods_list import get_mods_list
@@ -9,12 +9,12 @@ from ... ui_framework.graphics.draw import render_text, render_quad, draw_border
 from ... ui_framework.graphics.load import load_image_file
 from ... ui_framework.utils.geo import get_blf_text_dims
 from ... ui_framework.utils.checks import is_mouse_in_quad
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_AdjustClothOperator(bpy.types.Operator):
@@ -60,7 +60,7 @@ class HOPS_OT_AdjustClothOperator(bpy.types.Operator):
     def invoke(self, context, event):
         self.__class__.operator = self
         self.auto_restart = False
-        self.b_popup = get_preferences().property.in_tool_popup_style == 'BLENDER'
+        self.b_popup = addon.preference().property.in_tool_popup_style == 'BLENDER'
 
         self.param_names = {
             'uniform_pressure_force' : 'Pressure',
@@ -300,7 +300,7 @@ class HOPS_OT_AdjustClothOperator(bpy.types.Operator):
 
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 if not self.frozen:
                     win_list.append("{:.3f}".format(getattr(self.active_mod.settings, self.active_param)))
                 else:

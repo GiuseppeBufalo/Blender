@@ -1,14 +1,14 @@
 import bpy
 import pathlib
-from ... addon.utility.screen import dpi_factor
+from ...utility.screen import dpi_factor
 from ... ui_framework.graphics.draw import render_quad, render_geo, render_text, draw_border_lines
 from ... ui_framework.operator_ui import Master
 from ... ui_framework.utils.geo import get_blf_text_dims
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.addons import addon_exists
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utility import addon
-from ... preferences import get_preferences
+from ... utility import addon
 
 # Save system
 invalid = {'\\', '/', ':', '*', '?', '"', '<', '>', '|', '.'}
@@ -190,7 +190,7 @@ class HOPS_OT_PowerSave_Dialog(bpy.types.Operator):
             ["Now saving ... ", " "]
         ]
         ui.receive_draw_data(draw_data=draw_data)
-        ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+        ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
 
     def cancled_ui(self):
@@ -199,4 +199,4 @@ class HOPS_OT_PowerSave_Dialog(bpy.types.Operator):
         ui = Master()
         draw_data = [["Cancelled Operation"]]
         ui.receive_draw_data(draw_data=draw_data)
-        ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+        ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)

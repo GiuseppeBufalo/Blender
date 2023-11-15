@@ -2,8 +2,8 @@ import bpy, bmesh, mathutils, math, time, random
 from gpu_extras.batch import batch_for_shader
 from mathutils import Vector
 from .screen_saver_tips import tips
-from ... addon.utility import method_handler
-from ... preferences import get_preferences
+from ... utility import method_handler
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... ui_framework.graphics.draw import render_text, render_quad, draw_2D_lines
@@ -143,7 +143,7 @@ class Shader():
 
     def __init__(self, context):
 
-        self.hold_duration = get_preferences().ui.Hops_screen_saver_fade
+        self.hold_duration = addon.preference().ui.Hops_screen_saver_fade
         self.fade_duration = 2
 
         self.screen_width = context.area.width
@@ -173,19 +173,19 @@ class Shader():
         self.start_time = time.time()
 
         # Font color / alpha
-        color = get_preferences().color.Hops_UI_text_color
+        color = addon.preference().color.Hops_UI_text_color
         self.font_alpha = color[3]
         self.og_font_alpha = color[3]
         self.font_color = (color[0], color[1], color[2], self.font_alpha)
 
         # BG color / alpha
-        color = get_preferences().color.Hops_border_color
+        color = addon.preference().color.Hops_border_color
         self.bg_alpha = color[3]
         self.og_bg_alpha = color[3]
         self.bg_color = (color[0], color[1], color[2], self.bg_alpha)
 
         # Trim color
-        color = get_preferences().color.Hops_UI_cell_background_color
+        color = addon.preference().color.Hops_UI_cell_background_color
         self.trim_color = (color[0], color[1], color[2], self.bg_alpha)
 
         self.__setup_next_tip()

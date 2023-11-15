@@ -2,7 +2,7 @@ import os
 import bpy
 from pathlib import Path
 from bpy_extras.image_utils import load_image
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.master import Master
 from ...utils.addons import addon_exists
 from ... icons import icons_directory
@@ -66,7 +66,7 @@ class HOPS_OT_Kit_Ops_Window(bpy.types.Operator):
             return {'FINISHED'}
 
         # Check that window loads into exsisting addon
-        prefs = get_preferences()
+        prefs = addon.preference()
         if prefs.ui.Hops_asset_loader_window not in self.asset_opts:
             if len(self.asset_opts) > 0:
                 prefs.ui.Hops_asset_loader_window = self.asset_opts[0]
@@ -125,7 +125,7 @@ class HOPS_OT_Kit_Ops_Window(bpy.types.Operator):
     def draw_window(self, context, event):
 
         self.master.setup()
-        prefs = get_preferences()
+        prefs = addon.preference()
 
         window_name = ""
         main_window = {
@@ -390,7 +390,7 @@ class HOPS_OT_Kit_Ops_Window(bpy.types.Operator):
     def toggle_asset_loader(self, context):
         '''Toggle the window using the tab'''
 
-        prefs = get_preferences()
+        prefs = addon.preference()
         index = self.asset_opts.index(prefs.ui.Hops_asset_loader_window)
         next_asset = self.asset_opts[ (index + 1) % len(self.asset_opts) ]
         prefs.ui.Hops_asset_loader_window = next_asset

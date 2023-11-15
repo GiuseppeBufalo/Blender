@@ -3,7 +3,7 @@ import bpy
 from bpy.types import Menu
 from ... icons import get_icon_id
 from ... utils.addons import addon_exists
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_MT_SettingsSubmenu(bpy.types.Menu):
@@ -21,7 +21,7 @@ class HOPS_MT_SettingsSubmenu(bpy.types.Menu):
 
         row = layout.column().row()
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column =self.layout
@@ -77,7 +77,7 @@ class HOPS_MT_SettingsSubmenu(bpy.types.Menu):
 
         column.menu("HOPS_MT_ViewportSubmenu", text="ViewPort", icon_value=get_icon_id("WireMode"))
 
-        if get_preferences().ui.expanded_menu:
+        if addon.preference().ui.expanded_menu:
             column = row.column()
         else:
             column.separator()
@@ -109,7 +109,7 @@ class HOPS_MT_SettingsSubmenu(bpy.types.Menu):
 
         column.operator("hops.pref_helper", text = "Keymap / Prefs",  icon='EVENT_Q')
 
-        if get_preferences().needs_update:
+        if addon.preference().needs_update:
             column.operator("hops.about", text = "About",  icon_value=get_icon_id("logo_red"))
         else:
             column.operator("hops.about", text = "About",  icon_value=get_icon_id("sm_logo_white"))

@@ -5,7 +5,7 @@ from gpu_extras.batch import batch_for_shader
 from mathutils import Vector, Matrix
 from .... utility import math as hops_math
 from .... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast, get_2d_point_from_3d_point
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 
 class State(Enum):
     MAKE_PRIMITIVE = 0
@@ -50,7 +50,7 @@ class Bounds:
         self.top_front_right,
         self.top_back_left,
         self.top_back_right]
-        
+
 
     def bottom_points(self):
         return [
@@ -122,7 +122,7 @@ class Bounds:
 
         axis = 0                            # Left / Right
         if face_index in {0, 1}: axis = 2   # Top / Bottom
-        elif face_index in {4, 5}: axis = 1 # Front / Back 
+        elif face_index in {4, 5}: axis = 1 # Front / Back
 
         for vert in face:
             if position:
@@ -145,7 +145,7 @@ class Bounds:
     def move_to_anchor_point(self, anchor='TOP'):
         if anchor not in ANCHORS: return
         index = ANCHORS.index(anchor)
-        
+
         new_point = Vector((0,0,0))
         if anchor == 'NONE':
             new_point = hops_math.coords_to_center(self.all_points())
@@ -232,7 +232,7 @@ class Bounds:
         return round(dims[2] * factor, 4)
 
     # --- For Drawing --- #
-    
+
     def gl_bottom_lines(self):
         return [
             self.bot_front_left , self.bot_front_right,
@@ -374,7 +374,7 @@ def confirmed_exit(op, context):
 
 
 def add_cube_to_bounds(op, context):
-    
+
     if context.mode != 'OBJECT':
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -486,7 +486,7 @@ def add_lattice_cube(op, context):
 
         bounds = hops_math.coords_to_bounds(coords)
         center = hops_math.coords_to_center(bounds)
-        extents = hops_math.dimensions(bounds)    
+        extents = hops_math.dimensions(bounds)
 
 
         if context.mode != 'OBJECT':
@@ -533,11 +533,12 @@ def add_lattice_cube(op, context):
 
         lattice = get_lattice()
         remove_old_mods(objs)
-            
+
         # Object bounds for the lattice
         coords = []
         for obj in objs:
-            coords.extend([obj.matrix_world @ Vector(coord) for coord in obj.bound_box])
+            eval = obj.evaluated_get(context.evaluated_depsgraph_get())
+            coords.extend([obj.matrix_world @ Vector(coord) for coord in eval.bound_box])
 
         bounds = hops_math.coords_to_bounds(coords)
         center = hops_math.coords_to_center(bounds)
@@ -550,7 +551,7 @@ def add_lattice_cube(op, context):
         scale_mat = hops_math.get_sca_matrix(extents)
         lattice.matrix_world = scale_mat # write fit transformation in lattice matrix so it's up to date
         lattice.matrix_world.translation = center
-        
+
         # Add mods
         add_lattice_mods(objs)
 
@@ -594,7 +595,7 @@ def use_empty_to_scale(op, context):
     if op.initial_extents[0] != 0:
         sca = extents[0] / op.initial_extents[0]
         empty.scale[0] = sca
-        
+
     # Scale Y
     if op.initial_extents[1] != 0:
         sca = extents[1] / op.initial_extents[1]

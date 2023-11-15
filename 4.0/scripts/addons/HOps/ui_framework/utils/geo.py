@@ -1,6 +1,6 @@
 import bpy
 import blf
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.blender_ui import get_dpi
 
 
@@ -52,12 +52,12 @@ def bevel_verts(quad=((0,1), (0,0), (1,1), (0,1))):
 def get_blf_text_dims(text, size):
     '''Return the total width of the string'''
     #Prefs
-    prefs = get_preferences()
+    prefs = addon.preference()
     prefs_ui_scale = prefs.ui.Hops_modal_size
 
     dpi = int(get_dpi() * prefs_ui_scale)
     if bpy.app.version[0] >= 4:
-        blf.size(size, dpi)
+        blf.size(0, size * (dpi / 72.0))
     else:
         blf.size(0, size, dpi)
     dims = blf.dimensions(0, str(text))

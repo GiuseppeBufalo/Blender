@@ -1,9 +1,10 @@
 import bpy
 from bpy.props import EnumProperty
 from . utility import options, draw_panel, init_panels
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.blender_ui import get_dpi_factor
 from ... import bl_info
+from .. draw import workflow, sharpening, opt_ins, booleans, mesh, bevel, general
 
 
 class HOPS_OT_helper(bpy.types.Operator):
@@ -33,7 +34,7 @@ class HOPS_OT_helper(bpy.types.Operator):
 
 
     def invoke(self, context, event):
-        preference = get_preferences().ui
+        preference = addon.preference().ui
 
         if options().context == '':
             options().context = 'TOOL'
@@ -68,8 +69,33 @@ class HOPS_OT_helper(bpy.types.Operator):
 
         init_panels(self)
 
-        for pt in self.panels[option.context]:
-            draw_panel(self, pt, column)
+        if options().context != 'TOOL':
+            for pt in self.panels[option.context]:
+                draw_panel(self, pt, column)
+        else:
+            if context.active_object:
+                draw_box(column, 'general', 'General', general.draw, context)
+            draw_box(column, 'workflow', 'Workflow', workflow.draw, context)
+            draw_box(column, 'sharp', 'Sharpening / Shading', sharpening.draw, context)
+            draw_box(column, 'mesh', 'Mesh Clean / Dice', mesh.draw, context)
+            draw_box(column, 'bevel', 'Bevel / Operators', bevel.draw, context)
+            draw_box(column, 'booleans', 'Booleans', booleans.draw, context)
+            draw_box(column, 'opt_ins', 'Opt In / Out', opt_ins.draw, context)
 
-        # column.separator()
-        column.row()
+
+def draw_box(column, expand_prop, label_text, draw_func, context):
+    box = column.box()
+    row = box.row(align=True)
+    row.alignment = 'LEFT'
+    helper = bpy.context.window_manager.hardflow.helper
+    expand = getattr(helper, expand_prop)
+    row.prop(helper, expand_prop, text='', icon=f'DISCLOSURE_TRI_{"DOWN" if expand else "RIGHT"}', emboss=False)
+
+    row.prop(helper, expand_prop, toggle=True, text=label_text, emboss=False)
+    sub = row.row(align=True)
+    sub.scale_x = 0.70
+    sub.prop(helper, expand_prop, toggle=True, text='   ', emboss=False)
+
+    if expand:
+        content_col = box.column(align=True)
+        draw_func(content_col, context)

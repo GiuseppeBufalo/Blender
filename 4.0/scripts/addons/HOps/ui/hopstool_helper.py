@@ -1,6 +1,6 @@
 import bpy
 from math import radians, degrees
-from .. preferences import get_preferences
+from .. utility import addon
 from .. utils.blender_ui import get_dpi_factor
 from .. icons import get_icon_id
 
@@ -28,9 +28,9 @@ class HOPS_OT_hopstool_helper(bpy.types.Operator):
         row.scale_x = 0.9
         row.scale_y = 0.9
 
-        row.prop(get_preferences().behavior, "add_mirror_to_boolshapes", text="")#  icon="MOD_MIRROR")
-        row.prop(get_preferences().behavior, "add_WN_to_boolshapes", text="")# , icon="MOD_NORMALEDIT")
-        row.prop(get_preferences().behavior, "cursor_boolshapes", text="")# , icon="CURSOR")
+        row.prop(addon.preference().behavior, "add_mirror_to_boolshapes", text="")#  icon="MOD_MIRROR")
+        row.prop(addon.preference().behavior, "add_WN_to_boolshapes", text="")# , icon="MOD_NORMALEDIT")
+        row.prop(addon.preference().behavior, "cursor_boolshapes", text="")# , icon="CURSOR")
 
         self.layout.separator()
 

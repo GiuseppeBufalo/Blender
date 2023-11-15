@@ -1,5 +1,5 @@
 import bpy, bmesh
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -9,7 +9,7 @@ from ... ui_framework.utils.mods_list import get_mods_list
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class HOPS_OT_MOD_LSmooth(bpy.types.Operator):
@@ -34,7 +34,7 @@ Press H for help"""
 
         self.create_new = event.ctrl
         self.auto_vgroup = event.shift
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
         self.obj = context.active_object
         self.mods = [m for m in self.obj.modifiers if m.type == 'LAPLACIANSMOOTH']
 
@@ -206,9 +206,14 @@ Press H for help"""
             if bevel is None:
                 bevel = bm.edges.layers.float.new('bevel_weight_edge')
         else:
-            bevel = bm.edges.layers.bevel_weight.verify()
-        
-        crease = bm.edges.layers.crease.verify()
+            bevel = bm.edges.layers.bevel_weight.verify()  
+
+        if bpy.app.version[0] >= 4:
+            crease = bm.edges.layers.float.get('crease_edge')
+            if crease is None:
+                crease = bm.edges.layers.float.new('crease_edge')
+        else:
+            crease = bm.edges.layers.crease.verify()
 
         verts = []
         for v in bm.verts:
@@ -249,7 +254,7 @@ Press H for help"""
             if self.mod.use_z:
                 mods.append('Z')
 
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
                 win_list.append(f"{self.mod.iterations}")
                 win_list.append(f"{self.mod.lambda_factor:.3f}")
                 win_list.append(f"{mods}")

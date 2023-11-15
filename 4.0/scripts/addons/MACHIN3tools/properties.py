@@ -390,6 +390,7 @@ class M3SceneProperties(bpy.types.PropertyGroup):
     enforce_hide_render: BoolProperty(name="Enforce hide_render setting when Viewport Rendering", description="Enfore hide_render setting for objects when Viewport Rendering", default=True, update=update_enforce_hide_render)
 
     use_bevel_shader: BoolProperty(name="Use Bevel Shader", description="Batch Apply Bevel Shader to visible Materials", default=False, update=update_use_bevel_shader)
+    bevel_shader_use_dimensions: BoolProperty(name="Consider Object Dimensions for Bevel Radius Modulation", description="Consider Object Dimensions for Bevel Radius Modulation", default=True, update=update_bevel_shader)
     bevel_shader_samples: IntProperty(name="Samples", description="Bevel Shader Samples", default=16, min=2, max=32, update=update_bevel_shader)
     bevel_shader_radius: FloatProperty(name="Radius", description="Bevel Shader Global Radius", default=0.015, min=0, precision=3, step=0.01, update=update_bevel_shader)
 
@@ -547,6 +548,7 @@ class M3ObjectProperties(bpy.types.PropertyGroup):
 
 
     bevel_shader_radius_mod: FloatProperty(name="Active Object Bevel Radius Modulation", description="Factor to modulate the Bevel Shader Radius on the Active Object", default=1, min=0, precision=2, step=0.1)
+    bevel_shader_dimensions_mod: FloatProperty(name="Active Object Bevel Radius Modulation", description="Factor to modulate the Bevel Shader Radius on the Active Object", default=1, min=0, precision=2, step=0.1)
 
 
 

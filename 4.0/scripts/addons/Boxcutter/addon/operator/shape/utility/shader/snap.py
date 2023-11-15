@@ -84,7 +84,6 @@ class display_handler:
 
         self.grid: type = type('GridNull', tuple(), dict(display=False, update=lambda *_: None, fade=False, exit=True, remove=lambda *_, **__: None))
         self.sub_grid: type = type('GridNull', tuple(), dict(display=False, update=lambda *_: None, fade=False, exit=True, remove=lambda *_, **__: None))
-        # self.points: type = type('PointsNull', tuple(), dict(display=False, update=lambda *_: None, fade=False, exit=True, remove=lambda *_, **__: None))
 
         self.obj = None
         self.obj_name = ''
@@ -213,6 +212,7 @@ class display_handler:
         normal = Vector()
         face_index = -2
         obj = None
+        last_object = self.obj
 
         if toolbar.option() and toolbar.option().active_only:
             hit, location, normal, face_index, obj, _ = ray.cast(*self.mouse, selected=True)
@@ -228,15 +228,15 @@ class display_handler:
             bm.from_mesh(self.mesh)
 
             hit, location, normal, face_index = ray.cast(*self.mouse, bmesh_data=bm)
+            obj = context.active_object
 
             bm.free()
 
-        if hit and face_index != self.face_index and ((self.grid.display and preference.snap.adaptive) or obj != self.obj):
+        if hit and face_index != self.face_index and ((self.grid.display and preference.snap.adaptive or not self.grid.display) or obj != last_object):
             self.location = location
             self.normal = normal if round(normal.dot(self.normal), 3) != 1 else self.normal
             self.face_index = face_index
 
-            # return True
         else: hit = False
 
         return hit
@@ -315,7 +315,6 @@ class display_handler:
         offset = matrix @ offset
 
         self.view_transform.translation = offset
-        # self.location = offset
 
         if self.type != 'VIEW' and preference.snap.grid:
             self.matrix.translation = offset
@@ -403,7 +402,6 @@ class grid:
 
             self._offset = handler.offset
 
-        # self._background = Vector(preference.color.grid[:-1]) # TODO
         handler.update_alpha(self, self._color[-1], preference.display.grid_fade_time_out)
 
         self._thickness = 1 if not preference.display.thick_wire else 1.8
@@ -441,19 +439,15 @@ class grid:
 
         self._shader.bind()
 
-        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix)
-        self._shader.uniform_float('transform', self.transform)
+        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix @ self.transform)
         self._shader.uniform_float('intersect', self.intersect - self._offset)
 
         self._shader.uniform_float('count', self._count if self.main else self._count * 10)
-        self._shader.uniform_float('increment', self._increment)
         self._shader.uniform_float('size', self._size)
-
-        self._shader.uniform_float('color', self._color[:-1])
-        # self._shader.uniform_float('background', self._background) # TODO
-        self._shader.uniform_float('alpha', self.alpha if self.main else self.alpha * 0.15)
-
         self._shader.uniform_float('thickness', self._thickness)
+
+        alpha = self.alpha if self.main else self.alpha * 0.15
+        self._shader.uniform_float('color', [*self._color[:-1], alpha])
 
         if self._build_batch:
             self._batch = shader.batch(self._shader, 'TRIS', {'frame': self._frame}, indices=self._indices)
@@ -603,11 +597,8 @@ class points:
                 bc.snap.location = closest.transform @ closest.location
                 bc.snap.normal = handler.normal if closest.type != 'GRID' else closest.transform @ Vector((0, 0, -1))
 
-                # if hasattr(handler.obj, 'matrix_world'):
                 rot_mat = handler.obj_matrix.decompose()[1].to_matrix().to_4x4()
                 bc.snap.matrix = closest.transform if closest.type == 'GRID' or handler.obj_name not in bpy.data.objects else surface_matrix(handler.obj, rot_mat, handler.location, Vector(bc.snap.normal[:]), Vector(bc.snap.location[:]), face_index=handler.face_index)
-                # else:
-                #     bc.snap.matrix = closest.transform
 
             elif bc.snap.hit and self.active:
                 bc.snap.hit = False
@@ -691,7 +682,7 @@ class point:
         self._size = preference.display.snap_dot_size * screen.dpi_factor()
         self._size *= 1 if not self.highlight or self.type == 'GRID' else 1.5
 
-        self._color = preference.color.snap_point[:] # if not self.highlight else preference.color.snap_point_highlight[:-1]
+        self._color = preference.color.snap_point[:]
         self._outline = (0.1, 0.1, 0.1) if not self.highlight else preference.color.snap_point_highlight[:-1]
 
         handler.update_alpha(self, self._color[-1], preference.display.dot_fade_time_out)
@@ -712,12 +703,10 @@ class point:
 
         self._shader.bind()
 
-        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix)
-        self._shader.uniform_float('transform', self.transform)
+        self._shader.uniform_float('projection', region_data.window_matrix @ region_data.view_matrix @ self.transform)
 
-        self._shader.uniform_float('color', self._color[:-1])
+        self._shader.uniform_float('color', [*self._color[:-1], self.alpha])
         self._shader.uniform_float('outline', self._outline)
-        self._shader.uniform_float('alpha', self.alpha)
 
         if self.build_batch:
             self._batch = shader.batch(self._shader, 'POINTS', {'vert': [self.location]})

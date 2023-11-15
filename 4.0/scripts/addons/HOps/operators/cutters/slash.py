@@ -2,7 +2,7 @@ import bpy
 from bpy.props import BoolProperty
 from ... utils.objects import apply_modifier
 from ... material import assign_material
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import collections, modifier
 
 
@@ -62,15 +62,15 @@ class HOPS_OT_Slash(bpy.types.Operator):
             modifier_active_obj.operation = "DIFFERENCE"
             modifier_active_obj.object = cutter
             if hasattr(modifier_active_obj, 'solver'):
-                modifier_active_obj.solver = get_preferences().property.boolean_solver
+                modifier_active_obj.solver = addon.preference().property.boolean_solver
 
             modifier_new_obj = new_obj.modifiers.new(name="Boolean", type="BOOLEAN")
             modifier_new_obj.operation = "INTERSECT"
             modifier_new_obj.object = cutter
             if hasattr(modifier_new_obj, 'solver'):
-                modifier_new_obj.solver = get_preferences().property.boolean_solver
+                modifier_new_obj.solver = addon.preference().property.boolean_solver
 
-            if get_preferences().property.workflow == "DESTRUCTIVE":
+            if addon.preference().property.workflow == "DESTRUCTIVE":
                 for mod in object.modifiers:
                     if mod == modifier_active_obj:
                         apply_modifier(modifier_active_obj)
@@ -83,7 +83,7 @@ class HOPS_OT_Slash(bpy.types.Operator):
                 new_obj.select_set(True)
                 bpy.ops.hops.soft_sharpen()
 
-            elif get_preferences().property.workflow == "NONDESTRUCTIVE":
+            elif addon.preference().property.workflow == "NONDESTRUCTIVE":
 
                 modifier.user_sort(new_obj)
                 modifier.user_sort(object)

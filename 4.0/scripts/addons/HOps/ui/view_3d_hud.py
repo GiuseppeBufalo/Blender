@@ -2,14 +2,14 @@ import bpy
 from .. graphics.drawing2d import set_drawing_dpi
 from .. utils.blender_ui import get_dpi, get_dpi_factor
 from .. graphics.logo import draw_logo_hops
-from .. preferences import get_preferences
+from .. utility import addon
 
 
 def draw_hud():
     set_drawing_dpi(get_dpi())
     dpi_factor = get_dpi_factor()
 
-    if get_preferences().color.Hops_display_logo:
+    if addon.preference().color.Hops_display_logo:
         draw_logo_hops()
 
 

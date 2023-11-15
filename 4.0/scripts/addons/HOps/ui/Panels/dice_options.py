@@ -1,5 +1,5 @@
 import bpy
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_dice_options(bpy.types.Panel):
@@ -9,7 +9,7 @@ class HOPS_PT_dice_options(bpy.types.Panel):
     bl_region_type = 'UI'
 
     def draw(self, context):
-        preference = get_preferences().property
+        preference = addon.preference().property
         layout = self.layout
         column = layout.column(align=True)
         

@@ -1,5 +1,5 @@
 import bpy, bmesh, mathutils, math, copy
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.objects import set_active
 from ... utility import object, math as hops_math
 from mathutils import Matrix, Vector

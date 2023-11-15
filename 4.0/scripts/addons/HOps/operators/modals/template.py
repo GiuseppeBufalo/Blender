@@ -2,7 +2,7 @@ import bpy, bmesh, gpu
 from gpu_extras.batch import batch_for_shader
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
 from ... utils.blender_ui import get_dpi, get_dpi_factor
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.addon import method_handler
 
@@ -26,7 +26,7 @@ Press H for help
 
 
     def invoke(self, context, event):
-        self.modal_scale = get_preferences().ui.Hops_modal_scale
+        self.modal_scale = addon.preference().ui.Hops_modal_scale
 
         self.create_new = event.ctrl
         self.special_behavior = event.shift
@@ -94,9 +94,9 @@ Press H for help
             self.mod.some_value = round(self.buffer, digits)
 
         elif event.type == "H" and event.value == "PRESS":
-            get_preferences().property.hops_modal_help = not get_preferences().property.hops_modal_help
+            addon.preference().property.hops_modal_help = not addon.preference().property.hops_modal_help
             context.area.tag_redraw()
-            self.report({'INFO'}, f"{'Show' if get_preferences().property.hops_modal_help else 'Hide'} Help")
+            self.report({'INFO'}, f"{'Show' if addon.preference().property.hops_modal_help else 'Hide'} Help")
 
         self.mouse_prev_x = event.mouse_region_x
         context.area.tag_redraw()
@@ -148,9 +148,9 @@ Press H for help
         x = self.mouse_start_x
         y = self.mouse_start_y
 
-        c1 = get_preferences().color.Hops_hud_color
-        c2 = get_preferences().color.Hops_hud_help_color
-        c3 = get_preferences().color.Hops_hud_text_color
+        c1 = addon.preference().color.Hops_hud_color
+        c2 = addon.preference().color.Hops_hud_help_color
+        c3 = addon.preference().color.Hops_hud_text_color
 
         set_drawing_dpi(get_dpi())
         f = get_dpi_factor()
@@ -221,9 +221,9 @@ Press H for help
 
 
     def draw_help(self, context, x, y, f):
-        c2 = get_preferences().color.Hops_hud_help_color
+        c2 = addon.preference().color.Hops_hud_help_color
 
-        if get_preferences().property.hops_modal_help:
+        if addon.preference().property.hops_modal_help:
             draw_text(" Key - Adjust Some Value", x + 45 * f, y - 14 * f, size=11, color=c2)
             draw_text(" H - Show/Hide Help", x + 45 * f, y - 26 * f, size=11, color=c2)
 

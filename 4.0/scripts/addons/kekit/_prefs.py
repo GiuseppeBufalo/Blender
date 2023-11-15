@@ -1,14 +1,6 @@
-import bpy
 import json
-import os
-from bpy.types import (
-    PropertyGroup,
-    Operator,
-    Scene,
-    AddonPreferences,
-    Header,
-    Panel
-)
+
+import bpy
 from bpy.props import (
     BoolProperty,
     BoolVectorProperty,
@@ -19,57 +11,44 @@ from bpy.props import (
     StringProperty,
     EnumProperty,
 )
+from bpy.types import (
+    PropertyGroup,
+    Operator,
+    Scene,
+    AddonPreferences,
+)
+
 from bpy_extras.io_utils import ImportHelper
-from ._m_tt import KeTTHeader
-from ._utils import refresh_ui
+from ._utils import refresh_ui, get_prefs
+from ._ui import prefs_ui
+from .m_tt.m_tt import set_tt_icon_pos
+# tab category panel update
+from ._ui import UIKeKitMain
 
 kekit_version = (0, 0, 0)  # is set from __init__
 m_tooltip = "Toggles Module On/Off. Read Docs/Wiki for Module information"
 path = bpy.utils.user_resource('CONFIG')
-pcoll = {}
-icons = ["ke_bm1.png", "ke_bm2.png", "ke_bm3.png", "ke_bm4.png", "ke_bm5.png", "ke_bm6.png",
-         "ke_cursor1.png", "ke_cursor2.png", "ke_cursor3.png", "ke_cursor4.png", "ke_cursor5.png", "ke_cursor6.png",
-         "ke_dot1.png", "ke_dot2.png", "ke_dot3.png", "ke_dot4.png", "ke_dot5.png", "ke_dot6.png",
-         "ke_opc1.png", "ke_opc2.png", "ke_opc3.png", "ke_opc4.png", "ke_opc5.png", "ke_opc6.png",
-         "ke_snap1.png", "ke_snap2.png", "ke_snap3.png", "ke_snap4.png", "ke_snap5.png", "ke_snap6.png",
-         "ke_uncheck.png"]
 
 
-#
-# KIT FUNCTIONS
-#
-def load_icons():
-    from bpy.utils import previews
-    icons_dir = os.path.join(os.path.dirname(__file__), "icons")
-    pr = previews.new()
-    for i in icons:
-        name = i[:-4]
-        pr.load(name, os.path.join(icons_dir, i), 'IMAGE')
-    pcoll['kekit'] = pr
+# Updating tab location will require "Reload Add-ons":
+# To avoid managing x-importing all the module & submodule panels + future panels added
+def update_panel(self, context):
+    k = get_prefs()
+    error_message = "keKit : panel update failed"
+    try:
+        if "bl_rna" in UIKeKitMain.__dict__:
+            bpy.utils.unregister_class(UIKeKitMain)
 
+        UIKeKitMain.bl_category = k.category
+        bpy.utils.register_class(UIKeKitMain)
 
-def set_tt_icon_pos(self, context):
-    bpy.types.VIEW3D_HT_header.remove(KeTTHeader.draw)
-    bpy.types.VIEW3D_MT_editor_menus.remove(KeTTHeader.draw)
-    if bpy.context.preferences.addons[__package__].preferences.tt_icon_pos == "CENTER":
-        bpy.types.VIEW3D_MT_editor_menus.append(KeTTHeader.draw)
-    elif bpy.context.preferences.addons[__package__].preferences.tt_icon_pos == "RIGHT":
-        bpy.types.VIEW3D_HT_header.append(KeTTHeader.draw)
-    elif bpy.context.preferences.addons[__package__].preferences.tt_icon_pos == "LEFT":
-        bpy.types.VIEW3D_HT_header.prepend(KeTTHeader.draw)
-    # ...else REMOVE only
-
-
-def draw_extras(self, context):
-    layout = self.layout
-    row = layout.row(align=True)
-    row.operator("outliner.show_active", icon="ZOOM_PREVIOUS", text="")
-    row.operator("outliner.show_one_level", icon="ZOOM_IN", text="")
-    row.operator("outliner.show_one_level", icon="ZOOM_OUT", text="").open = False
+    except Exception as e:
+        print("\n[{}]\n{}\n\nError:\n{}".format(__name__, error_message, e))
+        pass
 
 
 def save_prefs():
-    ap = bpy.context.preferences.addons[__package__].preferences
+    ap = get_prefs()
     prefs = {}
     for key in ap.__annotations__.keys():
         k = getattr(ap, key)
@@ -84,13 +63,11 @@ def save_prefs():
     text_file.close()
 
 
-#
-#  KIT OPERATORS
-#
 class KeSavePrefs(Operator):
     bl_idname = "kekit.prefs_export"
     bl_label = "Export keKit Settings"
-    bl_description = "Export current keKit settings (to JSON-file in user config folder)"
+    bl_description = "Export current keKit settings (to JSON-file in user config folder)\n" \
+                     "Note: keKit automatically exports when closing Blender"
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
@@ -123,7 +100,7 @@ class KeLoadPrefs(Operator):
     inputpath : StringProperty(name="filepath", default=path + "/kekit_prefs.json", options={'HIDDEN'})
 
     def execute(self, context):
-        ap = context.preferences.addons['kekit'].preferences
+        ap = get_prefs()
         # file_name = path + "/kekit_prefs.json"
         file_name = self.inputpath
         prefs = None
@@ -138,7 +115,7 @@ class KeLoadPrefs(Operator):
             for key in prefs :
                 if key in ap.__annotations__.keys():
                     v = prefs[key]
-                    # Brute force assign ENUMS - won't assign with key - MEH!
+                    # OPC1 (Brute force assigning ENUMS)
                     if key == "opc1_obj_o":
                         ap.opc1_obj_o = v
                     elif key == "opc1_obj_p":
@@ -216,7 +193,7 @@ class KeResetPrefs(Operator):
     bl_options = {"INTERNAL"}
 
     def execute(self, context):
-        prefs = context.preferences.addons[__package__].preferences
+        prefs = get_prefs()
         props = prefs.__annotations__.keys()
         for k in props:
             prefs.property_unset(k)
@@ -224,75 +201,6 @@ class KeResetPrefs(Operator):
         return {'FINISHED'}
 
 
-class KeMouseOverInfo(Operator):
-    bl_idname = "ke_mouseover.info"
-    bl_label = "Info"
-    bl_options = {"INTERNAL"}
-
-    text: StringProperty(name="Info", description="Info", default='')
-
-    @classmethod
-    def description(cls, context, properties):
-        return properties.text
-
-    def execute(self, context):
-        return {'INTERFACE'}
-
-
-#
-# (3D VIEW) UI
-#
-class KeIconPreload(Header):
-    bl_idname = "VIEW3D_HT_KE_ICONPRELOAD"
-    bl_region_type = 'HEADER'
-    bl_space_type = 'VIEW_3D'
-
-    def draw(self, context):
-        # Terrible OpenGL style preloading to avoid seeing (the most used) icons load
-        layout = self.layout
-        row = layout.row()
-        row.ui_units_x = 0.01
-        row.scale_y = 0.01
-        row.scale_x = 0.01
-        # SNAPPING
-        row.label(icon_value=pcoll['kekit']['ke_snap1'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_snap2'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_snap3'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_snap4'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_snap5'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_snap6'].icon_id)
-        # OPC
-        row.label(icon_value=pcoll['kekit']['ke_opc1'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_opc2'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_opc3'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_opc4'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_opc5'].icon_id)
-        row.label(icon_value=pcoll['kekit']['ke_opc6'].icon_id)
-
-
-class UIKeKitMain(Panel):
-    bl_idname = "UI_PT_kekit"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = __package__
-    bl_label = 'keKit'
-    bl_description = 'keKit Main Panel'
-
-    def draw_header_preset(self, context):
-        layout = self.layout
-        layout.emboss = 'NONE'
-        row = layout.row()
-        row.label(text="%s" % bpy.context.preferences.addons[__package__].preferences.version)
-        row.operator("wm.url_open", text="", icon="URL").url = "https://ke-code.xyz/scripts/kekit.html"
-        row.separator(factor=0.5)
-
-    def draw(self, context):
-        layout = self.layout
-
-
-#
-# KIT PREFERENCES
-#
 class KeKitPropertiesTemp(PropertyGroup):
     slush: StringProperty(default="")
     view_query: StringProperty(default=" N/A ")
@@ -336,6 +244,9 @@ class KeKitAddonPreferences(AddonPreferences):
     outliner_extras: BoolProperty(name="Outliner Buttons", default=False,
                                   description="Adds extra buttons in Outliner header for:\n'Show Active', "
                                               "'Show One Level' and 'Hide One Level'\n Use 'Reload Addons' to apply")
+    material_extras: BoolProperty(name="Material Buttons", default=False,
+                                  description="Adds extra buttons in Material Properties Surface for:\n"
+                                              "'Sync Viewport Display'. Use 'Reload Addons' to apply")
     experimental: BoolProperty(name="Experimental", default=False,
                                description="Toggle properties/features that work - but has some quirks\n"
                                            "See keKit Wiki for details.")
@@ -344,26 +255,21 @@ class KeKitAddonPreferences(AddonPreferences):
                                             size=4, default=[0.8, 0.8, 0.8, 1.0])
     modal_color_text: FloatVectorProperty(name="Text Color", subtype='COLOR',
                                           size=4, default=[0.8, 0.8, 0.8, 1.0])
-    modal_color_subtext: FloatVectorProperty(name="Sub-Text Color", subtype='COLOR',
+    modal_color_subtext: FloatVectorProperty(name="SubText Color", subtype='COLOR',
                                              size=4, default=[0.5, 0.5, 0.5, 1.0])
     # MODULES
-    m_dupe: BoolProperty(name="1: Duplication", default=True, description=m_tooltip)
-    m_main: BoolProperty(name="2: Main", default=True, description=m_tooltip)
-    m_render: BoolProperty(name="3: Render", default=True, description=m_tooltip)
-    m_bookmarks: BoolProperty(name="4: Bookmarks", default=True, description=m_tooltip)
-    m_selection: BoolProperty(name="5: Select & Align", default=True, description=m_tooltip)
-    m_modeling: BoolProperty(name="6: Modeling", default=True, description=m_tooltip)
-    m_directloopcut: BoolProperty(name="6A: DirectLoopCut", default=True, description=m_tooltip)
-    m_multicut: BoolProperty(name="6B: MultiCut", default=True, description=m_tooltip)
-    m_subd: BoolProperty(name="6C: SubD Tools", default=True, description=m_tooltip)
-    m_unrotator: BoolProperty(name="6D: Unrotator", default=True, description=m_tooltip)
-    m_fitprim: BoolProperty(name="6E: FitPrim", default=True, description=m_tooltip)
-    m_contexttools: BoolProperty(name="6F: Context Tools", default=True, description=m_tooltip)
-    m_tt: BoolProperty(name="7: Transform Tools", default=True, description=m_tooltip)
-    m_idmaterials: BoolProperty(name="8: ID Materials", default=True, description=m_tooltip)
+    m_geo: BoolProperty(name="1: Geometry", default=True, description=m_tooltip)
+    m_render: BoolProperty(name="2: Render & Shade", default=True, description=m_tooltip)
+    m_bookmarks: BoolProperty(name="3: Bookmarks", default=True, description=m_tooltip)
+    m_selection: BoolProperty(name="4: Select & Align", default=True, description=m_tooltip)
+    m_modeling: BoolProperty(name="5: Modeling", default=True, description=m_tooltip)
+    m_modifiers: BoolProperty(name="6: Modifiers", default=True, description=m_tooltip)
+    m_contexttools: BoolProperty(name="7: Context Tools", default=True, description=m_tooltip)
+    m_tt: BoolProperty(name="8: Transform Tools", default=True, description=m_tooltip)
     m_cleanup: BoolProperty(name="9: Clean-Up Tools", default=True, description=m_tooltip)
     m_piemenus: BoolProperty(name="10: Pie Menus", default=True, description=m_tooltip)
-    kcm: BoolProperty(name="keKit Cursor Menu", default=True,
+    # SPECIAL MODULE
+    kcm: BoolProperty(name="Cursor Menu", default=True,
                       description="Show KeKit Cursor Menu icon in toolbar\nRequires keKit Select & Align Module\n"
                                   "Use 'Reload Addons' to apply")
     # OPERATOR PREFS
@@ -386,94 +292,118 @@ class KeKitAddonPreferences(AddonPreferences):
     unrotator_rndz: BoolProperty(description="Randomize Z-axis rotation when duplicating", default=False)
     # Orientation & Pivot Combo 1
     opc1_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="1GLOBAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="GLOBAL")
     opc1_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="1MEDIAN_POINT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="MEDIAN_POINT")
     opc1_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="1GLOBAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="GLOBAL")
     opc1_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="1MEDIAN_POINT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="MEDIAN_POINT")
     # Orientation & Pivot Combo 2
     opc2_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="2LOCAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="LOCAL")
     opc2_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="3INDIVIDUAL_ORIGINS")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="INDIVIDUAL_ORIGINS")
     opc2_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="3NORMAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="NORMAL")
     opc2_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="5ACTIVE_ELEMENT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="ACTIVE_ELEMENT")
     # Orientation & Pivot Combo 3
     opc3_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="1GLOBAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="GLOBAL")
     opc3_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="3INDIVIDUAL_ORIGINS")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="INDIVIDUAL_ORIGINS")
     opc3_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="2LOCAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="LOCAL")
     opc3_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="3INDIVIDUAL_ORIGINS")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="INDIVIDUAL_ORIGINS")
     # Orientation & Pivot Combo 4
     opc4_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="6CURSOR")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="CURSOR")
     opc4_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="4CURSOR")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="CURSOR")
     opc4_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="6CURSOR")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="CURSOR")
     opc4_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="4CURSOR")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="CURSOR")
     # Orientation & Pivot Combo 5
     opc5_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="1GLOBAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="GLOBAL")
     opc5_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="4CURSOR")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="CURSOR")
     opc5_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="1GLOBAL")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="GLOBAL")
     opc5_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="5ACTIVE_ELEMENT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="ACTIVE_ELEMENT")
     # Orientation & Pivot Combo 6
     opc6_obj_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="5VIEW")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="VIEW")
     opc6_obj_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="1MEDIAN_POINT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="MEDIAN_POINT")
     opc6_edit_o: EnumProperty(
-        items=[("1GLOBAL", "Global", ""), ("2LOCAL", "Local", ""), ("3NORMAL", "Normal", ""), ("4GIMBAL", "Gimbal", ""),
-               ("5VIEW", "View", ""), ("6CURSOR", "Cursor", "")], name="Orientation", default="5VIEW")
+        items=[("GLOBAL", "Global", ""), ("LOCAL", "Local", ""), ("NORMAL", "Normal", ""), ("GIMBAL", "Gimbal", ""),
+               ("VIEW", "View", ""), ("CURSOR", "Cursor", ""), ("PARENT", "Parent", "")],
+        name="Orientation", default="VIEW")
     opc6_edit_p: EnumProperty(
-        items=[("1MEDIAN_POINT", "Median Point", ""), ("2BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
-               ("3INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("4CURSOR", "Cursor", ""),
-               ("5ACTIVE_ELEMENT", "Active Element", "")], name="Pivot Transform", default="5ACTIVE_ELEMENT")
+        items=[("MEDIAN_POINT", "Median Point", ""), ("BOUNDING_BOX_CENTER", "Bounding Box Center", ""),
+               ("INDIVIDUAL_ORIGINS", "Individual Origins", ""), ("CURSOR", "Cursor", ""),
+               ("ACTIVE_ELEMENT", "Active Element", "")],
+        name="Pivot", default="ACTIVE_ELEMENT")
     # OPC naming
     opc1_name: StringProperty(description="Name OPC1", default="OPC1")
     opc2_name: StringProperty(description="Name OPC2", default="OPC2")
@@ -716,6 +646,11 @@ class KeKitAddonPreferences(AddonPreferences):
     apply_scale: BoolProperty(name="A",
                                    description="Auto Apply Scale before operation. (Shared setting for multiple ops)",
                                    default=True)
+    # Mouse Axis Scale Mode
+    mam_scale_mode: BoolProperty(name="Scale Constrain",
+                                 description="When mouse is over selected object(s) use non-constrained scale.\n"
+                                             "Else, use axis constrain relative to mouse (default mouse axis move)",
+                                 default=False)
 
     # TT header icons prefs
     tt_icon_pos: EnumProperty(
@@ -729,118 +664,47 @@ class KeKitAddonPreferences(AddonPreferences):
         update=set_tt_icon_pos,
         default="CENTER")
 
+    category: StringProperty(
+            name="Tab Category",
+            description="Choose a name (category) for tab placement",
+            default="kekit",
+            update=update_panel
+            )
+
     def draw(self, context):
         layout = self.layout
-        box = layout.box()
-        row = box.row()
-        # row.operator("kekit.prefs_import", icon="IMPORT")
-        row.operator("kekit.filebrowser", icon="IMPORT")
-
-        row.operator("kekit.prefs_export", icon="EXPORT")
-        row.operator("kekit.prefs_reset", icon="LOOP_BACK")
-
-        row = layout.row()
-        row.label(text="Show:")
-        row.prop(self, "kcm", toggle=True)
-        row.prop(self, "outliner_extras", toggle=True)
-        row.prop(self, "experimental", toggle=True)
-
-        if bpy.context.preferences.addons[__package__].preferences.m_tt:
-            row = layout.row()
-            row.label(text="Viewport TT Icons:")
-            row.prop(self, "tt_icon_pos", expand=True)
-
-        box = layout.box()
-        row = box.row()
-        row.label(text="keKit Main Panel Modules:")
-        row.operator("script.reload", text="Reload Add-ons", icon="FILE_REFRESH")
-        row = box.row()
-        row.prop(self, "m_dupe", toggle=True)
-        row.prop(self, "m_main", toggle=True)
-        row.prop(self, "m_render", toggle=True)
-
-        row = box.row()
-        row.label(text="keKit Modules:")
-        gf = box.grid_flow(row_major=True, columns=4)
-        gf.prop(self, "m_bookmarks", toggle=True)
-        gf.prop(self, "m_selection", toggle=True)
-        gf.prop(self, "m_modeling", toggle=True)
-        gf.prop(self, "m_directloopcut", toggle=True)
-        gf.prop(self, "m_multicut", toggle=True)
-        gf.prop(self, "m_subd", toggle=True)
-        gf.prop(self, "m_unrotator", toggle=True)
-        gf.prop(self, "m_fitprim", toggle=True)
-        gf.prop(self, "m_contexttools", toggle=True)
-        gf.prop(self, "m_tt", toggle=True)
-        gf.prop(self, "m_idmaterials", toggle=True)
-        gf.prop(self, "m_cleanup", toggle=True)
-        gf.prop(self, "m_piemenus", toggle=True)
-
-        layout.label(text="Modal Text:")
-        gf = layout.grid_flow(row_major=True, columns=2)
-        gf.use_property_split = True
-        gf.prop(self, "ui_scale")
-        gf.prop(self, 'modal_color_header')
-        gf.prop(self, 'modal_color_text')
-        gf.prop(self, 'modal_color_subtext')
+        prefs_ui(self, layout)
 
 
 classes = (
     KeKitAddonPreferences,
-    UIKeKitMain,
     KeKitPropertiesTemp,
     KeSavePrefs,
     KeLoadPrefs,
     KeFileBrowser,
     KeResetPrefs,
-    KeMouseOverInfo,
-    KeIconPreload
 )
-
-modules = ()
 
 
 def register():
-    load_icons()
 
     for cls in classes:
         bpy.utils.register_class(cls)
 
     Scene.kekit_temp = PointerProperty(type=KeKitPropertiesTemp)
 
-    bpy.types.VIEW3D_HT_header.append(KeIconPreload.draw)
-
-    if bpy.context.preferences.addons[__package__].preferences.outliner_extras:
-        bpy.types.OUTLINER_HT_header.append(draw_extras)
-
     v = "v" + str(kekit_version[0]) + "." + str(kekit_version[1]) + str(kekit_version[2])
     bpy.context.preferences.addons[__package__].preferences.version = v
 
 
 def unregister():
+
     save_prefs()
-
-    try:
-        bpy.types.OUTLINER_HT_header.remove(draw_extras)
-    except Exception as e:
-        print('keKit Draw Extras Header Unregister Fail: ', e)
-        pass
-
-    bpy.types.VIEW3D_HT_header.remove(KeIconPreload.draw)
 
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
-
     try:
         del Scene.kekit_temp
     except Exception as e:
         print('keKit Temp-Props Unregister Exception: ', e)
         pass
-
-    for pr in pcoll.values():
-        bpy.utils.previews.remove(pr)
-    pcoll.clear()
-
-
-if __name__ == "__main__":
-    register()

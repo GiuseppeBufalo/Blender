@@ -1,6 +1,6 @@
 import bpy, math
 from enum import Enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -10,7 +10,7 @@ from ... ui_framework import form_ui as form
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class Mode(Enum):
@@ -282,7 +282,7 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
             mod.use_merge_vertices = True
             mod.use_smooth_shade = True
             mod.use_normal_calculate = True
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=f'Screw - 12 Steps' )
 
 
@@ -295,7 +295,7 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
             mod.use_merge_vertices = True
             mod.use_smooth_shade = True
             mod.use_normal_calculate = False
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=f'Screw - 36 Steps' )
 
 
@@ -309,7 +309,7 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
             mod.use_smooth_shade = True
             mod.use_normal_calculate = False
             mod.axis = 'Z'
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=f'Extrude Mode' )
 
 
@@ -355,7 +355,7 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
             mod.use_merge_vertices = not mod.use_merge_vertices
             use_verts = mod.use_merge_vertices if not use_verts else None
 
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f'Merge Verts {use_verts}')
 
 
@@ -375,12 +375,12 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
                 smooth_enabled = True
 
         if smooth_enabled:
-            get_preferences().modifier.screw_normals = True
-            if get_preferences().ui.Hops_extra_info:
+            addon.preference().modifier.screw_normals = True
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info="Smoothing : On")
         else:
-            get_preferences().modifier.screw_normals = False
-            if get_preferences().ui.Hops_extra_info:
+            addon.preference().modifier.screw_normals = False
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info="Smoothing : Off")
 
 
@@ -477,7 +477,7 @@ class HOPS_OT_MOD_Screw(bpy.types.Operator):
         if self.master.should_build_fast_ui():
             # Main
             win_list = []
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: # Fast Floating
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: # Fast Floating
                 win_list.append(mod.steps)
                 win_list.append("{:.0f}".format(math.degrees(mod.angle))+ "°")
                 win_list.append("{}".format(round(mod.screw_offset, 4)))

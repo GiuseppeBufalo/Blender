@@ -1,7 +1,7 @@
 import bpy
 from math import radians
 from mathutils import Vector, Matrix
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class Object():
@@ -10,9 +10,11 @@ class Object():
 
         loc, rot, sca = obj.matrix_world.decompose()
 
+        eval = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
+
         self.matrix_scaless = Matrix.Translation(loc) @ rot.to_matrix().to_4x4()
         scale = Matrix.Diagonal((*sca, 1))
-        self.bounds = [scale @ Vector(v) for v in obj.bound_box]
+        self.bounds = [scale @ Vector(v) for v in eval.bound_box]
         self.min_corner, self.max_corner = coordinates_to_diagonal(self.bounds)
         self.center = (self.min_corner + self.max_corner) /2
 
@@ -172,7 +174,7 @@ class HOPS_OT_MOD_Curve(bpy.types.Operator):
         return context.mode == 'OBJECT'
 
     def invoke(self, context, event):
-        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if get_preferences().ui.Hops_extra_info else lambda val, sub=None: None
+        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if addon.preference().ui.Hops_extra_info else lambda val, sub=None: None
         self.selection = [Object(o) for o in context.selected_objects if o.type == 'MESH']
 
         if not self.selection:

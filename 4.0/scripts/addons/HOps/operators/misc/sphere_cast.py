@@ -1,8 +1,7 @@
 import bpy
 from ... utility import ops
 from ... utils.context import ExecutionContext
-from ... preferences import get_preferences
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.operator_ui import Master
 
 class HOPS_OT_SphereCast(bpy.types.Operator):
@@ -37,7 +36,7 @@ class HOPS_OT_SphereCast(bpy.types.Operator):
                 ["Converted To Sphere"]
                 ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
 
         return {"FINISHED"}

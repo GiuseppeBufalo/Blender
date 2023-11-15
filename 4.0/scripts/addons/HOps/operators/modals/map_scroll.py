@@ -4,12 +4,12 @@ from mathutils import Vector
 from bpy_extras.image_utils import load_image
 from enum import Enum
 
-from ... preferences import get_preferences
+from ... utility import addon
 
 from ... ui_framework.master import Master
 from ... ui_framework import form_ui as form
 
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
@@ -160,7 +160,7 @@ class Dirs:
 
 
     def prefs_folder(self):
-        folder = Path(get_preferences().property.maps_folder).resolve()
+        folder = Path(addon.preference().property.maps_folder).resolve()
         if os.path.exists(folder): return folder
 
         try:
@@ -172,7 +172,7 @@ class Dirs:
 
 
     def prefs_filter(self):
-        prefs_map_type = get_preferences().property.map_scroll_ftype
+        prefs_map_type = addon.preference().property.map_scroll_ftype
         return prefs_map_type if prefs_map_type in IMG_TYPES else IMG_TYPES[0]
 
 
@@ -1234,9 +1234,9 @@ class HOPS_OT_Map_Scroll(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
 
-        if not get_preferences().property.maps_folder: return False
+        if not addon.preference().property.maps_folder: return False
 
-        folder = Path(get_preferences().property.maps_folder).resolve()
+        folder = Path(addon.preference().property.maps_folder).resolve()
         if not folder.exists():
             return False
 
@@ -1464,7 +1464,7 @@ class HOPS_OT_Map_Scroll(bpy.types.Operator):
         # Folder Box
         row = self.form.row()
         group = self.folder_group()
-        self.folder_box = form.Scroll_Box(width=270, height=20 * get_preferences().property.map_scroll_folder_count, scroll_group=group, view_scroll_enabled=True)
+        self.folder_box = form.Scroll_Box(width=270, height=20 * addon.preference().property.map_scroll_folder_count, scroll_group=group, view_scroll_enabled=True)
         row.add_element(self.folder_box)
         self.form.row_insert(row)
 
@@ -1483,7 +1483,7 @@ class HOPS_OT_Map_Scroll(bpy.types.Operator):
         # File Box
         row = self.form.row()
         group = self.file_group()
-        self.file_box = form.Scroll_Box(width=270, height=20 * get_preferences().property.map_scroll_file_count, scroll_group=group, view_scroll_enabled=True)
+        self.file_box = form.Scroll_Box(width=270, height=20 * addon.preference().property.map_scroll_file_count, scroll_group=group, view_scroll_enabled=True)
         row.add_element(self.file_box)
         self.form.row_insert(row)
 

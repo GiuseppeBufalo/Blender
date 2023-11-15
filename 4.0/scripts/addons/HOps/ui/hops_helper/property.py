@@ -2,7 +2,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import *
 from ... utility import active_tool
-from ... addon import icon, panel
+from ... src import icon, panel
 
 
 def context_items(pg, context):

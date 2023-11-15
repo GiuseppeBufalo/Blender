@@ -1,6 +1,6 @@
 import bpy, math, time, mathutils
 from mathutils import Vector
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from ..drawing.gl_funcs import draw_2D_points
 
 

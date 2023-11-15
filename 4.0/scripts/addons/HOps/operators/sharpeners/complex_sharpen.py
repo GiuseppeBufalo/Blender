@@ -4,11 +4,10 @@ from bpy.props import EnumProperty, IntProperty, FloatProperty, BoolProperty
 from .. utils import update_bevel_modifier_if_necessary, update_Weight_modifier_if_necessary
 from ... utils.context import ExecutionContext
 from . soft_sharpen import soft_sharpen_object
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.objects import apply_modifiers
 from ... utils.objects import get_modifier_with_type
 from ... utility import modifier
-from ... preferences import get_preferences
 from ...ui_framework.operator_ui import Master
 
 
@@ -128,11 +127,11 @@ Hold shift - Bypass modifier apply / Sstatus change
         col = layout.column(align=True)
         colrow = col.row(align=True).split(factor=0.3, align=True)
         colrow.prop(self, "additive_mode", toggle=True)
-        colrow.prop(get_preferences().property, "sharpness", text="Sharpness")
+        colrow.prop(addon.preference().property, "sharpness", text="Sharpness")
         colrow = col.row(align=True).split(factor=0.3, align=True)
         colrow.prop(self, "is_global", text="Global", toggle=True)
         if self.is_global:
-            colrow.prop(get_preferences().property, "auto_smooth_angle", text="Auto Smooth Angle")
+            colrow.prop(addon.preference().property, "auto_smooth_angle", text="Auto Smooth Angle")
         else:
             colrow.prop(self, "auto_smooth_angle", text="Auto Smooth Angle")
         col.separator()
@@ -164,7 +163,7 @@ Hold shift - Bypass modifier apply / Sstatus change
         if event.shift:
             object.hops.status = "UNDEFINED"
 
-        if get_preferences().property.auto_bweight:
+        if addon.preference().property.auto_bweight:
             bpy.ops.hops.adjust_bevel("INVOKE_DEFAULT", ignore_ctrl=True)
         #Assistive to Sharpen
         elif self.to_bwidth:
@@ -183,8 +182,8 @@ Hold shift - Bypass modifier apply / Sstatus change
             complex_sharpen_active_object(
                 self,
                 obj,
-                get_preferences().property.sharpness,
-                get_preferences().property.auto_smooth_angle,
+                addon.preference().property.sharpness,
+                addon.preference().property.auto_smooth_angle,
                 self.additive_mode,
                 self.segment_amount,
                 self.bevelwidth,
@@ -195,13 +194,13 @@ Hold shift - Bypass modifier apply / Sstatus change
                 obj,
                 self.segment_amount,
                 self.bevelwidth,
-                get_preferences().property.bevel_profile)
+                addon.preference().property.bevel_profile)
 
-            # if get_preferences().property.add_weighten_normals_mod:
+            # if addon.preference().property.add_weighten_normals_mod:
             #     update_Weight_modifier_if_necessary(obj)
 
             obj.hops.is_global = self.is_global
-            obj.data.auto_smooth_angle = get_preferences().property.auto_smooth_angle if self.is_global else self.auto_smooth_angle
+            obj.data.auto_smooth_angle = addon.preference().property.auto_smooth_angle if self.is_global else self.auto_smooth_angle
 
         bpy.ops.object.select_all(action='DESELECT')
         for obj in selected:
@@ -222,7 +221,7 @@ Hold shift - Bypass modifier apply / Sstatus change
                 ["Modifiers Applied"],
                 ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
 
         return {"FINISHED"}

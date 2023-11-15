@@ -7,7 +7,7 @@ from bpy.types import (Panel,
                        )
 from math import radians, degrees
 from ... icons import get_icon_id
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_SharpPanel(bpy.types.Panel):
@@ -22,17 +22,17 @@ class HOPS_PT_SharpPanel(bpy.types.Panel):
         col = layout.column(align=True)
 
         colrow = col.row(align=True)
-        colrow.prop(get_preferences().property, "sharp_use_crease", text="Crease")
-        colrow.prop(get_preferences().property, "sharp_use_bweight", text="Bweight")
-        colrow.prop(get_preferences().property, "sharp_use_seam", text="Seam")
-        colrow.prop(get_preferences().property, "sharp_use_sharp", text="Sharp")
+        colrow.prop(addon.preference().property, "sharp_use_crease", text="Crease")
+        colrow.prop(addon.preference().property, "sharp_use_bweight", text="Bweight")
+        colrow.prop(addon.preference().property, "sharp_use_seam", text="Seam")
+        colrow.prop(addon.preference().property, "sharp_use_sharp", text="Sharp")
 
         colrow = col.row(align=True)
         colrow.operator("hops.set_sharpness_30", text="30")
         colrow.operator("hops.set_sharpness_45", text="45")
         colrow.operator("hops.set_sharpness_60", text="60")
 
-        col.prop(get_preferences().property, "sharpness", text="Sharpness")
+        col.prop(addon.preference().property, "sharpness", text="Sharpness")
 
         col.separator()
         col.operator("hops.sharp_manager", text="Sharps Manager")

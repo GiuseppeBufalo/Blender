@@ -15,7 +15,7 @@ from .elements.text_input import Text_Input
 
 def shortened_text(text="", width=0, font_size=12, with_dots=True):
     from .. utils.geo import get_blf_text_dims
-    from ... addon.utility.screen import dpi_factor
+    from ...utility.screen import dpi_factor
 
     width = width * dpi_factor(min=0.5)
     new_text = text

@@ -172,7 +172,7 @@ def method(op, context, event):
     if within_region_3d:
         bc.empty.matrix_parent_inverse = Matrix()
 
-        op.lazorcut = bc.shape.dimensions[2] < preference.shape.lazorcut_limit
+        op.lazorcut = bc.lattice.dimensions[2] < preference.shape.lazorcut_limit
 
         # MOUSEMOVE
         # if event.type == 'MOUSEMOVE' and event.value == 'RELEASE':
@@ -197,12 +197,15 @@ def method(op, context, event):
 
             pass_through = True
 
+        elif event.type == 'MOUSEMOVE' and preference.shape.mirror_gizmo:
+            pass_through = True
+
         elif op.operation != 'DRAW':
             op.add_point = False
 
         # LEFTMOUSE
         if event.type == 'LEFTMOUSE':
-            force_repeat = True in [d < 0.000001 for d in bc.shape.dimensions[:-2]] and op.operation != 'DRAW'
+            force_repeat = True in [d < 0.000001 for d in bc.lattice.dimensions[:-2]] and op.operation != 'DRAW'
             repeat_threshold = (op.init_mouse - op.mouse['location']).length < preference.keymap.repeat_threshold * screen.dpi_factor()
 
             if preference.keymap.alt_preserve and op.alt and not op.alt_skip:
@@ -212,6 +215,11 @@ def method(op, context, event):
                 op.lmb = True
                 op.last['mouse_click'] = op.mouse['location']
                 op.alt_skip = True
+
+                if op.operation == 'MIRROR' and preference.shape.mirror_gizmo:
+                    if op.mirror_gizmo_higlight:
+                        op.skip_lmb_release = True
+                        return {'PASS_THROUGH'}
 
                 if bc.shader and bc.shader.widgets.active and bc.shader.widgets.active.type != 'SNAP' and not event.ctrl:
                     widget = bc.shader.widgets.active
@@ -271,6 +279,9 @@ def method(op, context, event):
                 op.alt_skip = False
 
                 execute_in_none = op.operation == 'NONE' and op.modified
+
+                if op.operation == 'MIRROR' and preference.shape.mirror_gizmo:
+                    return {'RUNNING_MODAL'}
 
                 if op.operation == 'BEVEL':
                     utility.modal.operation.change(op, context, event, to='NONE')
@@ -688,7 +699,11 @@ def method(op, context, event):
                     'THREE': 'Z',
                     'NUMPAD_3': 'Z'}
 
-                if op.operation != 'SOLIDIFY':
+                if op.operation == 'MIRROR' and preference.shape.mirror_gizmo:
+                    index = 'XYZ'.index(axis[event.type])
+                    bpy.ops.bc.gizmo_click_toggle(axis_index=index, flip=event.shift)
+
+                elif op.operation != 'SOLIDIFY':
                     if not op.mirrored:
                         for i in range(3):
                             bc.mirror_axis[i] = 0
@@ -947,7 +962,7 @@ def method(op, context, event):
                                 if op.ngon_point_index != -1 and vert.index != op.ngon_point_index:
                                     continue
 
-                                vert.bevel_weight = 0
+                                mesh.index_weight(vindex, vert=True, value=0)
 
                             op.last['vert_weight'] = [0 for w in op.last['vert_weight'][:]]
 
@@ -957,7 +972,7 @@ def method(op, context, event):
                                 if op.ngon_point_index != -1 and op.ngon_point_index not in edge.vertices:
                                     continue
 
-                                edge.bevel_weight = 0
+                                mesh.index_weight(eindex, value=0)
 
                             # op.ngon_point_bevel = False
 
@@ -1112,6 +1127,13 @@ def method(op, context, event):
                 op.update()
                 return {'RUNNING_MODAL'}
 
+        # ;
+        elif event.type == 'SEMI_COLON':
+            if event.value == 'RELEASE':
+                if op.operation != 'MIRROR':
+                    preference.shape.mirror_gizmo = True
+                else:
+                    preference.shape.mirror_gizmo = False
 
         elif op.operation == 'NONE' and event.type not in {'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'}:
             op.update()

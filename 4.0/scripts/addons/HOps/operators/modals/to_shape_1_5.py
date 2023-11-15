@@ -2,12 +2,11 @@ import bpy
 import bmesh
 import enum
 from math import radians, copysign
-from ... preferences import get_preferences
+from ... utility import addon, collections, object, math , modifier, operator_override, method_handler
 # from ... utils.blender_ui import get_dpi_factor
 # from ... utils.context import ExecutionContext
 from bpy.props import EnumProperty, FloatProperty, BoolProperty
 from mathutils import Vector, Matrix, Euler
-from ... utility import collections, object, math , modifier
 
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
@@ -17,7 +16,6 @@ from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
 
 class Mouse_states(enum.Enum):
     none = enum.auto()
@@ -519,7 +517,7 @@ class HOPS_OT_Conv_To_Shape_1_5(bpy.types.Operator):
         self.flair = False
         self.running = False
 
-        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if get_preferences().ui.Hops_extra_info else lambda val: None
+        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if addon.preference().ui.Hops_extra_info else lambda val: None
         self.elem_multi = lambda vect1, vect2 : Vector([a*b for a,b in zip(vect1, vect2)])
 
         bpy.context.view_layer.update()
@@ -761,7 +759,8 @@ class HOPS_OT_Conv_To_Shape_1_5(bpy.types.Operator):
             override['edit_object'] = None
             override['selected_objects'] = list(self.created_shapes)
             override['mode'] = 'OBJECT'
-            bpy.ops.hops.draw_wire_mesh_launcher(override,'INVOKE_DEFAULT', target='SELECTED')
+
+            operator_override(context, bpy.ops.hops.draw_wire_mesh_launcher, override, 'INVOKE_DEFAULT', target='SELECTED')
 
             self.remove_deletables()
 
@@ -1046,7 +1045,7 @@ class HOPS_OT_Conv_To_Shape_1_5(bpy.types.Operator):
             elif self.primitive_type == 'Sphere':
                 preset = self.segment_presets[ event.type ]
                 self.sphere_segments = preset
-                self.sphere_rings = preset/2
+                self.sphere_rings = int(preset/2)
                 self.notify(F'Segments: {self.sphere_segments}. Rings: {self.sphere_rings}')
                 self.create_shape(context)
 
@@ -1378,7 +1377,8 @@ class HOPS_OT_Conv_To_Shape_1_5(bpy.types.Operator):
             override['edit_object'] = None
             override['selected_objects'] = list(self.created_shapes)
             override['mode'] = 'OBJECT'
-            bpy.ops.hops.draw_wire_mesh_launcher(override,'INVOKE_DEFAULT', target='SELECTED')
+
+            operator_override(context, bpy.ops.hops.draw_wire_mesh_launcher, override,'INVOKE_DEFAULT', target='SELECTED')
 
         if not self.running:
             if context.mode == 'OBJECT':
@@ -1925,7 +1925,7 @@ class HOPS_OT_Conv_To_Shape_1_5(bpy.types.Operator):
 
         # Main
         win_list = []
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
             win_list.append(self.primitive_type)
             win_list.append(self.shape_offset_axis)
             if self.shape_offset > 0:

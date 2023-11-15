@@ -1,5 +1,5 @@
 import bpy, bmesh
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 DESC = """Set edge length of selected edges rings;
@@ -38,7 +38,7 @@ class HOPS_OT_EDGE_LEN(bpy.types.Operator):
 
     def execute (self, context):
         self.edit_objects = [o for o in context.objects_in_mode_unique_data]
-        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if get_preferences().ui.Hops_extra_info else lambda val, sub=None: None
+        self.notify = lambda val, sub='': bpy.ops.hops.display_notification(info=val, subtext=sub) if addon.preference().ui.Hops_extra_info else lambda val, sub=None: None
 
         counter = 0
         for obj in self.edit_objects:

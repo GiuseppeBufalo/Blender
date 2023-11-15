@@ -2,6 +2,7 @@ import bpy
 from bpy.props import FloatProperty, BoolProperty, IntProperty
 from . utils.registration import get_path, get_name, get_addon
 from . utils.ui import draw_keymap_items, get_keymap_item, get_icon
+from . utils.draw import draw_split_row
 from . registration import keys as keysdict
 
 
@@ -9,11 +10,15 @@ decalmachine = None
 meshmachine = None
 machin3tools = None
 curvemachine = None
+hypercursor = None
 
 
 class PUNCHitPreferences(bpy.types.AddonPreferences):
     path = get_path()
     bl_idname = get_name()
+
+    registration_debug: BoolProperty(name="Addon Terminal Registration Output", default=True)
+
 
 
     push_default: IntProperty(name="Push Default Value", description="Pushing means widening the Extrusion a tiny bit. \nThis helps with Precision Issues in Polygonal Meshes\nSet to 0 to attempt Extrusions without changing the Shape at all.", default=1, min=0)
@@ -23,11 +28,15 @@ class PUNCHitPreferences(bpy.types.AddonPreferences):
 
 
 
+    show_sidebar_panel: BoolProperty(name="Show Sidebar Panel", description="Show PUNCHit Panel in 3D View's Sidebar", default=True)
+
+
     modal_hud_scale: FloatProperty(name="HUD Scale", description="Scale of HUD elements", default=1, min=0.1)
     modal_hud_timeout: FloatProperty(name="HUD Timeout", description="Modulate duration of fading HUD elements", default=1, min=0.1, max=10)
 
+
     def draw(self, context):
-        global decalmachine, meshmachine, curvemachine, machin3tools
+        global decalmachine, meshmachine, curvemachine, machin3tools, hypercursor
 
         if decalmachine is None:
             decalmachine = get_addon('DECALmachine')[0]
@@ -41,6 +50,9 @@ class PUNCHitPreferences(bpy.types.AddonPreferences):
         if machin3tools is None:
             machin3tools = get_addon('MACHIN3tools')[0]
 
+        if hypercursor is None:
+            hypercursor = get_addon('HyperCursor')[0]
+
         layout = self.layout
 
         column = layout.column(align=True)
@@ -53,45 +65,40 @@ class PUNCHitPreferences(bpy.types.AddonPreferences):
         b = split.box()
 
         bb = b.box()
-        bb.label(text="General")
-
-        column = bb.column(align=True)
-        row = column.row(align=True)
-        rs = row.split(factor=0.2, align=True)
-        rs.prop(self, "push_default", text="")
-        rs.label(text="Push Default Value")
-
-        row = column.row(align=True)
-        rs = row.split(factor=0.2, align=True)
-        rs.prop(self, "pull_default", text="")
-        rs.label(text="Pull Default Value")
+        bb.label(text="Addon")
 
         column = bb.column()
-        row = column.row()
-        rs = row.split(factor=0.2)
-        rs.prop(self, "non_manifold_extrude", text=str(self.non_manifold_extrude), toggle=True)
+        draw_split_row(self, column, prop='registration_debug', label='Print Addon Registration Output in System Console')
 
-        if self.non_manifold_extrude:
-            rss = rs.split(factor=0.34)
-            rss.label(text="Support non-manifold meshes")
-            rss.label(text="Experimental! Tends to require higher Push values!", icon='ERROR')
-        else:
-            rs.label(text="Support non-manifold meshes")
+
+
+        bb = b.box()
+        bb.label(text="General")
+
+        column = bb.column()
+
+        row = draw_split_row(self, column, prop='push_default', label='Push Default Value', factor=0.4, toggle=False, expand=False)
+        draw_split_row(self, row, prop='pull_default', label='Pull Default Value', factor=0.4)
+
+        draw_split_row(self, column, prop='non_manifold_extrude', label='Support non-manifold meshes', warning='Experimental! Tends to require higher Push values!' if self.non_manifold_extrude else '')
+
+
+
+        bb = b.box()
+        bb.label(text="View 3D")
+
+        column = bb.column()
+        draw_split_row(self, column, prop='show_sidebar_panel', label='Show Sidebar Panel')
+
+
 
         bb = b.box()
         bb.label(text="HUD")
 
         column = bb.column(align=True)
-        row = column.row(align=True)
-        rs = row.split(factor=0.2, align=True)
-        rs.prop(self, "modal_hud_scale", text="")
-        rs.label(text="Scale")
 
-        row = column.split(factor=0.2, align=True)
-        row.prop(self, "modal_hud_timeout", text='')
-        rs = row.split(factor=0.2, align=True)
-        rs.label(text="Timeout")
-        rs.label(text="Modulate Duration of Fading HUDs", icon='INFO')
+        draw_split_row(self, column, prop='modal_hud_scale', label='Modal HUD scale')
+        draw_split_row(self, column, prop='modal_hud_timeout', label='Timeout', info='Modulate Duration of Fading HUDs')
 
 
 
@@ -167,3 +174,4 @@ class PUNCHitPreferences(bpy.types.AddonPreferences):
         row.operator("wm.url_open", text='MESHmachine', icon_value=get_icon('save' if meshmachine else 'cancel_grey')).url = 'https://mesh.machin3.io'
         row.operator("wm.url_open", text='CURVEmachine', icon_value=get_icon('save' if curvemachine else 'cancel_grey')).url = 'https://curve.machin3.io/'
         row.operator("wm.url_open", text='MACHIN3tools', icon_value=get_icon('save' if machin3tools else 'cancel_grey')).url = 'https://machin3.io/MACHIN3tools'
+        row.operator("wm.url_open", text='HyperCursor', icon_value=get_icon('save' if hypercursor else 'cancel_grey')).url = 'https://www.youtube.com/playlist?list=PLcEiZ9GDvSdWs1w4ZrkbMvCT2R4F3O9yD'

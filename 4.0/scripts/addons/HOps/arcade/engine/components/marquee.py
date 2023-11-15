@@ -1,5 +1,5 @@
 import bpy, math, time
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from .... ui_framework.utils.geo import get_blf_text_dims
 from ..drawing.gl_funcs import draw_2D_text
 

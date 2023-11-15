@@ -1,7 +1,7 @@
 import bpy
 from bpy.props import BoolProperty
 import bpy.utils.previews
-from ... preferences import get_preferences
+from ... utility import addon
 from math import radians
 
 
@@ -32,7 +32,7 @@ LMB + ALT + CTRL - Sharp Manager (sharp manager)
             self.report({'INFO'}, F'Seams Converted To Sharp Markings')
 
         elif event.ctrl:
-            bpy.ops.hops.complex_sharpen('INVOKE_DEFAULT', is_global=True, auto_smooth_angle=get_preferences().property.auto_smooth_angle, to_bwidth=True)
+            bpy.ops.hops.complex_sharpen('INVOKE_DEFAULT', is_global=True, auto_smooth_angle=addon.preference().property.auto_smooth_angle, to_bwidth=True)
             self.report({'INFO'}, F'CSharpened ')
 
         elif event.alt:
@@ -45,7 +45,7 @@ LMB + ALT + CTRL - Sharp Manager (sharp manager)
             self.report({'INFO'}, F'Re-Sharpened')
 
         else:
-            bpy.ops.hops.soft_sharpen('INVOKE_DEFAULT', additive_mode=True, is_global=True, auto_smooth_angle=get_preferences().property.auto_smooth_angle)
+            bpy.ops.hops.soft_sharpen('INVOKE_DEFAULT', additive_mode=True, is_global=True, auto_smooth_angle=addon.preference().property.auto_smooth_angle)
             self.report({'INFO'}, F'SSharpened')
 
         return {'FINISHED'}

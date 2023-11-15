@@ -1,5 +1,5 @@
 from . import Dims
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from ... graphics.draw import draw_2D_lines
 
 class Spacer:

@@ -1,6 +1,6 @@
 import re
 import bpy
-from .... addon.utility.screen import dpi_factor
+from ....utility.screen import dpi_factor
 from ... graphics.draw import render_text, draw_border_lines, render_quad, render_image
 from ... graphics.load import load_image_file
 from ... utils.geo import get_blf_text_dims

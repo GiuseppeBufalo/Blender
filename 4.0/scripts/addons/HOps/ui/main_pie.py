@@ -1,7 +1,7 @@
 import bpy
 from .. icons import get_icon_id, icons
 from .. utils.addons import addon_exists
-from .. preferences import get_preferences
+from .. utility import addon
 from .. utils.objects import get_current_selected_status
 from .. import bl_info
 
@@ -71,7 +71,7 @@ class HOPS_MT_MainPie(bpy.types.Menu):
         #self.drawpie_options(layout)
         pie.column().label()
         
-        if get_preferences().property.accushape_type == 'V2':
+        if addon.preference().property.accushape_type == 'V2':
             pie.operator("hops.accu_shape_v2", text="AccuShape V2", icon_value=get_icon_id("grey"))
         else: 
             pie.operator("hops.accu_shape", text="AccuShape", icon_value=get_icon_id("grey"))
@@ -182,7 +182,7 @@ class HOPS_MT_MainPie(bpy.types.Menu):
         col.scale_x = 1.3
         col.scale_y = 1.3
 
-        if get_preferences().property.pie_mod_expand:
+        if addon.preference().property.pie_mod_expand:
 
             col.operator("hops.adjust_bevel", text="", icon="MOD_BEVEL")
             col.operator("hops.mod_lattice", text="", icon="MOD_LATTICE")
@@ -214,10 +214,10 @@ class HOPS_MT_MainPie(bpy.types.Menu):
         col.operator("hops.edit_bool_inset", text="", icon_value=get_icon_id("purple"))
         col.operator("hops.edit_bool_knife", text="", icon_value=get_icon_id("blue"))
         col.operator("hops.edit_bool_slash", text="", icon_value=get_icon_id("yellow"))
-        if get_preferences().property.pie_mod_expand:
-            col.prop(get_preferences().property, "pie_mod_expand", text="", icon="TRIA_LEFT")
+        if addon.preference().property.pie_mod_expand:
+            col.prop(addon.preference().property, "pie_mod_expand", text="", icon="TRIA_LEFT")
         else:
-            col.prop(get_preferences().property, "pie_mod_expand", text="", icon="TRIA_RIGHT")
+            col.prop(addon.preference().property, "pie_mod_expand", text="", icon="TRIA_RIGHT")
 
         maincol.label()
         maincol.label()
@@ -231,7 +231,7 @@ class HOPS_MT_MainPie(bpy.types.Menu):
         col.scale_x = 1.3
         col.scale_y = 1.3
 
-        if get_preferences().property.pie_mod_expand:
+        if addon.preference().property.pie_mod_expand:
 
             col.operator("hops.adjust_tthick", text="", icon="MOD_SOLIDIFY")
             col.operator("hops.mod_screw", text="", icon="MOD_SCREW")
@@ -299,10 +299,10 @@ class HOPS_MT_MainPie(bpy.types.Menu):
         col.operator("hops.bool_knife", text="", icon_value=get_icon_id("blue"))
         col.operator("hops.slash", text="", icon_value=get_icon_id("yellow"))
 
-        if get_preferences().property.pie_mod_expand:
-            col.prop(get_preferences().property, "pie_mod_expand", text="", icon="TRIA_LEFT")
+        if addon.preference().property.pie_mod_expand:
+            col.prop(addon.preference().property, "pie_mod_expand", text="", icon="TRIA_LEFT")
         else:
-            col.prop(get_preferences().property, "pie_mod_expand", text="", icon="TRIA_RIGHT")
+            col.prop(addon.preference().property, "pie_mod_expand", text="", icon="TRIA_RIGHT")
 
         maincol.label()
         maincol.label()

@@ -2,7 +2,7 @@ import bpy, webbrowser
 from mathutils import Vector
 from . utils import add_list_items, toggle_help, toggle_mods
 from .. graphics.load import load_image_file
-from ... preferences import get_preferences
+from ... utility import addon
 
 class Preset_Videos():
 
@@ -46,7 +46,7 @@ class Preset_Videos():
         # self.create.element_border(layout=header_layout, line_width=1)
 
         # Widget
-        split_count = get_preferences().ui.Hops_modal_pizza_ops_display_count
+        split_count = addon.preference().ui.Hops_modal_pizza_ops_display_count
         self.create.widget_scroll(panel=self.main_window.panels[-1], win_key="Video_Page", collapsable=False, split_count_override=True, split_count=split_count, show_bar=False)
         self.widget = self.main_window.panels[-1].widget
         self.widget.split_count = split_count

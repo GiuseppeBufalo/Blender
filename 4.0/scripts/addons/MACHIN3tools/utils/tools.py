@@ -7,19 +7,20 @@ def get_tools_from_context(context):
 
     active = view3d_tools.tool_active_from_context(context)
 
-    for tool in view3d_tools.tools_from_context(context):
-        if tool:
+    if active:
+        for tool in view3d_tools.tools_from_context(context):
+            if tool:
 
-            if type(tool) is tuple:
-                for subtool in tool:
-                    tools[subtool.idname] = {'label': subtool.label,
-                                             'icon_value': view3d_tools._icon_value_from_icon_handle(subtool.icon),
-                                             'active': subtool.idname == active.idname}
+                if type(tool) is tuple:
+                    for subtool in tool:
+                        tools[subtool.idname] = {'label': subtool.label,
+                                                 'icon_value': view3d_tools._icon_value_from_icon_handle(subtool.icon),
+                                                 'active': subtool.idname == active.idname}
 
-            else:
-                tools[tool.idname] = {'label': tool.label,
-                                      'icon_value': view3d_tools._icon_value_from_icon_handle(tool.icon),
-                                      'active': tool.idname == active.idname}
+                else:
+                    tools[tool.idname] = {'label': tool.label,
+                                          'icon_value': view3d_tools._icon_value_from_icon_handle(tool.icon),
+                                          'active': tool.idname == active.idname}
 
     return tools
 

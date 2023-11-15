@@ -5,8 +5,8 @@ from bpy.props import StringProperty, BoolProperty
 from ...ui_framework.graphics.draw import render_geo, draw_border_lines, render_quad, render_text
 from ...ui_framework.utils.geo import get_blf_text_dims
 
-from ...preferences import get_preferences
-from ...addon.utility import method_handler
+from ... utility import addon
+from ...utility import method_handler
 from ...utils.blender_ui import get_dpi, get_dpi_factor
 
 
@@ -40,7 +40,7 @@ class Container:
         self.loop_tris = [] # Indices
         self.uv_points = [] # Points
         # Color
-        self.color = get_preferences().color.Hops_UI_uv_color
+        self.color = addon.preference().color.Hops_UI_uv_color
         # Map Name
         self.name = ""
 
@@ -139,8 +139,8 @@ def build_and_append_draw_data(mesh, use_selected_faces=False):
     if len(mesh.uv_layers) < 1:
         return None
 
-    offset = get_preferences().ui.Hops_uv_padding * get_dpi_factor()
-    scale = get_preferences().ui.Hops_uv_scale * get_dpi_factor()
+    offset = addon.preference().ui.Hops_uv_padding * get_dpi_factor()
+    scale = addon.preference().ui.Hops_uv_scale * get_dpi_factor()
 
     container = Container() # Create a new container
     mesh.update()
@@ -206,7 +206,7 @@ class HOPS_OT_Draw_UV(bpy.types.Operator):
         Data.reset = False
 
         # Props
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
 
         # Registers
         self.shader = Shader(context)
@@ -280,7 +280,7 @@ class Shader():
     def __init__(self, context):
 
         self.context = context
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
         self.start_fade = False
         self.__captured_start_fade_time = False
         self.__start_fade_time = 0
@@ -497,8 +497,8 @@ from bpy.props import StringProperty, BoolProperty
 from ...ui_framework.graphics.draw import render_geo, draw_border_lines, render_quad, render_text
 from ...ui_framework.utils.geo import get_blf_text_dims
 
-from ...preferences import get_preferences
-from ...addon.utility import method_handler
+from ... utility import addon
+from ...utility import method_handler
 from ...utils.blender_ui import get_dpi, get_dpi_factor
 
 
@@ -532,7 +532,7 @@ class Container:
         self.loop_tris = [] # Indices
         self.uv_points = [] # Points
         # Color
-        self.color = get_preferences().color.Hops_UI_uv_color
+        self.color = addon.preference().color.Hops_UI_uv_color
         # Map Name
         self.name = ""
 
@@ -670,16 +670,12 @@ def build_and_append_draw_data(mesh, use_selected_faces=False, use_tagged_faces=
     if len(mesh.uv_layers) < 1:
         return None
 
-    offset = get_preferences().ui.Hops_uv_padding * get_dpi_factor()
-    scale = get_preferences().ui.Hops_uv_scale * get_dpi_factor()
+    offset = addon.preference().ui.Hops_uv_padding * get_dpi_factor()
+    scale = addon.preference().ui.Hops_uv_scale * get_dpi_factor()
 
     container = Container() # Create a new container
     mesh.update()
     mesh.calc_loop_triangles()
-
-    # Valeriy sketch ------------------
-    display_facemap = mesh.polygon_layers_int.get("HOPS_Show_UV")
-     # ---------------------------------
 
     # For drawing faces
     for tri in mesh.loop_triangles:
@@ -688,16 +684,6 @@ def build_and_append_draw_data(mesh, use_selected_faces=False, use_tagged_faces=
             polygon = mesh.polygons[tri.polygon_index]
             if not polygon.select:
                 continue
-
-        # Valeriy sketch  if use tagged faces-------------------
-        # if block enabled - will draw only tagged islands
-        # if disabled - all islands displays in solid fill but tagged in fill + wire
-        # last is more comfortable for perception
-        # if use_tagged_faces:
-        #     polygon = mesh.polygons[tri.polygon_index]
-        #     if display_facemap and display_facemap.data[polygon.index].value == 0:
-        #         continue
-        #-------------------------------------------------------
 
         container.loop_tris.append(tri.loops[:])
 
@@ -745,8 +731,8 @@ def highlight_layer(mesh):
     if len(mesh.uv_layers) < 1:
         return None
 
-    offset = get_preferences().ui.Hops_uv_padding * get_dpi_factor()
-    scale = get_preferences().ui.Hops_uv_scale * get_dpi_factor()
+    offset = addon.preference().ui.Hops_uv_padding * get_dpi_factor()
+    scale = addon.preference().ui.Hops_uv_scale * get_dpi_factor()
 
     container = Container() # Create a new container
 
@@ -807,7 +793,7 @@ class HOPS_OT_Draw_UV(bpy.types.Operator):
         Data.reset = False
 
         # Props
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
 
         # Registers
         self.shader = Shader(context)
@@ -881,7 +867,7 @@ class Shader():
     def __init__(self, context):
 
         self.context = context
-        self.prefs = get_preferences()
+        self.prefs = addon.preference()
         self.start_fade = False
         self.__captured_start_fade_time = False
         self.__start_fade_time = 0

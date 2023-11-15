@@ -3,8 +3,8 @@ from ..utils.geo import get_blf_text_dims
 from ..utils.checks import is_mouse_in_quad
 from ..graphics.draw import render_quad, render_text, draw_border_lines, draw_2D_lines, render_image
 from ..graphics.load import load_image_file
-from ...addon.utility.screen import dpi_factor
-from ...preferences import get_preferences
+from ...utility.screen import dpi_factor
+from ... utility import addon
 
 
 ####################################################
@@ -24,8 +24,8 @@ class Flow_Menu:
         self.bounds = Bounds()
 
         # Draw Settings
-        self.Hops_UI_cell_background_color = get_preferences().color.Hops_UI_cell_background_color
-        self.Hops_UI_border_color = get_preferences().color.Hops_UI_border_color
+        self.Hops_UI_cell_background_color = addon.preference().color.Hops_UI_cell_background_color
+        self.Hops_UI_border_color = addon.preference().color.Hops_UI_border_color
         
         # Draw Data
         self.icon = load_image_file('logo_red')
@@ -245,14 +245,14 @@ class Element:
         self.flow_form = flow_form
         self.ref_key = 0
         self.font_pos = (0,0)
-        self.font_color = get_preferences().color.Hops_UI_secondary_text_color
+        self.font_color = addon.preference().color.Hops_UI_secondary_text_color
         self.font_padding = 12 * dpi_factor(min=.25)
         self.bounds = Bounds()
         self.max_dims = (0,0)
         # BG
         self.show_bg = False
-        self.Hops_UI_mouse_over_color = get_preferences().color.Hops_UI_mouse_over_color
-        self.Hops_UI_border_color = get_preferences().color.Hops_UI_border_color
+        self.Hops_UI_mouse_over_color = addon.preference().color.Hops_UI_mouse_over_color
+        self.Hops_UI_border_color = addon.preference().color.Hops_UI_border_color
         # Event
         self.mouse_pos = (0,0)
         # Tip Box

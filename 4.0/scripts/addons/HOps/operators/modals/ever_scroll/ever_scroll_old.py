@@ -1,7 +1,7 @@
 import bpy, time
 from enum import Enum
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... ui_framework.graphics.draw import draw_text, render_quad, draw_border_lines
@@ -169,7 +169,7 @@ class Mod_Tracker:
                     if mod.show_render: # Protect shading
                         mod.show_viewport = False
 
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
 
         show = True if step > 0 else False
@@ -475,7 +475,7 @@ class Child_Tracker:
         for obj in self.children:
             obj.select_set(False)
             
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
     
         self.index += step
@@ -692,7 +692,7 @@ class Bool_Tracker:
         # Additive mode : Only runs once
         if self.ran_additive_check == False:
             self.ran_additive_check = True
-            if get_preferences().property.bool_scroll == 'ADDITIVE':
+            if addon.preference().property.bool_scroll == 'ADDITIVE':
                 for mod in obj.modifiers:
                     if mod.type == 'BOOLEAN':
                         if mod.object:
@@ -755,7 +755,7 @@ class Bool_Tracker:
 
         self.auto_scroll_sequance_begin = False
 
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
 
         for mod in self.bools:
@@ -791,7 +791,7 @@ class Bool_Tracker:
 
 
     def additive_prefs_save(self, mod):
-        if get_preferences().property.bool_scroll == 'ADDITIVE':
+        if addon.preference().property.bool_scroll == 'ADDITIVE':
             if not mod.object: return
             if mod.object not in self.tracked_bools:
                 self.tracked_bools.append(mod.object)
@@ -1438,9 +1438,9 @@ class Auto_Scroll:
 
         self.x = context.area.width * .25
         self.y = context.area.height * .75
-        self.font_color = get_preferences().color.Hops_UI_text_color
-        self.bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.br_color = get_preferences().color.Hops_UI_border_color
+        self.font_color = addon.preference().color.Hops_UI_text_color
+        self.bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.br_color = addon.preference().color.Hops_UI_border_color
         self.size = 16
 
         dims = get_blf_text_dims("00.00", self.size)
@@ -1463,7 +1463,7 @@ class Auto_Scroll:
         render_quad(quad=self.verts, color=self.bg_color, bevel_corners=True)
         draw_border_lines(vertices=self.verts, width=1, color=self.br_color, bevel_corners=True)
 
-        counter = abs(get_preferences().property.auto_scroll_time_interval - (time.time() - self.activated_time))
+        counter = abs(addon.preference().property.auto_scroll_time_interval - (time.time() - self.activated_time))
         text = "Start" if self.sequance_hold else f"{counter:.2f}"
         draw_text(text, self.x, self.y, size=self.size, color=self.font_color)
 
@@ -1558,7 +1558,7 @@ class HOPS_OT_Ever_Scroll(bpy.types.Operator):
         self.draw_handle_2D = bpy.types.SpaceView3D.draw_handler_add(self.safe_draw_2D, (context,), 'WINDOW', 'POST_PIXEL')
 
         # # Systems
-        # if get_preferences().property.bool_scroll_expanded == 'EXPANDED':
+        # if addon.preference().property.bool_scroll_expanded == 'EXPANDED':
         #     self.fas_UI = False
             
         self.master = Master(context=context, custom_preset="Every_Scroll", show_fast_ui=self.fas_UI)
@@ -1646,13 +1646,13 @@ class HOPS_OT_Ever_Scroll(bpy.types.Operator):
             # Main
             win_list = []
             if self.state == States.MOD:
-                win_list.append("Modifiers Scroll" if get_preferences().ui.Hops_modal_fast_ui_loc_options == 1 else "ModScroll")
+                win_list.append("Modifiers Scroll" if addon.preference().ui.Hops_modal_fast_ui_loc_options == 1 else "ModScroll")
             elif self.state == States.CHILD:
-                win_list.append("Child Scroll" if get_preferences().ui.Hops_modal_fast_ui_loc_options == 1 else "Children")
+                win_list.append("Child Scroll" if addon.preference().ui.Hops_modal_fast_ui_loc_options == 1 else "Children")
             elif self.state == States.BOOL:
-                win_list.append("Bool Scroll" if get_preferences().ui.Hops_modal_fast_ui_loc_options == 1 else "BoolScroll")
+                win_list.append("Bool Scroll" if addon.preference().ui.Hops_modal_fast_ui_loc_options == 1 else "BoolScroll")
             elif self.state == States.COLL:
-                win_list.append("Coll Scroll" if get_preferences().ui.Hops_modal_fast_ui_loc_options == 1 else "CollScroll")
+                win_list.append("Coll Scroll" if addon.preference().ui.Hops_modal_fast_ui_loc_options == 1 else "CollScroll")
 
             data = self.tracker.fast_interface(self.state)
             if data:
@@ -1889,12 +1889,12 @@ class HOPS_OT_Ever_Scroll(bpy.types.Operator):
                 self.auto_scroll.sequance_hold = False
             else: return
 
-        if time.time() - self.auto_scroll.activated_time > get_preferences().property.auto_scroll_time_interval:
+        if time.time() - self.auto_scroll.activated_time > addon.preference().property.auto_scroll_time_interval:
             self.auto_scroll.activated_time = time.time()
 
             # Make both left and right scroll same direction
             step = 1
-            if get_preferences().property.modal_handedness == 'RIGHT': step *= -1
+            if addon.preference().property.modal_handedness == 'RIGHT': step *= -1
             self.tracker.cycle(context, self.state, step)
 
         # Pause looping on sequence restart
@@ -1918,19 +1918,19 @@ class HOPS_OT_Ever_Scroll(bpy.types.Operator):
         # Adjust speed
         if event.type in {'WHEELDOWNMOUSE', 'LEFT_BRACKET'} and event.value == 'PRESS':
             self.auto_scroll.activated_time = time.time()
-            get_preferences().property.auto_scroll_time_interval -= .125
-            if get_preferences().property.auto_scroll_time_interval < .1:
-                get_preferences().property.auto_scroll_time_interval = .25
+            addon.preference().property.auto_scroll_time_interval -= .125
+            if addon.preference().property.auto_scroll_time_interval < .1:
+                addon.preference().property.auto_scroll_time_interval = .25
 
-            bpy.ops.hops.display_notification(info=f"Interval time set: {get_preferences().property.auto_scroll_time_interval:.3f}")
+            bpy.ops.hops.display_notification(info=f"Interval time set: {addon.preference().property.auto_scroll_time_interval:.3f}")
 
         elif event.type in {'WHEELUPMOUSE', 'RIGHT_BRACKET'} and event.value == 'PRESS':
             self.auto_scroll.activated_time = time.time()
-            get_preferences().property.auto_scroll_time_interval += .125
-            if get_preferences().property.auto_scroll_time_interval > 60:
-                get_preferences().property.auto_scroll_time_interval = 60
+            addon.preference().property.auto_scroll_time_interval += .125
+            if addon.preference().property.auto_scroll_time_interval > 60:
+                addon.preference().property.auto_scroll_time_interval = 60
 
-            bpy.ops.hops.display_notification(info=f"Interval time set: {get_preferences().property.auto_scroll_time_interval:.3f}")
+            bpy.ops.hops.display_notification(info=f"Interval time set: {addon.preference().property.auto_scroll_time_interval:.3f}")
 
 
     def safe_draw_2D(self, context):

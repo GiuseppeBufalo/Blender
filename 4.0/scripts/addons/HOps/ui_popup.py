@@ -4,7 +4,7 @@ from . icons import icons
 from . ui.addon_checker import draw_addon_diagnostics
 from . utils.addons import addon_exists
 from . utils.blender_ui import get_dpi_factor
-from . preferences import get_preferences
+from . utility import addon
 from . utility import modifier
 from . import bl_info
 
@@ -82,7 +82,7 @@ class HOPS_OT_InsertsPopupPreview(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        preference = get_preferences().ui
+        preference = addon.preference().ui
         dpi_value = bpy.context.preferences.system.dpi
         wm = context.window_manager
 
@@ -102,7 +102,7 @@ class HOPS_OT_InsertsPopupPreview(bpy.types.Operator):
             bpy.ops.hops.kit_ops_window("INVOKE_DEFAULT")
             return {'FINISHED'}
         else:
-            if get_preferences().property.ko_popup_type == 'DEFAULT' or event.alt:
+            if addon.preference().property.ko_popup_type == 'DEFAULT' or event.alt:
                 if preference.use_kitops_popup:
                     return context.window_manager.invoke_popup(self, width=int(200 * get_dpi_factor(force=False)))
                 else:

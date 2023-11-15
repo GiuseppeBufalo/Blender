@@ -1,7 +1,7 @@
 import bpy
 from bpy.types import Panel
 
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_PT_mesh_clean_options(Panel):
@@ -13,7 +13,7 @@ class HOPS_PT_mesh_clean_options(Panel):
 
     def draw(self, context):
         layout = self.layout
-        preference = get_preferences().property
+        preference = addon.preference().property
         
         column = layout.column(align=True)
         box = column.box()

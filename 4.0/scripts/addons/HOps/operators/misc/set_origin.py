@@ -3,7 +3,7 @@ from mathutils import Vector, Matrix, geometry
 from bpy_extras.view3d_utils import region_2d_to_origin_3d, region_2d_to_vector_3d, location_3d_to_region_2d
 from gpu_extras.batch import batch_for_shader
 
-from ... preferences import get_preferences
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... ui_framework.utils.mods_list import get_mods_list
 from ... utility.base_modal_controls import Base_Modal_Controls
@@ -14,7 +14,7 @@ from ... utility.object import set_origin
 from ... utility.math import coords_to_center, dimensions
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... ui_framework import form_ui as form
-from ... addon.utility import method_handler
+from ... utility import method_handler
 
 
 class states(enum.Enum):
@@ -127,10 +127,10 @@ class HOPS_OT_SET_ORIGIN(bpy.types.Operator):
         return context.selected_objects
 
     def invoke(self, context, event):
-        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if get_preferences().ui.Hops_extra_info else lambda val: None
+        self.notify = lambda val: bpy.ops.hops.display_notification(info=val) if addon.preference().ui.Hops_extra_info else lambda val: None
         self.object_name = ''
         self.face_index = -1
-        preference = get_preferences()
+        preference = addon.preference()
         self.init_cursor_matrix = context.scene.cursor.matrix.copy()
         self.shift = event.shift
         self.state = states.origin
@@ -234,7 +234,7 @@ class HOPS_OT_SET_ORIGIN(bpy.types.Operator):
                     if obj in self.visible_meshes:
                         self.form_obj = context.active_object
         self.form = None
-        if self.form_obj and get_preferences().property.in_tool_popup_style == 'DEFAULT':
+        if self.form_obj and addon.preference().property.in_tool_popup_style == 'DEFAULT':
             if len(self.form_obj.modifiers) > 0:
                 self.setup_form(context, event)
 
@@ -527,7 +527,7 @@ class HOPS_OT_SET_ORIGIN(bpy.types.Operator):
             self.notify('FINISHED')
             return {'FINISHED'}
 
-        elif event.type == 'TAB' and event.value == 'PRESS' and get_preferences().property.in_tool_popup_style == 'BLENDER':
+        elif event.type == 'TAB' and event.value == 'PRESS' and addon.preference().property.in_tool_popup_style == 'BLENDER':
             bpy.ops.hops.modlist_popover(allow_removal=False)
 
         self.draw_ui(context)
@@ -823,7 +823,7 @@ class HOPS_OT_SET_ORIGIN(bpy.types.Operator):
             gmode = '[R] Loc & Rot'
             gmode_s = '[R] L&R'
 
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
             win_list.append(self.state.name.capitalize()[0])
             win_list.append(f"[S] {self.object_mode.name[0]}" if not self.object_lock else "L")
             win_list.append(gmode_s)
@@ -852,7 +852,7 @@ class HOPS_OT_SET_ORIGIN(bpy.types.Operator):
             ("O", "Toggle viewport rendering")]
 
         help_items["STANDARD"] = [
-            ("TAB", f"Modifier list") if get_preferences().property.in_tool_popup_style == 'BLENDER' else ('', ''),
+            ("TAB", f"Modifier list") if addon.preference().property.in_tool_popup_style == 'BLENDER' else ('', ''),
             ("B", f"Toggle {'Bounds' if not self.bounds_only else 'Mesh'} mode"),
             ("C", f"Object lock: {self.object_lock}"),
             ("F", f"Location : {'First' if not self.median_loc else 'Median'} [Alt]"),

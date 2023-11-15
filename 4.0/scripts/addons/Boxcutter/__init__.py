@@ -19,8 +19,8 @@ bl_info = {
     'name': 'BoxCutter',
     'description': 'BoxCutter 7.19: Seax',
     'author': 'AR, MX, proxe, Neerhom',
-    'version': (7, 19, 16),
-    'blender': (2, 83, 13),
+    'version': (7, 19, 18),
+    'blender': (3, 6, 0),
     'location': 'View3D',
     'wiki_url': 'https://boxcutter-manual.readthedocs.io/',
     'category': '3D View'}

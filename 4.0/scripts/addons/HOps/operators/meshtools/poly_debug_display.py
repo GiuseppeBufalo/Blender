@@ -1,6 +1,6 @@
 import bpy, gpu
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 
 # --- SHADER --- #
 DRAW_HANDLER = None
@@ -51,7 +51,7 @@ class DATA:
         gpu.state.depth_test_set('LESS')
         #glDepthFunc(GL_LESS)
 
-        alpha = get_preferences().color.poly_debug_alpha
+        alpha = addon.preference().color.poly_debug_alpha
 
         if DATA.tri_batch:
             DATA.shader.bind()

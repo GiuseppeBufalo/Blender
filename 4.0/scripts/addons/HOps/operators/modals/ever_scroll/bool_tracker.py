@@ -1,5 +1,5 @@
 import bpy
-from .... preferences import get_preferences
+from .... utility import addon
 from .... utility.base_modal_controls import increment_maps, decrement_maps
 
 from . import States, Auto_Scroll, update_local_view, mods_exit_options, turn_on_coll
@@ -378,7 +378,7 @@ class Bool_Tracker:
         self.recursive.setup(obj)
 
         self.protected_additive = []
-        if get_preferences().property.bool_scroll == 'ADDITIVE':
+        if addon.preference().property.bool_scroll == 'ADDITIVE':
             for mod in obj.modifiers:
                 if bool_mod_valid_obj(context, mod):
                     if mod.object.visible_get():
@@ -409,7 +409,7 @@ class Bool_Tracker:
             if obj.users_collection[0] != colls:
                 filtered.append(obj)
 
-        if get_preferences().property.bool_scroll == 'ADDITIVE':
+        if addon.preference().property.bool_scroll == 'ADDITIVE':
             for obj in filtered: unhide_layers(obj)
 
         else:
@@ -471,7 +471,7 @@ class Bool_Tracker:
 
         self.auto_scroll_sequance_begin = False
 
-        if get_preferences().property.modal_handedness == 'RIGHT':
+        if addon.preference().property.modal_handedness == 'RIGHT':
             step *= -1
 
         for mod in self.bools:

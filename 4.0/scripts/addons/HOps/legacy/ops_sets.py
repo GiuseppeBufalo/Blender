@@ -4,7 +4,7 @@ from bpy.types import WindowManager
 from bpy.props import BoolProperty, IntProperty, FloatProperty, EnumProperty
 from bpy.props import *
 from .. utils.addons import addon_exists
-from .. preferences import get_preferences
+from .. utility import addon
 from ..ui_framework.operator_ui import Master
 
 #############################
@@ -89,7 +89,7 @@ class HOPS_OT_renset1Operator(bpy.types.Operator):
             column.prop(self, "use_shadow_high_bitdepth")
 
             row = column.row(align=True)
-            row.prop(get_preferences().property, "Eevee_preset_HQ", expand=True)
+            row.prop(addon.preference().property, "Eevee_preset_HQ", expand=True)
 
             column.prop(self, "gi_diffuse_bounces")
             column.prop(self, "taa_samples")
@@ -126,9 +126,9 @@ class HOPS_OT_renset1Operator(bpy.types.Operator):
             c.eevee.use_ssr_halfres = self.use_ssr_halfres
             c.eevee.use_soft_shadows = self.use_soft_shadows
             c.eevee.use_shadow_high_bitdepth = self.use_shadow_high_bitdepth
-            c.eevee.shadow_cube_size = get_preferences().property.Eevee_preset_HQ
-            c.eevee.gi_cubemap_resolution = get_preferences().property.Eevee_preset_HQ
-            c.eevee.shadow_cascade_size = get_preferences().property.Eevee_preset_HQ
+            c.eevee.shadow_cube_size = addon.preference().property.Eevee_preset_HQ
+            c.eevee.gi_cubemap_resolution = addon.preference().property.Eevee_preset_HQ
+            c.eevee.shadow_cascade_size = addon.preference().property.Eevee_preset_HQ
             c.eevee.gi_diffuse_bounces = self.gi_diffuse_bounces
             c.eevee.taa_samples = self.taa_samples
 
@@ -155,7 +155,7 @@ class HOPS_OT_renset1Operator(bpy.types.Operator):
                 draw_data = [
                     ["Eevee HQ "],
                     ["Eevee configured to high quality", ""],
-                    ["Resolution", get_preferences().property.Eevee_preset_HQ],
+                    ["Resolution", addon.preference().property.Eevee_preset_HQ],
                     ["Soft Shadows", self.use_soft_shadows],
                     ["Reflections", self.use_ssr],
                     ["Viewport Cavity/Shadows ", self.show_cavity],
@@ -169,7 +169,7 @@ class HOPS_OT_renset1Operator(bpy.types.Operator):
                     ["Glossy Bounces", self.glossy_bounces]
                     ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 
@@ -261,7 +261,7 @@ class HOPS_OT_renset2Operator(bpy.types.Operator):
             column.prop(self, "gi_diffuse_bounces")
 
             row = column.row(align=True)
-            row.prop(get_preferences().property, "Eevee_preset_LQ", expand=True)
+            row.prop(addon.preference().property, "Eevee_preset_LQ", expand=True)
 
             column.prop(self, "taa_samples")
             column.prop(self, "show_shadows")
@@ -296,9 +296,9 @@ class HOPS_OT_renset2Operator(bpy.types.Operator):
             c.eevee.use_ssr_halfres = self.use_ssr_halfres
             c.eevee.use_soft_shadows = self.use_soft_shadows
             #bpy.context.space_data.overlay.show_overlays = True
-            c.eevee.shadow_cube_size = get_preferences().property.Eevee_preset_LQ
-            c.eevee.gi_cubemap_resolution = get_preferences().property.Eevee_preset_LQ
-            c.eevee.shadow_cascade_size = get_preferences().property.Eevee_preset_LQ
+            c.eevee.shadow_cube_size = addon.preference().property.Eevee_preset_LQ
+            c.eevee.gi_cubemap_resolution = addon.preference().property.Eevee_preset_LQ
+            c.eevee.shadow_cascade_size = addon.preference().property.Eevee_preset_LQ
             c.eevee.taa_samples = self.taa_samples
             #Shading
             c2.show_shadows = self.show_shadows
@@ -316,7 +316,7 @@ class HOPS_OT_renset2Operator(bpy.types.Operator):
                 draw_data = [
                     ["Eevee LQ "],
                     ["Eevee configured to low quality", ""],
-                    ["Resolution", get_preferences().property.Eevee_preset_LQ],
+                    ["Resolution", addon.preference().property.Eevee_preset_LQ],
                     ["Soft Shadows", self.use_soft_shadows],
                     ["Reflections", self.use_ssr],
                     ["Viewport Cavity/Shadows ", self.show_cavity]
@@ -330,7 +330,7 @@ class HOPS_OT_renset2Operator(bpy.types.Operator):
                     ["Glossy Bounces", self.glossy_bounces]
                     ]
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
         return {'FINISHED'}
 
@@ -353,7 +353,7 @@ class HOPS_OT_renset3Operator(bpy.types.Operator):
         layout = self.layout
         column = layout.column(align=True)
         row = column.row(align=True)
-        row.prop(get_preferences().property, "Eevee_preset_HQ", expand=True)
+        row.prop(addon.preference().property, "Eevee_preset_HQ", expand=True)
 
     def execute(self, context):
         c = bpy.context.scene
@@ -388,9 +388,9 @@ class HOPS_OT_renset3Operator(bpy.types.Operator):
             c.eevee.use_ssr_halfres = False
             c.eevee.use_soft_shadows = True
             c.eevee.use_shadow_high_bitdepth = True
-            c.eevee.shadow_cube_size = get_preferences().property.Eevee_preset_HQ
-            c.eevee.gi_cubemap_resolution = get_preferences().property.Eevee_preset_HQ
-            c.eevee.shadow_cascade_size = get_preferences().property.Eevee_preset_HQ
+            c.eevee.shadow_cube_size = addon.preference().property.Eevee_preset_HQ
+            c.eevee.gi_cubemap_resolution = addon.preference().property.Eevee_preset_HQ
+            c.eevee.shadow_cascade_size = addon.preference().property.Eevee_preset_HQ
             c.eevee.gi_diffuse_bounces = 4
             c.eevee.taa_samples = 64
 
@@ -504,7 +504,7 @@ class HOPS_OT_EndframeOperator(bpy.types.Operator):
         firstframe = self.firstframe
         bpy.context.scene.frame_start = firstframe
         bpy.context.scene.frame_end = lastframe
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f"Last Frame: {lastframe}")
         return {'FINISHED'}
 

@@ -14,7 +14,7 @@ def shape(op, context, event, dot=False):
     wm = context.window_manager
     bc = context.scene.bc
 
-    bound_object(op, context)
+    op.bounds = [Vector(c) for c in bc.lattice.bound_box]
 
     if not bc.running or not op.bounds:
         return
@@ -198,6 +198,7 @@ def shape(op, context, event, dot=False):
             bc.shape.modifiers.remove(solidify)
 
     clamp(op, bc)
+    clamp_inset(op, bc)
     weld_size(op, bc)
 
 
@@ -226,12 +227,10 @@ def clamp(op, bc):
 
             weight = 0.0
             for i, v in enumerate(vindices):
-                vert = bc.shape.data.vertices[i]
-
-                if vert.bevel_weight < weight:
+                if mesh.index_weight(i, vert=True) < weight:
                     continue
 
-                weight = vert.bevel_weight
+                weight = mesh.index_weight(i, vert=True)
 
             _clamp *= weight
 
@@ -242,6 +241,62 @@ def clamp(op, bc):
             mod.width = _clamp
 
 
+def clamp_inset(op, bc):
+    if op.mode != 'INSET' or not op.datablock['insets']:
+        return
+
+    if not hasattr(op, 'inset_lock'):
+        op.inset_lock = 0
+
+    if op.inset_lock != 0:
+        op.inset_lock += 1
+        if op.inset_lock > 9:
+            op.inset_lock = 0
+
+        return
+
+    op.inset_lock += 1
+    context = bpy.context
+    shape = op.datablock['insets'][0]
+
+    for mod in shape.modifiers:
+        if mod.type != 'SOLIDIFY':
+            continue
+
+        mod.show_viewport = False
+        break
+
+    eval = shape.evaluated_get(context.evaluated_depsgraph_get())
+
+    for mod in shape.modifiers:
+        if mod.type != 'SOLIDIFY':
+            continue
+
+        mod.show_viewport = True
+        break
+
+    dist = max(eval.dimensions)
+    for edge in eval.data.edges:
+        vert1 = eval.data.vertices[edge.vertices[0]]
+        vert2 = eval.data.vertices[edge.vertices[1]]
+
+        length = (vert1.co - vert2.co).length
+
+        if length < dist:
+            dist = length
+
+    for mod in shape.modifiers:
+        if mod.type != 'SOLIDIFY':
+            continue
+
+        mod.thickness = op.last['thickness']
+
+        if abs(mod.thickness) > dist:
+            mod.thickness = -dist
+
+        break
+
+
 def weld_size(op, bc):
     width = op.last['modifier']['bevel_width']
     for key, value in op.last['modifier'].items():
@@ -250,7 +305,7 @@ def weld_size(op, bc):
                 width = value
 
     weld_threshold = (width / op.last['modifier']['segments']) * 0.25
-    limit = max(bc.shape.dimensions) * 0.001
+    limit = max(bc.lattice.dimensions) * 0.001
     if weld_threshold > limit:
         weld_threshold = limit
 
@@ -258,36 +313,3 @@ def weld_size(op, bc):
         if mod.type == 'WELD':
             mod.merge_threshold = weld_threshold if weld_threshold > 0.00001 else 0.00001
 
-
-def bound_object(op, context):
-    bc = context.scene.bc
-    preference = addon.preference()
-
-    if not bc.running:
-        return
-
-    existing_by_name = [m.name for m in bc.shape.modifiers]
-    for mod in bc.bound_object.modifiers:
-        if mod.name not in existing_by_name and mod.type != 'LATTICE':
-            bc.bound_object.modifiers.remove(mod)
-
-    existing_by_name = [m.name for m in bc.bound_object.modifiers]
-    for mod in bc.shape.modifiers:
-        if mod.name not in existing_by_name and mod.type not in {'ARRAY', 'MIRROR', 'SCREW', 'DECIMATE', 'BEVEL', 'WELD', 'LATTICE', 'VERTEX_WEIGHT_EDIT'}:
-            if (op.shape_type == 'NGON' or op.ngon_fit) and not preference.shape.cyclic:
-                continue
-            modifier.new(bc.bound_object, mod=mod)
-
-        elif mod.type == 'DISPLACE':
-            bound_mod = bc.bound_object.modifiers[mod.name]
-            bound_mod.direction = mod.direction
-            bound_mod.strength = mod.strength
-            bound_mod.mid_level = 0
-
-        elif mod.type == 'SOLIDIFY':
-            bound_mod = bc.bound_object.modifiers[mod.name]
-            bound_mod.thickness = mod.thickness
-            bound_mod.offset = mod.offset
-
-    op.bounds = [Vector(c) for c in bc.bound_object.bound_box]
-    bc.bound_object.matrix_world = bc.shape.matrix_world

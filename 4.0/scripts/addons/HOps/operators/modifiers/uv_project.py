@@ -1,5 +1,5 @@
 import bpy, math, pathlib
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 
@@ -131,7 +131,7 @@ Ctrl + LMB  - Copy projectors from active to selected
                 obj.data.materials.clear()
                 obj.data.materials.append(mat)
 
-        prefs = get_preferences()
+        prefs = addon.preference()
         count = len(selected)
         self.draw_ui(prefs, count)
         return {'FINISHED'}

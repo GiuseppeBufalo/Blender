@@ -9,8 +9,8 @@ from gpu_extras.batch import batch_for_shader
 from bpy.props import IntProperty, FloatProperty, BoolProperty, StringProperty
 from mathutils import Matrix, Vector, geometry, Quaternion
 from ... graphics.drawing2d import draw_text
-from ... addon.utility import method_handler
-from ... preferences import get_preferences
+from ... utility import method_handler
+from ... utility import addon
 from ... ui_framework.master import Master
 from ... utils.space_3d import get_3D_point_from_mouse
 from ... utils.bmesh import get_edges_center, is_an_edge_selected, get_face_normal_from_vert

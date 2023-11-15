@@ -1,5 +1,5 @@
 import bpy
-from ...preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 from ...utility.collections import turn_on_parent_collections, all_collections_in_view_layer
 
@@ -201,7 +201,7 @@ class HOPS_OT_UniquifyObjects(bpy.types.Operator):
 
 
 def draw_ui(roots=0, objs=0):
-    prefs = get_preferences()
+    prefs = addon.preference()
     ui = Master()
     draw_data = [
         ['Uniquify Copy'],
@@ -304,7 +304,7 @@ def draw_ui(roots=0, objs=0):
 
 
 # def draw_ui(roots=0, objs=0):
-#     prefs = get_preferences()
+#     prefs = addon.preference()
 #     ui = Master()
 #     draw_data = [
 #         ['Uniquify Copy'],

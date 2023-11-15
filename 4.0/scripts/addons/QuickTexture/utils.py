@@ -15,33 +15,6 @@ from . import maths
 
 import numpy
 
-def is_front_facing(context, obj, polygon):
-    """
-    When deciding if a polygon is facing the camera, you need 
-    only calculate the dot product of the normal vector of     
-    that polygon, with a vector from the camera to one of the 
-    polygon's vertices. 
-
-    - If the dot product is less than zero, the polygon is facing the camera. 
-    - If the value is greater than zero, it is facing away from the camera.
-    """
-
-    region = context.region  
-    rv3d = context.space_data.region_3d  
-
-    # neat eye location code with the help of paleajed
-    eye = Vector(rv3d.view_matrix[2][:3])
-    eye.length = rv3d.view_distance
-    eye_location = rv3d.view_location + eye  
-
-    pnormal = obj.matrix_world.to_3x3() @ polygon.normal
-    world_coordinate = obj.matrix_world @ obj.data.vertices[0].co
-
-    result_vector = eye_location - world_coordinate
-    dot_value = pnormal.dot(result_vector)            
-
-    return not (dot_value < 0.0)
-
 def view_direction(view_dir):
 
     view_dir_abs = list(map(abs, view_dir))

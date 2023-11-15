@@ -12,7 +12,7 @@ from mathutils import Matrix, Vector
 from math import radians
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
 from ... utils.blender_ui import get_dpi, get_dpi_factor
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utils.objects import get_modifier_with_type
 from .. Gizmos import custom_gizmo_shapes
 
@@ -48,9 +48,9 @@ class HOPS_OT_ArrayGizmo(Operator):
             wm = context.window_manager
             wm.gizmo_group_type_ensure(HOPS_OT_HopsArrayGizmoGroup.bl_idname)
 
-        get_preferences().property.Hops_gizmo = True
+        addon.preference().property.Hops_gizmo = True
         if context.space_data.type == 'VIEW_3D':
-            get_preferences().property.Hops_gizmo_mirror = True
+            addon.preference().property.Hops_gizmo_mirror = True
             context.area.tag_redraw()
 
         ob = context.active_object
@@ -80,7 +80,7 @@ class HOPS_OT_ArrayGizmo(Operator):
         return {"RUNNING_MODAL"}
 
     def modal(self, context, event):
-        if get_preferences().property.Hops_gizmo is False:
+        if addon.preference().property.Hops_gizmo is False:
             bpy.ops.wm.tool_set_by_id(name=self.current_tool, space_type='VIEW_3D')
             context.window_manager.gizmo_group_type_unlink_delayed(HOPS_OT_HopsArrayGizmoGroup.bl_idname)
             context.area.header_text_set(text=None)
@@ -150,7 +150,7 @@ class HOPS_OT_ArrayGizmo(Operator):
         batch = batch_for_shader(shader, 'TRIS', {"pos": vertices}, indices=indices)
 
         shader.bind()
-        shader.uniform_float("color", get_preferences().color.Hops_hud_color)
+        shader.uniform_float("color", addon.preference().color.Hops_hud_color)
         gpu.state.blend_set('ALPHA')
         batch.draw(shader)
         gpu.state.blend_set('NONE')
@@ -160,13 +160,13 @@ class HOPS_OT_ArrayGizmo(Operator):
         constant = object.modifiers["Array"].constant_offset_displace
 
         draw_text(str(count),
-                  x + 27 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 27 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         draw_text("  X: {:.3f}  Y: {:.3f}  Z: {:.3f} ".format(relative[0], relative[1], relative[2]),
-                  x + 50 * factor, y + 9 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 50 * factor, y + 9 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
         draw_text("  X: {:.3f}  Y: {:.3f}  Z: {:.3f} ".format(constant[0], constant[1], constant[2]),
-                  x + 50 * factor, y + 28 * factor, size=12, color=get_preferences().color.Hops_hud_text_color)
+                  x + 50 * factor, y + 28 * factor, size=12, color=addon.preference().color.Hops_hud_text_color)
 
 
 class HOPS_OT_HopsArrayGizmoGroup(GizmoGroup):

@@ -2,7 +2,7 @@ import bpy
 from math import radians
 from bpy.props import BoolProperty, FloatProperty
 from ... utils.context import ExecutionContext
-from ... preferences import get_preferences
+from ... utility import addon
 from .. utils import clear_ssharps, mark_ssharps, set_smoothing, mark_ssharps_bmesh
 from ... utility import modifier
 
@@ -48,11 +48,11 @@ class HOPS_OT_SoftSharpenOperator(bpy.types.Operator):
         col = layout.column(align=True)
         colrow = col.row(align=True).split(factor=0.3, align=True)
         colrow.prop(self, "additive_mode", toggle=True)
-        colrow.prop(get_preferences().property, "sharpness", text="Sharpness")
+        colrow.prop(addon.preference().property, "sharpness", text="Sharpness")
         colrow = col.row(align=True).split(factor=0.3, align=True)
         colrow.prop(self, "is_global", text="Global", toggle=True)
         if self.is_global:
-            colrow.prop(get_preferences().property, "auto_smooth_angle", text="Auto Smooth Angle")
+            colrow.prop(addon.preference().property, "auto_smooth_angle", text="Auto Smooth Angle")
         else:
             colrow.prop(self, "auto_smooth_angle", text="Auto Smooth Angle")
         col.separator()
@@ -74,13 +74,13 @@ class HOPS_OT_SoftSharpenOperator(bpy.types.Operator):
 
             soft_sharpen_object(
                 obj,
-                get_preferences().property.sharpness,
-                get_preferences().property.auto_smooth_angle,
+                addon.preference().property.sharpness,
+                addon.preference().property.auto_smooth_angle,
                 self.additive_mode,
                 self.reveal_mesh)
 
             obj.hops.is_global = self.is_global
-            obj.data.auto_smooth_angle = get_preferences().property.auto_smooth_angle if self.is_global else self.auto_smooth_angle
+            obj.data.auto_smooth_angle = addon.preference().property.auto_smooth_angle if self.is_global else self.auto_smooth_angle
 
         return {"FINISHED"}
 

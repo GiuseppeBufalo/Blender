@@ -1197,7 +1197,8 @@ class dot_handler():
             matrix = dot_matrix @ scale
             positions = [matrix @ vec for vec in self.preview_verts]
 
-            preview_shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+            uniform_color = 'UNIFORM_COLOR' if bpy.app.version[0] >= 4 else '3D_UNIFORM_COLOR'
+            preview_shader = gpu.shader.from_builtin(uniform_color)
             preview_shader.bind()
             preview_shader.uniform_float('color', self.preview_color)
 
@@ -1206,7 +1207,7 @@ class dot_handler():
 
             gpu.state.line_width_set(self.preview_width)
 
-            border_shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+            border_shader = gpu.shader.from_builtin(uniform_color)
             border_shader.bind()
             border_shader.uniform_float('color', self.active_dot.outline_color_high)
 
@@ -1299,13 +1300,15 @@ def raycast_obj(context, origin_world, direction_world, selected_only=True, obje
 
         return hit, vec, normal, index
 
+    def has_screw(obj):
+        for mod in obj.modifiers:
+            if mod.type == 'SCREW' and mod.show_viewport: return True
+
     for obj in objects:
         inverted = obj.matrix_world.inverted()
         orig = inverted @ origin_world
         direction = inverted @ (direction_world + origin_world) - orig
         use_evaluated = evaluated
-
-        bounds = obj.bound_box
 
         if obj.mode == 'EDIT':
             obj.update_from_editmode()
@@ -1315,6 +1318,10 @@ def raycast_obj(context, origin_world, direction_world, selected_only=True, obje
             context.collection.objects.link(tmp)
             bounds = [Vector(v) for v in tmp.bound_box]
             bpy.data.objects.remove(tmp)
+
+        else:
+            eval = obj.evaluated_get(context.evaluated_depsgraph_get())
+            bounds = eval.bound_box
 
         center = coordinates_center(bounds)
         sca = coordinates_dimension(bounds)
@@ -1346,8 +1353,16 @@ def raycast_obj(context, origin_world, direction_world, selected_only=True, obje
 
         elif obj.mode == 'OBJECT' and obj.type == 'MESH':
             if use_evaluated:
-                eval_obj = obj.evaluated_get(depsgraph)
-                hit, location, normal, index = eval_obj.ray_cast(orig, direction)
+                if has_screw(obj):
+                    eval_obj = obj.evaluated_get(depsgraph)
+                    temp_mesh = bpy.data.meshes.new_from_object(eval_obj)
+                    cast_obj.data = temp_mesh
+
+                    hit, location, normal, index  = cast_obj.ray_cast(orig, direction)
+
+                else:
+                    eval_obj = obj.evaluated_get(depsgraph)
+                    hit, location, normal, index = eval_obj.ray_cast(orig, direction)
 
             else:
                 eval_obj = obj
@@ -1384,6 +1399,20 @@ def raycast_obj(context, origin_world, direction_world, selected_only=True, obje
 
     if not cast:
         processed_cast = (False, Vector((0,0,0)), Vector((0,0,-1)), -1, None, Matrix())
+
+    elif cast[0] and cast[3] < 0: # invalid index from screw modifier
+        hit, location, normal, index, matrix = cast
+        inverted = matrix.inverted()
+        orig = inverted @ origin_world
+        direction = inverted @ (direction_world + origin_world) - orig
+
+        mesh = bpy.data.meshes.new_from_object(hit_object.evaluated_get(depsgraph))
+        removeable_meshes.append(mesh)
+        cast_obj.data = mesh
+        _, _, _, index = cast_obj.ray_cast(orig, direction)
+
+        cast = hit, location, normal, index, matrix
+        processed_cast = cast_processor(hit_object, hit_mesh, cast)
 
     else:
         processed_cast = cast_processor(hit_object, hit_mesh, cast)
@@ -1511,7 +1540,8 @@ def grid_shader (self, context):
         gpu.state.depth_test_set('LESS')
         gpu.state.depth_mask_set(False)
 
-    polygon_shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    uniform_color = 'UNIFORM_COLOR' if bpy.app.version[0] >= 4 else '3D_UNIFORM_COLOR'
+    polygon_shader = gpu.shader.from_builtin(uniform_color)
     polygon_shader.bind()
     polygon_shader.uniform_float('color', self.plane_color)
 
@@ -1535,7 +1565,7 @@ def grid_shader (self, context):
 
     gpu.state.line_width_set(self.grid_thickness * 1.5)
 
-    border_shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+    border_shader = gpu.shader.from_builtin(uniform_color)
     border_shader.bind()
     border_shader.uniform_float('color', self.border_color if not self.frozen else self.border_f_color)
 

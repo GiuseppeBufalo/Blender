@@ -26,6 +26,10 @@ def change(op, context, event, to='CUT', init=False, force=False):
 
         offset = preference.shape.offset if preference.behavior.boolean_solver == 'FAST' else 0
 
+        if preference.display.wire_only:
+            from ...utility import tracked_states
+            tracked_states.shader_batch = True
+
         if value == 'MAKE':
             offset = 0
 

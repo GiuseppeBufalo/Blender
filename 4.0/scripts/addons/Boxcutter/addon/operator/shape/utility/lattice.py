@@ -28,7 +28,7 @@ def thickness_clamp(op, context):
     preference = addon.preference()
     bc = context.scene.bc
     factor = 0.005
-    thickness = min(bc.shape.dimensions[:-1]) * factor
+    thickness = min(bc.lattice.dimensions[:-1]) * factor
 
     offset = preference.shape.offset
 
@@ -55,9 +55,6 @@ def create(op, context, event, zero=True):
     if op.shape_type != 'NGON':
         mod = bc.shape.modifiers.new(name='Lattice', type='LATTICE')
         mod.object = bc.lattice
-
-    mod = bc.bound_object.modifiers.new(name='Lattice', type='LATTICE')
-    mod.object = bc.lattice
 
     # bc.lattice.hide_set(True)
     # bc.shape.hide_set(True)

@@ -9,10 +9,54 @@ from ..... utility import addon, view3d, object, mesh
 from . modal import flip
 
 
+def index_weight(index, mesh=None, vert=False, value=None, member=False):
+    bc = bpy.context.scene.bc
+
+    mesh = bc.shape.data if not mesh else mesh
+
+    if bpy.app.version < (4, ):
+        if value is not None:
+            if vert:
+                mesh.vertices[index].bevel_weight = value
+            else:
+                mesh.edges[index].bevel_weight = value
+
+        if member:
+            return mesh.vertices[index] if vert else mesh.edges[index]
+
+        return mesh.vertices[index].bevel_weight if vert else mesh.edges[index].bevel_weight
+
+    attribute = F'bevel_weight_{"vert" if vert else "edge"}'
+
+    if not mesh.attributes.get(attribute):
+        mesh.attributes.new(attribute, 'FLOAT', 'POINT' if vert else 'EDGE')
+
+    if value is not None:
+        mesh.attributes[attribute].data[index].value = value
+
+    if member:
+        return mesh.attributes[attribute].data[index]
+
+    return mesh.attributes[attribute].data[index].value
+
+
+def bevel_weight_verify(bm):
+    if bpy.app.version < (4, ):
+        return bm.edges.layers.bevel_weight.verify()
+
+    else:
+        bevel = bm.edges.layers.float.get('bevel_weight_edge')
+
+        if bevel is None:
+            bevel = bm.edges.layers.float.new('bevel_weight_edge')
+
+        return bevel
+
+
 def thickness_clamp(context):
     bc = context.scene.bc
     factor = 0.005
-    thickness = min(bc.shape.dimensions[:-1]) * factor
+    thickness = min(bc.lattice.dimensions[:-1]) * factor
 
     offset = preference.shape.offset if boolean_solver() == 'FAST' else 0
 
@@ -39,7 +83,8 @@ def remove_point(op, context, event, index=-1, fill=True):
 
     op.geo['indices']['offset'] = [v.index for v in bc.shape.data.vertices]
     op.geo['indices']['top_edge'] = [e.index for e in bc.shape.data.edges]
-    op.last['vert_weight'] = [bc.shape.data.vertices[i].bevel_weight for i in op.geo['indices']['offset']]
+
+    op.last['vert_weight'] = [index_weight(i, vert=True) for i in op.geo['indices']['offset']]
 
 
 def add_point(op, context, event):
@@ -80,7 +125,8 @@ def add_point(op, context, event):
 
     op.geo['indices']['offset'] = [v.index for v in bc.shape.data.vertices]
     op.geo['indices']['top_edge'] = [e.index for e in bc.shape.data.edges]
-    op.last['vert_weight'] = [bc.shape.data.vertices[i].bevel_weight for i in op.geo['indices']['offset']]
+
+    op.last['vert_weight'] = [index_weight(i, vert=True) for i in op.geo['indices']['offset']]
 
 
 # TODO: edge length based on increment snap, snap to draw dots
@@ -154,7 +200,7 @@ def draw(op, context, event):
 
         vert.co = (location_x, op.view3d['location'].y, vert.co.z)
 
-        if not lasso:
+        if not lasso and len(bc.shape.data.vertices) > 2:
             point1 = vert.co.xy
 
             n = index+1 if index+2 < len(bc.shape.data.vertices) else 0
@@ -449,7 +495,7 @@ def extrude(op, context, event, extrude_only=True, amount=-0.001):
                 if vert.index not in edge.vertices:
                     continue
 
-                edge.bevel_weight = vert.bevel_weight
+                index_weight(edge.index, value=index_weight(front, vert=True))
 
         op.extruded = True
 
@@ -555,28 +601,24 @@ def bevel_weight(op, context, event):
         for vindex in op.geo['indices']['offset']:
             vert = bc.shape.data.vertices[vindex]
 
-            vert.bevel_weight = 1.0 if not vert.bevel_weight else vert.bevel_weight
+            value = index_weight(vindex, vert=True)
+            index_weight(vindex, vert=True, value=1.0 if not value else value)
 
         for vindex in op.geo['indices']['offset']:
-            vert = bc.shape.data.vertices[vindex]
-
             for eindex in op.geo['indices']['mid_edge']:
-                edge = bc.shape.data.edges[eindex]
-                edge.bevel_weight = vert.bevel_weight
+                index_weight(eindex, value=index_weight(vindex, vert=True))
 
     if preference.shape.quad_bevel:
         vertex_group(op, context, event, q_only=True)
 
         if preference.shape.bevel_both:
             for index in op.geo['indices']['top_edge']:
-                edge = shape.data.edges[index]
-                edge.bevel_weight = shape.data.bc.q_beveled and op.flip_z
+                index_weight(index, value=shape.data.bc.q_beveled and op.flip_z)
 
         return
 
     for index in op.geo['indices']['bot_edge']:
-        edge = shape.data.edges[index]
-        edge.bevel_weight = shape.data.bc.q_beveled
+        index_weight(index, value=shape.data.bc.q_beveled)
 
 
 def knife(op, context, event):
@@ -588,7 +630,7 @@ def knife(op, context, event):
     original_active = context.active_object
     original_selected = context.selected_objects[:]
 
-    dimension_z = bc.shape.dimensions[2]
+    dimension_z = bc.lattice.dimensions[2]
     lazorcut_limit = addon.preference().shape.lazorcut_limit
     too_thin = dimension_z < lazorcut_limit and not op.extruded
     aligned = not op.extruded and op.align_to_view
@@ -661,8 +703,9 @@ def knife(op, context, event):
         hops = addon.hops()
         if hops and addon.preference().behavior.hops_mark:
             pref = hops.property
+            bevel = 0.0
 
-            bevel = bm.edges.layers.bevel_weight.verify()
+            bevel = bevel_weight_verify(bm)
             crease = bm.edges.layers.crease.verify()
             edges = [edge for edge in bm.edges if edge.select]
 
@@ -705,17 +748,19 @@ def pivot(op, context, transform=True):
     preference = addon.preference()
 
     if bc.shape and not bc.shape.bc.array_circle:
+        eval = bc.shape.evaluated_get(context.evaluated_depsgraph_get())
+
         if preference.behavior.set_origin == 'MOUSE':
 
             return Vector()
 
         elif preference.behavior.set_origin == 'CENTER':
-            bounds = [bc.shape.bound_box[i] for i in (1, 2, 5, 6)]
+            bounds = [eval.bound_box[i] for i in (1, 2, 5, 6)]
             local_location = 0.25 * sum((Vector(b) for b in bounds), Vector())
             global_location = bc.shape.matrix_world @ local_location
 
         elif preference.behavior.set_origin == 'BBOX':
-            local_location = 0.125 * sum((Vector(b) for b in bc.shape.bound_box), Vector())
+            local_location = 0.125 * sum((Vector(b) for b in eval.bound_box), Vector())
             global_location = bc.shape.matrix_world @ local_location
 
         elif preference.behavior.set_origin == 'ACTIVE':
@@ -822,12 +867,7 @@ class create:
         dat.from_pydata(verts, edges, faces)
         dat.validate()
 
-        op.last['vert_weight'] = [dat.vertices[i].bevel_weight for i in op.geo['indices']['offset']]
-        op.datablock['bound_box'] = bpy.data.objects.new(name=F'Bound Box', object_data=dat)
-        bc.bound_object = op.datablock['bound_box']
-
-        bc.collection.objects.link(bc.bound_object)
-        # bc.bound_object.hide_set(True)
+        op.last['vert_weight'] = [index_weight(i, mesh=dat, vert=True) for i in op.geo['indices']['offset']]
 
         del dat
 
@@ -891,8 +931,6 @@ class create:
 
         bc.shape = bpy.data.objects.new(name='Cutter', object_data=dat)
         bc.shape.bc.array_axis = preference.shape.array_axis
-
-        bc.bound_object.parent = bc.shape
 
         del dat
 

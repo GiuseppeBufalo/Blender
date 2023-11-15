@@ -3,7 +3,7 @@ from bpy.props import *
 from mathutils import Vector
 from ... utils.blender_ui import get_dpi, get_dpi_factor
 from ... graphics.drawing2d import draw_text, set_drawing_dpi
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_ModalCircle(bpy.types.Operator):
@@ -22,7 +22,7 @@ class HOPS_OT_ModalCircle(bpy.types.Operator):
     def invoke(self, context, event):
 
         self.subdivide = 1
-        self.start_value = get_preferences().property.Hops_circle_size
+        self.start_value = addon.preference().property.Hops_circle_size
         self.offset = 0
         self.start_mouse_position = Vector((event.mouse_region_x, event.mouse_region_y))
         self.last_mouse_x = event.mouse_region_x
@@ -56,11 +56,11 @@ class HOPS_OT_ModalCircle(bpy.types.Operator):
         bpy.ops.mesh.looptools_circle(custom_radius=False, fit='inside', flatten=False, influence=100, lock_x=False, lock_y=False, lock_z=False, radius=self.radius, regular=True)
 
         if event.type in ("ESC", "RIGHTMOUSE"):
-            bpy.ops.mesh.looptools_circle(custom_radius=True, fit='best', flatten=True, influence=100, lock_x=False, lock_y=False, lock_z=False, radius=get_preferences().property.Hops_circle_size, regular=True)
+            bpy.ops.mesh.looptools_circle(custom_radius=True, fit='best', flatten=True, influence=100, lock_x=False, lock_y=False, lock_z=False, radius=addon.preference().property.Hops_circle_size, regular=True)
             return self.finish()
 
         if event.type in ("SPACE", "LEFTMOUSE"):
-            get_preferences().property.Hops_circle_size = self.radius
+            addon.preference().property.Hops_circle_size = self.radius
             return self.finish()
 
         self.last_mouse_x = event.mouse_region_x

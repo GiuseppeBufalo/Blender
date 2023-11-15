@@ -76,7 +76,7 @@ class HOPS_OT_FastMeshEditor(bpy.types.Operator):
 
         # Tool state
         self.tool = Tool.SELECT
-        entry = get_preferences().property.multi_tool_entry
+        entry = addon.preference().property.multi_tool_entry
         entry = self.relaunch_tool if self.relaunch_tool != "" else entry
 
         self.tool_type = entry
@@ -108,7 +108,7 @@ class HOPS_OT_FastMeshEditor(bpy.types.Operator):
         self.setup_tool_data()
 
         # Flow menu
-        self.flow = Flow_Menu() if get_preferences().property.menu_style_selector == 'DEFAULT' else FlowDummy()
+        self.flow = Flow_Menu() if addon.preference().property.menu_style_selector == 'DEFAULT' else FlowDummy()
         self.setup_flow_menu()
 
         # Base Systems

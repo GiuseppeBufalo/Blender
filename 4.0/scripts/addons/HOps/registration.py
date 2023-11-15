@@ -1,6 +1,6 @@
 import bpy
+from . import props
 from . ui import view_3d_hud
-from . import extend_bpy_types
 from . icons import initialize_icons_collection, unload_icons
 from . mesh_check import HopsMeshCheckCollectionGroup
 from . brush_previews import unregister_and_unload_brushes
@@ -17,7 +17,7 @@ from . operators.meshtools.multi_tool.utils import register_multitool, unregiste
 def register_all():
     register_properties()
     view_3d_hud.register()
-    extend_bpy_types.register()
+    props.register()
     initialize_icons_collection()
     # overlay_drawer.register_callbacks()
     # register_keymap()
@@ -38,7 +38,7 @@ def unregister_all():
     unload_icons()
     unregister_properties()
     view_3d_hud.unregister()
-    extend_bpy_types.unregister()
+    props.unregister()
     # overlay_drawer.unregister_callbacks()
     # unregister_keymap()
     # bpy.app.handlers.load_post.remove(brush_load_handler)

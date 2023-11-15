@@ -2,7 +2,7 @@ import bpy
 import bmesh
 from ... utils.modifiers import apply_modifiers, remove_modifiers
 from ... utils.objects import set_active
-from ... preferences import get_preferences
+from ... utility import addon
 
 
 class HOPS_OT_CutIn(bpy.types.Operator):
@@ -41,7 +41,7 @@ Shift + LMB - Takes TWO meshes, applies modifiers and separates their intesectio
         duplicate = bpy.context.active_object
         boolobjects = bpy.context.selected_objects
 
-        if not get_preferences().property.keep_cutin_bevel:
+        if not addon.preference().property.keep_cutin_bevel:
             remove_modifiers(boolobjects, "BEVEL")
 
         active.select_set(True)
@@ -70,7 +70,13 @@ Shift + LMB - Takes TWO meshes, applies modifiers and separates their intesectio
         bm = bmesh.new()
         bm.from_mesh(me)
 
-        cr = bm.edges.layers.crease.verify()
+        if bpy.app.version[0] >= 4:
+            cr = bm.edges.layers.float.get('crease_edge')
+            if cr is None:
+                cr = bm.edges.layers.float.new('crease_edge')
+        else:
+            cr = bm.edges.layers.crease.verify()
+
         if bpy.app.version[0] >= 4:
             bw = bm.edges.layers.float.get('bevel_weight_edge')
             if bw is None:

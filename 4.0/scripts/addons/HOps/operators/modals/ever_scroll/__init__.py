@@ -1,12 +1,12 @@
 import bpy, time, gpu
 from enum import Enum
-from .... preferences import get_preferences
+from .... utility import addon
 from .... ui_framework.graphics.draw import draw_text, render_quad, draw_border_lines
 from .... ui_framework.utils.geo import get_blf_text_dims
 from .... utility.base_modal_controls import confirm_events
 from .... utility.collections import unhide_layers
-from .... addon.utility import modifier as mod_utils
-from .... addon.utility.screen import dpi_factor
+from .... utility import modifier as mod_utils
+from ....utility.screen import dpi_factor
 
 
 class States(Enum):
@@ -27,9 +27,9 @@ class Auto_Scroll:
 
         self.x = context.area.width * .25
         self.y = context.area.height * .75
-        self.font_color = get_preferences().color.Hops_UI_text_color
-        self.bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.br_color = get_preferences().color.Hops_UI_border_color
+        self.font_color = addon.preference().color.Hops_UI_text_color
+        self.bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.br_color = addon.preference().color.Hops_UI_border_color
         self.size = 16
 
         dims = get_blf_text_dims("00.00", self.size)
@@ -48,7 +48,7 @@ class Auto_Scroll:
 
 
     def display_msg(self):
-        counter = abs(get_preferences().property.auto_scroll_time_interval - (time.time() - self.activated_time))
+        counter = abs(addon.preference().property.auto_scroll_time_interval - (time.time() - self.activated_time))
         text = "Start" if self.sequance_hold else f"{counter:.2f}"
         return text
 
@@ -164,8 +164,17 @@ def get_node_graph_objects(mod):
     objects = []
     for node in mod.node_group.nodes:
         if node.type == 'OBJECT_INFO':
-            if 'Object' in node.inputs:
-                val = node.inputs['Object'].default_value
-                if val.type == 'MESH':
+            obj_input = node.inputs['Object']
+            if obj_input.is_linked:
+                link = obj_input.links[0]
+                if link.from_node.type != 'GROUP_INPUT' or link.from_socket.type != 'OBJECT': continue
+
+                val = mod[link.from_socket.identifier]
+                if val and val.type == 'MESH':
+                    objects.append(val)
+
+            else:
+                val = obj_input.default_value
+                if val and val.type == 'MESH':
                     objects.append(val)
     return objects

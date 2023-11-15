@@ -147,7 +147,8 @@ def shape(op, context, event):
         array.count = 2 if array.count < 2 else array.count
         op.last['modifier']['count'] = array.count
 
-        dim = bc.bound_object.dimensions[axis_index]
+        eval = bc.shape.evaluated_get(context.evaluated_depsgraph_get())
+        dim = eval.dimensions[axis_index]
 
         origin_location = lattice.center(Matrix(), side='front')
         intersect_location = op.view3d['location']

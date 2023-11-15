@@ -1,7 +1,7 @@
 import bpy, bmesh
 from mathutils import Matrix, Vector
 from enum import Enum
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... utility.collections import view_layer_unhide, hide_all_objects_in_collection, hops_col_get
 from ... ui_framework.master import Master
@@ -9,7 +9,7 @@ from ... ui_framework.utils.mods_list import get_mods_list
 from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
+from ... utility import method_handler
 from ... utility.modifier import user_sort
 
 

@@ -256,6 +256,12 @@ def lazorcut(op, context):
 
     context.view_layer.update()
 
+    front = (1, 2, 5, 6)
+    location = (0.25 * sum((Vector(bc.lattice.bound_box[point][:]) for point in front), Vector()))
+    location_to = (0.25 * sum((Vector(obj.bound_box[point][:]) for point in front), Vector()))
+    difference = (location - location_to)
+    difference.z -= preference.shape.offset if preference.behavior.boolean_solver == 'FAST' else 0.0
+
     # if obj.dimensions[2] < 0.001:
     #     print('here')
     #     return
@@ -263,7 +269,7 @@ def lazorcut(op, context):
     # aligned = op.mode == 'KNIFE' and op.align_to_view
     depth = preference.shape.lazorcut_depth + (preference.shape.offset if preference.behavior.boolean_solver == 'FAST' else 0)
     for point in lattice.back:
-        bc.lattice.data.points[point].co_deform.z = -(obj.dimensions[2] + (preference.shape.offset + 0.01) if not preference.shape.lazorcut_depth else depth)
+        bc.lattice.data.points[point].co_deform.z = -(obj.dimensions[2] + difference.z + (preference.shape.offset + 0.01) if not preference.shape.lazorcut_depth else depth)
 
     if op.shape_type == 'NGON':
         bevel = False
@@ -293,13 +299,7 @@ def lazorcut(op, context):
         for vert in verts:
             vert.co.z = -(obj.dimensions[2] + ((preference.shape.offset + 0.01 if preference.behavior.boolean_solver == 'FAST' else 0)) if not preference.shape.lazorcut_depth else depth)
 
-    front = (1, 2, 5, 6)
-
     # matrix = bc.shape.matrix_world.inverted()
-    location = (0.25 * sum((Vector(bc.shape.bound_box[point][:]) for point in front), Vector()))
-    location_to = (0.25 * sum((Vector(obj.bound_box[point][:]) for point in front), Vector()))
-    difference = (location - location_to)
-    difference.z -= preference.shape.offset if preference.behavior.boolean_solver == 'FAST' else 0.0
 
     current = bc.shape.location
     location = Vector((0, 0, -difference.z)) @ bc.shape.matrix_world.inverted()

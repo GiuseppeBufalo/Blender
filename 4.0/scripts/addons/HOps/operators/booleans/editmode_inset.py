@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from ... preferences import get_preferences
+from ... utility import addon
 from ...ui_framework.operator_ui import Master
 
 
@@ -137,7 +137,7 @@ LMB + Shift - Outset"""
 
         if bpy.app.version > (2, 83, 0):
             row = self.layout.row()
-            row.prop(get_preferences().property, "boolean_solver", text='Solver', expand=True)
+            row.prop(addon.preference().property, "boolean_solver", text='Solver', expand=True)
         layout.separator()
         layout.prop(self, 'use_swap')
         if bpy.app.version > (2, 83, 0):
@@ -162,6 +162,6 @@ LMB + Shift - Outset"""
                 ["Inset Boolean"]]
 
             ui.receive_draw_data(draw_data=draw_data)
-            ui.draw(draw_bg=get_preferences().ui.Hops_operator_draw_bg, draw_border=get_preferences().ui.Hops_operator_draw_border)
+            ui.draw(draw_bg=addon.preference().ui.Hops_operator_draw_bg, draw_border=addon.preference().ui.Hops_operator_draw_border)
 
-        return edit_bool_inset(context, self.keep_cutters, self.outset, self.thickness, self.use_swap, self.use_self, self.threshold, get_preferences().property.boolean_solver)
+        return edit_bool_inset(context, self.keep_cutters, self.outset, self.thickness, self.use_swap, self.use_self, self.threshold, addon.preference().property.boolean_solver)

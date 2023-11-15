@@ -2,24 +2,24 @@ import bpy, blf, math, gpu
 from gpu_extras.batch import batch_for_shader
 from .cursor_warp import get_screen_warp_padding
 from ..ui_framework.graphics.draw import draw_2D_lines
-from ..addon.utility.screen import dpi_factor
-from ..preferences import get_preferences
+from ..utility.screen import dpi_factor
+from .. utility import addon
 
 
 def draw_modal_frame(context: bpy.context):
     '''Draw the frame around the modal screen.'''
 
-    if get_preferences().ui.Hops_warp_on == False:
+    if addon.preference().ui.Hops_warp_on == False:
         return
-    if get_preferences().ui.Hops_warp_border_display == False:
+    if addon.preference().ui.Hops_warp_border_display == False:
         return
 
     scale_factor = dpi_factor()
     tolerance = get_screen_warp_padding()
 
-    width = get_preferences().ui.Hops_warp_line_width
+    width = addon.preference().ui.Hops_warp_line_width
 
-    if get_preferences().ui.Hops_warp_border_display_style == 'BORDER':
+    if addon.preference().ui.Hops_warp_border_display_style == 'BORDER':
 
         vertices = [
             # Bottom Left
@@ -33,13 +33,13 @@ def draw_modal_frame(context: bpy.context):
             # Bottom Left
             (tolerance, tolerance)]
 
-        color = get_preferences().color.Hops_UI_cell_background_color
+        color = addon.preference().color.Hops_UI_cell_background_color
 
         draw_2D_lines(vertices, width=width, color=color)
 
-    if get_preferences().ui.Hops_warp_border_display_style == 'CORNERS':
+    if addon.preference().ui.Hops_warp_border_display_style == 'CORNERS':
 
-        length = get_preferences().ui.Hops_warp_line_length
+        length = addon.preference().ui.Hops_warp_line_length
 
         vertices = [
             (tolerance, tolerance + length),
@@ -71,7 +71,7 @@ def draw_modal_frame(context: bpy.context):
             (9,10),
             (10,11)]
 
-        color = get_preferences().color.Hops_UI_cell_background_color
+        color = addon.preference().color.Hops_UI_cell_background_color
 
         built_in_shader = 'UNIFORM_COLOR' if bpy.app.version[0] >=4 else '2D_UNIFORM_COLOR'
         shader = gpu.shader.from_builtin(built_in_shader)

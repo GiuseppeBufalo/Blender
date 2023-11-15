@@ -1,19 +1,19 @@
 import bpy
-from ..addon.utility.screen import dpi_factor
-from ..preferences import get_preferences
+from ..utility.screen import dpi_factor
+from .. utility import addon
 
 
 def get_screen_warp_padding():
     '''The padding around the modal frame.'''
 
-    tolerance = get_preferences().ui.Hops_warp_mode_padding
+    tolerance = addon.preference().ui.Hops_warp_mode_padding
     return int(tolerance * dpi_factor())
 
 
 def mouse_warp(context, event):
     '''Warp the mouse in the screen region.'''
 
-    if not get_preferences().ui.Hops_warp_on: return
+    if not addon.preference().ui.Hops_warp_on: return
 
     if event.type == 'INBETWEEN_MOUSEMOVE':
         return False

@@ -1,7 +1,7 @@
 import bpy
 import math
 from mathutils import Vector
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility import modifier
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
@@ -12,8 +12,8 @@ from ... utils.gizmo_axial import Axial
 from ... utils.mod_controller import Mod_Controller
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
-from ... addon.utility.screen import dpi_factor
+from ... utility import method_handler
+from ...utility.screen import dpi_factor
 
 DIRECTION_TYPES = ["NORMAL", "X", "Y", "Z", "CUSTOM_NORMAL", "RGB_TO_XYZ"]
 
@@ -28,7 +28,7 @@ def direction_update(self, context):
     op = HOPS_OT_MOD_Displace.operator
     if op.popup:
         op.set_direction(self.prop_direction)
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=f"Displacement: {self.prop_direction}")
 
 def strength_update(self, context):
@@ -125,7 +125,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
     def invoke(self, context, event):
 
         self.__class__.operator = self
-        self.blender_popup = get_preferences().property.in_tool_popup_style == 'BLENDER'
+        self.blender_popup = addon.preference().property.in_tool_popup_style == 'BLENDER'
 
         # Mods
         objs = [o for o in context.selected_objects if o.type == 'MESH']
@@ -153,7 +153,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
         self.original_tool_shelf, self.original_n_panel = collapse_3D_view_panels()
         self.draw_handle = bpy.types.SpaceView3D.draw_handler_add(self.safe_draw_shader, (context,), 'WINDOW', 'POST_PIXEL')
 
-        if not get_preferences().keymap.spacebar_accept:
+        if not addon.preference().keymap.spacebar_accept:
             self.base_controls.confirm_events.remove('SPACE')
 
         context.window_manager.modal_handler_add(self)
@@ -231,7 +231,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
     def mouse_adjust(self, context, event):
         for mod in self.mod_controller.active_modifiers():
             # Mouse motion
-            if get_preferences().property.modal_handedness == 'LEFT':
+            if addon.preference().property.modal_handedness == 'LEFT':
                 if event.ctrl:
                     mod.mid_level -= self.base_controls.mouse / 10
                 else:
@@ -245,7 +245,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
             if self.base_controls.scroll:
                 if not event.shift:
                     mod.direction = DIRECTION_TYPES[(DIRECTION_TYPES.index(mod.direction) + self.base_controls.scroll) % len(DIRECTION_TYPES)]
-                    if get_preferences().ui.Hops_extra_info:
+                    if addon.preference().ui.Hops_extra_info:
                         bpy.ops.hops.display_notification(info=f"{mod.direction}" )
         # Shift scroll
         if self.base_controls.scroll > 0 and event.shift:
@@ -297,7 +297,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
         for mod in self.mod_controller.active_modifiers():
             mod.direction = self.axis
             self.report({'INFO'}, f"Displace Axis: {self.axis}")
-            if get_preferences().ui.Hops_extra_info:
+            if addon.preference().ui.Hops_extra_info:
                 bpy.ops.hops.display_notification(info=f"Displace Axis: {self.axis}")
 
 
@@ -309,7 +309,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
     def set_strength(self, strength=0):
         for mod in self.mod_controller.active_modifiers():
             mod.strength = strength
-        if get_preferences().ui.Hops_extra_info:
+        if addon.preference().ui.Hops_extra_info:
             bpy.ops.hops.display_notification(info=F'Strength : {strength}' )
 
     # --- GIZMO --- #
@@ -348,7 +348,7 @@ class HOPS_OT_MOD_Displace(bpy.types.Operator):
 
         # Main
         win_list = []
-        if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
+        if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1: #Fast Floating
             win_list.append("{}".format(mod.direction))
             win_list.append("{:.3f}".format(mod.strength))
             win_list.append("{:.3f}".format(mod.mid_level))

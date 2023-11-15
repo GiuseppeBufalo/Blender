@@ -2,7 +2,7 @@ import bpy, mathutils, math, gpu, traceback, bmesh, time
 from enum import Enum
 from mathutils import Vector, Matrix, Quaternion
 from gpu_extras.batch import batch_for_shader
-from ... preferences import get_preferences
+from ... utility import addon
 from ... utility.base_modal_controls import Base_Modal_Controls
 from ... ui_framework.master import Master
 from ... ui_framework.graphics.draw import render_text, render_quad, draw_border_lines
@@ -12,8 +12,8 @@ from ... utils.toggle_view3d_panels import collapse_3D_view_panels
 from ... utils.space_3d import get_3D_point_from_mouse, scene_ray_cast, get_2d_point_from_3d_point
 from ... utils.modal_frame_drawing import draw_modal_frame
 from ... utils.cursor_warp import mouse_warp
-from ... addon.utility import method_handler
-from ... addon.utility.screen import dpi_factor
+from ... utility import method_handler
+from ...utility.screen import dpi_factor
 from ... utility import math as hops_math
 from ... utility import object
 
@@ -87,7 +87,7 @@ class Static_Menu:
 
         # Font
         self.f_size = 14
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -97,10 +97,10 @@ class Static_Menu:
         self.font_height  = get_blf_text_dims("Qjq`", self.f_size)[1]
 
         # Colors
-        self.highlight_color = get_preferences().color.Hops_UI_highlight_color
-        self.cell_bg_color   = get_preferences().color.Hops_UI_cell_background_color
-        self.border_color    = get_preferences().color.Hops_UI_border_color
-        self.hover_color     = get_preferences().color.Hops_UI_mouse_over_color
+        self.highlight_color = addon.preference().color.Hops_UI_highlight_color
+        self.cell_bg_color   = addon.preference().color.Hops_UI_cell_background_color
+        self.border_color    = addon.preference().color.Hops_UI_border_color
+        self.hover_color     = addon.preference().color.Hops_UI_mouse_over_color
 
         # Screen
         self.screen_width = context.area.width
@@ -449,8 +449,8 @@ class Move_Bracket:
         self.vert_dims = Dims()
         self.hori_dims = Dims()
 
-        self.border_color = get_preferences().color.Hops_UI_border_color
-        # self.hover_color  = get_preferences().color.Hops_UI_mouse_over_color
+        self.border_color = addon.preference().color.Hops_UI_border_color
+        # self.hover_color  = addon.preference().color.Hops_UI_mouse_over_color
 
         self.screen_width = context.area.width
         self.screen_height = context.area.height
@@ -461,7 +461,7 @@ class Move_Bracket:
         self.top_spacing  = 250 * self.factor
 
         # self.pos = (self.left_spacing, self.screen_height - self.top_spacing)
-        self.pos = get_preferences().ui.accu_pos
+        self.pos = addon.preference().ui.accu_pos
 
         self.width   = 100 * self.factor
         self.height  = 100 * self.factor
@@ -522,7 +522,7 @@ class Move_Bracket:
         if self.pos[1] > max_y:
             self.pos = (self.pos[0], max_y)
 
-        get_preferences().ui.accu_pos = self.pos
+        addon.preference().ui.accu_pos = self.pos
     
 
     def setup(self):
@@ -559,13 +559,13 @@ class Entry_Box:
 
         # Font
         self.f_size      = 14
-        self.f_color     = get_preferences().color.Hops_UI_text_color
+        self.f_color     = addon.preference().color.Hops_UI_text_color
         self.font_height = get_blf_text_dims("123456789.", self.f_size)[1]
 
         # Colors
-        self.cell_bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.hover_color   = get_preferences().color.Hops_UI_mouse_over_color
-        self.border_color  = get_preferences().color.Hops_UI_border_color
+        self.cell_bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.hover_color   = addon.preference().color.Hops_UI_mouse_over_color
+        self.border_color  = addon.preference().color.Hops_UI_border_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -722,16 +722,16 @@ class Unit_Tabs:
 
         # Font
         self.f_size      = 14
-        self.f_color     = get_preferences().color.Hops_UI_text_color
+        self.f_color     = addon.preference().color.Hops_UI_text_color
         self.font_height = get_blf_text_dims("123456789.", self.f_size)[1]
 
         # Text
         self.text = ""
 
         # Colors
-        self.cell_bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.hover_color   = get_preferences().color.Hops_UI_mouse_over_color
-        self.border_color  = get_preferences().color.Hops_UI_border_color
+        self.cell_bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.hover_color   = addon.preference().color.Hops_UI_mouse_over_color
+        self.border_color  = addon.preference().color.Hops_UI_border_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -783,7 +783,7 @@ class Length_Box:
 
         # Font
         self.f_size      = 14
-        self.f_color     = get_preferences().color.Hops_UI_text_color
+        self.f_color     = addon.preference().color.Hops_UI_text_color
         self.font_height = get_blf_text_dims("Qtji.", self.f_size)[1]
 
         # Units
@@ -791,9 +791,9 @@ class Length_Box:
         self.imperial_opts = ["Miles", "Feet", "Inches", "Thousandth"]
 
         # Colors
-        self.cell_bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.hover_color   = get_preferences().color.Hops_UI_mouse_over_color
-        self.border_color  = get_preferences().color.Hops_UI_border_color
+        self.cell_bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.hover_color   = addon.preference().color.Hops_UI_mouse_over_color
+        self.border_color  = addon.preference().color.Hops_UI_border_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -878,7 +878,7 @@ class Popup_Menu:
 
         # Font
         self.f_size = 14
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -886,9 +886,9 @@ class Popup_Menu:
         self.font_height  = get_blf_text_dims("Qjq`", self.f_size)[1]
 
         # Colors
-        self.highlight_color = get_preferences().color.Hops_UI_highlight_color
-        self.cell_bg_color   = get_preferences().color.Hops_UI_cell_background_color
-        self.border_color    = get_preferences().color.Hops_UI_border_color
+        self.highlight_color = addon.preference().color.Hops_UI_highlight_color
+        self.cell_bg_color   = addon.preference().color.Hops_UI_cell_background_color
+        self.border_color    = addon.preference().color.Hops_UI_border_color
 
         # Screen
         self.screen_width = context.area.width
@@ -1081,16 +1081,16 @@ class Popup_Entry_Box:
 
         # Font
         self.f_size = 16
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # Entry
         self.text = "0"
         self.entry_string = ""
 
         # Colors
-        self.cell_bg_color   = get_preferences().color.Hops_UI_cell_background_color
-        self.border_color    = get_preferences().color.Hops_UI_border_color
-        self.hover_color     = get_preferences().color.Hops_UI_mouse_over_color
+        self.cell_bg_color   = addon.preference().color.Hops_UI_cell_background_color
+        self.border_color    = addon.preference().color.Hops_UI_border_color
+        self.hover_color     = addon.preference().color.Hops_UI_mouse_over_color
 
         # States
         self.mouse_over = False
@@ -1291,7 +1291,7 @@ class Face_Editor_Menu:
 
         # Font
         self.f_size = 16
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # Scale / Padding
         self.scale_factor = dpi_factor(min=.25)
@@ -1299,9 +1299,9 @@ class Face_Editor_Menu:
         self.font_height  = get_blf_text_dims("Qjq`", self.f_size)[1]
 
         # Colors
-        self.highlight_color = get_preferences().color.Hops_UI_highlight_color
-        self.cell_bg_color   = get_preferences().color.Hops_UI_cell_background_color
-        self.border_color    = get_preferences().color.Hops_UI_border_color
+        self.highlight_color = addon.preference().color.Hops_UI_highlight_color
+        self.cell_bg_color   = addon.preference().color.Hops_UI_cell_background_color
+        self.border_color    = addon.preference().color.Hops_UI_border_color
 
         # Screen
         self.screen_width = context.area.width
@@ -1469,16 +1469,16 @@ class Face_Entry_Box:
 
         # Font
         self.f_size = 16
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # Entry
         self.text = "0"
         self.entry_string = ""
 
         # Colors
-        self.cell_bg_color = get_preferences().color.Hops_UI_cell_background_color
-        self.border_color  = get_preferences().color.Hops_UI_border_color
-        self.hover_color   = get_preferences().color.Hops_UI_mouse_over_color
+        self.cell_bg_color = addon.preference().color.Hops_UI_cell_background_color
+        self.border_color  = addon.preference().color.Hops_UI_border_color
+        self.hover_color   = addon.preference().color.Hops_UI_mouse_over_color
 
         # States
         self.mouse_over = False
@@ -1723,7 +1723,7 @@ class Face_Controller:
         self.menu = Face_Editor_Menu(context)
 
         # Drawing
-        self.f_color = get_preferences().color.Hops_UI_text_color
+        self.f_color = addon.preference().color.Hops_UI_text_color
 
         # States
         self.entry_locked = False
@@ -2199,7 +2199,7 @@ class HOPS_OT_Accu_Shape(bpy.types.Operator):
             
             # Main
             win_list = []            
-            if get_preferences().ui.Hops_modal_fast_ui_loc_options != 1:
+            if addon.preference().ui.Hops_modal_fast_ui_loc_options != 1:
                 if self.state in {State.POINT_1, State.POINT_2, State.POINT_3}:
                     win_list.append("Click to Confirm")
                 elif self.state == State.ADJUST:

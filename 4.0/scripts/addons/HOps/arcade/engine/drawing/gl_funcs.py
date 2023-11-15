@@ -66,7 +66,7 @@ def draw_2D_text(text, x, y, size=12, color=(1,1,1,1), dpi=72):
     font_id = 0
     blf.position(font_id, x, y, 0)
     if bpy.app.version[0] >= 4:
-        blf.size(size, dpi)
+        blf.size(font_id, size * (dpi / 72.0))
     else:
         blf.size(font_id, size, dpi)
     blf.color(font_id, *color)

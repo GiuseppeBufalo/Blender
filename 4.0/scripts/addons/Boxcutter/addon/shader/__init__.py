@@ -1,4 +1,5 @@
-from gpu.types import GPUBatch, GPUIndexBuf, GPUVertBuf, GPUShader
+import sys
+from gpu.types import GPUBatch, GPUIndexBuf, GPUVertBuf, GPUShader, GPUUniformBuf
 
 
 handlers = []
@@ -51,6 +52,7 @@ def new(*stubs, script=False):
     interfaces = []
     constants = []
 
+    # TODO: multi vert out?
     vert_out = GPUStageInterfaceInfo(F'{"".join(choice(ascii_lowercase) for _ in range(16))}')
 
     shader_info = GPUShaderCreateInfo()
@@ -62,7 +64,7 @@ def new(*stubs, script=False):
     def parse(line, vertex=False, fragment=False):
         _type = 'vertex' if vertex else 'fragment'
 
-        if ' ' not in line:
+        if ' ' not in line or line.startswith('//'):
             return
 
         t = line.split(' ')[1].upper()
@@ -115,7 +117,7 @@ def new(*stubs, script=False):
                 continue
 
             if i > 1:
-                raise ValueError('Shader stubs must be vertex, fragment')
+                raise ValueError('Shader stubs must be vertex, fragment (WIP)')
 
             parse(line, vertex=not i, fragment=i)
 
