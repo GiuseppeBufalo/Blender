@@ -24,6 +24,7 @@ import bpy
 import ctypes
 import platform
 import re
+import os
 
 from enum import IntEnum
 
@@ -38,6 +39,72 @@ _ATTR_LOOKUP_BUILD_LOCK = 'zen_sets_lookup_build_lock'
 
 
 _ATTR_OBJ_COLOR_STATE = 'zen_sets_object_color_state'
+
+
+app_version = bpy.app.version
+
+
+class ZenPolls:
+
+    version_since_3_0_0 = app_version >= (3, 0, 0)
+
+    version_since_3_2_0 = app_version >= (3, 2, 0)
+
+    version_since_3_3_0 = app_version >= (3, 3, 0)
+
+    version_since_2_93_0 = app_version >= (2, 93, 0)
+
+    version_lower_3_5_0 = app_version < (3, 5, 0)
+
+    version_lower_3_4_0 = app_version < (3, 4, 0)
+
+    version_lower_4_0_0 = app_version < (4, 0, 0)
+
+
+class ZsPresets:
+
+    @classmethod
+    def get_preset_path(cls, s_preset_subdir):
+        return os.path.join('zen_bbq', s_preset_subdir)
+
+    @classmethod
+    def force_full_preset_path(cls, s_preset_dir):
+        target_path = os.path.join("presets", cls.get_preset_path(s_preset_dir))
+        target_path = bpy.utils.user_resource('SCRIPTS', path=target_path, create=True)
+
+        if not target_path:
+            raise RuntimeError(f"Can not find or create: {s_preset_dir}")
+
+        return target_path
+
+
+class ZenStrUtils:
+    @classmethod
+    def ireplace(cls, text, find, repl):
+        return re.sub('(?i)' + re.escape(find), lambda m: repl, text)
+
+    @classmethod
+    def smart_replace(cls, text, props):
+        err = ''
+        new_name = ''
+        try:
+            if props.find != '':
+                if props.use_regex:
+                    new_name = re.sub(props.find, props.replace, text)
+                else:
+                    if props.match_case:
+                        new_name = text.replace(props.find, props.replace)
+                    else:
+                        new_name = cls.ireplace(text, props.find, props.replace)
+            else:
+                new_name = props.replace
+        except Exception as e:
+            err = str(e)
+
+        if new_name == '':
+            new_name = text
+
+        return (new_name, err)
 
 
 class ZenLocks:

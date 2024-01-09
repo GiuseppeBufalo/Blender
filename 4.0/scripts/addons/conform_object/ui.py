@@ -82,9 +82,13 @@ class LATTICE_PT_conform_panel(bpy.types.Panel):
         layout = self.layout
 
         hide_select = context.view_layer.objects.active.conform_object.source_obj.hide_select
-        snapping_mode = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements == {'FACE'} and \
-                        context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_project
 
+        if hasattr(context.scene.tool_settings, 'use_snap_project'):
+            snapping_mode = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements == {'FACE'} and \
+                            context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_project
+        elif hasattr(context.scene.tool_settings, 'use_snap_time_absolute') and hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+            snapping_mode = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements_individual == {'FACE_PROJECT'} and \
+                            context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_time_absolute
 
         col = layout.column(align=True)
         col.separator()

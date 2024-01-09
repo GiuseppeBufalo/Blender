@@ -24,7 +24,8 @@ from .operators import ZBBQ_OT_DrawHighlight
 
 from . import globals as ZBBQ_Globals
 from .vlog import Log
-from .commonFunc import ZBBQ_CommonFunc
+from .commonFunc import ZBBQ_CommonFunc, ZBBQ_MaterialFunc
+# from .bake import ZBBQ_Bake
 from .sceneConfig import ZBBQ_BuggedPinkShaderReset3DSpace, ZBBQ_SceneConfigFunc
 
 from timeit import default_timer as timer
@@ -96,6 +97,19 @@ def ZBBQ_CbDepsgraphUpdatePost(scene):
 
                             g_LAST_UPDATE[p_obj] = timer()
 
+# @persistent
+# def ZBBQ_CbBakePre(dummy1, dummy2):
+#     Log.debug("[ZBBQ_CbBakePre] Invoked!")
+
+
+# @persistent
+# def ZBBQ_CbBakeCancel(dummy1, dummy2):
+#     Log.debug("[ZBBQ_CbBakeCancel] Invoked!")
+
+
+# @persistent
+# def ZBBQ_CbBakeComplete(dummy1, dummy2):
+#     Log.debug("[ZBBQ_CbBakeComplete] Invoked!")
 
 @persistent
 def ZBBQ_CbSceneLoaded(scene):
@@ -114,6 +128,9 @@ def ZBBQ_CbSceneLoaded(scene):
     reset_all_draw_cache()
 
     ZBBQ_SceneConfigFunc.CbOnInit()
+
+    ZBBQ_MaterialFunc.CheckNodeTreesVersionsAndUpdateIfNecessary()
+    ZBBQ_CommonFunc.CheckSceneObjectsAndUpdateIfNecessary()
 
 
 @persistent
@@ -318,6 +335,15 @@ def register():
     if ZBBQ_CbDepsgraphUpdatePost not in bpy.app.handlers.depsgraph_update_post:
         bpy.app.handlers.depsgraph_update_post.append(ZBBQ_CbDepsgraphUpdatePost)
 
+    # if ZBBQ_CbBakePre not in bpy.app.handlers.object_bake_pre:
+    #     bpy.app.handlers.object_bake_pre.append(ZBBQ_CbBakePre)
+
+    # if ZBBQ_CbBakeComplete not in bpy.app.handlers.object_bake_complete:
+    #     bpy.app.handlers.object_bake_complete.append(ZBBQ_CbBakeComplete)
+
+    # if ZBBQ_CbBakeCancel not in bpy.app.handlers.object_bake_cancel:
+    #     bpy.app.handlers.object_bake_cancel.append(ZBBQ_CbBakeCancel)
+
     ZBBQ_CommonFunc.BevelPresetGroupsCreateDefaultIfNone()
     bpy.app.timers.register(ZBBQ_SceneConfigFunc.CbOnInit)  # These actions need to be done at add-on init as well as at scene loaded
 
@@ -340,3 +366,12 @@ def unregister():
 
     if ZBBQ_CbDepsgraphUpdatePost in bpy.app.handlers.depsgraph_update_post:
         bpy.app.handlers.depsgraph_update_post.remove(ZBBQ_CbDepsgraphUpdatePost)
+
+    # if ZBBQ_CbBakePre in bpy.app.handlers.object_bake_pre:
+    #     bpy.app.handlers.object_bake_pre.remove(ZBBQ_CbBakePre)
+
+    # if ZBBQ_CbBakeComplete in bpy.app.handlers.object_bake_complete:
+    #     bpy.app.handlers.object_bake_complete.remove(ZBBQ_CbBakeComplete)
+
+    # if ZBBQ_CbBakePre in bpy.app.handlers.object_bake_pre:
+    #     bpy.app.handlers.object_bake_pre.remove(ZBBQ_CbBakePre)

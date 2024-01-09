@@ -28,6 +28,7 @@ from gpu_extras.batch import batch_for_shader
 
 from .consts import ZBBQ_Consts
 from .commonFunc import ZBBQ_CommonFunc
+from .blender_zen_utils import ZenPolls
 
 ZBBQ_ShaderColoredEdges = None
 ZBBQ_BatchColoredEdges = None
@@ -80,7 +81,7 @@ class ZBBQ_OverlaySurface():
             bm.from_mesh(self.obj.data)
             needToFreeBM = True
 
-        dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+        dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
 
         if dataLayer is not None:
 
@@ -216,7 +217,8 @@ def register():
     global ZBBQ_ShaderColoredEdges, ZBBQ_OverlaySurfaces
 
     if ZBBQ_ShaderColoredEdges is None:
-        ZBBQ_ShaderColoredEdges = gpu.shader.from_builtin('3D_SMOOTH_COLOR')
+        ZBBQ_ShaderColoredEdges = gpu.shader.from_builtin(
+            '3D_SMOOTH_COLOR' if ZenPolls.version_lower_3_5_0 else 'SMOOTH_COLOR')
 
     if ZBBQ_OverlaySurfaces is None:
         ZBBQ_OverlaySurfaces = []

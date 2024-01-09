@@ -99,7 +99,7 @@ def repeat(op, context, collect=False):
                 repeat_obj = bpy.data.objects[repeat_name]
 
                 override = {'object': repeat_obj, 'active_object': repeat_obj, 'selected_editable_objects': [bc.shape], 'selected_objects': [bc.shape]}
-                operator_override(context, bpy.ops.object.make_links_data, override, type='MODIFIER')
+                operator_override(context, bpy.ops.object.make_links_data, override, type='MODIFIERS')
 
                 for mod in bc.shape.modifiers: # remap object references or exception
                     if mod.type == 'LATTICE':

@@ -36,7 +36,7 @@ _draw_handlers = {}
 class FakeGroup:
     def __init__(self) -> None:
         self.name = 'FakeGroup'
-        self.layer_name = ZBBQ_Consts.customDataLayerName
+        self.layer_name = ZBBQ_Consts.customDataLayerRadiusName
 
 
 class ZBBQ_EdgeLayerManager:
@@ -59,7 +59,7 @@ class ZBBQ_EdgeLayerManager:
         result = []
 
         bm = self.get_bm(p_obj)
-        dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+        dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
         if dataLayer:
             result.append(FakeGroup())
 

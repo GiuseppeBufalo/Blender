@@ -19,7 +19,7 @@ def cleanup(self, context):
     if not self.caps_collection.all_objects:
         bpy.data.collections.remove(self.caps_collection)
     
-    unlink_libraries()
+    # unlink_libraries()
 
 
 def get_collection_from_scene(context, name):

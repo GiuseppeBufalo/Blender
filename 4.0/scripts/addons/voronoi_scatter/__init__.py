@@ -3,9 +3,9 @@ Copyright (C) 2020-2023 Orange Turbine
 https://orangeturbine.com
 orangeturbine@cgcookie.com
 
-This file is part of Scattershot, created by Jonathan Lampel. 
+This file is part of Scattershot, created by Jonathan Lampel.
 
-All code distributed with this add-on is open source as described below. 
+All code distributed with this add-on is open source as described below.
 
 Scattershot is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ along with this program; if not, see <https://www.gnu.org/licenses/>.
 bl_info = {
     "name": "Scattershot - Voronoi Image Texture Scattering",
     "author": "Jonathan Lampel",
-    "version": (1, 9, 1),
+    "version": (1, 10, 0),
     "blender": (3, 4, 0),
     "location": "Shader Editor > Node",
     "description": "Quickly distributes image textures around your model with several controls for randomization",
@@ -39,7 +39,7 @@ from bpy.types import AddonPreferences
 from bpy.props import (StringProperty, BoolProperty)
 from . import interface
 from . defaults import (file_types, texture_names)
-from . utilities import name_array_to_string
+from .utilities.utilities import name_array_to_string
 
 class scattershot_preferences(AddonPreferences):
   bl_idname = __name__

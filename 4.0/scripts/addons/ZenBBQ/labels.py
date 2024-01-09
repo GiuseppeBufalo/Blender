@@ -82,6 +82,12 @@ class ZBBQ_Labels:
     ZBBQ_OT_PieMenuGeometryOptionsBottom_Desc = "Default: Switch Solid/Rendered\nCTRL: (Edit Mode only) Switch Colored Edges On/Off"
     ZBBQ_OT_PieMenuGeometryOptionsBottom_Report_MeshEditOnly = "Sorry, Bevel Highlight is available only in Edit Mode!"
 
+    ZBBQ_OT_BakeStart_Label = "Start Baking"
+    ZBBQ_OT_BakeStart_Desc = "Start baking all selected objects to the chosen folder"
+
+    ZBBQ_OT_BakeOpenFolder_Label = "Open Bake Folder"
+    ZBBQ_OT_BakeOpenFolder_Desc = "Open the folder with the baked files with file explorer"
+
     ZBBQ_OT_MaterialRepair_Label = "Repair Materials"
     ZBBQ_OT_MaterialRepair_Desc = "Remove all Zen BBQ Nodes for all Materials in Scene and re-add Zen BBQ Bevel Shader Node (if it was present in that Material before)"
 
@@ -123,6 +129,14 @@ class ZBBQ_Labels:
     ZBBQ_OT_DrawHighlight_Label = "Highlight Bevels Toggle"
     ZBBQ_OT_DrawHighlight_Desc = "Toggle On/Off Highlight Bevels on Objects in Edit Mode"
 
+    # ============ LIVE BOOLEAN
+
+    ZBBQ_PROP_IntactBevelDisplayUnits_Label = "Live Boolean (default) bevel units"
+    ZBBQ_PROP_IntactBevelDisplayUnits_Desc = "Live Boolean Bevel units to choose from"
+
+    ZBBQ_PROP_IntactBevelDisplayRadius_Label = "Live Boolean (default) bevel radius"
+    ZBBQ_PROP_IntactBevelDisplayRadius_Desc = "Default (intact) bevel radius, also used as Live Boolean radius according to the chosen units"
+
     # ============ OPERATORS FROM UI
 
     ZBBQ_OT_CallPie_GeometryOptions_Label = 'Zen BBQ - Pie Menu'
@@ -155,6 +169,10 @@ class ZBBQ_Labels:
     ZBBQ_Prefs_Prop_CyclesActivatingConfirmation_Name = "Always confirm before switching to Cycles"
     ZBBQ_Prefs_Prop_CyclesActivatingConfirmation_NameShort = "Ask for switching to Cycles"
     ZBBQ_Prefs_Prop_CyclesActivatingConfirmation_Desc = "Ask before switching to Cycles while assigning Bevel Preset"
+
+    ZBBQ_Prefs_Prop_BakeOpenFolderAfterFinish_Name = "Open folder after bake is finished"
+    ZBBQ_Prefs_Prop_BakeOpenFolderAfterFinish_Desc = "Open folder with the baked files in file explorer after baking is finished"
+
     ZBBQ_Prefs_Prop_PolygonBoundaryLoopOnly_Name = "Face Boundary Mode"
     ZBBQ_Prefs_Prop_PolygonBoundaryLoopOnly_Desc = "Assign Values only to Boundary Edges of selected Faces"
 

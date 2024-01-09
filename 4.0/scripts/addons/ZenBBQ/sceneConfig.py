@@ -21,6 +21,9 @@
 import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, FloatProperty, IntProperty, StringProperty, PointerProperty, EnumProperty
+from .labels import ZBBQ_Labels
+from .consts import ZBBQ_Consts
+from .units import ZBBQ_Units, ZBBQ_UnitsForEnumPropertySceneUnitSystem, ZBBQ_UnitsForEnumPropertyConsideringUnitSystem
 
 from . import globals as ZBBQ_Globals
 from .vlog import Log
@@ -28,6 +31,7 @@ from .vlog import Log
 from .colors import ZBBQ_Colors
 from .commonFunc import ZBBQ_CommonFunc, ZBBQ_MaterialFunc
 from .preferences import ZBBQ_Pref_BevelPresetGroup
+from .blender_zen_utils import ZenStrUtils
 
 from dataclasses import dataclass
 
@@ -730,6 +734,105 @@ def register():
 
     bpy.types.Scene.ZBBQ_PresetsIncluded = PointerProperty(type=ZBBQ_Pref_BevelPresetGroup)
 
+    # Object units display
+
+    def ZBBQ_IntactBevelDisplayUnitsUpdate(self,value):
+        # Log.debug("Чего такую рожу скорчил? Сказано же, поддержка Blender 4.0 ближе к выходным будет.")
+        Log.debug(self.ZBBQ_IntactBevelDisplayRadius * ZBBQ_Units[self.ZBBQ_IntactBevelDisplayUnits].unitAndSceneScaleMultiplier())
+
+    bpy.types.Object.ZBBQ_IntactBevelDisplayUnits = bpy.props.EnumProperty(
+        items=lambda self, context: ZBBQ_UnitsForEnumPropertyConsideringUnitSystem(ZBBQ_CommonFunc.GetActiveBevelPresetGroup().unitSystem),
+        # items=lambda self, context: ZBBQ_UnitsForEnumPropertySceneUnitSystem(),
+        name=ZBBQ_Labels.ZBBQ_PROP_IntactBevelDisplayUnits_Label,
+        description=ZBBQ_Labels.ZBBQ_PROP_IntactBevelDisplayUnits_Desc,
+        update=ZBBQ_IntactBevelDisplayUnitsUpdate
+    )
+
+    def ZBBQ_IntactBevelDisplayRadiusSet(self,value):
+        self[ZBBQ_Consts.customPropertyIntactBevelRadiusName] = value*ZBBQ_Units[self.ZBBQ_IntactBevelDisplayUnits].unitAndSceneScaleMultiplier()
+
+    def ZBBQ_IntactBevelDisplayRadiusGet(self):
+        return self[ZBBQ_Consts.customPropertyIntactBevelRadiusName]/ZBBQ_Units[self.ZBBQ_IntactBevelDisplayUnits].unitAndSceneScaleMultiplier()
+
+    bpy.types.Object.ZBBQ_IntactBevelDisplayRadius = bpy.props.FloatProperty(
+        name=ZBBQ_Labels.ZBBQ_PROP_IntactBevelDisplayRadius_Label,
+        description=ZBBQ_Labels.ZBBQ_PROP_IntactBevelDisplayRadius_Desc,
+        set=ZBBQ_IntactBevelDisplayRadiusSet,
+        get=ZBBQ_IntactBevelDisplayRadiusGet,
+    )
+
+    # Save to folder
+
+    def get_bake_folder_expand(self):
+        import os
+        s_path = bpy.path.abspath(self.ZBBQ_BakeSaveToFolder)
+        s_path = ZenStrUtils.ireplace(s_path, '//', bpy.path.abspath('//'))
+        s_path = ZenStrUtils.ireplace(s_path, '%RENDER_OUTPUT%', bpy.path.abspath(bpy.context.preferences.filepaths.render_output_directory))
+        s_path = ZenStrUtils.ireplace(s_path, '%TEXTURES%', bpy.path.abspath(bpy.context.preferences.filepaths.texture_directory))
+        s_path = ZenStrUtils.ireplace(s_path, '%SCENE_NAME%', self.name)
+
+        s_path = os.path.abspath(s_path)
+
+        return s_path
+
+    def set_bake_folder_expand(self, value):
+        if value:
+            value = bpy.path.abspath(value)
+            value = ZenStrUtils.ireplace(value, bpy.path.abspath('//'), '//')
+            value = ZenStrUtils.ireplace(value, bpy.path.abspath(bpy.context.preferences.filepaths.render_output_directory), '%RENDER_OUTPUT%')
+            value = ZenStrUtils.ireplace(value, bpy.path.abspath(bpy.context.preferences.filepaths.texture_directory), '%TEXTURES%')
+            value = ZenStrUtils.ireplace(value, self.name, '%SCENE_NAME%')
+
+        self.ZBBQ_BakeSaveToFolder = value
+
+    bpy.types.Scene.ZBBQ_BakeSaveToFolderExpand = StringProperty(
+            name="Save baked images to",
+            description="Directory where the baked images are saved to",
+            get=get_bake_folder_expand,
+            set=set_bake_folder_expand,
+            options={'HIDDEN', 'SKIP_SAVE'},
+            subtype='DIR_PATH')
+
+    def get_bake_folder(self):
+        s_path = self.get('ZBBQ_BakeSaveToFolder', '')
+        return s_path if s_path else '//'
+
+    def set_bake_folder(self, value):
+        self['ZBBQ_BakeSaveToFolder'] = value
+
+    bpy.types.Scene.ZBBQ_BakeSaveToFolder = StringProperty(
+        name="Save baked images to",
+        description="Directory where the baked images are saved to",
+        get=get_bake_folder,
+        set=set_bake_folder)
+
+    def get_bake_image_name(self):
+        s_path = self.get('ZBBQ_BakeImageName', '')
+        return s_path if s_path else r'%MAT_NAME% - %IMAGE_NAME%.png'
+
+    def set_bake_image_name(self, value):
+        self['ZBBQ_BakeImageName'] = value
+
+    bpy.types.Scene.ZBBQ_BakeImageName = StringProperty(
+        name="Image Name",
+        description="Name of the baked image, available constants: %MAT_NAME%, %IMAGE_NAME%, %SCENE_NAME%, %ID%",
+        get=get_bake_image_name,
+        set=set_bake_image_name)
+
+    bpy.types.Scene.ZBBQ_BakeImageWidth = IntProperty(
+            name="Baked image width",
+            description="Baked image width",
+            default=1024,
+            min=128,
+            max=8096)
+
+    bpy.types.Scene.ZBBQ_BakeImageHeight = IntProperty(
+            name="Baked image height",
+            description="Baked image height",
+            default=1024,
+            min=128,
+            max=8096)
+
 
 def unregister():
 
@@ -762,6 +865,9 @@ def unregister():
 
     del bpy.types.Scene.ZBBQ_HasPresetsIncluded
     del bpy.types.Scene.ZBBQ_PresetsIncluded
+
+    del bpy.types.Object.ZBBQ_IntactBevelDisplayUnits
+    del bpy.types.Object.ZBBQ_IntactBevelDisplayRadius
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

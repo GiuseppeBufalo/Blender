@@ -16,7 +16,7 @@ bl_info = {
     "author" : "Mark Kingsnorth",
     "description" : "Deform an object to the surface of another.",
     "blender" : (3, 0, 0),
-    "version" : (1, 4, 5),
+    "version" : (1, 4, 10),
     "location" : "",
     "warning" : "",
     "category" : "Mesh",

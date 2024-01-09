@@ -35,6 +35,16 @@ from .consts import ZBBQ_Consts
 from .units import ZBBQ_Unit, ZBBQ_UnitSystemsForEnumProperty, ZBBQ_Units, ZBBQ_UnitsForEnumPropertyConsideringUnitSystem
 from .keymap_manager import draw_keymaps
 
+from .demo_examples import (
+    ZBBQ_DemoExample,
+    ZBBQ_DemoExampleProps,
+
+    ZBBQ_OT_DemoExamplesUpdate,
+    ZBBQ_OT_DemoExamplesDownload,
+    ZBBQ_OT_DemoExamplesDelete,
+
+    ZBBQ_UL_DemoExampleList)
+
 
 def ZBBQ_RebuildColoredEdges(self, context):
 
@@ -167,10 +177,20 @@ class ZBBQ_Prefs(bpy.types.AddonPreferences):
             description=ZBBQ_Labels.ZBBQ_Prefs_Prop_CyclesActivatingConfirmation_Desc,
             default=True)
 
+    bakeOpenFolderAfterFinish: BoolProperty(
+            name=ZBBQ_Labels.ZBBQ_Prefs_Prop_BakeOpenFolderAfterFinish_Name,
+            description=ZBBQ_Labels.ZBBQ_Prefs_Prop_BakeOpenFolderAfterFinish_Desc,
+            default=False)
+
     polygonBoundaryLoopOnly: BoolProperty(
             name=ZBBQ_Labels.ZBBQ_Prefs_Prop_PolygonBoundaryLoopOnly_Name,
             description=ZBBQ_Labels.ZBBQ_Prefs_Prop_PolygonBoundaryLoopOnly_Desc,
             default=False)  # Default: False
+
+    demo: bpy.props.PointerProperty(
+        name='Demo',
+        type=ZBBQ_DemoExampleProps
+    )
 
     tabs: bpy.props.EnumProperty(
         items=[
@@ -195,6 +215,7 @@ class ZBBQ_Prefs(bpy.types.AddonPreferences):
             box.prop(self, 'smartSelectRadiusThreshold')
             box.prop(self, 'polygonBoundaryLoopOnly')
             box.prop(self, 'cyclesActivatingConfirmation')
+            box.prop(self, 'bakeOpenFolderAfterFinish')
 
             layout.label(text="Cleanup / Repair")
 
@@ -227,6 +248,9 @@ class ZBBQ_Prefs(bpy.types.AddonPreferences):
                 icon_value=ZBBQ_Icons['Discord-Logo-White_32'].id()
             ).url = ZBBQ_Labels.PANEL_HELP_DISCORD_LINK
 
+            box = layout.box()
+            self.demo.draw(box, context)
+
         box_products = layout.box()
         box_products.label(text='Zen Add-ons')
         box_products.operator(
@@ -255,6 +279,13 @@ classes = (
 
     ZBBQ_Pref_BevelPreset,
     ZBBQ_Pref_BevelPresetGroup,
+
+    ZBBQ_DemoExample,
+    ZBBQ_DemoExampleProps,
+    ZBBQ_OT_DemoExamplesUpdate,
+    ZBBQ_OT_DemoExamplesDownload,
+    ZBBQ_OT_DemoExamplesDelete,
+    ZBBQ_UL_DemoExampleList,
 
     ZBBQ_Prefs,
 

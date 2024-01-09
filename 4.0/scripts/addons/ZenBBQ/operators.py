@@ -18,8 +18,12 @@
 
 # Copyright 2022, Dmitry Aleksandrovich Maslov (ABTOMAT)
 
+import platform
+import subprocess
+import os
 import bmesh
 import bpy
+# import _bpy
 
 import addon_utils
 
@@ -27,13 +31,14 @@ from bpy.types import Operator
 from bpy.props import StringProperty, EnumProperty
 
 from . import globals as ZBBQ_Globals
-from .blender_zen_utils import ZenLocks
+from .blender_zen_utils import ZenLocks, ZenStrUtils
 from .vlog import Log
 
 from .consts import ZBBQ_Consts
 from .labels import ZBBQ_Labels
 
 from .commonFunc import ZBBQ_CommonFunc, ZBBQ_MaterialFunc
+from .bake import ZBBQ_Bake
 from .units import ZBBQ_UnitSystems, ZBBQ_Units, ZBBQ_UnitsForEnumPropertySceneUnitSystem, ZBBQ_UnitsForEnumPropertyUnitSystemForCurrentPresetGroup
 from .sceneConfig import ZBBQ_PreviewRenderConfigIsNotTouched, ZBBQ_PreviewRenderPresetsSet, ZBBQ_SceneConfigFunc
 
@@ -298,19 +303,28 @@ class ZBBQ_OT_SmartSelectByRadiusOfSelectedVerts(Operator):
             bm = bmesh.from_edit_mesh(obj.data)
             vertsSelected = [vert for vert in bm.verts if vert.select]
 
-            if not ZBBQ_CommonFunc.ObjectHasDataLayer(obj):
+            if not ZBBQ_CommonFunc.ObjectHasDataLayerRadius(obj):
                 # We do not add Data Layer if there is none
                 # Instead, we consider all vertices to have zero radius
                 valuesToCheck.append(0)
                 continue
 
-            dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
-            if dataLayer is None:
-                dataLayer = bm.verts.layers.float.new(ZBBQ_Consts.customDataLayerName)
+            dataLayerRadius = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
+            dataLayerUserDefined = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerUserDefinedName)
+
+            if dataLayerRadius is None:
+                dataLayerRadius = bm.verts.layers.float.new(ZBBQ_Consts.customDataLayerRadiusName)
 
             for vert in vertsSelected:
-                if not vert[dataLayer] in valuesToCheck:
-                    valuesToCheck.append(vert[dataLayer])
+                vertRadius = 0
+
+                if (vert[dataLayerUserDefined] == 0):
+                    vertRadius = obj[ZBBQ_Consts.customPropertyIntactBevelRadiusName]
+                else:
+                    vertRadius = vert[dataLayerRadius]
+
+                if vertRadius not in valuesToCheck:
+                    valuesToCheck.append(vertRadius)
 
         ZBBQ_CommonFunc.Report(self, f"Selecting geometry with Bevel Radius {valuesToCheck}")
 
@@ -676,6 +690,72 @@ class ZBBQ_OT_PieMenuGeometryOptionsBottom(Operator):
             ZBBQ_CommonFunc.Report(self, text=ZBBQ_Labels.ZBBQ_OT_PieMenuGeometryOptionsBottom_Report_MeshEditOnly)
 
         return {'FINISHED'}
+
+
+# Bake
+
+class ZBBQ_OT_BakeStart(Operator):
+
+    bl_idname = "global.zen_bbq_bake_start"
+    bl_label = ZBBQ_Labels.ZBBQ_OT_BakeStart_Label
+    bl_description = ZBBQ_Labels.ZBBQ_OT_BakeStart_Desc
+    bl_options = {'REGISTER'}
+
+    def execute(self, context: bpy.types.Context):
+
+        # We need to toggle preview on
+        if bpy.context.scene.render.engine != 'CYCLES':
+            bpy.ops.object.zen_bbq_render_preview_toggle('INVOKE_DEFAULT')
+
+        # Remember which objects were selected prior
+        ZBBQ_Bake.ClearQueuesEtc()
+
+        objectsForBaking = [obj for obj in context.visible_objects if ZBBQ_CommonFunc.ObjectIsReadyForBevel(obj)]
+
+        for obj in objectsForBaking:
+            ZBBQ_Bake.AddObjectToBakingNormalQueue(obj)
+
+        # Log.debug(f"Objects to bake: {len(objectsForBaking)}")
+
+        macro = ZBBQ_Bake.GetBakeMacro()
+
+        for i in range(len(ZBBQ_Bake.bakingQueue)):
+            macro.define("ZBBQ_OT_bake_prepare_next_object")
+            macro.define("OBJECT_OT_bake", type="NORMAL")
+            macro.define("ZBBQ_OT_bake_object_finished")
+
+        # macro.define("ZBBQ_OT_bake_prepare_next_object")
+        macro.define("ZBBQ_OT_bake_all_objects_finished")
+
+        bpy.ops.zbbq.do_bake('INVOKE_DEFAULT')
+
+        return {'CANCELLED'}
+
+    @classmethod
+    def poll(cls, context):
+        return ZBBQ_Bake.BakeFolderIsValid()
+    
+    def draw(self, context):
+        if bpy.context.scene.render.engine != 'CYCLES':
+            self.layout.label(text=ZBBQ_Labels.ZBBQ_OT_RenderPreviewToggle_Confirm_Cycles+ZBBQ_CommonFunc.StrConfirmQuestion(self))
+
+
+class ZBBQ_OT_BakeOpenFolder(Operator):
+
+    bl_idname = "global.zen_bbq_bake_open_folder"
+    bl_label = ZBBQ_Labels.ZBBQ_OT_BakeOpenFolder_Label
+    bl_description = ZBBQ_Labels.ZBBQ_OT_BakeOpenFolder_Desc
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        ZBBQ_Bake.BakeFolderOpen()
+        return {'CANCELLED'}
+
+    @classmethod
+    def poll(cls, context):
+        return ZBBQ_Bake.BakeFolderIsValid()
+
+
 
 # Preferences and Cleanup
 
@@ -1129,6 +1209,105 @@ class ZBBQ_OT_DrawHighlight(bpy.types.Operator):
             op('INVOKE_DEFAULT', mode=mode)
 
 
+class ZBBQ_OT_BakeObjectFinished(bpy.types.Operator):
+    bl_idname = "zbbq.bake_object_finished"
+    bl_label = "Bake Object Finished"
+
+    def invoke(self, context, event):
+        Log.debug("[ZBBQ_OT_BakeObjectFinished] Invoked!")
+
+        # Remove last rendered
+        if(len(ZBBQ_Bake.bakingQueue) > 0):
+            ZBBQ_Bake.bakingQueue.pop(0)
+
+        return {'FINISHED'}
+
+
+class ZBBQ_OT_BakeAllObjectsFinished(bpy.types.Operator):
+    bl_idname = "zbbq.bake_all_objects_finished"
+    bl_label = "Bake All Objects Finished"
+
+    def invoke(self, context: bpy.types.Context, event):
+        # Log.debug("[ZBBQ_OT_BakeAllObjectsFinished] Invoked!")
+
+        p_scene = bpy.context.scene
+
+        folder = p_scene.ZBBQ_BakeSaveToFolderExpand
+
+        s_template_image_name = p_scene.ZBBQ_BakeImageName
+
+        idx_counter = 1
+
+        for mat in ZBBQ_Bake.bakedMats:
+            for node in ZBBQ_MaterialFunc.MaterialGetShaderNodesBakingImage(mat):
+                filename = str(s_template_image_name)
+                filename = ZenStrUtils.ireplace(filename, '%MAT_NAME%', mat.name)
+                filename = ZenStrUtils.ireplace(filename, '%IMAGE_NAME%', node.image.name)
+                filename = ZenStrUtils.ireplace(filename, '%SCENE_NAME%', p_scene.name)
+
+                filename = ZenStrUtils.ireplace(filename, '%ID%', f'{idx_counter:03d}')
+
+                idx_counter += 1
+
+                path = os.path.join(folder, filename)
+                node.image.save_render(path)
+                # Log.debug(f"Saved to file: {path}")
+
+        ZBBQ_Bake.bakeFinished = True
+        return {'FINISHED'}
+
+
+class ZBBQ_OT_BakePrepareNextObject(bpy.types.Operator):
+    bl_idname = "zbbq.bake_prepare_next_object"
+    bl_label = "Bake Prepare Next Object"
+
+    def invoke(self, context, event):
+        Log.debug("[ZBBQ_OT_BakePrepareNextObject] Invoked!")
+        ZBBQ_Bake.ObjectBakeNormalNext()  # Start Baking
+        return {'FINISHED'}
+
+
+class ZBBQ_OT_DoBake(bpy.types.Operator):
+    bl_idname = "zbbq.do_bake"
+    bl_label = "Do Bake"
+    tag_finish: bpy.props.BoolProperty()
+
+    def modal(self, context, event):
+        # if getattr(type(self), "finished", False):
+
+        # Log.debug(f"Modal {ZBBQ_Bake.bakeFinished}")
+
+        if ZBBQ_Bake.bakeFinished:
+            self.report({'INFO'}, "Done")
+            type(self).finished = False
+            context.window_manager.event_timer_remove(self.t)
+
+            if (ZBBQ_CommonFunc.GetPrefs().bakeOpenFolderAfterFinish):
+                ZBBQ_Bake.BakeFolderOpen()
+
+            return {'FINISHED'}
+        return {'RUNNING_MODAL'}
+
+    def invoke(self, context, event):
+        if self.tag_finish:
+            type(self).finished = True
+
+            ZBBQ_Bake.bakeFinished = True
+
+            Log.debug("Done all bakings!")
+            return {'FINISHED'}
+
+        Log.debug("Baking Invoked!")
+
+        ZBBQ_Bake.bakeFinished = False  # does not work here for unknown reason
+        bpy.ops.render.bake_macro('INVOKE_DEFAULT')
+
+        wm = context.window_manager
+        self.t = wm.event_timer_add(0.1, window=context.window)
+        wm.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+
 classes = (
 
     ZBBQ_OT_FixSceneUnitSystem,
@@ -1163,11 +1342,25 @@ classes = (
     ZBBQ_OT_PieMenuGeometryOptionsTop,
     ZBBQ_OT_PieMenuGeometryOptionsBottom,
 
+    ZBBQ_OT_BakeStart,
+    ZBBQ_OT_BakeOpenFolder,
+
     ZBBQ_OT_MaterialsRepair,
     ZBBQ_OT_ObjectAddonCleanup,
     ZBBQ_OT_GlobalAddonCleanup,
     ZBBQ_OT_Keymaps,
-    ZBBQ_OT_ResetPreferences
+    ZBBQ_OT_ResetPreferences,
+
+
+    # Bake test modal
+
+    ZBBQ_OT_BakePrepareNextObject,
+    ZBBQ_OT_DoBake,
+    ZBBQ_OT_BakeAllObjectsFinished,
+    ZBBQ_OT_BakeObjectFinished,
+    # ZBBQ_OT_bake_report,
+    # ZBBQ_OT_set_finished,
+    # ZBBQ_OT_bake_modal
 )
 
 

@@ -32,7 +32,7 @@ from . import eventHandling
 bl_info = {
     "name": "Zen BBQ",
     "author": "Valeriy Yatsenko, Sergey Tyapkin, Viktor [VAN] Teplov, Alex Zhornyak,  Dmitry [ABTOMAT] Maslov",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2, 1),
     "description": "Create, adjust and visually control bevel effect without actually changing geometry.",
     "blender": (3, 00, 0),
     "location": "View3D > Sidebar > Zen BBQ > Zen BBQ",

@@ -23,12 +23,20 @@ class ZBBQ_Consts:
     addonId = "ZenBBQ"
     addonName = "Zen BBQ"
 
-    customDataLayerName = "ZenBBQ"
+    customDataLayerRadiusName = "ZenBBQ"
+    customDataLayerUserDefinedName = "ZenBBQ_UserDefined"
+
+    customPropertyIntactBevelRadiusName = "ZenBBQ_IntactBevelRadius"
+    # customPropertyIntactBevelUnitsName = "ZenBBQ_IntactBevelUnits"
 
     shaderNodeNormalName = "ZenBBQ_Normal"
+    shaderNodeBakingImageName = "ZenBBQ_BakingImage"
+
     shaderNodeTreePreviewMetallicName = "ZenBBQ_PreviewMetallic"
 
     shaderNodeTreeNormalName = "ZenBBQ_NormalNodeTree"
+    shaderNodeTreeNormalNameCurrentVersion = "1.1"
+
     shaderNodeTreePreviewMetallicName = "ZenBBQ_PreviewMetallicNodeTree"
 
     defaultMaterialName = "ZenBBQ_DefaultMaterial"

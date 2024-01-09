@@ -18,6 +18,7 @@
 
 # Copyright 2022, Dmitry Aleksandrovich Maslov (ABTOMAT)
 
+import os
 import bpy
 from bpy.types import UIList, Operator, Panel, Menu
 
@@ -26,9 +27,10 @@ from .colors import ZBBQ_Colors
 from .ico import ZBBQ_Icons
 from .units import ZBBQ_UnitSystems
 from .consts import ZBBQ_Consts
+from .bake import ZBBQ_Bake
 from .commonFunc import ZBBQ_CommonFunc, ZBBQ_MaterialFunc
 from .sceneConfig import ZBBQ_PreviewRenderPresetsGetCurrentIdx, ZBBQ_PreviewRenderPresetsMatchesSaved
-from .operators import ZBBQ_OT_ActiveObjectGetReady, ZBBQ_OT_BakeNormalForSelection, ZBBQ_OT_FixSceneUnitSystem, ZBBQ_OT_MaterialsRepair, ZBBQ_OT_PieMenuGeometryOptionsTop, ZBBQ_OT_PresetsPresetGroupImportFromScene, ZBBQ_OT_SetZeroBevelRadiusToSelection, ZBBQ_OT_ShaderNodeNormalAdd, ZBBQ_OT_DrawHighlight, ZBBQ_OT_GlobalAddonCleanup, ZBBQ_OT_Keymaps, ZBBQ_OT_ObjectAddonCleanup, ZBBQ_OT_PieMenuGeometryOptionsBottom, ZBBQ_OT_PresetsPresetGroupAdd, ZBBQ_OT_PresetsPresetGroupRemove, ZBBQ_OT_PreviewShaderNodeToggle, ZBBQ_OT_ShaderNodeNormalRemove, ZBBQ_OT_RenderPreviewToggle, ZBBQ_OT_ResetPreferences, ZBBQ_OT_SetBevelRadiusToSelection, ZBBQ_OT_ShaderNodeNormalToggle, ZBBQ_OT_SmartSelectByRadiusFromActivePreset, ZBBQ_OT_SmartSelectByRadiusOfSelectedVerts, ZBBQ_OT_TestOpA, ZBBQ_OT_TestOpB
+from .operators import ZBBQ_OT_ActiveObjectGetReady, ZBBQ_OT_BakeNormalForSelection, ZBBQ_OT_BakeOpenFolder, ZBBQ_OT_FixSceneUnitSystem, ZBBQ_OT_BakeStart, ZBBQ_OT_MaterialsRepair, ZBBQ_OT_PieMenuGeometryOptionsTop, ZBBQ_OT_PresetsPresetGroupImportFromScene, ZBBQ_OT_SetZeroBevelRadiusToSelection, ZBBQ_OT_ShaderNodeNormalAdd, ZBBQ_OT_DrawHighlight, ZBBQ_OT_GlobalAddonCleanup, ZBBQ_OT_Keymaps, ZBBQ_OT_ObjectAddonCleanup, ZBBQ_OT_PieMenuGeometryOptionsBottom, ZBBQ_OT_PresetsPresetGroupAdd, ZBBQ_OT_PresetsPresetGroupRemove, ZBBQ_OT_PreviewShaderNodeToggle, ZBBQ_OT_ShaderNodeNormalRemove, ZBBQ_OT_RenderPreviewToggle, ZBBQ_OT_ResetPreferences, ZBBQ_OT_SetBevelRadiusToSelection, ZBBQ_OT_ShaderNodeNormalToggle, ZBBQ_OT_SmartSelectByRadiusFromActivePreset, ZBBQ_OT_SmartSelectByRadiusOfSelectedVerts, ZBBQ_OT_TestOpA, ZBBQ_OT_TestOpB  # , ZBBQ_OT_bake_modal
 from .labels import ZBBQ_Labels
 from .blender_zen_utils import ZsUiConstants
 
@@ -200,7 +202,7 @@ class ZBBQ_PT_Main(Panel):
             else:
                 layout.label(text="This object can be used for Zen BBQ!")
 
-                hasDataLayer = ZBBQ_CommonFunc.ObjectHasDataLayer(obj)
+                hasDataLayer = ZBBQ_CommonFunc.ObjectHasDataLayerRadius(obj)
                 layout.label(text=f'Has Data Layer: {"YES" if hasDataLayer else "NO"}')
 
                 hasMaterial = ZBBQ_MaterialFunc.ObjectHasMaterialsFilled(obj)
@@ -232,6 +234,46 @@ class ZBBQ_PT_Main_Sub_Quality(Panel):
         DrawPreviewRenderPresetsSwitch(layout)
 
 
+class ZBBQ_PT_Main_Sub_Advanced(Panel):
+    bl_idname = "ZBBQ_PT_Main_Sub_Advanced"
+    bl_parent_id = "ZBBQ_PT_Main"
+    bl_label = "Advanced"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Zen BBQ'
+    # bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+
+        layout = self.layout
+        layout.label(text=ZBBQ_Labels.ZBBQ_PROP_IntactBevelDisplayRadius_Label)
+
+        # bpg = ZBBQ_CommonFunc.GetActiveBevelPresetGroup()
+
+        # TODO: ERROR: rna_uiItemR: property not found: Object.["ZenBBQ_IntactBevelRadius"]
+        if(len(bpy.context.selected_objects) == 0):
+            layout.label(text="(Please select an object)")
+        else:
+            objectsSelectedAndReadyForBevel = [obj for obj in bpy.context.selected_objects if ZBBQ_CommonFunc.ObjectIsReadyForBevel(obj)]
+            if(len(objectsSelectedAndReadyForBevel) == 1):
+                # layout.label(text=f"for: {len(objectsSelectedAndreadyForBevel)} selected objects:")
+                # layout.prop(objectsSelectedAndReadyForBevel[0], f'["{ZBBQ_Consts.customPropertyIntactBevelRadiusName}"]', text="")
+
+                row = layout.row()
+
+                col = row.column()
+                col.prop(objectsSelectedAndReadyForBevel[0], "ZBBQ_IntactBevelDisplayRadius", text="")
+
+                col = row.column()
+                col.scale_x = 0.65
+                col.prop(objectsSelectedAndReadyForBevel[0], "ZBBQ_IntactBevelDisplayUnits", text="")
+            else:
+                if(len(objectsSelectedAndReadyForBevel) == 0):
+                    layout.label(text="(No ZenBBQ in selection)")
+                else:
+                    layout.label(text="(Please select one object)")
+
+
 # class ZBBQ_PT_Main_Sub_Advanced(Panel):
 #     bl_idname = "ZBBQ_PT_Main_Sub_Advanced"
 #     bl_parent_id = "ZBBQ_PT_Main"
@@ -253,6 +295,54 @@ class ZBBQ_PT_Main_Sub_Quality(Panel):
 #         previewShaderNodeToggleDepress = previewShaderNodeToggleModeAndObjects['toggleMode'] == 'OFF' and len(previewShaderNodeToggleModeAndObjects['objectsToToggle']) > 0
 
 #         layout.operator(ZBBQ_OT_ShaderNodeNormalToggle.bl_idname, depress=previewShaderNodeToggleDepress)
+
+class ZBBQ_PT_Bake(Panel):
+
+    bl_idname = "ZBBQ_PT_Bake"
+    bl_label = "Bake"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_category = 'Zen BBQ'
+
+    @classmethod
+    def poll(cls, context):
+        if context.mode in {'EDIT_MESH', 'OBJECT'}:
+            return True
+        return False
+
+    def draw(self, context: bpy.types.Context):
+
+        layout = self.layout
+
+        p_scene = context.scene
+
+        layout.prop(p_scene, "ZBBQ_BakeImageWidth")
+        layout.prop(p_scene, "ZBBQ_BakeImageHeight")
+
+        layout.label(text="Save baked files to:")
+
+        b_is_bake_dir_valid = ZBBQ_Bake.BakeFolderIsValid()
+
+        r = layout.row(align=False)
+        r.alert = not b_is_bake_dir_valid
+        r1 = r.row(align=True)
+        r1.prop(p_scene, "ZBBQ_BakeSaveToFolder", text='')
+        r2 = r.row(align=True)
+        r2.alignment = 'RIGHT'
+        r2.prop(p_scene, "ZBBQ_BakeSaveToFolderExpand", text="", icon_only=True)
+
+        if p_scene.ZBBQ_BakeSaveToFolderExpand != p_scene.ZBBQ_BakeSaveToFolder:
+            layout.label(text=p_scene.ZBBQ_BakeSaveToFolderExpand)
+
+        if not ZBBQ_Bake.BakeFolderIsValid():
+            layout.label(text="Please choose a valid path!")
+
+        layout.prop(p_scene, 'ZBBQ_BakeImageName')
+
+        layout.operator(ZBBQ_OT_BakeOpenFolder.bl_idname)
+        layout.operator(ZBBQ_OT_BakeStart.bl_idname)
+
+
 
 
 class ZBBQ_PT_Preferences(Panel):
@@ -331,11 +421,18 @@ class ZBBQ_PT_Help(bpy.types.Panel):
             text=ZBBQ_Labels.PANEL_HELP_DISCORD_LABEL,
             icon_value=ZBBQ_Icons['Discord-Logo-White_32'].id()
         ).url = ZBBQ_Labels.PANEL_HELP_DISCORD_LINK
+        
         try:
-            row = col.row(align=True)
+            row = layout.row(align=True)
             row.label(text='Version: ' + ZBBQ_CommonFunc.GetAddonVersion())
         except Exception:
             print('Zen BBQ: No version found. There may be several versions installed. Try uninstalling everything and installing the latest version.')
+
+        addon_prefs = ZBBQ_CommonFunc.GetPrefs()
+        box = layout.box()
+        addon_prefs.demo.draw(box, context)
+
+        
 
 
 class ZBBQ_PT_Debug(bpy.types.Panel):
@@ -607,7 +704,11 @@ classes = [
 
     ZBBQ_PT_Main,
     ZBBQ_PT_Main_Sub_Quality,
+    ZBBQ_PT_Main_Sub_Advanced,
     # ZBBQ_PT_Main_Sub_Advanced,
+
+    # ZBBQ_PT_Bake,
+
     ZBBQ_PT_Preferences,
     ZBBQ_PT_Preferences_Sub_Common,
 

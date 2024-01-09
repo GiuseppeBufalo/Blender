@@ -1,3 +1,49 @@
+QuickTexture 2024 for Blender 4.0
+    New Features
+        QuickPaintover allows you to paint textures using your favorite image editor
+            Set the full Image Editor .EXE file location in the preferences
+            QuickPaintover will cover your entire viewport and project onto the surface like a Mesh Decal
+            Make sure you collapse everything down to a single layer before saving, and then use the Apply Paintover tool to update the texture
+            Create as many QuickPaintover objects needed!
+            Don't forget that these are MESH objects, so you can boolean them and do any other mesh operations!
+    	UI is automatically updated to display your custom hotkeys
+        Mode option to choose between Procedural Box, View, UV or Triplanar from the start for your QuickTextures
+        Create TriPlanar layers
+        Delete Material tool to remove all QuickTexture related attributes and materials in order to have a clean slate
+        Detailed Error Messages when something goes wrong
+        Support Custom Keywords in Filenames so you can ensure your textures are loaded properly
+        Supports Metal Maps
+	Control Emission Contrast
+        Multilayer option for QuickTexture creates 3 layers with edge and dirt masks along with some basic color variation from a single click
+
+    Improvements
+        Mesh Decals
+            Mask by Normal Direction
+            Threshold setting to remove stretched polygons
+            Use a Collection as a target object for Decal
+            More consistent
+        N panel now moves UI text out of the way to not interfere
+        Baking
+            Supports baking Metal map
+            Bake multiple objects (decals) onto one texture
+        Remaking Material into a QuickTexture supports materials with node groups and materials that just had a single diffuse texture
+        Mouse movement to change settings now supports wrapping around viewport
+            Ctrl/Shift/Alt as multipliers to affect changing settings are now standardized
+        Vector Displacement node switched to Displacement so it behaves as expected
+        MidLevel control added for Displacement Map
+        If no objects are selected when creating a QuickTexture, a Photomodeling Plane will be created from the chosen image(s) 
+        If no objects are selected when creating a QuickDecal, a Reference Plane will be created from the chosen image(s)
+        Shadow Visibility in both Cycles and Eevee is automatically turned off for all Decals, Ref and Photomodeling Objects
+        Escape stops all actions
+        Undo warning has been added, please Undo carefully and give it time between each Undo or Blender will crash
+
+    Bug Fixes
+        Only draws UI in one viewport
+        Handles Multi User objects
+        Compatability issues with other addons that added attributes to shaders has been fixed
+        Displacement support when remaking materials/using the make unique tool
+        Cleans up any empty materials on an object before running to prevent crash
+
 QuickTexture 2022 for Blender 3.4
     New Features
         New Alt+Q Pie Menu for tools and presets

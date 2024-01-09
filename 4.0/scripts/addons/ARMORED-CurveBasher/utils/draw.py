@@ -43,7 +43,7 @@ def draw_title(self, text):
 	
 	font_id = 1		# FORCE IT FOR NOW
 
-	blf.size(font_id, int(font_size_title * get_scale()), dpi) 
+	blf.size(font_id, font_size_title * get_scale() * dpi / 72)	# * dpi / 72 is the new way to control DPI in Blender 4.0 (no more <dpi> argument).
 
 	cursor_offset_x = 30  # positive means right
 	cursor_offset_y = 0   # negative means down
@@ -77,7 +77,7 @@ def draw_string(self, text):
 	x = self.mouse_x + cursor_offset_x
 	y = self.mouse_y + cursor_offset_y
 
-	blf.size(font_id, int(font_size_string  * get_scale()), dpi) 
+	blf.size(font_id, font_size_string  * get_scale() * dpi / 72)
 
 	if shadow:
 		so = 1  # Shadow Offset and other clever stuff.
@@ -99,7 +99,7 @@ def draw_string(self, text):
 def draw_body(self, string_matrix, cursor_offset_x=30, cursor_offset_y=-65):
 	# Run the draw_complex_line function as many times as required to draw the full matrix of strings.
 
-	blf.size(font_id, int(font_size_prop * get_scale()), dpi)
+	blf.size(font_id, font_size_prop * get_scale() * dpi / 72)
 	line_height = blf.dimensions(font_id, 'M')[1] * 2.2
 
 	offset_y = 0
@@ -135,7 +135,7 @@ def draw_complex_line(self, compound_string, offset_y=0, cursor_offset_x=30, cur
 		else:
 			blf.color(font_id, *WHITE,  1.0)
 
-		blf.size(font_id, int(font_size_prop * get_scale()) + fs_offset, dpi)
+		blf.size(font_id, (font_size_prop * get_scale() + fs_offset) * dpi / 72)
 
 		blf.position(font_id, (x - i), (y + offset_y + i), 0)
 		blf.draw(font_id, str(prop))
@@ -162,7 +162,7 @@ def draw_complex_line(self, compound_string, offset_y=0, cursor_offset_x=30, cur
 		if type(val) == float:
 			val = '%.3f'%(val)
 
-		blf.size(font_id, int(font_size_val * get_scale()), dpi)
+		blf.size(font_id, font_size_val * get_scale() * dpi / 72)
 		blf.position(font_id, (x - i + prop_width * get_scale()), (y + offset_y + i), 0)
 		blf.draw(font_id, str(val))
 
@@ -172,7 +172,7 @@ def draw_complex_line(self, compound_string, offset_y=0, cursor_offset_x=30, cur
 		else:
 			blf.color(font_id, *WHITE,  0.5)
 
-		blf.size(font_id, int(font_size_key * get_scale()), dpi)
+		blf.size(font_id, font_size_key * get_scale() * dpi / 72)
 		blf.position(font_id, (x - i + prop_width * get_scale() + val_width * get_scale()), (y + offset_y + i), 0)
 		blf.draw(font_id, str(key))
 
@@ -202,7 +202,7 @@ def draw_preset_keymap(self, offset_y=35, cursor_offset_x=30, cursor_offset_y=-6
 		else:
 			blf.color(font_id, *WHITE,  0.5)
 
-		blf.size(font_id, int(font_size_key * get_scale()), dpi)
+		blf.size(font_id, font_size_key * get_scale() * dpi / 72)
 		blf.position(font_id, (x - i + prop_width * get_scale() + val_width * get_scale()), (y + offset_y * get_scale() + i), 0)
 		blf.draw(font_id, str(key))
 

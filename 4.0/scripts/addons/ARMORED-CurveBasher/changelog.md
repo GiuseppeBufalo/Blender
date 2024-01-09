@@ -60,11 +60,19 @@
 *(15/Mar/22)*
 - Wire Generator BUGFIX: someone reported a crash in 3.1 caused by the randomized seed being a float instead of a int, I think I fixed it.
 - Curvebasher Preferences: added *Show N Panel* - Shows or Hides the Curve Basher tab from Blender's N panel.
-- 
+
 ### Revision 7:
 *(12/Nov/22)*
 - Curvebasher BUGFIX: Moving the *CB Kitbash* or *CB Caps* collections would cause an error when the addon would look for those collections in the wrong place.
-- 
+
+### Revision 8:
+*(30/Jan/23)*
+- Curvebasher BUGFIX: Presets would lose their textures after ending the modal operator with LEFTMOUSE. The data block was not local and the `utils.collections.cleanup()` was unlinking the required library. Temporarily disabled the `unlink_libraries` function (should be harmless) until a better solution is found.
+
+### Revision 9:
+*(17/Nov/23)*
+- Curvebasher BUGFIX: the Kitbasher HUD was not being drawn because of a deprecated DPI parameter in the `<blf.size()>` command.
+
 
 ## v1.2
 *(05/Nov/20)*

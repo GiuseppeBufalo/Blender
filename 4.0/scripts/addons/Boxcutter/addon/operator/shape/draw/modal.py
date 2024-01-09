@@ -962,7 +962,7 @@ def method(op, context, event):
                                 if op.ngon_point_index != -1 and vert.index != op.ngon_point_index:
                                     continue
 
-                                mesh.index_weight(vindex, vert=True, value=0)
+                                utility.mesh.index_weight(vindex, vert=True, value=0)
 
                             op.last['vert_weight'] = [0 for w in op.last['vert_weight'][:]]
 
@@ -972,7 +972,7 @@ def method(op, context, event):
                                 if op.ngon_point_index != -1 and op.ngon_point_index not in edge.vertices:
                                     continue
 
-                                mesh.index_weight(eindex, value=0)
+                                utility.mesh.index_weight(eindex, value=0)
 
                             # op.ngon_point_bevel = False
 

@@ -4,3 +4,25 @@ view3d.edit_mesh_extrude_move_shrink_fatten
 Texture ▸ Image Texture
    ug4oce2lw_4K_Displacement.exr
 Color ▸ Brightness/Contrast
+ 0 Dry_Mud_ug4oce2lw
+ 0 Dry_Trampled_vdzgdfb
+ 0 Material
+Input ▸ Fresnel
+Converter ▸ Color Ramp
+Output ▸ Viewer
+   Material
+   Material.001
+   Scene
+Edit ▸ Weighted Normal
+   Light
+   Base Material
+Filter ▸ Glare
+Color ▸ Adjust ▸ RGB Curves
+Generate ▸ Array
+Generate ▸ Mirror
+Texture ▸ Noise Texture
+Vector ▸ Normal Map
+Vector ▸ Bump
+Input ▸ Constant ▸ RGB
+Color ▸ Invert Color
+Color ▸ Mix ▸ Mix Color

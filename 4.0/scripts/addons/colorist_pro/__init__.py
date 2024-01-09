@@ -15,8 +15,8 @@ bl_info = {
     "name" : "Colorist Pro",
     "author" : "Mikhael Tamosee", 
     "description" : "",
-    "blender" : (3, 6, 1),
-    "version" : (1, 0, 3),
+    "blender" : (4, 0, 0),
+    "version" : (1, 1, 1),
     "location" : "",
     "warning" : "",
     "doc_url": "", 
@@ -76,9 +76,9 @@ class SNA_OT_Operator027_E268C(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
+class SNA_PT_SELECTIVE_COLOR_6B020(bpy.types.Panel):
     bl_label = 'Selective Color'
-    bl_idname = 'SNA_PT_SELECTIVE_COLOR_2BE89'
+    bl_idname = 'SNA_PT_SELECTIVE_COLOR_6B020'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -105,7 +105,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_81FA8.scale_x = 1.0
         row_81FA8.scale_y = 1.5
         row_81FA8.alignment = 'Expand'.upper()
-        if not True: row_81FA8.operator_context = "EXEC_DEFAULT"
+        row_81FA8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_81FA8.operator('sna.operator028_d6556', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_81FA8.operator('sna.operator029_0476c', text='Disable', icon_value=0, emboss=True, depress=False)
         layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[26], 'default_value', text='Mix', icon_value=0, emboss=True)
@@ -128,7 +128,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_2D717.scale_x = 1.0
         row_2D717.scale_y = 1.0
         row_2D717.alignment = 'Expand'.upper()
-        if not True: row_2D717.operator_context = "EXEC_DEFAULT"
+        row_2D717.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_2D717.label(text='Red', icon_value=850)
         row_2D717.separator(factor=1.0299999713897705)
         row_1FAAA = row_2D717.row(heading='', align=False)
@@ -140,7 +140,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_1FAAA.scale_x = 0.8999999761581421
         row_1FAAA.scale_y = 1.0
         row_1FAAA.alignment = 'Expand'.upper()
-        if not True: row_1FAAA.operator_context = "EXEC_DEFAULT"
+        row_1FAAA.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_1FAAA.operator('sna.operator026_2ac7b', text='Reset', icon_value=715, emboss=True, depress=False)
         col_D5476 = box_9DC06.column(heading='', align=True)
         col_D5476.alert = False
@@ -151,7 +151,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_D5476.scale_x = 1.0
         col_D5476.scale_y = 1.0
         col_D5476.alignment = 'Expand'.upper()
-        if not True: col_D5476.operator_context = "EXEC_DEFAULT"
+        col_D5476.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_D5476.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[2], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_D5476.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[3], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_D5476.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[4], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -174,7 +174,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_FE5B8.scale_x = 1.0
         row_FE5B8.scale_y = 1.0
         row_FE5B8.alignment = 'Expand'.upper()
-        if not True: row_FE5B8.operator_context = "EXEC_DEFAULT"
+        row_FE5B8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_FE5B8.label(text='Green', icon_value=852)
         row_FE5B8.separator(factor=1.0299999713897705)
         row_B86A2 = row_FE5B8.row(heading='', align=False)
@@ -186,7 +186,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_B86A2.scale_x = 0.8999999761581421
         row_B86A2.scale_y = 1.0
         row_B86A2.alignment = 'Expand'.upper()
-        if not True: row_B86A2.operator_context = "EXEC_DEFAULT"
+        row_B86A2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_B86A2.operator('sna.operator027_e268c', text='Reset', icon_value=715, emboss=True, depress=False)
         col_3E894 = box_13C4D.column(heading='', align=True)
         col_3E894.alert = False
@@ -197,7 +197,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_3E894.scale_x = 1.0
         col_3E894.scale_y = 1.0
         col_3E894.alignment = 'Expand'.upper()
-        if not True: col_3E894.operator_context = "EXEC_DEFAULT"
+        col_3E894.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_3E894.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[6], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_3E894.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[7], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_3E894.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[8], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -220,7 +220,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_F4338.scale_x = 1.0
         row_F4338.scale_y = 1.0
         row_F4338.alignment = 'Expand'.upper()
-        if not True: row_F4338.operator_context = "EXEC_DEFAULT"
+        row_F4338.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_F4338.label(text='Blue', icon_value=853)
         row_F4338.separator(factor=1.0299999713897705)
         row_2C953 = row_F4338.row(heading='', align=False)
@@ -232,7 +232,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_2C953.scale_x = 0.8999999761581421
         row_2C953.scale_y = 1.0
         row_2C953.alignment = 'Expand'.upper()
-        if not True: row_2C953.operator_context = "EXEC_DEFAULT"
+        row_2C953.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_2C953.operator('sna.operator030_d0c31', text='Reset', icon_value=715, emboss=True, depress=False)
         col_A12CF = box_0F3B9.column(heading='', align=True)
         col_A12CF.alert = False
@@ -243,7 +243,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_A12CF.scale_x = 1.0
         col_A12CF.scale_y = 1.0
         col_A12CF.alignment = 'Expand'.upper()
-        if not True: col_A12CF.operator_context = "EXEC_DEFAULT"
+        col_A12CF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_A12CF.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[10], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_A12CF.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[11], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_A12CF.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[12], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -266,7 +266,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_76002.scale_x = 1.0
         row_76002.scale_y = 1.0
         row_76002.alignment = 'Expand'.upper()
-        if not True: row_76002.operator_context = "EXEC_DEFAULT"
+        row_76002.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_76002.label(text='Cyan', icon_value=857)
         row_76002.separator(factor=1.0299999713897705)
         row_8446C = row_76002.row(heading='', align=False)
@@ -278,7 +278,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_8446C.scale_x = 0.8999999761581421
         row_8446C.scale_y = 1.0
         row_8446C.alignment = 'Expand'.upper()
-        if not True: row_8446C.operator_context = "EXEC_DEFAULT"
+        row_8446C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_8446C.operator('sna.operator031_bb8c9', text='Reset', icon_value=715, emboss=True, depress=False)
         col_ECD6C = box_AD71C.column(heading='', align=True)
         col_ECD6C.alert = False
@@ -289,7 +289,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_ECD6C.scale_x = 1.0
         col_ECD6C.scale_y = 1.0
         col_ECD6C.alignment = 'Expand'.upper()
-        if not True: col_ECD6C.operator_context = "EXEC_DEFAULT"
+        col_ECD6C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_ECD6C.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[14], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_ECD6C.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[15], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_ECD6C.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[16], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -312,7 +312,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_02746.scale_x = 1.0
         row_02746.scale_y = 1.0
         row_02746.alignment = 'Expand'.upper()
-        if not True: row_02746.operator_context = "EXEC_DEFAULT"
+        row_02746.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_02746.label(text='Magenta', icon_value=860)
         row_02746.separator(factor=1.0299999713897705)
         row_A6710 = row_02746.row(heading='', align=False)
@@ -324,7 +324,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_A6710.scale_x = 0.8999999761581421
         row_A6710.scale_y = 1.0
         row_A6710.alignment = 'Expand'.upper()
-        if not True: row_A6710.operator_context = "EXEC_DEFAULT"
+        row_A6710.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_A6710.operator('sna.operator032_fba2a', text='Reset', icon_value=715, emboss=True, depress=False)
         col_050C5 = box_64ED0.column(heading='', align=True)
         col_050C5.alert = False
@@ -335,7 +335,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_050C5.scale_x = 1.0
         col_050C5.scale_y = 1.0
         col_050C5.alignment = 'Expand'.upper()
-        if not True: col_050C5.operator_context = "EXEC_DEFAULT"
+        col_050C5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_050C5.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[18], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_050C5.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[19], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_050C5.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[20], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -358,7 +358,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_0ABA8.scale_x = 1.0
         row_0ABA8.scale_y = 1.0
         row_0ABA8.alignment = 'Expand'.upper()
-        if not True: row_0ABA8.operator_context = "EXEC_DEFAULT"
+        row_0ABA8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_0ABA8.label(text='Yellow', icon_value=858)
         row_0ABA8.separator(factor=1.0299999713897705)
         row_31027 = row_0ABA8.row(heading='', align=False)
@@ -370,7 +370,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         row_31027.scale_x = 0.8999999761581421
         row_31027.scale_y = 1.0
         row_31027.alignment = 'Expand'.upper()
-        if not True: row_31027.operator_context = "EXEC_DEFAULT"
+        row_31027.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_31027.operator('sna.operator033_1e2a6', text='Reset', icon_value=715, emboss=True, depress=False)
         col_A2410 = box_C6383.column(heading='', align=True)
         col_A2410.alert = False
@@ -381,7 +381,7 @@ class SNA_PT_SELECTIVE_COLOR_2BE89(bpy.types.Panel):
         col_A2410.scale_x = 1.0
         col_A2410.scale_y = 1.0
         col_A2410.alignment = 'Expand'.upper()
-        if not True: col_A2410.operator_context = "EXEC_DEFAULT"
+        col_A2410.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_A2410.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[22], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_A2410.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[23], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_A2410.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[24], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -512,9 +512,9 @@ class SNA_OT_Operator033_1E2A6(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
+class SNA_PT_SELECTIVE_COLOR_A0FCA(bpy.types.Panel):
     bl_label = 'Selective Color'
-    bl_idname = 'SNA_PT_SELECTIVE_COLOR_3BD5B'
+    bl_idname = 'SNA_PT_SELECTIVE_COLOR_A0FCA'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -541,7 +541,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_061BE.scale_x = 1.0
         row_061BE.scale_y = 1.5
         row_061BE.alignment = 'Expand'.upper()
-        if not True: row_061BE.operator_context = "EXEC_DEFAULT"
+        row_061BE.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_061BE.operator('sna.operator028_d6556', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_061BE.operator('sna.operator029_0476c', text='Disable', icon_value=0, emboss=True, depress=False)
         layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[26], 'default_value', text='Mix', icon_value=0, emboss=True)
@@ -564,7 +564,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_4E609.scale_x = 1.0
         row_4E609.scale_y = 1.0
         row_4E609.alignment = 'Expand'.upper()
-        if not True: row_4E609.operator_context = "EXEC_DEFAULT"
+        row_4E609.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_4E609.label(text='Red', icon_value=850)
         row_4E609.separator(factor=1.0299999713897705)
         row_2296E = row_4E609.row(heading='', align=False)
@@ -576,7 +576,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_2296E.scale_x = 0.8999999761581421
         row_2296E.scale_y = 1.0
         row_2296E.alignment = 'Expand'.upper()
-        if not True: row_2296E.operator_context = "EXEC_DEFAULT"
+        row_2296E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_2296E.operator('sna.operator026_2ac7b', text='Reset', icon_value=715, emboss=True, depress=False)
         col_A6577 = box_AFB7E.column(heading='', align=True)
         col_A6577.alert = False
@@ -587,7 +587,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_A6577.scale_x = 1.0
         col_A6577.scale_y = 1.0
         col_A6577.alignment = 'Expand'.upper()
-        if not True: col_A6577.operator_context = "EXEC_DEFAULT"
+        col_A6577.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_A6577.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[2], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_A6577.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[3], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_A6577.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[4], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -610,7 +610,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_5C388.scale_x = 1.0
         row_5C388.scale_y = 1.0
         row_5C388.alignment = 'Expand'.upper()
-        if not True: row_5C388.operator_context = "EXEC_DEFAULT"
+        row_5C388.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_5C388.label(text='Green', icon_value=852)
         row_5C388.separator(factor=1.0299999713897705)
         row_6A62E = row_5C388.row(heading='', align=False)
@@ -622,7 +622,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_6A62E.scale_x = 0.8999999761581421
         row_6A62E.scale_y = 1.0
         row_6A62E.alignment = 'Expand'.upper()
-        if not True: row_6A62E.operator_context = "EXEC_DEFAULT"
+        row_6A62E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_6A62E.operator('sna.operator027_e268c', text='Reset', icon_value=715, emboss=True, depress=False)
         col_68E52 = box_1327A.column(heading='', align=True)
         col_68E52.alert = False
@@ -633,7 +633,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_68E52.scale_x = 1.0
         col_68E52.scale_y = 1.0
         col_68E52.alignment = 'Expand'.upper()
-        if not True: col_68E52.operator_context = "EXEC_DEFAULT"
+        col_68E52.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_68E52.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[6], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_68E52.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[7], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_68E52.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[8], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -656,7 +656,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_929F4.scale_x = 1.0
         row_929F4.scale_y = 1.0
         row_929F4.alignment = 'Expand'.upper()
-        if not True: row_929F4.operator_context = "EXEC_DEFAULT"
+        row_929F4.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_929F4.label(text='Blue', icon_value=853)
         row_929F4.separator(factor=1.0299999713897705)
         row_C7CD7 = row_929F4.row(heading='', align=False)
@@ -668,7 +668,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_C7CD7.scale_x = 0.8999999761581421
         row_C7CD7.scale_y = 1.0
         row_C7CD7.alignment = 'Expand'.upper()
-        if not True: row_C7CD7.operator_context = "EXEC_DEFAULT"
+        row_C7CD7.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_C7CD7.operator('sna.operator030_d0c31', text='Reset', icon_value=715, emboss=True, depress=False)
         col_3E324 = box_81BA7.column(heading='', align=True)
         col_3E324.alert = False
@@ -679,7 +679,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_3E324.scale_x = 1.0
         col_3E324.scale_y = 1.0
         col_3E324.alignment = 'Expand'.upper()
-        if not True: col_3E324.operator_context = "EXEC_DEFAULT"
+        col_3E324.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_3E324.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[10], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_3E324.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[11], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_3E324.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[12], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -702,7 +702,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_18230.scale_x = 1.0
         row_18230.scale_y = 1.0
         row_18230.alignment = 'Expand'.upper()
-        if not True: row_18230.operator_context = "EXEC_DEFAULT"
+        row_18230.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_18230.label(text='Cyan', icon_value=857)
         row_18230.separator(factor=1.0299999713897705)
         row_14B1A = row_18230.row(heading='', align=False)
@@ -714,7 +714,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_14B1A.scale_x = 0.8999999761581421
         row_14B1A.scale_y = 1.0
         row_14B1A.alignment = 'Expand'.upper()
-        if not True: row_14B1A.operator_context = "EXEC_DEFAULT"
+        row_14B1A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_14B1A.operator('sna.operator031_bb8c9', text='Reset', icon_value=715, emboss=True, depress=False)
         col_02AE8 = box_3929F.column(heading='', align=True)
         col_02AE8.alert = False
@@ -725,7 +725,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_02AE8.scale_x = 1.0
         col_02AE8.scale_y = 1.0
         col_02AE8.alignment = 'Expand'.upper()
-        if not True: col_02AE8.operator_context = "EXEC_DEFAULT"
+        col_02AE8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_02AE8.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[14], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_02AE8.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[15], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_02AE8.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[16], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -748,7 +748,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_52EA7.scale_x = 1.0
         row_52EA7.scale_y = 1.0
         row_52EA7.alignment = 'Expand'.upper()
-        if not True: row_52EA7.operator_context = "EXEC_DEFAULT"
+        row_52EA7.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_52EA7.label(text='Magenta', icon_value=860)
         row_52EA7.separator(factor=1.0299999713897705)
         row_0CB33 = row_52EA7.row(heading='', align=False)
@@ -760,7 +760,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_0CB33.scale_x = 0.8999999761581421
         row_0CB33.scale_y = 1.0
         row_0CB33.alignment = 'Expand'.upper()
-        if not True: row_0CB33.operator_context = "EXEC_DEFAULT"
+        row_0CB33.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_0CB33.operator('sna.operator032_fba2a', text='Reset', icon_value=715, emboss=True, depress=False)
         col_AD78A = box_A6CF9.column(heading='', align=True)
         col_AD78A.alert = False
@@ -771,7 +771,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_AD78A.scale_x = 1.0
         col_AD78A.scale_y = 1.0
         col_AD78A.alignment = 'Expand'.upper()
-        if not True: col_AD78A.operator_context = "EXEC_DEFAULT"
+        col_AD78A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_AD78A.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[18], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_AD78A.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[19], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_AD78A.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[20], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
@@ -794,7 +794,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_3F349.scale_x = 1.0
         row_3F349.scale_y = 1.0
         row_3F349.alignment = 'Expand'.upper()
-        if not True: row_3F349.operator_context = "EXEC_DEFAULT"
+        row_3F349.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_3F349.label(text='Yellow', icon_value=858)
         row_3F349.separator(factor=1.0299999713897705)
         row_6993A = row_3F349.row(heading='', align=False)
@@ -806,7 +806,7 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         row_6993A.scale_x = 0.8999999761581421
         row_6993A.scale_y = 1.0
         row_6993A.alignment = 'Expand'.upper()
-        if not True: row_6993A.operator_context = "EXEC_DEFAULT"
+        row_6993A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_6993A.operator('sna.operator033_1e2a6', text='Reset', icon_value=715, emboss=True, depress=False)
         col_54A3F = box_44558.column(heading='', align=True)
         col_54A3F.alert = False
@@ -817,15 +817,15 @@ class SNA_PT_SELECTIVE_COLOR_3BD5B(bpy.types.Panel):
         col_54A3F.scale_x = 1.0
         col_54A3F.scale_y = 1.0
         col_54A3F.alignment = 'Expand'.upper()
-        if not True: col_54A3F.operator_context = "EXEC_DEFAULT"
+        col_54A3F.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_54A3F.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[22], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_54A3F.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[23], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         col_54A3F.prop(bpy.data.scenes['Scene'].node_tree.nodes['Selective Color'].inputs[24], 'default_value', text='Brightness', icon_value=0, emboss=True, slider=True)
 
 
-class SNA_PT_LENS_FLARE_5420C(bpy.types.Panel):
+class SNA_PT_LENS_FLARE_9C407(bpy.types.Panel):
     bl_label = 'Lens Flare'
-    bl_idname = 'SNA_PT_LENS_FLARE_5420C'
+    bl_idname = 'SNA_PT_LENS_FLARE_9C407'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -852,7 +852,7 @@ class SNA_PT_LENS_FLARE_5420C(bpy.types.Panel):
         row_B03A5.scale_x = 1.0
         row_B03A5.scale_y = 1.5
         row_B03A5.alignment = 'Expand'.upper()
-        if not True: row_B03A5.operator_context = "EXEC_DEFAULT"
+        row_B03A5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_B03A5.operator('sna.enable_lens_flare_29410', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_B03A5.operator('sna.disable_lens_flare_4a654', text='Disable', icon_value=0, emboss=True, depress=False)
 
@@ -934,9 +934,9 @@ class SNA_OT_Disable_Glares_De435(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_GLARE_4FB11(bpy.types.Panel):
+class SNA_PT_GLARE_59C9A(bpy.types.Panel):
     bl_label = 'Glare'
-    bl_idname = 'SNA_PT_GLARE_4FB11'
+    bl_idname = 'SNA_PT_GLARE_59C9A'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -963,7 +963,7 @@ class SNA_PT_GLARE_4FB11(bpy.types.Panel):
         row_A16CD.scale_x = 1.0
         row_A16CD.scale_y = 1.5
         row_A16CD.alignment = 'Expand'.upper()
-        if not True: row_A16CD.operator_context = "EXEC_DEFAULT"
+        row_A16CD.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_A16CD.operator('sna.enable_glares_c9218', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_A16CD.operator('sna.disable_glares_de435', text='Disable', icon_value=0, emboss=True, depress=False)
 
@@ -1036,9 +1036,9 @@ class SNA_OT_Operator_9650E(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
+class SNA_PT_LENS_DIRT_5A957(bpy.types.Panel):
     bl_label = 'Lens Dirt'
-    bl_idname = 'SNA_PT_LENS_DIRT_75EBB'
+    bl_idname = 'SNA_PT_LENS_DIRT_5A957'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -1065,7 +1065,7 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         row_7FB30.scale_x = 1.0
         row_7FB30.scale_y = 1.5
         row_7FB30.alignment = 'Expand'.upper()
-        if not True: row_7FB30.operator_context = "EXEC_DEFAULT"
+        row_7FB30.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_7FB30.operator('sna.operator_9650e', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_7FB30.operator('sna.operator001_5409d', text='Disable', icon_value=0, emboss=True, depress=False)
         layout.prop(bpy.data.node_groups['Lens Dirt'].nodes['Blur.001'].inputs[1], 'default_value', text='Extra Brightness', icon_value=0, emboss=True)
@@ -1078,7 +1078,7 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         col_70B85.scale_x = 1.0
         col_70B85.scale_y = 1.0
         col_70B85.alignment = 'Expand'.upper()
-        if not True: col_70B85.operator_context = "EXEC_DEFAULT"
+        col_70B85.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_70B85.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.004'].inputs[1], 'default_value', text='Aberration', icon_value=0, emboss=True)
         col_70B85.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.004'].inputs[2], 'default_value', text='Dispersion', icon_value=0, emboss=True)
         box_88120 = layout.box()
@@ -1101,7 +1101,7 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         col_507E5.scale_x = 1.0
         col_507E5.scale_y = 1.0
         col_507E5.alignment = 'Expand'.upper()
-        if not True: col_507E5.operator_context = "EXEC_DEFAULT"
+        col_507E5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_507E5.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.013'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
         col_507E5.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
         col_507E5.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True, slider=True)
@@ -1125,7 +1125,7 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         col_3F1A2.scale_x = 1.0
         col_3F1A2.scale_y = 1.0
         col_3F1A2.alignment = 'Expand'.upper()
-        if not True: col_3F1A2.operator_context = "EXEC_DEFAULT"
+        col_3F1A2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_3F1A2.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.014'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
         col_3F1A2.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.003'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
         col_3F1A2.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.003'].inputs[1], 'default_value', text='Extra Bokeh', icon_value=0, emboss=True)
@@ -1150,7 +1150,7 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         col_DEF48.scale_x = 1.0
         col_DEF48.scale_y = 1.0
         col_DEF48.alignment = 'Expand'.upper()
-        if not True: col_DEF48.operator_context = "EXEC_DEFAULT"
+        col_DEF48.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_DEF48.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.001'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
         col_DEF48.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.005'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
         col_DEF48.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.005'].inputs[1], 'default_value', text='Extra Bokeh', icon_value=0, emboss=True)
@@ -1164,14 +1164,14 @@ class SNA_PT_LENS_DIRT_75EBB(bpy.types.Panel):
         col_C6260.scale_x = 1.0
         col_C6260.scale_y = 0.75
         col_C6260.alignment = 'Expand'.upper()
-        if not True: col_C6260.operator_context = "EXEC_DEFAULT"
+        col_C6260.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_C6260.label(text='Enabled Glares will have influence on', icon_value=0)
         col_C6260.label(text="Lens Dirt's brightness and color", icon_value=0)
 
 
-class SNA_PT_GLARE_585AA(bpy.types.Panel):
+class SNA_PT_GLARE_74542(bpy.types.Panel):
     bl_label = 'Glare'
-    bl_idname = 'SNA_PT_GLARE_585AA'
+    bl_idname = 'SNA_PT_GLARE_74542'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -1198,7 +1198,7 @@ class SNA_PT_GLARE_585AA(bpy.types.Panel):
         row_CD1F5.scale_x = 1.0
         row_CD1F5.scale_y = 1.5
         row_CD1F5.alignment = 'Expand'.upper()
-        if not True: row_CD1F5.operator_context = "EXEC_DEFAULT"
+        row_CD1F5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_CD1F5.operator('sna.enable_glares_c9218', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_CD1F5.operator('sna.disable_glares_de435', text='Disable', icon_value=0, emboss=True, depress=False)
 
@@ -1277,9 +1277,9 @@ class SNA_OT_Operator006_2227B(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
+class SNA_PT_LENS_DIRT_D38EB(bpy.types.Panel):
     bl_label = 'Lens Dirt'
-    bl_idname = 'SNA_PT_LENS_DIRT_EE194'
+    bl_idname = 'SNA_PT_LENS_DIRT_D38EB'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -1306,7 +1306,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         row_5D2AA.scale_x = 1.0
         row_5D2AA.scale_y = 1.5
         row_5D2AA.alignment = 'Expand'.upper()
-        if not True: row_5D2AA.operator_context = "EXEC_DEFAULT"
+        row_5D2AA.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_5D2AA.operator('sna.operator_9650e', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_5D2AA.operator('sna.operator001_5409d', text='Disable', icon_value=0, emboss=True, depress=False)
         layout.prop(bpy.data.node_groups['Lens Dirt'].nodes['Blur.001'].inputs[1], 'default_value', text='Extra Brightness', icon_value=0, emboss=True)
@@ -1319,7 +1319,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         col_50D11.scale_x = 1.0
         col_50D11.scale_y = 1.0
         col_50D11.alignment = 'Expand'.upper()
-        if not True: col_50D11.operator_context = "EXEC_DEFAULT"
+        col_50D11.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_50D11.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.004'].inputs[1], 'default_value', text='Aberration', icon_value=0, emboss=True)
         col_50D11.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.004'].inputs[2], 'default_value', text='Dispersion', icon_value=0, emboss=True)
         box_90256 = layout.box()
@@ -1342,7 +1342,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         col_A897C.scale_x = 1.0
         col_A897C.scale_y = 1.0
         col_A897C.alignment = 'Expand'.upper()
-        if not True: col_A897C.operator_context = "EXEC_DEFAULT"
+        col_A897C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_A897C.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.013'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
         col_A897C.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True)
         col_A897C.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True, slider=True)
@@ -1366,7 +1366,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         col_49DAC.scale_x = 1.0
         col_49DAC.scale_y = 1.0
         col_49DAC.alignment = 'Expand'.upper()
-        if not True: col_49DAC.operator_context = "EXEC_DEFAULT"
+        col_49DAC.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_49DAC.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.014'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
         col_49DAC.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.003'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
         col_49DAC.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.003'].inputs[1], 'default_value', text='Extra Bokeh', icon_value=0, emboss=True)
@@ -1391,7 +1391,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         col_F2399.scale_x = 1.0
         col_F2399.scale_y = 1.0
         col_F2399.alignment = 'Expand'.upper()
-        if not True: col_F2399.operator_context = "EXEC_DEFAULT"
+        col_F2399.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_F2399.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.001'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
         col_F2399.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.005'].inputs[0], 'default_value', text='Scale', icon_value=0, emboss=True)
         col_F2399.prop(bpy.data.node_groups['Lens Dirt'].nodes['Group.005'].inputs[1], 'default_value', text='Extra Bokeh', icon_value=0, emboss=True)
@@ -1405,7 +1405,7 @@ class SNA_PT_LENS_DIRT_EE194(bpy.types.Panel):
         col_45140.scale_x = 1.0
         col_45140.scale_y = 0.75
         col_45140.alignment = 'Expand'.upper()
-        if not True: col_45140.operator_context = "EXEC_DEFAULT"
+        col_45140.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_45140.label(text='Enabled Glares will have influence on', icon_value=0)
         col_45140.label(text="Lens Dirt's brightness and color", icon_value=0)
 
@@ -1746,9 +1746,9 @@ class SNA_OT_Operator018_E9C55(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_ASPECT_RATIO__RESOLUTION_75871(bpy.types.Panel):
+class SNA_PT_ASPECT_RATIO__RESOLUTION_4245E(bpy.types.Panel):
     bl_label = 'Aspect Ratio & Resolution'
-    bl_idname = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_idname = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -1785,14 +1785,14 @@ class SNA_PT_ASPECT_RATIO__RESOLUTION_75871(bpy.types.Panel):
         col_090D7.scale_x = 1.0
         col_090D7.scale_y = 1.0
         col_090D7.alignment = 'Expand'.upper()
-        if not True: col_090D7.operator_context = "EXEC_DEFAULT"
+        col_090D7.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_090D7.prop(bpy.data.scenes['Scene'].render, 'resolution_x', text='Resolution X', icon_value=0, emboss=True)
         col_090D7.prop(bpy.data.scenes['Scene'].render, 'resolution_y', text='Resolution Y', icon_value=0, emboss=True)
 
 
-class SNA_PT_ASPECT_RATIO__RESOLUTION_5636C(bpy.types.Panel):
+class SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F(bpy.types.Panel):
     bl_label = 'Aspect Ratio & Resolution'
-    bl_idname = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_idname = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -1829,7 +1829,7 @@ class SNA_PT_ASPECT_RATIO__RESOLUTION_5636C(bpy.types.Panel):
         col_43267.scale_x = 1.0
         col_43267.scale_y = 1.0
         col_43267.alignment = 'Expand'.upper()
-        if not True: col_43267.operator_context = "EXEC_DEFAULT"
+        col_43267.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_43267.prop(bpy.data.scenes['Scene'].render, 'resolution_x', text='Resolution X', icon_value=0, emboss=True)
         col_43267.prop(bpy.data.scenes['Scene'].render, 'resolution_y', text='Resolution Y', icon_value=0, emboss=True)
 
@@ -1837,7 +1837,7 @@ class SNA_PT_ASPECT_RATIO__RESOLUTION_5636C(bpy.types.Panel):
 class SNA_OT_Enable_Colorist_264Dc(bpy.types.Operator):
     bl_idname = "sna.enable_colorist_264dc"
     bl_label = "Enable Colorist"
-    bl_description = "Enable the compositing tree and add the necessary nodes. Warning: This will delete existing node setup in the compositor"
+    bl_description = "Enable the compositing tree and add the necessary nodes"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
@@ -1848,31 +1848,31 @@ class SNA_OT_Enable_Colorist_264Dc(bpy.types.Operator):
 
     def execute(self, context):
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Colorist Pro', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Colorist Pro', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_7B570 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Film Emulation', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Film Emulation', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_CCEE9 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Glares', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Glares', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_A3316 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Lens Dirt', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Lens Dirt', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_F1029 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Lens Flare', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Lens Flare', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_C5216 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Selective Color', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Selective Color', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_9CDA1 = None if not new_data else new_data[0]
         before_data = list(bpy.data.node_groups)
-        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes.blend') + r'\NodeTree', filename='Wet Lens', link=False)
+        bpy.ops.wm.append(directory=os.path.join(os.path.dirname(__file__), 'assets', 'Colorist Nodes Blender 4.0.blend') + r'\NodeTree', filename='Wet Lens', link=False)
         new_data = list(filter(lambda d: not d in before_data, list(bpy.data.node_groups)))
         appended_FB913 = None if not new_data else new_data[0]
         bpy.context.scene.use_nodes = True
@@ -1950,98 +1950,6 @@ class SNA_OT_Enable_Colorist_264Dc(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_COLORIST_PRO_V103_4322D(bpy.types.Panel):
-    bl_label = 'Colorist Pro v1.0.3'
-    bl_idname = 'SNA_PT_COLORIST_PRO_V103_4322D'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = ''
-    bl_category = 'Colorist'
-    bl_order = 0
-    bl_ui_units_x=0
-
-    @classmethod
-    def poll(cls, context):
-        return not (False)
-
-    def draw_header(self, context):
-        layout = self.layout
-
-    def draw(self, context):
-        layout = self.layout
-        col_5A6FB = layout.column(heading='', align=False)
-        col_5A6FB.alert = False
-        col_5A6FB.enabled = True
-        col_5A6FB.active = True
-        col_5A6FB.use_property_split = False
-        col_5A6FB.use_property_decorate = False
-        col_5A6FB.scale_x = 1.0
-        col_5A6FB.scale_y = 1.809999942779541
-        col_5A6FB.alignment = 'Expand'.upper()
-        if not True: col_5A6FB.operator_context = "EXEC_DEFAULT"
-        op = col_5A6FB.operator('sna.enable_colorist_264dc', text='Enable Colorist Pro', icon_value=240, emboss=True, depress=False)
-        layout.prop(bpy.data.scenes['Scene'], 'use_nodes', text='Use Nodes (Compositor)', icon_value=0, emboss=True)
-        row_90C12 = layout.row(heading='', align=False)
-        row_90C12.alert = False
-        row_90C12.enabled = True
-        row_90C12.active = True
-        row_90C12.use_property_split = False
-        row_90C12.use_property_decorate = False
-        row_90C12.scale_x = 3.1599998474121094
-        row_90C12.scale_y = 1.0
-        row_90C12.alignment = 'Expand'.upper()
-        if not True: row_90C12.operator_context = "EXEC_DEFAULT"
-        row_90C12.label(text='', icon_value=0)
-        row_90C12.label(text='', icon_value=0)
-        row_90C12.label(text='Version: 1.0.3', icon_value=0)
-
-
-class SNA_PT_COLORIST_PRO_V103_C2B7C(bpy.types.Panel):
-    bl_label = 'Colorist Pro v1.0.3'
-    bl_idname = 'SNA_PT_COLORIST_PRO_V103_C2B7C'
-    bl_space_type = 'NODE_EDITOR'
-    bl_region_type = 'UI'
-    bl_context = ''
-    bl_category = 'Colorist'
-    bl_order = 0
-    bl_ui_units_x=0
-
-    @classmethod
-    def poll(cls, context):
-        return not (False)
-
-    def draw_header(self, context):
-        layout = self.layout
-
-    def draw(self, context):
-        layout = self.layout
-        col_96AA9 = layout.column(heading='', align=False)
-        col_96AA9.alert = False
-        col_96AA9.enabled = True
-        col_96AA9.active = True
-        col_96AA9.use_property_split = False
-        col_96AA9.use_property_decorate = False
-        col_96AA9.scale_x = 1.0
-        col_96AA9.scale_y = 1.809999942779541
-        col_96AA9.alignment = 'Expand'.upper()
-        if not True: col_96AA9.operator_context = "EXEC_DEFAULT"
-        op = col_96AA9.operator('sna.enable_colorist_264dc', text='Enable Colorist Pro', icon_value=240, emboss=True, depress=False)
-        layout.prop(bpy.data.scenes['Scene'], 'use_nodes', text='Use Nodes (Compositor)', icon_value=0, emboss=True)
-        row_7A3DF = layout.row(heading='', align=False)
-        row_7A3DF.alert = False
-        row_7A3DF.enabled = True
-        row_7A3DF.active = True
-        row_7A3DF.use_property_split = False
-        row_7A3DF.use_property_decorate = False
-        row_7A3DF.scale_x = 3.1599998474121094
-        row_7A3DF.scale_y = 1.0
-        row_7A3DF.alignment = 'Expand'.upper()
-        if not True: row_7A3DF.operator_context = "EXEC_DEFAULT"
-        row_7A3DF.label(text='', icon_value=0)
-        row_7A3DF.label(text='', icon_value=0)
-        row_7A3DF.label(text='Version: 1.0.3', icon_value=0)
-
-
 class SNA_OT_Reset_Wb_253Dd(bpy.types.Operator):
     bl_idname = "sna.reset_wb_253dd"
     bl_label = "Reset WB"
@@ -2085,9 +1993,9 @@ class SNA_OT_Operator002_9Ba85(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
+class SNA_PT_COLOR_GRADING_8B4C0(bpy.types.Panel):
     bl_label = 'Color Grading'
-    bl_idname = 'SNA_PT_COLOR_GRADING_029FA'
+    bl_idname = 'SNA_PT_COLOR_GRADING_8B4C0'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -2124,7 +2032,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         col_87484.scale_x = 1.0
         col_87484.scale_y = 1.0
         col_87484.alignment = 'Expand'.upper()
-        if not True: col_87484.operator_context = "EXEC_DEFAULT"
+        col_87484.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_61919 = col_87484.row(heading='', align=False)
         row_61919.alert = False
         row_61919.enabled = True
@@ -2134,7 +2042,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_61919.scale_x = 1.0
         row_61919.scale_y = 1.0
         row_61919.alignment = 'Expand'.upper()
-        if not True: row_61919.operator_context = "EXEC_DEFAULT"
+        row_61919.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_61919.label(text='White Balance', icon_value=299)
         row_61919.separator(factor=1.0)
         row_0F8C9 = row_61919.row(heading='', align=False)
@@ -2146,7 +2054,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_0F8C9.scale_x = 0.8999999761581421
         row_0F8C9.scale_y = 1.0
         row_0F8C9.alignment = 'Expand'.upper()
-        if not True: row_0F8C9.operator_context = "EXEC_DEFAULT"
+        row_0F8C9.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_0F8C9.operator('sna.reset_wb_253dd', text='Reset', icon_value=715, emboss=True, depress=False)
         col_87484.separator(factor=2.0)
         col_87484.prop(bpy.data.node_groups['Colorist Pro'].nodes['Math'].inputs[0], 'default_value', text='Temperature', icon_value=0, emboss=True)
@@ -2170,7 +2078,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_F0763.scale_x = 1.0
         row_F0763.scale_y = 1.0
         row_F0763.alignment = 'Expand'.upper()
-        if not True: row_F0763.operator_context = "EXEC_DEFAULT"
+        row_F0763.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_F0763.label(text='Color', icon_value=54)
         row_F0763.separator(factor=1.0)
         row_997F1 = row_F0763.row(heading='', align=False)
@@ -2182,7 +2090,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_997F1.scale_x = 0.8999999761581421
         row_997F1.scale_y = 1.0
         row_997F1.alignment = 'Expand'.upper()
-        if not True: row_997F1.operator_context = "EXEC_DEFAULT"
+        row_997F1.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_997F1.operator('sna.operator003_68e0d', text='Reset', icon_value=715, emboss=True, depress=False)
         box_39E1B.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group.001'].inputs[1], 'default_value', text='Vibrance', icon_value=0, emboss=True)
         col_64F52 = box_39E1B.column(heading='', align=True)
@@ -2194,7 +2102,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         col_64F52.scale_x = 1.0
         col_64F52.scale_y = 1.0
         col_64F52.alignment = 'Expand'.upper()
-        if not True: col_64F52.operator_context = "EXEC_DEFAULT"
+        col_64F52.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_64F52.prop(bpy.data.node_groups['Colorist Pro'].nodes['Hue Saturation Value'].inputs[1], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_64F52.prop(bpy.data.node_groups['Colorist Pro'].nodes['Hue Saturation Value'].inputs[2], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         box_94905 = layout.box()
@@ -2216,7 +2124,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_26A91.scale_x = 1.0
         row_26A91.scale_y = 1.0
         row_26A91.alignment = 'Expand'.upper()
-        if not True: row_26A91.operator_context = "EXEC_DEFAULT"
+        row_26A91.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_26A91.label(text='Exposure', icon_value=239)
         row_26A91.separator(factor=1.0299999713897705)
         row_1DD98 = row_26A91.row(heading='', align=False)
@@ -2228,7 +2136,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_1DD98.scale_x = 0.8999999761581421
         row_1DD98.scale_y = 1.0
         row_1DD98.alignment = 'Expand'.upper()
-        if not True: row_1DD98.operator_context = "EXEC_DEFAULT"
+        row_1DD98.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_1DD98.operator('sna.operator002_9ba85', text='Reset', icon_value=715, emboss=True, depress=False)
         col_BB1E8 = box_94905.column(heading='', align=True)
         col_BB1E8.alert = False
@@ -2239,7 +2147,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         col_BB1E8.scale_x = 1.0
         col_BB1E8.scale_y = 1.0
         col_BB1E8.alignment = 'Expand'.upper()
-        if not True: col_BB1E8.operator_context = "EXEC_DEFAULT"
+        col_BB1E8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_BB1E8.prop(bpy.data.node_groups['Colorist Pro'].nodes['Exposure'].inputs[1], 'default_value', text='Exposure', icon_value=0, emboss=True, slider=True)
         col_BB1E8.prop(bpy.data.node_groups['Colorist Pro'].nodes['Gamma'].inputs[1], 'default_value', text='Gamma', icon_value=0, emboss=True, slider=True)
         box_94905.prop(bpy.data.node_groups['Colorist Pro'].nodes['Bright/Contrast.001'].inputs[2], 'default_value', text='Contrast', icon_value=0, emboss=True, slider=True)
@@ -2262,7 +2170,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_92DB5.scale_x = 1.0
         row_92DB5.scale_y = 1.0
         row_92DB5.alignment = 'Expand'.upper()
-        if not True: row_92DB5.operator_context = "EXEC_DEFAULT"
+        row_92DB5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_92DB5.label(text='Tone', icon_value=107)
         row_92DB5.separator(factor=1.0299999713897705)
         row_98BB2 = row_92DB5.row(heading='', align=False)
@@ -2274,7 +2182,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_98BB2.scale_x = 0.8999999761581421
         row_98BB2.scale_y = 1.0
         row_98BB2.alignment = 'Expand'.upper()
-        if not True: row_98BB2.operator_context = "EXEC_DEFAULT"
+        row_98BB2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_98BB2.operator('sna.operator024_25e20', text='Reset', icon_value=715, emboss=True, depress=False)
         col_AE3EE = box_34DB9.column(heading='', align=True)
         col_AE3EE.alert = False
@@ -2285,7 +2193,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         col_AE3EE.scale_x = 1.0
         col_AE3EE.scale_y = 1.0
         col_AE3EE.alignment = 'Expand'.upper()
-        if not True: col_AE3EE.operator_context = "EXEC_DEFAULT"
+        col_AE3EE.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_D685C = col_AE3EE.row(heading='', align=True)
         row_D685C.alert = False
         row_D685C.enabled = True
@@ -2295,7 +2203,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_D685C.scale_x = 1.0
         row_D685C.scale_y = 1.0
         row_D685C.alignment = 'Expand'.upper()
-        if not True: row_D685C.operator_context = "EXEC_DEFAULT"
+        row_D685C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_CDAB7 = row_D685C.row(heading='', align=False)
         row_CDAB7.alert = False
         row_CDAB7.enabled = True
@@ -2305,7 +2213,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_CDAB7.scale_x = 0.33000001311302185
         row_CDAB7.scale_y = 1.0
         row_CDAB7.alignment = 'Expand'.upper()
-        if not True: row_CDAB7.operator_context = "EXEC_DEFAULT"
+        row_CDAB7.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_CDAB7.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'gain', text='', icon_value=0, emboss=True, slider=True)
         row_D685C.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[1], 'default_value', text='Highlight', icon_value=0, emboss=True, slider=True)
         row_45FFF = col_AE3EE.row(heading='', align=True)
@@ -2317,7 +2225,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_45FFF.scale_x = 1.0
         row_45FFF.scale_y = 1.0
         row_45FFF.alignment = 'Expand'.upper()
-        if not True: row_45FFF.operator_context = "EXEC_DEFAULT"
+        row_45FFF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_3AC26 = row_45FFF.row(heading='', align=False)
         row_3AC26.alert = False
         row_3AC26.enabled = True
@@ -2327,7 +2235,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_3AC26.scale_x = 0.33000001311302185
         row_3AC26.scale_y = 1.0
         row_3AC26.alignment = 'Expand'.upper()
-        if not True: row_3AC26.operator_context = "EXEC_DEFAULT"
+        row_3AC26.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_3AC26.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'gamma', text='', icon_value=0, emboss=True, slider=True)
         row_45FFF.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[2], 'default_value', text='Midtone', icon_value=0, emboss=True, slider=True)
         row_7718A = col_AE3EE.row(heading='', align=True)
@@ -2339,7 +2247,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_7718A.scale_x = 1.0
         row_7718A.scale_y = 1.0
         row_7718A.alignment = 'Expand'.upper()
-        if not True: row_7718A.operator_context = "EXEC_DEFAULT"
+        row_7718A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_20BB9 = row_7718A.row(heading='', align=False)
         row_20BB9.alert = False
         row_20BB9.enabled = True
@@ -2349,7 +2257,7 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         row_20BB9.scale_x = 0.33000001311302185
         row_20BB9.scale_y = 1.0
         row_20BB9.alignment = 'Expand'.upper()
-        if not True: row_20BB9.operator_context = "EXEC_DEFAULT"
+        row_20BB9.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_20BB9.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'lift', text='', icon_value=0, emboss=True, slider=True)
         row_7718A.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[3], 'default_value', text='Shadow', icon_value=0, emboss=True, slider=True)
         col_5523A = box_34DB9.column(heading='', align=True)
@@ -2361,15 +2269,15 @@ class SNA_PT_COLOR_GRADING_029FA(bpy.types.Panel):
         col_5523A.scale_x = 1.0
         col_5523A.scale_y = 1.0
         col_5523A.alignment = 'Expand'.upper()
-        if not True: col_5523A.operator_context = "EXEC_DEFAULT"
+        col_5523A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_5523A.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[4], 'default_value', text='White', icon_value=0, emboss=True, slider=True)
         col_5523A.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[5], 'default_value', text='Black', icon_value=0, emboss=True, slider=True)
         box_34DB9.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[6], 'default_value', text='Mix', icon_value=0, emboss=True)
 
 
-class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
+class SNA_PT_COLOR_GRADING_FA4B5(bpy.types.Panel):
     bl_label = 'Color Grading'
-    bl_idname = 'SNA_PT_COLOR_GRADING_F9B97'
+    bl_idname = 'SNA_PT_COLOR_GRADING_FA4B5'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -2406,7 +2314,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         col_4FE67.scale_x = 1.0
         col_4FE67.scale_y = 1.0
         col_4FE67.alignment = 'Expand'.upper()
-        if not True: col_4FE67.operator_context = "EXEC_DEFAULT"
+        col_4FE67.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_95E76 = col_4FE67.row(heading='', align=False)
         row_95E76.alert = False
         row_95E76.enabled = True
@@ -2416,7 +2324,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_95E76.scale_x = 1.0
         row_95E76.scale_y = 1.0
         row_95E76.alignment = 'Expand'.upper()
-        if not True: row_95E76.operator_context = "EXEC_DEFAULT"
+        row_95E76.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_95E76.label(text='White Balance', icon_value=299)
         row_95E76.separator(factor=1.0)
         row_7290B = row_95E76.row(heading='', align=False)
@@ -2428,7 +2336,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_7290B.scale_x = 0.8999999761581421
         row_7290B.scale_y = 1.0
         row_7290B.alignment = 'Expand'.upper()
-        if not True: row_7290B.operator_context = "EXEC_DEFAULT"
+        row_7290B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_7290B.operator('sna.reset_wb_253dd', text='Reset', icon_value=715, emboss=True, depress=False)
         col_4FE67.separator(factor=2.0)
         col_4FE67.prop(bpy.data.node_groups['Colorist Pro'].nodes['Math'].inputs[0], 'default_value', text='Temperature', icon_value=0, emboss=True)
@@ -2452,7 +2360,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_82723.scale_x = 1.0
         row_82723.scale_y = 1.0
         row_82723.alignment = 'Expand'.upper()
-        if not True: row_82723.operator_context = "EXEC_DEFAULT"
+        row_82723.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_82723.label(text='Color', icon_value=54)
         row_82723.separator(factor=1.0)
         row_2BA45 = row_82723.row(heading='', align=False)
@@ -2464,7 +2372,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_2BA45.scale_x = 0.8999999761581421
         row_2BA45.scale_y = 1.0
         row_2BA45.alignment = 'Expand'.upper()
-        if not True: row_2BA45.operator_context = "EXEC_DEFAULT"
+        row_2BA45.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_2BA45.operator('sna.operator003_68e0d', text='Reset', icon_value=715, emboss=True, depress=False)
         box_7CC46.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group.001'].inputs[1], 'default_value', text='Vibrance', icon_value=0, emboss=True)
         col_E26FF = box_7CC46.column(heading='', align=True)
@@ -2476,7 +2384,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         col_E26FF.scale_x = 1.0
         col_E26FF.scale_y = 1.0
         col_E26FF.alignment = 'Expand'.upper()
-        if not True: col_E26FF.operator_context = "EXEC_DEFAULT"
+        col_E26FF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_E26FF.prop(bpy.data.node_groups['Colorist Pro'].nodes['Hue Saturation Value'].inputs[1], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_E26FF.prop(bpy.data.node_groups['Colorist Pro'].nodes['Hue Saturation Value'].inputs[2], 'default_value', text='Saturation', icon_value=0, emboss=True, slider=True)
         box_FE308 = layout.box()
@@ -2498,7 +2406,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_6CCC8.scale_x = 1.0
         row_6CCC8.scale_y = 1.0
         row_6CCC8.alignment = 'Expand'.upper()
-        if not True: row_6CCC8.operator_context = "EXEC_DEFAULT"
+        row_6CCC8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_6CCC8.label(text='Exposure', icon_value=239)
         row_6CCC8.separator(factor=1.0299999713897705)
         row_3C29F = row_6CCC8.row(heading='', align=False)
@@ -2510,7 +2418,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_3C29F.scale_x = 0.8999999761581421
         row_3C29F.scale_y = 1.0
         row_3C29F.alignment = 'Expand'.upper()
-        if not True: row_3C29F.operator_context = "EXEC_DEFAULT"
+        row_3C29F.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_3C29F.operator('sna.operator002_9ba85', text='Reset', icon_value=715, emboss=True, depress=False)
         col_1DB22 = box_FE308.column(heading='', align=True)
         col_1DB22.alert = False
@@ -2521,7 +2429,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         col_1DB22.scale_x = 1.0
         col_1DB22.scale_y = 1.0
         col_1DB22.alignment = 'Expand'.upper()
-        if not True: col_1DB22.operator_context = "EXEC_DEFAULT"
+        col_1DB22.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_1DB22.prop(bpy.data.node_groups['Colorist Pro'].nodes['Exposure'].inputs[1], 'default_value', text='Exposure', icon_value=0, emboss=True, slider=True)
         col_1DB22.prop(bpy.data.node_groups['Colorist Pro'].nodes['Gamma'].inputs[1], 'default_value', text='Gamma', icon_value=0, emboss=True)
         box_FE308.prop(bpy.data.node_groups['Colorist Pro'].nodes['Bright/Contrast.001'].inputs[2], 'default_value', text='Contrast', icon_value=0, emboss=True, slider=True)
@@ -2544,7 +2452,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_C785C.scale_x = 1.0
         row_C785C.scale_y = 1.0
         row_C785C.alignment = 'Expand'.upper()
-        if not True: row_C785C.operator_context = "EXEC_DEFAULT"
+        row_C785C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_C785C.label(text='Tone', icon_value=107)
         row_C785C.separator(factor=1.0299999713897705)
         row_F976E = row_C785C.row(heading='', align=False)
@@ -2556,7 +2464,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_F976E.scale_x = 0.8999999761581421
         row_F976E.scale_y = 1.0
         row_F976E.alignment = 'Expand'.upper()
-        if not True: row_F976E.operator_context = "EXEC_DEFAULT"
+        row_F976E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_F976E.operator('sna.operator024_25e20', text='Reset', icon_value=715, emboss=True, depress=False)
         col_6A3A5 = box_E681F.column(heading='', align=True)
         col_6A3A5.alert = False
@@ -2567,7 +2475,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         col_6A3A5.scale_x = 1.0
         col_6A3A5.scale_y = 1.0
         col_6A3A5.alignment = 'Expand'.upper()
-        if not True: col_6A3A5.operator_context = "EXEC_DEFAULT"
+        col_6A3A5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_CB6BA = col_6A3A5.row(heading='', align=True)
         row_CB6BA.alert = False
         row_CB6BA.enabled = True
@@ -2577,7 +2485,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_CB6BA.scale_x = 1.0
         row_CB6BA.scale_y = 1.0
         row_CB6BA.alignment = 'Expand'.upper()
-        if not True: row_CB6BA.operator_context = "EXEC_DEFAULT"
+        row_CB6BA.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_3D2E5 = row_CB6BA.row(heading='', align=False)
         row_3D2E5.alert = False
         row_3D2E5.enabled = True
@@ -2587,7 +2495,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_3D2E5.scale_x = 0.33000001311302185
         row_3D2E5.scale_y = 1.0
         row_3D2E5.alignment = 'Expand'.upper()
-        if not True: row_3D2E5.operator_context = "EXEC_DEFAULT"
+        row_3D2E5.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_3D2E5.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'gain', text='', icon_value=0, emboss=True, slider=True)
         row_CB6BA.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[1], 'default_value', text='Highlight/Gain', icon_value=0, emboss=True, slider=True)
         row_0090F = col_6A3A5.row(heading='', align=True)
@@ -2599,7 +2507,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_0090F.scale_x = 1.0
         row_0090F.scale_y = 1.0
         row_0090F.alignment = 'Expand'.upper()
-        if not True: row_0090F.operator_context = "EXEC_DEFAULT"
+        row_0090F.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_B1449 = row_0090F.row(heading='', align=False)
         row_B1449.alert = False
         row_B1449.enabled = True
@@ -2609,7 +2517,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_B1449.scale_x = 0.33000001311302185
         row_B1449.scale_y = 1.0
         row_B1449.alignment = 'Expand'.upper()
-        if not True: row_B1449.operator_context = "EXEC_DEFAULT"
+        row_B1449.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_B1449.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'gamma', text='', icon_value=0, emboss=True, slider=True)
         row_0090F.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[2], 'default_value', text='Midtone', icon_value=0, emboss=True, slider=True)
         row_F9E0D = col_6A3A5.row(heading='', align=True)
@@ -2621,7 +2529,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_F9E0D.scale_x = 1.0
         row_F9E0D.scale_y = 1.0
         row_F9E0D.alignment = 'Expand'.upper()
-        if not True: row_F9E0D.operator_context = "EXEC_DEFAULT"
+        row_F9E0D.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_725ED = row_F9E0D.row(heading='', align=False)
         row_725ED.alert = False
         row_725ED.enabled = True
@@ -2631,7 +2539,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         row_725ED.scale_x = 0.33000001311302185
         row_725ED.scale_y = 1.0
         row_725ED.alignment = 'Expand'.upper()
-        if not True: row_725ED.operator_context = "EXEC_DEFAULT"
+        row_725ED.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_725ED.prop(bpy.data.node_groups['Tonal Range'].nodes['Color Balance'], 'lift', text='', icon_value=0, emboss=True, slider=True)
         row_F9E0D.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[3], 'default_value', text='Shadow', icon_value=0, emboss=True, slider=True)
         col_1D187 = box_E681F.column(heading='', align=True)
@@ -2643,7 +2551,7 @@ class SNA_PT_COLOR_GRADING_F9B97(bpy.types.Panel):
         col_1D187.scale_x = 1.0
         col_1D187.scale_y = 1.0
         col_1D187.alignment = 'Expand'.upper()
-        if not True: col_1D187.operator_context = "EXEC_DEFAULT"
+        col_1D187.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_1D187.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[4], 'default_value', text='White', icon_value=0, emboss=True, slider=True)
         col_1D187.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[5], 'default_value', text='Black', icon_value=0, emboss=True, slider=True)
         box_E681F.prop(bpy.data.node_groups['Colorist Pro'].nodes['Group'].inputs[6], 'default_value', text='Mix', icon_value=0, emboss=True)
@@ -2672,9 +2580,9 @@ class SNA_OT_Operator003_68E0D(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_COLOR_MANAGEMENT_54B5A(bpy.types.Panel):
+class SNA_PT_COLOR_MANAGEMENT_A2DC9(bpy.types.Panel):
     bl_label = 'Color Management'
-    bl_idname = 'SNA_PT_COLOR_MANAGEMENT_54B5A'
+    bl_idname = 'SNA_PT_COLOR_MANAGEMENT_A2DC9'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -2712,21 +2620,9 @@ class SNA_PT_COLOR_MANAGEMENT_54B5A(bpy.types.Panel):
         row_BFB5B.scale_x = 1.0
         row_BFB5B.scale_y = 1.5
         row_BFB5B.alignment = 'Expand'.upper()
-        if not True: row_BFB5B.operator_context = "EXEC_DEFAULT"
-        op = row_BFB5B.operator('sna.operator004_5f1e2', text='Blender Default', icon_value=0, emboss=True, depress=False)
-        op = row_BFB5B.operator('sna.operator023_034fc', text='ACES Preset', icon_value=0, emboss=True, depress=False)
-        col_D7AA0 = box_46A98.column(heading='', align=True)
-        col_D7AA0.alert = False
-        col_D7AA0.enabled = True
-        col_D7AA0.active = True
-        col_D7AA0.use_property_split = False
-        col_D7AA0.use_property_decorate = False
-        col_D7AA0.scale_x = 1.0
-        col_D7AA0.scale_y = 0.75
-        col_D7AA0.alignment = 'Expand'.upper()
-        if not True: col_D7AA0.operator_context = "EXEC_DEFAULT"
-        col_D7AA0.label(text='Use LUTs exclusively with ACES', icon_value=0)
-        col_D7AA0.label(text='sRGB or Rec709 only', icon_value=0)
+        row_BFB5B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        op = row_BFB5B.operator('sna.operator004_5f1e2', text='Blender AGX', icon_value=0, emboss=True, depress=False)
+        op = row_BFB5B.operator('sna.operator023_034fc', text='ACES sRGB', icon_value=0, emboss=True, depress=False)
         box_31661 = layout.box()
         box_31661.alert = False
         box_31661.enabled = True
@@ -2770,7 +2666,7 @@ class SNA_PT_COLOR_MANAGEMENT_54B5A(bpy.types.Panel):
         row_FB51C.scale_x = 1.0
         row_FB51C.scale_y = 1.0
         row_FB51C.alignment = 'Expand'.upper()
-        if not True: row_FB51C.operator_context = "EXEC_DEFAULT"
+        row_FB51C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_FB51C.label(text='LUTs (Look)', icon_value=303)
         row_FB51C.separator(factor=1.0)
         row_BAE4A = row_FB51C.row(heading='', align=False)
@@ -2782,7 +2678,7 @@ class SNA_PT_COLOR_MANAGEMENT_54B5A(bpy.types.Panel):
         row_BAE4A.scale_x = 0.8999999761581421
         row_BAE4A.scale_y = 1.0
         row_BAE4A.alignment = 'Expand'.upper()
-        if not True: row_BAE4A.operator_context = "EXEC_DEFAULT"
+        row_BAE4A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_BAE4A.operator('sna.clear_luts_47b32', text='Reset', icon_value=715, emboss=True, depress=False)
         box_A612D.prop(bpy.data.scenes['Scene'].view_settings, 'look', text='', icon_value=0, emboss=True)
         box_A8041 = layout.box()
@@ -2830,7 +2726,7 @@ class SNA_OT_Operator024_25E20(bpy.types.Operator):
 class SNA_OT_Operator004_5F1E2(bpy.types.Operator):
     bl_idname = "sna.operator004_5f1e2"
     bl_label = "Operator.004"
-    bl_description = "Change colorspace to Blender's default"
+    bl_description = "Change colorspace to Blender's AGX"
     bl_options = {"REGISTER", "UNDO"}
 
     @classmethod
@@ -2841,7 +2737,7 @@ class SNA_OT_Operator004_5F1E2(bpy.types.Operator):
 
     def execute(self, context):
         bpy.context.scene.display_settings.display_device = 'sRGB'
-        bpy.context.scene.view_settings.view_transform = 'Filmic'
+        bpy.context.scene.view_settings.view_transform = 'AgX'
         bpy.context.scene.sequencer_colorspace_settings.name = 'sRGB'
         return {"FINISHED"}
 
@@ -2864,16 +2760,16 @@ class SNA_OT_Operator023_034Fc(bpy.types.Operator):
     def execute(self, context):
         bpy.context.scene.display_settings.display_device = 'ACES'
         bpy.context.scene.view_settings.view_transform = 'sRGB'
-        bpy.context.scene.sequencer_colorspace_settings.name = 'ACES - ACEScg'
+        bpy.context.scene.sequencer_colorspace_settings.name = 'ACEScg'
         return {"FINISHED"}
 
     def invoke(self, context, event):
         return self.execute(context)
 
 
-class SNA_PT_COLOR_MANAGEMENT_01BE3(bpy.types.Panel):
+class SNA_PT_COLOR_MANAGEMENT_BA963(bpy.types.Panel):
     bl_label = 'Color Management'
-    bl_idname = 'SNA_PT_COLOR_MANAGEMENT_01BE3'
+    bl_idname = 'SNA_PT_COLOR_MANAGEMENT_BA963'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -2911,21 +2807,9 @@ class SNA_PT_COLOR_MANAGEMENT_01BE3(bpy.types.Panel):
         row_5A7CD.scale_x = 1.0
         row_5A7CD.scale_y = 1.5
         row_5A7CD.alignment = 'Expand'.upper()
-        if not True: row_5A7CD.operator_context = "EXEC_DEFAULT"
-        op = row_5A7CD.operator('sna.operator004_5f1e2', text='Blender Default', icon_value=0, emboss=True, depress=False)
+        row_5A7CD.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        op = row_5A7CD.operator('sna.operator004_5f1e2', text='Blender AGX', icon_value=0, emboss=True, depress=False)
         op = row_5A7CD.operator('sna.operator023_034fc', text='ACES sRGB', icon_value=0, emboss=True, depress=False)
-        col_126D7 = box_5138B.column(heading='', align=True)
-        col_126D7.alert = False
-        col_126D7.enabled = True
-        col_126D7.active = True
-        col_126D7.use_property_split = False
-        col_126D7.use_property_decorate = False
-        col_126D7.scale_x = 1.0
-        col_126D7.scale_y = 0.75
-        col_126D7.alignment = 'Expand'.upper()
-        if not True: col_126D7.operator_context = "EXEC_DEFAULT"
-        col_126D7.label(text='Use LUTs exclusively with ACES', icon_value=0)
-        col_126D7.label(text='sRGB or Rec709 only', icon_value=0)
         box_E97BD = layout.box()
         box_E97BD.alert = False
         box_E97BD.enabled = True
@@ -2969,7 +2853,7 @@ class SNA_PT_COLOR_MANAGEMENT_01BE3(bpy.types.Panel):
         row_8F38C.scale_x = 1.0
         row_8F38C.scale_y = 1.0
         row_8F38C.alignment = 'Expand'.upper()
-        if not True: row_8F38C.operator_context = "EXEC_DEFAULT"
+        row_8F38C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_8F38C.label(text='LUTs (Look)', icon_value=303)
         row_8F38C.separator(factor=1.0)
         row_905D8 = row_8F38C.row(heading='', align=False)
@@ -2981,7 +2865,7 @@ class SNA_PT_COLOR_MANAGEMENT_01BE3(bpy.types.Panel):
         row_905D8.scale_x = 0.8999999761581421
         row_905D8.scale_y = 1.0
         row_905D8.alignment = 'Expand'.upper()
-        if not True: row_905D8.operator_context = "EXEC_DEFAULT"
+        row_905D8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_905D8.operator('sna.clear_luts_47b32', text='Reset', icon_value=715, emboss=True, depress=False)
         box_AEEA8.prop(bpy.data.scenes['Scene'].view_settings, 'look', text='', icon_value=0, emboss=True)
         box_499EE = layout.box()
@@ -3140,9 +3024,9 @@ class SNA_OT_Disable_Film_7061A(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_FILM_EMULATION_F700D(bpy.types.Panel):
+class SNA_PT_FILM_EMULATION_69921(bpy.types.Panel):
     bl_label = 'Film Emulation'
-    bl_idname = 'SNA_PT_FILM_EMULATION_F700D'
+    bl_idname = 'SNA_PT_FILM_EMULATION_69921'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -3169,7 +3053,7 @@ class SNA_PT_FILM_EMULATION_F700D(bpy.types.Panel):
         row_38280.scale_x = 1.0
         row_38280.scale_y = 1.5
         row_38280.alignment = 'Expand'.upper()
-        if not True: row_38280.operator_context = "EXEC_DEFAULT"
+        row_38280.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_38280.operator('sna.enable_film_bdaed', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_38280.operator('sna.disable_film_7061a', text='Disable', icon_value=0, emboss=True, depress=False)
 
@@ -3254,9 +3138,9 @@ class SNA_OT_Bw_Noise001_0530C(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_FILM_EMULATION_417FF(bpy.types.Panel):
+class SNA_PT_FILM_EMULATION_5D6F8(bpy.types.Panel):
     bl_label = 'Film Emulation'
-    bl_idname = 'SNA_PT_FILM_EMULATION_417FF'
+    bl_idname = 'SNA_PT_FILM_EMULATION_5D6F8'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
@@ -3283,14 +3167,14 @@ class SNA_PT_FILM_EMULATION_417FF(bpy.types.Panel):
         row_69C19.scale_x = 1.0
         row_69C19.scale_y = 1.5
         row_69C19.alignment = 'Expand'.upper()
-        if not True: row_69C19.operator_context = "EXEC_DEFAULT"
+        row_69C19.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_69C19.operator('sna.enable_film_bdaed', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_69C19.operator('sna.disable_film_7061a', text='Disable', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_LENS_FLARE_69B3E(bpy.types.Panel):
+class SNA_PT_LENS_FLARE_77473(bpy.types.Panel):
     bl_label = 'Lens Flare'
-    bl_idname = 'SNA_PT_LENS_FLARE_69B3E'
+    bl_idname = 'SNA_PT_LENS_FLARE_77473'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
@@ -3317,7 +3201,7 @@ class SNA_PT_LENS_FLARE_69B3E(bpy.types.Panel):
         row_FE8AF.scale_x = 1.0
         row_FE8AF.scale_y = 1.5
         row_FE8AF.alignment = 'Expand'.upper()
-        if not True: row_FE8AF.operator_context = "EXEC_DEFAULT"
+        row_FE8AF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_FE8AF.operator('sna.enable_lens_flare_29410', text='Enable', icon_value=0, emboss=True, depress=False)
         op = row_FE8AF.operator('sna.disable_lens_flare_4a654', text='Disable', icon_value=0, emboss=True, depress=False)
 
@@ -3390,15 +3274,131 @@ class SNA_OT_Disable_Lens_Flare_4A654(bpy.types.Operator):
         return self.execute(context)
 
 
-class SNA_PT_panel017_FD594(bpy.types.Panel):
+class SNA_PT_COLORIST_PRO_V111_5161E(bpy.types.Panel):
+    bl_label = 'Colorist Pro v1.1.1'
+    bl_idname = 'SNA_PT_COLORIST_PRO_V111_5161E'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_context = ''
+    bl_category = 'Colorist'
+    bl_order = 0
+    bl_ui_units_x=0
+
+    @classmethod
+    def poll(cls, context):
+        return not (False)
+
+    def draw_header(self, context):
+        layout = self.layout
+
+    def draw(self, context):
+        layout = self.layout
+        col_5A6FB = layout.column(heading='', align=False)
+        col_5A6FB.alert = False
+        col_5A6FB.enabled = True
+        col_5A6FB.active = True
+        col_5A6FB.use_property_split = False
+        col_5A6FB.use_property_decorate = False
+        col_5A6FB.scale_x = 1.0
+        col_5A6FB.scale_y = 1.809999942779541
+        col_5A6FB.alignment = 'Expand'.upper()
+        col_5A6FB.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        op = col_5A6FB.operator('sna.enable_colorist_264dc', text='Enable Colorist Pro', icon_value=240, emboss=True, depress=False)
+        col_CA2E2 = layout.column(heading='', align=False)
+        col_CA2E2.alert = False
+        col_CA2E2.enabled = True
+        col_CA2E2.active = True
+        col_CA2E2.use_property_split = False
+        col_CA2E2.use_property_decorate = False
+        col_CA2E2.scale_x = 1.0
+        col_CA2E2.scale_y = 0.46000003814697266
+        col_CA2E2.alignment = 'Expand'.upper()
+        col_CA2E2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_CA2E2.label(text='Warning: Enabling Colorist Pro will delete', icon_value=0)
+        col_CA2E2.label(text='any existing nodes in the compositor', icon_value=0)
+        layout.prop(bpy.data.scenes['Scene'], 'use_nodes', text='Use Nodes (Compositor)', icon_value=0, emboss=True)
+        row_90C12 = layout.row(heading='', align=False)
+        row_90C12.alert = False
+        row_90C12.enabled = True
+        row_90C12.active = True
+        row_90C12.use_property_split = False
+        row_90C12.use_property_decorate = False
+        row_90C12.scale_x = 3.1599998474121094
+        row_90C12.scale_y = 1.0
+        row_90C12.alignment = 'Expand'.upper()
+        row_90C12.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_90C12.label(text='', icon_value=0)
+        row_90C12.label(text='', icon_value=0)
+        row_90C12.label(text='Version: 1.1.1', icon_value=0)
+
+
+class SNA_PT_COLORIST_PRO_V111_BCC9C(bpy.types.Panel):
+    bl_label = 'Colorist Pro v1.1.1'
+    bl_idname = 'SNA_PT_COLORIST_PRO_V111_BCC9C'
+    bl_space_type = 'NODE_EDITOR'
+    bl_region_type = 'UI'
+    bl_context = ''
+    bl_category = 'Colorist'
+    bl_order = 0
+    bl_ui_units_x=0
+
+    @classmethod
+    def poll(cls, context):
+        return not (False)
+
+    def draw_header(self, context):
+        layout = self.layout
+
+    def draw(self, context):
+        layout = self.layout
+        col_96AA9 = layout.column(heading='', align=False)
+        col_96AA9.alert = False
+        col_96AA9.enabled = True
+        col_96AA9.active = True
+        col_96AA9.use_property_split = False
+        col_96AA9.use_property_decorate = False
+        col_96AA9.scale_x = 1.0
+        col_96AA9.scale_y = 1.809999942779541
+        col_96AA9.alignment = 'Expand'.upper()
+        col_96AA9.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        op = col_96AA9.operator('sna.enable_colorist_264dc', text='Enable Colorist Pro', icon_value=240, emboss=True, depress=False)
+        col_83C4E = layout.column(heading='', align=False)
+        col_83C4E.alert = False
+        col_83C4E.enabled = True
+        col_83C4E.active = True
+        col_83C4E.use_property_split = False
+        col_83C4E.use_property_decorate = False
+        col_83C4E.scale_x = 1.0
+        col_83C4E.scale_y = 0.46000003814697266
+        col_83C4E.alignment = 'Expand'.upper()
+        col_83C4E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_83C4E.label(text='Warning: Enabling Colorist Pro will delete', icon_value=0)
+        col_83C4E.label(text='any existing nodes in the compositor', icon_value=0)
+        layout.prop(bpy.data.scenes['Scene'], 'use_nodes', text='Use Nodes (Compositor)', icon_value=0, emboss=True)
+        row_7A3DF = layout.row(heading='', align=False)
+        row_7A3DF.alert = False
+        row_7A3DF.enabled = True
+        row_7A3DF.active = True
+        row_7A3DF.use_property_split = False
+        row_7A3DF.use_property_decorate = False
+        row_7A3DF.scale_x = 3.1599998474121094
+        row_7A3DF.scale_y = 1.0
+        row_7A3DF.alignment = 'Expand'.upper()
+        row_7A3DF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_7A3DF.label(text='', icon_value=0)
+        row_7A3DF.label(text='', icon_value=0)
+        row_7A3DF.label(text='Version: 1.1.1', icon_value=0)
+
+
+class SNA_PT_panel017_B3899(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel017_FD594'
+    bl_idname = 'SNA_PT_panel017_B3899'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_5420C'
+    bl_parent_id = 'SNA_PT_LENS_FLARE_9C407'
     bl_ui_units_x=0
 
     @classmethod
@@ -3416,7 +3416,7 @@ class SNA_PT_panel017_FD594(bpy.types.Panel):
         row_B5F34.scale_x = 0.9700000286102295
         row_B5F34.scale_y = 1.0
         row_B5F34.alignment = 'Expand'.upper()
-        if not True: row_B5F34.operator_context = "EXEC_DEFAULT"
+        row_B5F34.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_B5F34.label(text='Iris Ghost', icon_value=0)
         row_B5F34.separator(factor=1.4500000476837158)
         row_491A4 = row_B5F34.row(heading='', align=False)
@@ -3428,7 +3428,7 @@ class SNA_PT_panel017_FD594(bpy.types.Panel):
         row_491A4.scale_x = 0.9599999785423279
         row_491A4.scale_y = 1.0
         row_491A4.alignment = 'Expand'.upper()
-        if not True: row_491A4.operator_context = "EXEC_DEFAULT"
+        row_491A4.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_491A4.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.029'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=False)
 
     def draw(self, context):
@@ -3456,7 +3456,7 @@ class SNA_PT_panel017_FD594(bpy.types.Panel):
         col_8DD9E.scale_x = 1.0
         col_8DD9E.scale_y = 1.0
         col_8DD9E.alignment = 'Expand'.upper()
-        if not True: col_8DD9E.operator_context = "EXEC_DEFAULT"
+        col_8DD9E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_8DD9E.prop(bpy.data.node_groups['Lens Flare'].nodes['Group.002'].inputs[1], 'default_value', text='Distortion', icon_value=0, emboss=True)
         col_8DD9E.prop(bpy.data.node_groups['Lens Flare'].nodes['Group.002'].inputs[2], 'default_value', text='Dispersion', icon_value=0, emboss=True)
         col_8DD9E.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.001'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
@@ -3469,20 +3469,21 @@ class SNA_PT_panel017_FD594(bpy.types.Panel):
         col_98515.scale_x = 1.0
         col_98515.scale_y = 1.0
         col_98515.alignment = 'Expand'.upper()
-        if not True: col_98515.operator_context = "EXEC_DEFAULT"
+        col_98515.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_98515.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_98515.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'color_modulation', text='Color Module', icon_value=0, emboss=True)
+        col_98515.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'threshold', text='Threshold', icon_value=0, emboss=True)
 
 
-class SNA_PT_ghost_2473D(bpy.types.Panel):
+class SNA_PT_ghost_97C8D(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_ghost_2473D'
+    bl_idname = 'SNA_PT_ghost_97C8D'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_4FB11'
+    bl_parent_id = 'SNA_PT_GLARE_59C9A'
     bl_ui_units_x=0
 
     @classmethod
@@ -3500,7 +3501,7 @@ class SNA_PT_ghost_2473D(bpy.types.Panel):
         row_04F7E.scale_x = 1.0
         row_04F7E.scale_y = 1.0
         row_04F7E.alignment = 'Expand'.upper()
-        if not True: row_04F7E.operator_context = "EXEC_DEFAULT"
+        row_04F7E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_04F7E.label(text='Ghost', icon_value=0)
         row_04F7E.separator(factor=4.329999923706055)
         row_8D6DC = row_04F7E.row(heading='', align=False)
@@ -3512,7 +3513,7 @@ class SNA_PT_ghost_2473D(bpy.types.Panel):
         row_8D6DC.scale_x = 0.9299999475479126
         row_8D6DC.scale_y = 1.0
         row_8D6DC.alignment = 'Expand'.upper()
-        if not True: row_8D6DC.operator_context = "EXEC_DEFAULT"
+        row_8D6DC.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_8D6DC.prop(bpy.data.node_groups['Glares'].nodes['Mix'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3538,22 +3539,22 @@ class SNA_PT_ghost_2473D(bpy.types.Panel):
         col_D72BF.scale_x = 1.0
         col_D72BF.scale_y = 1.0
         col_D72BF.alignment = 'Expand'.upper()
-        if not True: col_D72BF.operator_context = "EXEC_DEFAULT"
+        col_D72BF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_D72BF.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_D72BF.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'color_modulation', text='Color Modulation', icon_value=0, emboss=True, slider=True)
         col_D72BF.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         box_3DECC.prop(bpy.data.node_groups['Glares'].nodes['Blur.001'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True, slider=False)
 
 
-class SNA_PT_panel005_0019D(bpy.types.Panel):
+class SNA_PT_panel005_95AB8(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel005_0019D'
+    bl_idname = 'SNA_PT_panel005_95AB8'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_4FB11'
+    bl_parent_id = 'SNA_PT_GLARE_59C9A'
     bl_ui_units_x=0
 
     @classmethod
@@ -3571,7 +3572,7 @@ class SNA_PT_panel005_0019D(bpy.types.Panel):
         row_2E4A1.scale_x = 1.0
         row_2E4A1.scale_y = 1.0
         row_2E4A1.alignment = 'Expand'.upper()
-        if not True: row_2E4A1.operator_context = "EXEC_DEFAULT"
+        row_2E4A1.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_2E4A1.label(text='Simple Star', icon_value=0)
         row_2E4A1.separator(factor=2.319999933242798)
         row_2F7CD = row_2E4A1.row(heading='', align=False)
@@ -3583,7 +3584,7 @@ class SNA_PT_panel005_0019D(bpy.types.Panel):
         row_2F7CD.scale_x = 0.9299999475479126
         row_2F7CD.scale_y = 1.0
         row_2F7CD.alignment = 'Expand'.upper()
-        if not True: row_2F7CD.operator_context = "EXEC_DEFAULT"
+        row_2F7CD.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_2F7CD.prop(bpy.data.node_groups['Glares'].nodes['Mix.008'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3609,7 +3610,7 @@ class SNA_PT_panel005_0019D(bpy.types.Panel):
         col_724DB.scale_x = 1.0
         col_724DB.scale_y = 1.0
         col_724DB.alignment = 'Expand'.upper()
-        if not True: col_724DB.operator_context = "EXEC_DEFAULT"
+        col_724DB.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_724DB.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_724DB.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         col_724DB.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'fade', text='Fade', icon_value=0, emboss=True, slider=True)
@@ -3617,15 +3618,15 @@ class SNA_PT_panel005_0019D(bpy.types.Panel):
         box_083C3.prop(bpy.data.node_groups['Glares'].nodes['Blur.004'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_ghost001_7E906(bpy.types.Panel):
+class SNA_PT_ghost001_5ED67(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_ghost001_7E906'
+    bl_idname = 'SNA_PT_ghost001_5ED67'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_585AA'
+    bl_parent_id = 'SNA_PT_GLARE_74542'
     bl_ui_units_x=0
 
     @classmethod
@@ -3643,7 +3644,7 @@ class SNA_PT_ghost001_7E906(bpy.types.Panel):
         row_1448A.scale_x = 1.0
         row_1448A.scale_y = 1.0
         row_1448A.alignment = 'Expand'.upper()
-        if not True: row_1448A.operator_context = "EXEC_DEFAULT"
+        row_1448A.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_1448A.label(text='Ghost', icon_value=0)
         row_1448A.separator(factor=4.329999923706055)
         row_B285C = row_1448A.row(heading='', align=False)
@@ -3655,7 +3656,7 @@ class SNA_PT_ghost001_7E906(bpy.types.Panel):
         row_B285C.scale_x = 0.9299999475479126
         row_B285C.scale_y = 1.0
         row_B285C.alignment = 'Expand'.upper()
-        if not True: row_B285C.operator_context = "EXEC_DEFAULT"
+        row_B285C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_B285C.prop(bpy.data.node_groups['Glares'].nodes['Mix'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3681,22 +3682,22 @@ class SNA_PT_ghost001_7E906(bpy.types.Panel):
         col_1FF6C.scale_x = 1.0
         col_1FF6C.scale_y = 1.0
         col_1FF6C.alignment = 'Expand'.upper()
-        if not True: col_1FF6C.operator_context = "EXEC_DEFAULT"
+        col_1FF6C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_1FF6C.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_1FF6C.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'color_modulation', text='Color Modulation', icon_value=0, emboss=True, slider=True)
         col_1FF6C.prop(bpy.data.node_groups['Glares'].nodes['Glare'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         box_A0519.prop(bpy.data.node_groups['Glares'].nodes['Blur.001'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True, slider=False)
 
 
-class SNA_PT_panel029_5FF72(bpy.types.Panel):
+class SNA_PT_panel029_16DD7(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel029_5FF72'
+    bl_idname = 'SNA_PT_panel029_16DD7'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_585AA'
+    bl_parent_id = 'SNA_PT_GLARE_74542'
     bl_ui_units_x=0
 
     @classmethod
@@ -3714,7 +3715,7 @@ class SNA_PT_panel029_5FF72(bpy.types.Panel):
         row_261EF.scale_x = 1.0
         row_261EF.scale_y = 1.0
         row_261EF.alignment = 'Expand'.upper()
-        if not True: row_261EF.operator_context = "EXEC_DEFAULT"
+        row_261EF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_261EF.label(text='Simple Star', icon_value=0)
         row_261EF.separator(factor=2.319999933242798)
         row_F9C69 = row_261EF.row(heading='', align=False)
@@ -3726,7 +3727,7 @@ class SNA_PT_panel029_5FF72(bpy.types.Panel):
         row_F9C69.scale_x = 0.9299999475479126
         row_F9C69.scale_y = 1.0
         row_F9C69.alignment = 'Expand'.upper()
-        if not True: row_F9C69.operator_context = "EXEC_DEFAULT"
+        row_F9C69.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_F9C69.prop(bpy.data.node_groups['Glares'].nodes['Mix.008'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3752,7 +3753,7 @@ class SNA_PT_panel029_5FF72(bpy.types.Panel):
         col_B4353.scale_x = 1.0
         col_B4353.scale_y = 1.0
         col_B4353.alignment = 'Expand'.upper()
-        if not True: col_B4353.operator_context = "EXEC_DEFAULT"
+        col_B4353.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_B4353.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_B4353.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         col_B4353.prop(bpy.data.node_groups['Glares'].nodes['Glare.003'], 'fade', text='Fade', icon_value=0, emboss=True, slider=True)
@@ -3760,15 +3761,15 @@ class SNA_PT_panel029_5FF72(bpy.types.Panel):
         box_00565.prop(bpy.data.node_groups['Glares'].nodes['Blur.004'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel030_0527C(bpy.types.Panel):
+class SNA_PT_panel030_AB64D(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel030_0527C'
+    bl_idname = 'SNA_PT_panel030_AB64D'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_585AA'
+    bl_parent_id = 'SNA_PT_GLARE_74542'
     bl_ui_units_x=0
 
     @classmethod
@@ -3786,7 +3787,7 @@ class SNA_PT_panel030_0527C(bpy.types.Panel):
         row_6A93D.scale_x = 1.0
         row_6A93D.scale_y = 1.0
         row_6A93D.alignment = 'Expand'.upper()
-        if not True: row_6A93D.operator_context = "EXEC_DEFAULT"
+        row_6A93D.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_6A93D.label(text='Streaks', icon_value=0)
         row_6A93D.separator(factor=2.9799997806549072)
         row_2E7AE = row_6A93D.row(heading='', align=False)
@@ -3798,7 +3799,7 @@ class SNA_PT_panel030_0527C(bpy.types.Panel):
         row_2E7AE.scale_x = 0.9299999475479126
         row_2E7AE.scale_y = 1.0
         row_2E7AE.alignment = 'Expand'.upper()
-        if not True: row_2E7AE.operator_context = "EXEC_DEFAULT"
+        row_2E7AE.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_2E7AE.prop(bpy.data.node_groups['Glares'].nodes['Mix.004'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3824,7 +3825,7 @@ class SNA_PT_panel030_0527C(bpy.types.Panel):
         col_AD189.scale_x = 1.0
         col_AD189.scale_y = 1.0
         col_AD189.alignment = 'Expand'.upper()
-        if not True: col_AD189.operator_context = "EXEC_DEFAULT"
+        col_AD189.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_AD189.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_AD189.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'color_modulation', text='Color Modulation', icon_value=0, emboss=True, slider=True)
         col_AD189.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'threshold', text='Threshold', icon_value=0, emboss=True)
@@ -3834,15 +3835,15 @@ class SNA_PT_panel030_0527C(bpy.types.Panel):
         box_58A0A.prop(bpy.data.node_groups['Glares'].nodes['Blur.002'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel031_95F3C(bpy.types.Panel):
+class SNA_PT_panel031_34A85(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel031_95F3C'
+    bl_idname = 'SNA_PT_panel031_34A85'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_585AA'
+    bl_parent_id = 'SNA_PT_GLARE_74542'
     bl_ui_units_x=0
 
     @classmethod
@@ -3860,7 +3861,7 @@ class SNA_PT_panel031_95F3C(bpy.types.Panel):
         row_E21C3.scale_x = 1.0
         row_E21C3.scale_y = 1.0
         row_E21C3.alignment = 'Expand'.upper()
-        if not True: row_E21C3.operator_context = "EXEC_DEFAULT"
+        row_E21C3.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_E21C3.label(text='Fog Glow', icon_value=0)
         row_E21C3.separator(factor=1.2699999809265137)
         row_276C0 = row_E21C3.row(heading='', align=False)
@@ -3872,7 +3873,7 @@ class SNA_PT_panel031_95F3C(bpy.types.Panel):
         row_276C0.scale_x = 0.9299999475479126
         row_276C0.scale_y = 1.0
         row_276C0.alignment = 'Expand'.upper()
-        if not True: row_276C0.operator_context = "EXEC_DEFAULT"
+        row_276C0.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_276C0.prop(bpy.data.node_groups['Glares'].nodes['Mix.006'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -3898,21 +3899,21 @@ class SNA_PT_panel031_95F3C(bpy.types.Panel):
         col_88171.scale_x = 1.0
         col_88171.scale_y = 1.0
         col_88171.alignment = 'Expand'.upper()
-        if not True: col_88171.operator_context = "EXEC_DEFAULT"
+        col_88171.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_88171.prop(bpy.data.node_groups['Glares'].nodes['Glare.002'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         col_88171.prop(bpy.data.node_groups['Glares'].nodes['Glare.002'], 'size', text='Size', icon_value=0, emboss=True)
         box_89813.prop(bpy.data.node_groups['Glares'].nodes['Blur.003'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_WET_LENS_E0695(bpy.types.Panel):
+class SNA_PT_WET_LENS_0D64E(bpy.types.Panel):
     bl_label = 'Wet Lens'
-    bl_idname = 'SNA_PT_WET_LENS_E0695'
+    bl_idname = 'SNA_PT_WET_LENS_0D64E'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_DIRT_75EBB'
+    bl_parent_id = 'SNA_PT_LENS_DIRT_5A957'
     bl_ui_units_x=0
 
     @classmethod
@@ -3924,17 +3925,6 @@ class SNA_PT_WET_LENS_E0695(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        col_91B2E = layout.column(heading='', align=False)
-        col_91B2E.alert = False
-        col_91B2E.enabled = True
-        col_91B2E.active = True
-        col_91B2E.use_property_split = False
-        col_91B2E.use_property_decorate = False
-        col_91B2E.scale_x = 1.0
-        col_91B2E.scale_y = 1.0
-        col_91B2E.alignment = 'Expand'.upper()
-        if not True: col_91B2E.operator_context = "EXEC_DEFAULT"
-        col_91B2E.label(text='This section is experimental', icon_value=0)
         row_A3284 = layout.row(heading='', align=True)
         row_A3284.alert = False
         row_A3284.enabled = True
@@ -3944,7 +3934,7 @@ class SNA_PT_WET_LENS_E0695(bpy.types.Panel):
         row_A3284.scale_x = 1.0
         row_A3284.scale_y = 1.8399999141693115
         row_A3284.alignment = 'Expand'.upper()
-        if not True: row_A3284.operator_context = "EXEC_DEFAULT"
+        row_A3284.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_A3284.operator('sna.operator005_39b40', text='Make It Wet!', icon_value=470, emboss=True, depress=False)
         op = row_A3284.operator('sna.operator006_2227b', text='Dry It!', icon_value=299, emboss=True, depress=False)
         box_7BA66 = layout.box()
@@ -3966,19 +3956,19 @@ class SNA_PT_WET_LENS_E0695(bpy.types.Panel):
         col_1C6A6.scale_x = 1.0
         col_1C6A6.scale_y = 1.0
         col_1C6A6.alignment = 'Expand'.upper()
-        if not True: col_1C6A6.operator_context = "EXEC_DEFAULT"
+        col_1C6A6.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_1C6A6.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.006'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
 
-class SNA_PT_WET_LENS_215BB(bpy.types.Panel):
+class SNA_PT_WET_LENS_2A174(bpy.types.Panel):
     bl_label = 'Wet Lens'
-    bl_idname = 'SNA_PT_WET_LENS_215BB'
+    bl_idname = 'SNA_PT_WET_LENS_2A174'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_DIRT_EE194'
+    bl_parent_id = 'SNA_PT_LENS_DIRT_D38EB'
     bl_ui_units_x=0
 
     @classmethod
@@ -3990,17 +3980,6 @@ class SNA_PT_WET_LENS_215BB(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        col_6FB52 = layout.column(heading='', align=False)
-        col_6FB52.alert = False
-        col_6FB52.enabled = True
-        col_6FB52.active = True
-        col_6FB52.use_property_split = False
-        col_6FB52.use_property_decorate = False
-        col_6FB52.scale_x = 1.0
-        col_6FB52.scale_y = 1.0
-        col_6FB52.alignment = 'Expand'.upper()
-        if not True: col_6FB52.operator_context = "EXEC_DEFAULT"
-        col_6FB52.label(text='This section is experimental', icon_value=0)
         row_78260 = layout.row(heading='', align=True)
         row_78260.alert = False
         row_78260.enabled = True
@@ -4010,7 +3989,7 @@ class SNA_PT_WET_LENS_215BB(bpy.types.Panel):
         row_78260.scale_x = 1.0
         row_78260.scale_y = 1.8399999141693115
         row_78260.alignment = 'Expand'.upper()
-        if not True: row_78260.operator_context = "EXEC_DEFAULT"
+        row_78260.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_78260.operator('sna.operator005_39b40', text='Make It Wet!', icon_value=470, emboss=True, depress=False)
         op = row_78260.operator('sna.operator006_2227b', text='Dry It!', icon_value=299, emboss=True, depress=False)
         box_C647F = layout.box()
@@ -4032,19 +4011,19 @@ class SNA_PT_WET_LENS_215BB(bpy.types.Panel):
         col_4BD22.scale_x = 1.0
         col_4BD22.scale_y = 1.0
         col_4BD22.alignment = 'Expand'.upper()
-        if not True: col_4BD22.operator_context = "EXEC_DEFAULT"
+        col_4BD22.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_4BD22.prop(bpy.data.node_groups['Lens Dirt'].nodes['Mix.006'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel026_63902(bpy.types.Panel):
+class SNA_PT_panel026_B0DA7(bpy.types.Panel):
     bl_label = '4:3'
-    bl_idname = 'SNA_PT_panel026_63902'
+    bl_idname = 'SNA_PT_panel026_B0DA7'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_ui_units_x=0
 
     @classmethod
@@ -4075,7 +4054,7 @@ class SNA_PT_panel026_63902(bpy.types.Panel):
         row_1385B.scale_x = 1.0
         row_1385B.scale_y = 1.5
         row_1385B.alignment = 'Expand'.upper()
-        if not True: row_1385B.operator_context = "EXEC_DEFAULT"
+        row_1385B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_1385B.operator('sna.operator021_564c0', text='4:3 4K', icon_value=0, emboss=True, depress=False)
         row_74CCD = box_29021.row(heading='', align=False)
         row_74CCD.alert = False
@@ -4086,20 +4065,20 @@ class SNA_PT_panel026_63902(bpy.types.Panel):
         row_74CCD.scale_x = 1.0
         row_74CCD.scale_y = 1.5
         row_74CCD.alignment = 'Expand'.upper()
-        if not True: row_74CCD.operator_context = "EXEC_DEFAULT"
+        row_74CCD.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_74CCD.operator('sna.operator022_b4eef', text='4:3 720p', icon_value=0, emboss=True, depress=False)
         op = row_74CCD.operator('sna.operator014_71654', text='4:3 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel022_8DB73(bpy.types.Panel):
+class SNA_PT_panel022_FB574(bpy.types.Panel):
     bl_label = '16:9'
-    bl_idname = 'SNA_PT_panel022_8DB73'
+    bl_idname = 'SNA_PT_panel022_FB574'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_ui_units_x=0
 
     @classmethod
@@ -4130,7 +4109,7 @@ class SNA_PT_panel022_8DB73(bpy.types.Panel):
         row_F4F67.scale_x = 1.0
         row_F4F67.scale_y = 1.5
         row_F4F67.alignment = 'Expand'.upper()
-        if not True: row_F4F67.operator_context = "EXEC_DEFAULT"
+        row_F4F67.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_F4F67.operator('sna.operator007_c2369', text='16:9 1080p', icon_value=0, emboss=True, depress=False)
         op = row_F4F67.operator('sna.operator008_2c684', text='16:9 4K', icon_value=0, emboss=True, depress=False)
         row_0B4F0 = box_5DFB8.row(heading='', align=False)
@@ -4142,20 +4121,20 @@ class SNA_PT_panel022_8DB73(bpy.types.Panel):
         row_0B4F0.scale_x = 1.0
         row_0B4F0.scale_y = 1.5
         row_0B4F0.alignment = 'Expand'.upper()
-        if not True: row_0B4F0.operator_context = "EXEC_DEFAULT"
+        row_0B4F0.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_0B4F0.operator('sna.operator009_1aa7a', text='16:9 720p', icon_value=0, emboss=True, depress=False)
         op = row_0B4F0.operator('sna.operator010_d86fc', text='16:9 480p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_SOCIAL_MEDIA_80538(bpy.types.Panel):
+class SNA_PT_SOCIAL_MEDIA_DFA8C(bpy.types.Panel):
     bl_label = 'Social Media'
-    bl_idname = 'SNA_PT_SOCIAL_MEDIA_80538'
+    bl_idname = 'SNA_PT_SOCIAL_MEDIA_DFA8C'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_ui_units_x=0
 
     @classmethod
@@ -4186,7 +4165,7 @@ class SNA_PT_SOCIAL_MEDIA_80538(bpy.types.Panel):
         row_48CD9.scale_x = 1.0
         row_48CD9.scale_y = 1.5
         row_48CD9.alignment = 'Expand'.upper()
-        if not True: row_48CD9.operator_context = "EXEC_DEFAULT"
+        row_48CD9.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_48CD9.operator('sna.operator011_325e9', text='Insta Square 1:1', icon_value=0, emboss=True, depress=False)
         op = row_48CD9.operator('sna.operator012_a483c', text='Insta Vertical 4:5', icon_value=0, emboss=True, depress=False)
         row_C3018 = box_FBA7F.row(heading='', align=False)
@@ -4198,19 +4177,19 @@ class SNA_PT_SOCIAL_MEDIA_80538(bpy.types.Panel):
         row_C3018.scale_x = 1.0
         row_C3018.scale_y = 1.5
         row_C3018.alignment = 'Expand'.upper()
-        if not True: row_C3018.operator_context = "EXEC_DEFAULT"
+        row_C3018.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_C3018.operator('sna.operator013_19b92', text='Insta Reels/Tiktok 9:16', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel024_C053C(bpy.types.Panel):
+class SNA_PT_panel024_27A4E(bpy.types.Panel):
     bl_label = '2.35:1'
-    bl_idname = 'SNA_PT_panel024_C053C'
+    bl_idname = 'SNA_PT_panel024_27A4E'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_ui_units_x=0
 
     @classmethod
@@ -4241,7 +4220,7 @@ class SNA_PT_panel024_C053C(bpy.types.Panel):
         row_FAF4C.scale_x = 1.0
         row_FAF4C.scale_y = 1.5
         row_FAF4C.alignment = 'Expand'.upper()
-        if not True: row_FAF4C.operator_context = "EXEC_DEFAULT"
+        row_FAF4C.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_FAF4C.operator('sna.operator016_29794', text='2.35:1 4K', icon_value=0, emboss=True, depress=False)
         row_EABB6 = box_76EFF.row(heading='', align=False)
         row_EABB6.alert = False
@@ -4252,20 +4231,20 @@ class SNA_PT_panel024_C053C(bpy.types.Panel):
         row_EABB6.scale_x = 1.0
         row_EABB6.scale_y = 1.5
         row_EABB6.alignment = 'Expand'.upper()
-        if not True: row_EABB6.operator_context = "EXEC_DEFAULT"
+        row_EABB6.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_EABB6.operator('sna.operator017_cf146', text='2.35:1 720p', icon_value=0, emboss=True, depress=False)
         op = row_EABB6.operator('sna.operator015_aea69', text='2.35:1 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel025_DBA7C(bpy.types.Panel):
+class SNA_PT_panel025_32F65(bpy.types.Panel):
     bl_label = '1.85:1'
-    bl_idname = 'SNA_PT_panel025_DBA7C'
+    bl_idname = 'SNA_PT_panel025_32F65'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_75871'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_4245E'
     bl_ui_units_x=0
 
     @classmethod
@@ -4296,7 +4275,7 @@ class SNA_PT_panel025_DBA7C(bpy.types.Panel):
         row_2F416.scale_x = 1.0
         row_2F416.scale_y = 1.5
         row_2F416.alignment = 'Expand'.upper()
-        if not True: row_2F416.operator_context = "EXEC_DEFAULT"
+        row_2F416.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_2F416.operator('sna.operator018_e9c55', text='1.85:1 4K', icon_value=0, emboss=True, depress=False)
         row_F4413 = box_F486B.row(heading='', align=False)
         row_F4413.alert = False
@@ -4307,20 +4286,20 @@ class SNA_PT_panel025_DBA7C(bpy.types.Panel):
         row_F4413.scale_x = 1.0
         row_F4413.scale_y = 1.5
         row_F4413.alignment = 'Expand'.upper()
-        if not True: row_F4413.operator_context = "EXEC_DEFAULT"
+        row_F4413.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_F4413.operator('sna.operator019_b1ef3', text='1.85:1 720p', icon_value=0, emboss=True, depress=False)
         op = row_F4413.operator('sna.operator020_7a6a7', text='1.85:1 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel038_AD960(bpy.types.Panel):
+class SNA_PT_panel038_03BC6(bpy.types.Panel):
     bl_label = '4:3'
-    bl_idname = 'SNA_PT_panel038_AD960'
+    bl_idname = 'SNA_PT_panel038_03BC6'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_ui_units_x=0
 
     @classmethod
@@ -4351,7 +4330,7 @@ class SNA_PT_panel038_AD960(bpy.types.Panel):
         row_E6882.scale_x = 1.0
         row_E6882.scale_y = 1.5
         row_E6882.alignment = 'Expand'.upper()
-        if not True: row_E6882.operator_context = "EXEC_DEFAULT"
+        row_E6882.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_E6882.operator('sna.operator021_564c0', text='4:3 4K', icon_value=0, emboss=True, depress=False)
         row_2B062 = box_BAC29.row(heading='', align=False)
         row_2B062.alert = False
@@ -4362,20 +4341,20 @@ class SNA_PT_panel038_AD960(bpy.types.Panel):
         row_2B062.scale_x = 1.0
         row_2B062.scale_y = 1.5
         row_2B062.alignment = 'Expand'.upper()
-        if not True: row_2B062.operator_context = "EXEC_DEFAULT"
+        row_2B062.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_2B062.operator('sna.operator022_b4eef', text='4:3 720p', icon_value=0, emboss=True, depress=False)
         op = row_2B062.operator('sna.operator014_71654', text='4:3 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel039_DFAA1(bpy.types.Panel):
+class SNA_PT_panel039_B1C6B(bpy.types.Panel):
     bl_label = '16:9'
-    bl_idname = 'SNA_PT_panel039_DFAA1'
+    bl_idname = 'SNA_PT_panel039_B1C6B'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_ui_units_x=0
 
     @classmethod
@@ -4406,7 +4385,7 @@ class SNA_PT_panel039_DFAA1(bpy.types.Panel):
         row_A8F36.scale_x = 1.0
         row_A8F36.scale_y = 1.5
         row_A8F36.alignment = 'Expand'.upper()
-        if not True: row_A8F36.operator_context = "EXEC_DEFAULT"
+        row_A8F36.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_A8F36.operator('sna.operator007_c2369', text='16:9 1080p', icon_value=0, emboss=True, depress=False)
         op = row_A8F36.operator('sna.operator008_2c684', text='16:9 4K', icon_value=0, emboss=True, depress=False)
         row_36DFC = box_14C6F.row(heading='', align=False)
@@ -4418,20 +4397,20 @@ class SNA_PT_panel039_DFAA1(bpy.types.Panel):
         row_36DFC.scale_x = 1.0
         row_36DFC.scale_y = 1.5
         row_36DFC.alignment = 'Expand'.upper()
-        if not True: row_36DFC.operator_context = "EXEC_DEFAULT"
+        row_36DFC.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_36DFC.operator('sna.operator009_1aa7a', text='16:9 720p', icon_value=0, emboss=True, depress=False)
         op = row_36DFC.operator('sna.operator010_d86fc', text='16:9 480p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_SOCIAL_MEDIA_AD2DF(bpy.types.Panel):
+class SNA_PT_SOCIAL_MEDIA_DC603(bpy.types.Panel):
     bl_label = 'Social Media'
-    bl_idname = 'SNA_PT_SOCIAL_MEDIA_AD2DF'
+    bl_idname = 'SNA_PT_SOCIAL_MEDIA_DC603'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_ui_units_x=0
 
     @classmethod
@@ -4462,7 +4441,7 @@ class SNA_PT_SOCIAL_MEDIA_AD2DF(bpy.types.Panel):
         row_6D98E.scale_x = 1.0
         row_6D98E.scale_y = 1.5
         row_6D98E.alignment = 'Expand'.upper()
-        if not True: row_6D98E.operator_context = "EXEC_DEFAULT"
+        row_6D98E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_6D98E.operator('sna.operator011_325e9', text='Insta Square 1:1', icon_value=0, emboss=True, depress=False)
         op = row_6D98E.operator('sna.operator012_a483c', text='Insta Vertical 4:5', icon_value=0, emboss=True, depress=False)
         row_964BE = box_CE025.row(heading='', align=False)
@@ -4474,19 +4453,19 @@ class SNA_PT_SOCIAL_MEDIA_AD2DF(bpy.types.Panel):
         row_964BE.scale_x = 1.0
         row_964BE.scale_y = 1.5
         row_964BE.alignment = 'Expand'.upper()
-        if not True: row_964BE.operator_context = "EXEC_DEFAULT"
+        row_964BE.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_964BE.operator('sna.operator013_19b92', text='Insta Reels/Tiktok 9:16', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel041_8506D(bpy.types.Panel):
+class SNA_PT_panel041_1FC6C(bpy.types.Panel):
     bl_label = '2.35:1'
-    bl_idname = 'SNA_PT_panel041_8506D'
+    bl_idname = 'SNA_PT_panel041_1FC6C'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_ui_units_x=0
 
     @classmethod
@@ -4517,7 +4496,7 @@ class SNA_PT_panel041_8506D(bpy.types.Panel):
         row_26024.scale_x = 1.0
         row_26024.scale_y = 1.5
         row_26024.alignment = 'Expand'.upper()
-        if not True: row_26024.operator_context = "EXEC_DEFAULT"
+        row_26024.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_26024.operator('sna.operator016_29794', text='2.35:1 4K', icon_value=0, emboss=True, depress=False)
         row_93C45 = box_CC918.row(heading='', align=False)
         row_93C45.alert = False
@@ -4528,20 +4507,20 @@ class SNA_PT_panel041_8506D(bpy.types.Panel):
         row_93C45.scale_x = 1.0
         row_93C45.scale_y = 1.5
         row_93C45.alignment = 'Expand'.upper()
-        if not True: row_93C45.operator_context = "EXEC_DEFAULT"
+        row_93C45.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_93C45.operator('sna.operator017_cf146', text='2.35:1 720p', icon_value=0, emboss=True, depress=False)
         op = row_93C45.operator('sna.operator015_aea69', text='2.35:1 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel042_990B5(bpy.types.Panel):
+class SNA_PT_panel042_5FAD5(bpy.types.Panel):
     bl_label = '1.85:1'
-    bl_idname = 'SNA_PT_panel042_990B5'
+    bl_idname = 'SNA_PT_panel042_5FAD5'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_5636C'
+    bl_parent_id = 'SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F'
     bl_ui_units_x=0
 
     @classmethod
@@ -4572,7 +4551,7 @@ class SNA_PT_panel042_990B5(bpy.types.Panel):
         row_C6584.scale_x = 1.0
         row_C6584.scale_y = 1.5
         row_C6584.alignment = 'Expand'.upper()
-        if not True: row_C6584.operator_context = "EXEC_DEFAULT"
+        row_C6584.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_C6584.operator('sna.operator018_e9c55', text='1.85:1 4K', icon_value=0, emboss=True, depress=False)
         row_7C8F1 = box_7B019.row(heading='', align=False)
         row_7C8F1.alert = False
@@ -4583,20 +4562,20 @@ class SNA_PT_panel042_990B5(bpy.types.Panel):
         row_7C8F1.scale_x = 1.0
         row_7C8F1.scale_y = 1.5
         row_7C8F1.alignment = 'Expand'.upper()
-        if not True: row_7C8F1.operator_context = "EXEC_DEFAULT"
+        row_7C8F1.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_7C8F1.operator('sna.operator019_b1ef3', text='1.85:1 720p', icon_value=0, emboss=True, depress=False)
         op = row_7C8F1.operator('sna.operator020_7a6a7', text='1.85:1 1080p', icon_value=0, emboss=True, depress=False)
 
 
-class SNA_PT_panel003_88558(bpy.types.Panel):
+class SNA_PT_panel003_2D3AF(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel003_88558'
+    bl_idname = 'SNA_PT_panel003_2D3AF'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_4FB11'
+    bl_parent_id = 'SNA_PT_GLARE_59C9A'
     bl_ui_units_x=0
 
     @classmethod
@@ -4614,7 +4593,7 @@ class SNA_PT_panel003_88558(bpy.types.Panel):
         row_7944B.scale_x = 1.0
         row_7944B.scale_y = 1.0
         row_7944B.alignment = 'Expand'.upper()
-        if not True: row_7944B.operator_context = "EXEC_DEFAULT"
+        row_7944B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_7944B.label(text='Streaks', icon_value=0)
         row_7944B.separator(factor=2.9799997806549072)
         row_96B7B = row_7944B.row(heading='', align=False)
@@ -4626,7 +4605,7 @@ class SNA_PT_panel003_88558(bpy.types.Panel):
         row_96B7B.scale_x = 0.9299999475479126
         row_96B7B.scale_y = 1.0
         row_96B7B.alignment = 'Expand'.upper()
-        if not True: row_96B7B.operator_context = "EXEC_DEFAULT"
+        row_96B7B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_96B7B.prop(bpy.data.node_groups['Glares'].nodes['Mix.004'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -4652,7 +4631,7 @@ class SNA_PT_panel003_88558(bpy.types.Panel):
         col_15E77.scale_x = 1.0
         col_15E77.scale_y = 1.0
         col_15E77.alignment = 'Expand'.upper()
-        if not True: col_15E77.operator_context = "EXEC_DEFAULT"
+        col_15E77.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_15E77.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_15E77.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'color_modulation', text='Color Modulation', icon_value=0, emboss=True, slider=True)
         col_15E77.prop(bpy.data.node_groups['Glares'].nodes['Glare.001'], 'threshold', text='Threshold', icon_value=0, emboss=True)
@@ -4662,15 +4641,15 @@ class SNA_PT_panel003_88558(bpy.types.Panel):
         box_1FBF0.prop(bpy.data.node_groups['Glares'].nodes['Blur.002'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel004_97DAF(bpy.types.Panel):
+class SNA_PT_panel004_665CF(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel004_97DAF'
+    bl_idname = 'SNA_PT_panel004_665CF'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_GLARE_4FB11'
+    bl_parent_id = 'SNA_PT_GLARE_59C9A'
     bl_ui_units_x=0
 
     @classmethod
@@ -4688,7 +4667,7 @@ class SNA_PT_panel004_97DAF(bpy.types.Panel):
         row_D0F38.scale_x = 1.0
         row_D0F38.scale_y = 1.0
         row_D0F38.alignment = 'Expand'.upper()
-        if not True: row_D0F38.operator_context = "EXEC_DEFAULT"
+        row_D0F38.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_D0F38.label(text='Fog Glow', icon_value=0)
         row_D0F38.separator(factor=1.2699999809265137)
         row_698B8 = row_D0F38.row(heading='', align=False)
@@ -4700,7 +4679,7 @@ class SNA_PT_panel004_97DAF(bpy.types.Panel):
         row_698B8.scale_x = 0.9299999475479126
         row_698B8.scale_y = 1.0
         row_698B8.alignment = 'Expand'.upper()
-        if not True: row_698B8.operator_context = "EXEC_DEFAULT"
+        row_698B8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_698B8.prop(bpy.data.node_groups['Glares'].nodes['Mix.006'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -4726,92 +4705,21 @@ class SNA_PT_panel004_97DAF(bpy.types.Panel):
         col_D37DB.scale_x = 1.0
         col_D37DB.scale_y = 1.0
         col_D37DB.alignment = 'Expand'.upper()
-        if not True: col_D37DB.operator_context = "EXEC_DEFAULT"
+        col_D37DB.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_D37DB.prop(bpy.data.node_groups['Glares'].nodes['Glare.002'], 'threshold', text='Threshold', icon_value=0, emboss=True)
         col_D37DB.prop(bpy.data.node_groups['Glares'].nodes['Glare.002'], 'size', text='Size', icon_value=0, emboss=True)
         box_A258B.prop(bpy.data.node_groups['Glares'].nodes['Blur.003'].inputs[1], 'default_value', text='Blur', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel013_08FF4(bpy.types.Panel):
+class SNA_PT_panel012_CC8A4(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel013_08FF4'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = ''
-    bl_order = 0
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_F700D'
-    bl_ui_units_x=0
-
-    @classmethod
-    def poll(cls, context):
-        return not (False)
-
-    def draw_header(self, context):
-        layout = self.layout
-        row_ACA52 = layout.row(heading='', align=False)
-        row_ACA52.alert = False
-        row_ACA52.enabled = True
-        row_ACA52.active = True
-        row_ACA52.use_property_split = False
-        row_ACA52.use_property_decorate = False
-        row_ACA52.scale_x = 1.0
-        row_ACA52.scale_y = 1.0
-        row_ACA52.alignment = 'Expand'.upper()
-        if not True: row_ACA52.operator_context = "EXEC_DEFAULT"
-        row_ACA52.label(text='Film Grain', icon_value=0)
-        row_ACA52.separator(factor=0.46000003814697266)
-        row_26849 = row_ACA52.row(heading='', align=False)
-        row_26849.alert = False
-        row_26849.enabled = True
-        row_26849.active = True
-        row_26849.use_property_split = False
-        row_26849.use_property_decorate = False
-        row_26849.scale_x = 0.8999999761581421
-        row_26849.scale_y = 1.0
-        row_26849.alignment = 'Expand'.upper()
-        if not True: row_26849.operator_context = "EXEC_DEFAULT"
-        row_26849.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[11], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
-
-    def draw(self, context):
-        layout = self.layout
-        row_35C4B = layout.row(heading='', align=True)
-        row_35C4B.alert = False
-        row_35C4B.enabled = True
-        row_35C4B.active = True
-        row_35C4B.use_property_split = False
-        row_35C4B.use_property_decorate = False
-        row_35C4B.scale_x = 1.0
-        row_35C4B.scale_y = 1.5
-        row_35C4B.alignment = 'Expand'.upper()
-        if not True: row_35C4B.operator_context = "EXEC_DEFAULT"
-        op = row_35C4B.operator('sna.bw_noise_8b7f2', text='BW Grain', icon_value=0, emboss=True, depress=False)
-        op = row_35C4B.operator('sna.k_grain_8bf7c', text='RGB Grain', icon_value=0, emboss=True, depress=False)
-        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[12], 'default_value', text='Soften Grain', icon_value=0, emboss=True, slider=True)
-        col_E10A2 = layout.column(heading='', align=True)
-        col_E10A2.alert = False
-        col_E10A2.enabled = True
-        col_E10A2.active = True
-        col_E10A2.use_property_split = False
-        col_E10A2.use_property_decorate = False
-        col_E10A2.scale_x = 1.0
-        col_E10A2.scale_y = 1.0
-        col_E10A2.alignment = 'Expand'.upper()
-        if not True: col_E10A2.operator_context = "EXEC_DEFAULT"
-        col_E10A2.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[13], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
-        col_E10A2.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[14], 'default_value', text='RGB Grain Saturation', icon_value=0, emboss=True)
-        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[15], 'default_value', text='Animate (0/1)', icon_value=0, emboss=True)
-
-
-class SNA_PT_panel012_804D6(bpy.types.Panel):
-    bl_label = ''
-    bl_idname = 'SNA_PT_panel012_804D6'
+    bl_idname = 'SNA_PT_panel012_CC8A4'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_F700D'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_69921'
     bl_ui_units_x=0
 
     @classmethod
@@ -4829,7 +4737,7 @@ class SNA_PT_panel012_804D6(bpy.types.Panel):
         row_E03C6.scale_x = 1.0
         row_E03C6.scale_y = 1.0
         row_E03C6.alignment = 'Expand'.upper()
-        if not True: row_E03C6.operator_context = "EXEC_DEFAULT"
+        row_E03C6.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_E03C6.label(text='Halation', icon_value=0)
         row_E03C6.separator(factor=2.140000104904175)
         row_C0DC4 = row_E03C6.row(heading='', align=False)
@@ -4841,7 +4749,7 @@ class SNA_PT_panel012_804D6(bpy.types.Panel):
         row_C0DC4.scale_x = 0.8999999761581421
         row_C0DC4.scale_y = 1.0
         row_C0DC4.alignment = 'Expand'.upper()
-        if not True: row_C0DC4.operator_context = "EXEC_DEFAULT"
+        row_C0DC4.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_C0DC4.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[3], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
 
     def draw(self, context):
@@ -4855,7 +4763,7 @@ class SNA_PT_panel012_804D6(bpy.types.Panel):
         col_8B31B.scale_x = 1.0
         col_8B31B.scale_y = 1.0
         col_8B31B.alignment = 'Expand'.upper()
-        if not True: col_8B31B.operator_context = "EXEC_DEFAULT"
+        col_8B31B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_8B31B.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[5], 'default_value', text='Glow', icon_value=0, emboss=True)
         col_8B31B.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[6], 'default_value', text='Threshold', icon_value=0, emboss=True)
         layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[4], 'default_value', text='Green Channel', icon_value=0, emboss=True, slider=True)
@@ -4868,20 +4776,20 @@ class SNA_PT_panel012_804D6(bpy.types.Panel):
         col_0846F.scale_x = 1.0
         col_0846F.scale_y = 1.0
         col_0846F.alignment = 'Expand'.upper()
-        if not True: col_0846F.operator_context = "EXEC_DEFAULT"
+        col_0846F.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_0846F.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[7], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_0846F.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[8], 'default_value', text='Saturation', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel_88FEC(bpy.types.Panel):
+class SNA_PT_panel_E701A(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel_88FEC'
+    bl_idname = 'SNA_PT_panel_E701A'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_F700D'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_69921'
     bl_ui_units_x=0
 
     @classmethod
@@ -4913,23 +4821,23 @@ class SNA_PT_panel_88FEC(bpy.types.Panel):
         col_FB565.scale_x = 1.0
         col_FB565.scale_y = 1.0
         col_FB565.alignment = 'Expand'.upper()
-        if not True: col_FB565.operator_context = "EXEC_DEFAULT"
+        col_FB565.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_FB565.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_projector', text='Projector', icon_value=0, emboss=True)
         col_FB565.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_jitter', text='Jitter', icon_value=0, emboss=True)
         col_FB565.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_fit', text='Fit', icon_value=0, emboss=True)
-        col_FB565.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[23], 'default_value', text='Distort', icon_value=0, emboss=True)
-        col_FB565.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[24], 'default_value', text='Dispersion', icon_value=0, emboss=True)
+        col_FB565.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[24], 'default_value', text='Distort', icon_value=0, emboss=True)
+        col_FB565.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[25], 'default_value', text='Dispersion', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel015_235E6(bpy.types.Panel):
+class SNA_PT_panel015_6D695(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel015_235E6'
+    bl_idname = 'SNA_PT_panel015_6D695'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_F700D'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_69921'
     bl_ui_units_x=0
 
     @classmethod
@@ -4961,21 +4869,21 @@ class SNA_PT_panel015_235E6(bpy.types.Panel):
         col_04395.scale_x = 1.0
         col_04395.scale_y = 1.0
         col_04395.alignment = 'Expand'.upper()
-        if not True: col_04395.operator_context = "EXEC_DEFAULT"
-        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[18], 'default_value', text='Red', icon_value=0, emboss=True)
-        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[19], 'default_value', text='Green', icon_value=0, emboss=True)
-        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[20], 'default_value', text='Blue', icon_value=0, emboss=True)
+        col_04395.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[19], 'default_value', text='Red', icon_value=0, emboss=True)
+        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[20], 'default_value', text='Green', icon_value=0, emboss=True)
+        col_04395.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[21], 'default_value', text='Blue', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel036_353E3(bpy.types.Panel):
+class SNA_PT_panel036_8C8DD(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel036_353E3'
+    bl_idname = 'SNA_PT_panel036_8C8DD'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_417FF'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_5D6F8'
     bl_ui_units_x=0
 
     @classmethod
@@ -4993,7 +4901,7 @@ class SNA_PT_panel036_353E3(bpy.types.Panel):
         row_41361.scale_x = 1.0
         row_41361.scale_y = 1.0
         row_41361.alignment = 'Expand'.upper()
-        if not True: row_41361.operator_context = "EXEC_DEFAULT"
+        row_41361.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_41361.label(text='Film Grain', icon_value=0)
         row_41361.separator(factor=0.46000003814697266)
         row_16BFE = row_41361.row(heading='', align=False)
@@ -5005,7 +4913,7 @@ class SNA_PT_panel036_353E3(bpy.types.Panel):
         row_16BFE.scale_x = 0.8999999761581421
         row_16BFE.scale_y = 1.0
         row_16BFE.alignment = 'Expand'.upper()
-        if not True: row_16BFE.operator_context = "EXEC_DEFAULT"
+        row_16BFE.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_16BFE.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[11], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
 
     def draw(self, context):
@@ -5019,10 +4927,10 @@ class SNA_PT_panel036_353E3(bpy.types.Panel):
         row_B45B6.scale_x = 1.0
         row_B45B6.scale_y = 1.5
         row_B45B6.alignment = 'Expand'.upper()
-        if not True: row_B45B6.operator_context = "EXEC_DEFAULT"
+        row_B45B6.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         op = row_B45B6.operator('sna.bw_noise_8b7f2', text='BW Grain', icon_value=0, emboss=True, depress=False)
         op = row_B45B6.operator('sna.k_grain_8bf7c', text='RGB Grain', icon_value=0, emboss=True, depress=False)
-        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[12], 'default_value', text='Soften Grain', icon_value=0, emboss=True, slider=True)
+        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[12], 'default_value', text='Shadow Clumping', icon_value=0, emboss=True, slider=True)
         col_3A175 = layout.column(heading='', align=True)
         col_3A175.alert = False
         col_3A175.enabled = True
@@ -5032,21 +4940,22 @@ class SNA_PT_panel036_353E3(bpy.types.Panel):
         col_3A175.scale_x = 1.0
         col_3A175.scale_y = 1.0
         col_3A175.alignment = 'Expand'.upper()
-        if not True: col_3A175.operator_context = "EXEC_DEFAULT"
-        col_3A175.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[13], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
-        col_3A175.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[14], 'default_value', text='RGB Grain Saturation', icon_value=0, emboss=True)
-        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[15], 'default_value', text='Animate (0/1)', icon_value=0, emboss=True)
+        col_3A175.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_3A175.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[13], 'default_value', text='Soften Grain', icon_value=0, emboss=True, slider=True)
+        col_3A175.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[14], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
+        col_3A175.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[15], 'default_value', text='RGB Grain Saturation', icon_value=0, emboss=True)
+        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[16], 'default_value', text='Animate (0/1)', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel037_C6813(bpy.types.Panel):
+class SNA_PT_panel037_3EEE5(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel037_C6813'
+    bl_idname = 'SNA_PT_panel037_3EEE5'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_417FF'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_5D6F8'
     bl_ui_units_x=0
 
     @classmethod
@@ -5064,7 +4973,7 @@ class SNA_PT_panel037_C6813(bpy.types.Panel):
         row_C4C8E.scale_x = 1.0
         row_C4C8E.scale_y = 1.0
         row_C4C8E.alignment = 'Expand'.upper()
-        if not True: row_C4C8E.operator_context = "EXEC_DEFAULT"
+        row_C4C8E.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_C4C8E.label(text='Halation', icon_value=0)
         row_C4C8E.separator(factor=2.140000104904175)
         row_EFF9B = row_C4C8E.row(heading='', align=False)
@@ -5076,7 +4985,7 @@ class SNA_PT_panel037_C6813(bpy.types.Panel):
         row_EFF9B.scale_x = 0.8999999761581421
         row_EFF9B.scale_y = 1.0
         row_EFF9B.alignment = 'Expand'.upper()
-        if not True: row_EFF9B.operator_context = "EXEC_DEFAULT"
+        row_EFF9B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_EFF9B.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[3], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
 
     def draw(self, context):
@@ -5090,7 +4999,7 @@ class SNA_PT_panel037_C6813(bpy.types.Panel):
         col_63A13.scale_x = 1.0
         col_63A13.scale_y = 1.0
         col_63A13.alignment = 'Expand'.upper()
-        if not True: col_63A13.operator_context = "EXEC_DEFAULT"
+        col_63A13.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_63A13.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[5], 'default_value', text='Glow', icon_value=0, emboss=True)
         col_63A13.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[6], 'default_value', text='Threshold', icon_value=0, emboss=True)
         layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[4], 'default_value', text='Green Channel', icon_value=0, emboss=True, slider=True)
@@ -5103,20 +5012,20 @@ class SNA_PT_panel037_C6813(bpy.types.Panel):
         col_31103.scale_x = 1.0
         col_31103.scale_y = 1.0
         col_31103.alignment = 'Expand'.upper()
-        if not True: col_31103.operator_context = "EXEC_DEFAULT"
+        col_31103.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_31103.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[7], 'default_value', text='Hue', icon_value=0, emboss=True)
         col_31103.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[8], 'default_value', text='Saturation', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel045_E2FA1(bpy.types.Panel):
+class SNA_PT_panel045_C078A(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel045_E2FA1'
+    bl_idname = 'SNA_PT_panel045_C078A'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 4
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_417FF'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_5D6F8'
     bl_ui_units_x=0
 
     @classmethod
@@ -5148,23 +5057,23 @@ class SNA_PT_panel045_E2FA1(bpy.types.Panel):
         col_C3DF6.scale_x = 1.0
         col_C3DF6.scale_y = 1.0
         col_C3DF6.alignment = 'Expand'.upper()
-        if not True: col_C3DF6.operator_context = "EXEC_DEFAULT"
+        col_C3DF6.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_C3DF6.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_projector', text='Projector', icon_value=0, emboss=True)
         col_C3DF6.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_jitter', text='Jitter', icon_value=0, emboss=True)
         col_C3DF6.prop(bpy.data.node_groups['Film Emulation'].nodes['Lens Distortion'], 'use_fit', text='Fit', icon_value=0, emboss=True)
-        col_C3DF6.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[23], 'default_value', text='Distort', icon_value=0, emboss=True)
-        col_C3DF6.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[24], 'default_value', text='Dispersion', icon_value=0, emboss=True)
+        col_C3DF6.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[24], 'default_value', text='Distort', icon_value=0, emboss=True)
+        col_C3DF6.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[25], 'default_value', text='Dispersion', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel046_84B76(bpy.types.Panel):
+class SNA_PT_panel046_A473D(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel046_84B76'
+    bl_idname = 'SNA_PT_panel046_A473D'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 3
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_FILM_EMULATION_417FF'
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_5D6F8'
     bl_ui_units_x=0
 
     @classmethod
@@ -5196,21 +5105,21 @@ class SNA_PT_panel046_84B76(bpy.types.Panel):
         col_76751.scale_x = 1.0
         col_76751.scale_y = 1.0
         col_76751.alignment = 'Expand'.upper()
-        if not True: col_76751.operator_context = "EXEC_DEFAULT"
-        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[18], 'default_value', text='Red', icon_value=0, emboss=True)
-        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[19], 'default_value', text='Green', icon_value=0, emboss=True)
-        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[20], 'default_value', text='Blue', icon_value=0, emboss=True)
+        col_76751.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[19], 'default_value', text='Red', icon_value=0, emboss=True)
+        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[20], 'default_value', text='Green', icon_value=0, emboss=True)
+        col_76751.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[21], 'default_value', text='Blue', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel008_068C3(bpy.types.Panel):
+class SNA_PT_panel008_50F63(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel008_068C3'
+    bl_idname = 'SNA_PT_panel008_50F63'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 0
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_69B3E'
+    bl_parent_id = 'SNA_PT_LENS_FLARE_77473'
     bl_ui_units_x=0
 
     @classmethod
@@ -5228,7 +5137,7 @@ class SNA_PT_panel008_068C3(bpy.types.Panel):
         row_03694.scale_x = 0.9700000286102295
         row_03694.scale_y = 1.0
         row_03694.alignment = 'Expand'.upper()
-        if not True: row_03694.operator_context = "EXEC_DEFAULT"
+        row_03694.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_03694.label(text='Iris Ghost', icon_value=0)
         row_03694.separator(factor=1.4500000476837158)
         row_A86AD = row_03694.row(heading='', align=False)
@@ -5240,7 +5149,7 @@ class SNA_PT_panel008_068C3(bpy.types.Panel):
         row_A86AD.scale_x = 0.9599999785423279
         row_A86AD.scale_y = 1.0
         row_A86AD.alignment = 'Expand'.upper()
-        if not True: row_A86AD.operator_context = "EXEC_DEFAULT"
+        row_A86AD.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_A86AD.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.029'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=False)
 
     def draw(self, context):
@@ -5268,7 +5177,7 @@ class SNA_PT_panel008_068C3(bpy.types.Panel):
         col_C565B.scale_x = 1.0
         col_C565B.scale_y = 1.0
         col_C565B.alignment = 'Expand'.upper()
-        if not True: col_C565B.operator_context = "EXEC_DEFAULT"
+        col_C565B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_C565B.prop(bpy.data.node_groups['Lens Flare'].nodes['Group.002'].inputs[1], 'default_value', text='Distortion', icon_value=0, emboss=True)
         col_C565B.prop(bpy.data.node_groups['Lens Flare'].nodes['Group.002'].inputs[2], 'default_value', text='Dispersion', icon_value=0, emboss=True)
         col_C565B.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.001'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
@@ -5281,20 +5190,21 @@ class SNA_PT_panel008_068C3(bpy.types.Panel):
         col_D4159.scale_x = 1.0
         col_D4159.scale_y = 1.0
         col_D4159.alignment = 'Expand'.upper()
-        if not True: col_D4159.operator_context = "EXEC_DEFAULT"
+        col_D4159.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_D4159.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'iterations', text='Iterations', icon_value=0, emboss=True)
         col_D4159.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'color_modulation', text='Color Module', icon_value=0, emboss=True)
+        col_D4159.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.005'], 'threshold', text='Threshold', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel011_457C4(bpy.types.Panel):
+class SNA_PT_panel011_89433(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel011_457C4'
+    bl_idname = 'SNA_PT_panel011_89433'
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_69B3E'
+    bl_parent_id = 'SNA_PT_LENS_FLARE_77473'
     bl_ui_units_x=0
 
     @classmethod
@@ -5312,7 +5222,7 @@ class SNA_PT_panel011_457C4(bpy.types.Panel):
         row_380BF.scale_x = 0.9699999690055847
         row_380BF.scale_y = 1.0
         row_380BF.alignment = 'Expand'.upper()
-        if not True: row_380BF.operator_context = "EXEC_DEFAULT"
+        row_380BF.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_380BF.label(text='Simple Hoop', icon_value=0)
         row_96189 = row_380BF.row(heading='', align=False)
         row_96189.alert = False
@@ -5323,7 +5233,7 @@ class SNA_PT_panel011_457C4(bpy.types.Panel):
         row_96189.scale_x = 0.9599999785423279
         row_96189.scale_y = 1.0
         row_96189.alignment = 'Expand'.upper()
-        if not True: row_96189.operator_context = "EXEC_DEFAULT"
+        row_96189.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_96189.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.037'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -5340,8 +5250,7 @@ class SNA_PT_panel011_457C4(bpy.types.Panel):
         box_B9D43.scale_x = 1.0
         box_B9D43.scale_y = 1.0
         if not True: box_B9D43.operator_context = "EXEC_DEFAULT"
-        box_B9D43.prop(bpy.data.node_groups['Lens Flare'].nodes['Lens Distortion.017'], 'use_projector', text='Invert Hoop', icon_value=0, emboss=True)
-        col_864FB = box_B9D43.column(heading='', align=False)
+        col_864FB = box_B9D43.column(heading='', align=True)
         col_864FB.alert = False
         col_864FB.enabled = True
         col_864FB.active = True
@@ -5350,92 +5259,22 @@ class SNA_PT_panel011_457C4(bpy.types.Panel):
         col_864FB.scale_x = 1.0
         col_864FB.scale_y = 1.0
         col_864FB.alignment = 'Expand'.upper()
-        if not True: col_864FB.operator_context = "EXEC_DEFAULT"
+        col_864FB.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_864FB.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.034'].inputs[0], 'default_value', text='Iris', icon_value=0, emboss=True)
         col_864FB.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.035'].inputs[0], 'default_value', text='Soften', icon_value=0, emboss=True)
         col_864FB.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.003'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
+        box_B9D43.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.008'], 'threshold', text='Threshold', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel010_F93CF(bpy.types.Panel):
+class SNA_PT_panel027_E8B95(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel010_F93CF'
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_context = ''
-    bl_order = 1
-    bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_69B3E'
-    bl_ui_units_x=0
-
-    @classmethod
-    def poll(cls, context):
-        return not (False)
-
-    def draw_header(self, context):
-        layout = self.layout
-        row_BA7F3 = layout.row(heading='', align=False)
-        row_BA7F3.alert = False
-        row_BA7F3.enabled = True
-        row_BA7F3.active = True
-        row_BA7F3.use_property_split = False
-        row_BA7F3.use_property_decorate = False
-        row_BA7F3.scale_x = 0.9700000286102295
-        row_BA7F3.scale_y = 1.0
-        row_BA7F3.alignment = 'Expand'.upper()
-        if not True: row_BA7F3.operator_context = "EXEC_DEFAULT"
-        row_BA7F3.label(text='Hoop Flare', icon_value=0)
-        row_BA7F3.separator(factor=0.3100000023841858)
-        row_A6EA8 = row_BA7F3.row(heading='', align=False)
-        row_A6EA8.alert = False
-        row_A6EA8.enabled = True
-        row_A6EA8.active = True
-        row_A6EA8.use_property_split = False
-        row_A6EA8.use_property_decorate = False
-        row_A6EA8.scale_x = 0.9599999785423279
-        row_A6EA8.scale_y = 1.0
-        row_A6EA8.alignment = 'Expand'.upper()
-        if not True: row_A6EA8.operator_context = "EXEC_DEFAULT"
-        row_A6EA8.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.033'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.007'], 'quality', text='Quality', icon_value=0, emboss=True)
-        layout.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.025'].inputs[2], 'default_value', text='Color Overlay', icon_value=0, emboss=True)
-        box_ECB78 = layout.box()
-        box_ECB78.alert = False
-        box_ECB78.enabled = True
-        box_ECB78.active = True
-        box_ECB78.use_property_split = False
-        box_ECB78.use_property_decorate = False
-        box_ECB78.alignment = 'Expand'.upper()
-        box_ECB78.scale_x = 1.0
-        box_ECB78.scale_y = 1.0
-        if not True: box_ECB78.operator_context = "EXEC_DEFAULT"
-        box_ECB78.prop(bpy.data.node_groups['Lens Flare'].nodes['Lens Distortion.013'], 'use_projector', text='Invert Hoop', icon_value=0, emboss=True)
-        col_CF305 = box_ECB78.column(heading='', align=False)
-        col_CF305.alert = False
-        col_CF305.enabled = True
-        col_CF305.active = True
-        col_CF305.use_property_split = False
-        col_CF305.use_property_decorate = False
-        col_CF305.scale_x = 1.0
-        col_CF305.scale_y = 1.0
-        col_CF305.alignment = 'Expand'.upper()
-        if not True: col_CF305.operator_context = "EXEC_DEFAULT"
-        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.030'].inputs[0], 'default_value', text='Iris', icon_value=0, emboss=True)
-        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.031'].inputs[0], 'default_value', text='Soften', icon_value=0, emboss=True)
-        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.002'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
-
-
-class SNA_PT_panel027_327B3(bpy.types.Panel):
-    bl_label = ''
-    bl_idname = 'SNA_PT_panel027_327B3'
+    bl_idname = 'SNA_PT_panel027_E8B95'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 1
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_5420C'
+    bl_parent_id = 'SNA_PT_LENS_FLARE_9C407'
     bl_ui_units_x=0
 
     @classmethod
@@ -5453,7 +5292,7 @@ class SNA_PT_panel027_327B3(bpy.types.Panel):
         row_88FE4.scale_x = 0.9700000286102295
         row_88FE4.scale_y = 1.0
         row_88FE4.alignment = 'Expand'.upper()
-        if not True: row_88FE4.operator_context = "EXEC_DEFAULT"
+        row_88FE4.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_88FE4.label(text='Hoop Flare', icon_value=0)
         row_88FE4.separator(factor=0.3100000023841858)
         row_D81F2 = row_88FE4.row(heading='', align=False)
@@ -5465,7 +5304,7 @@ class SNA_PT_panel027_327B3(bpy.types.Panel):
         row_D81F2.scale_x = 0.9599999785423279
         row_D81F2.scale_y = 1.0
         row_D81F2.alignment = 'Expand'.upper()
-        if not True: row_D81F2.operator_context = "EXEC_DEFAULT"
+        row_D81F2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_D81F2.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.033'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -5482,8 +5321,7 @@ class SNA_PT_panel027_327B3(bpy.types.Panel):
         box_D63B3.scale_x = 1.0
         box_D63B3.scale_y = 1.0
         if not True: box_D63B3.operator_context = "EXEC_DEFAULT"
-        box_D63B3.prop(bpy.data.node_groups['Lens Flare'].nodes['Lens Distortion.013'], 'use_projector', text='Invert Hoop', icon_value=0, emboss=True)
-        col_C3743 = box_D63B3.column(heading='', align=False)
+        col_C3743 = box_D63B3.column(heading='', align=True)
         col_C3743.alert = False
         col_C3743.enabled = True
         col_C3743.active = True
@@ -5492,21 +5330,22 @@ class SNA_PT_panel027_327B3(bpy.types.Panel):
         col_C3743.scale_x = 1.0
         col_C3743.scale_y = 1.0
         col_C3743.alignment = 'Expand'.upper()
-        if not True: col_C3743.operator_context = "EXEC_DEFAULT"
+        col_C3743.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_C3743.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.030'].inputs[0], 'default_value', text='Iris', icon_value=0, emboss=True)
         col_C3743.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.031'].inputs[0], 'default_value', text='Soften', icon_value=0, emboss=True)
         col_C3743.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.002'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
+        box_D63B3.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.007'], 'threshold', text='Threshold', icon_value=0, emboss=True)
 
 
-class SNA_PT_panel018_ABE38(bpy.types.Panel):
+class SNA_PT_panel018_444C5(bpy.types.Panel):
     bl_label = ''
-    bl_idname = 'SNA_PT_panel018_ABE38'
+    bl_idname = 'SNA_PT_panel018_444C5'
     bl_space_type = 'NODE_EDITOR'
     bl_region_type = 'UI'
     bl_context = ''
     bl_order = 2
     bl_options = {'DEFAULT_CLOSED'}
-    bl_parent_id = 'SNA_PT_LENS_FLARE_5420C'
+    bl_parent_id = 'SNA_PT_LENS_FLARE_9C407'
     bl_ui_units_x=0
 
     @classmethod
@@ -5524,7 +5363,7 @@ class SNA_PT_panel018_ABE38(bpy.types.Panel):
         row_13A43.scale_x = 0.9699999690055847
         row_13A43.scale_y = 1.0
         row_13A43.alignment = 'Expand'.upper()
-        if not True: row_13A43.operator_context = "EXEC_DEFAULT"
+        row_13A43.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_13A43.label(text='Simple Hoop', icon_value=0)
         row_67BD7 = row_13A43.row(heading='', align=False)
         row_67BD7.alert = False
@@ -5535,7 +5374,7 @@ class SNA_PT_panel018_ABE38(bpy.types.Panel):
         row_67BD7.scale_x = 0.9599999785423279
         row_67BD7.scale_y = 1.0
         row_67BD7.alignment = 'Expand'.upper()
-        if not True: row_67BD7.operator_context = "EXEC_DEFAULT"
+        row_67BD7.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         row_67BD7.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.037'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
 
     def draw(self, context):
@@ -5552,8 +5391,7 @@ class SNA_PT_panel018_ABE38(bpy.types.Panel):
         box_94938.scale_x = 1.0
         box_94938.scale_y = 1.0
         if not True: box_94938.operator_context = "EXEC_DEFAULT"
-        box_94938.prop(bpy.data.node_groups['Lens Flare'].nodes['Lens Distortion.017'], 'use_projector', text='Invert Hoop', icon_value=0, emboss=True)
-        col_81185 = box_94938.column(heading='', align=False)
+        col_81185 = box_94938.column(heading='', align=True)
         col_81185.alert = False
         col_81185.enabled = True
         col_81185.active = True
@@ -5562,10 +5400,154 @@ class SNA_PT_panel018_ABE38(bpy.types.Panel):
         col_81185.scale_x = 1.0
         col_81185.scale_y = 1.0
         col_81185.alignment = 'Expand'.upper()
-        if not True: col_81185.operator_context = "EXEC_DEFAULT"
+        col_81185.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
         col_81185.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.034'].inputs[0], 'default_value', text='Iris', icon_value=0, emboss=True)
         col_81185.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.035'].inputs[0], 'default_value', text='Soften', icon_value=0, emboss=True)
         col_81185.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.003'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
+        box_94938.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.008'], 'threshold', text='Threshold', icon_value=0, emboss=True)
+
+
+class SNA_PT_panel013_A1AAA(bpy.types.Panel):
+    bl_label = ''
+    bl_idname = 'SNA_PT_panel013_A1AAA'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_context = ''
+    bl_order = 0
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = 'SNA_PT_FILM_EMULATION_69921'
+    bl_ui_units_x=0
+
+    @classmethod
+    def poll(cls, context):
+        return not (False)
+
+    def draw_header(self, context):
+        layout = self.layout
+        row_ACA52 = layout.row(heading='', align=False)
+        row_ACA52.alert = False
+        row_ACA52.enabled = True
+        row_ACA52.active = True
+        row_ACA52.use_property_split = False
+        row_ACA52.use_property_decorate = False
+        row_ACA52.scale_x = 1.0
+        row_ACA52.scale_y = 1.0
+        row_ACA52.alignment = 'Expand'.upper()
+        row_ACA52.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_ACA52.label(text='Film Grain', icon_value=0)
+        row_ACA52.separator(factor=0.46000003814697266)
+        row_26849 = row_ACA52.row(heading='', align=False)
+        row_26849.alert = False
+        row_26849.enabled = True
+        row_26849.active = True
+        row_26849.use_property_split = False
+        row_26849.use_property_decorate = False
+        row_26849.scale_x = 0.8999999761581421
+        row_26849.scale_y = 1.0
+        row_26849.alignment = 'Expand'.upper()
+        row_26849.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_26849.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[11], 'default_value', text='Opacity', icon_value=0, emboss=True, slider=True)
+
+    def draw(self, context):
+        layout = self.layout
+        row_35C4B = layout.row(heading='', align=True)
+        row_35C4B.alert = False
+        row_35C4B.enabled = True
+        row_35C4B.active = True
+        row_35C4B.use_property_split = False
+        row_35C4B.use_property_decorate = False
+        row_35C4B.scale_x = 1.0
+        row_35C4B.scale_y = 1.5
+        row_35C4B.alignment = 'Expand'.upper()
+        row_35C4B.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        op = row_35C4B.operator('sna.bw_noise_8b7f2', text='BW Grain', icon_value=0, emboss=True, depress=False)
+        op = row_35C4B.operator('sna.k_grain_8bf7c', text='RGB Grain', icon_value=0, emboss=True, depress=False)
+        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[12], 'default_value', text='Shadow Clumping', icon_value=0, emboss=True, slider=True)
+        col_E10A2 = layout.column(heading='', align=True)
+        col_E10A2.alert = False
+        col_E10A2.enabled = True
+        col_E10A2.active = True
+        col_E10A2.use_property_split = False
+        col_E10A2.use_property_decorate = False
+        col_E10A2.scale_x = 1.0
+        col_E10A2.scale_y = 1.0
+        col_E10A2.alignment = 'Expand'.upper()
+        col_E10A2.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_E10A2.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[13], 'default_value', text='Soften Grain', icon_value=0, emboss=True, slider=True)
+        col_E10A2.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[14], 'default_value', text='Scale', icon_value=0, emboss=True, slider=True)
+        col_E10A2.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[15], 'default_value', text='RGB Grain Saturation', icon_value=0, emboss=True)
+        layout.prop(bpy.data.scenes['Scene'].node_tree.nodes['Film Emulation'].inputs[16], 'default_value', text='Animate (0/1)', icon_value=0, emboss=True)
+
+
+class SNA_PT_panel010_83136(bpy.types.Panel):
+    bl_label = ''
+    bl_idname = 'SNA_PT_panel010_83136'
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_context = ''
+    bl_order = 1
+    bl_options = {'DEFAULT_CLOSED'}
+    bl_parent_id = 'SNA_PT_LENS_FLARE_77473'
+    bl_ui_units_x=0
+
+    @classmethod
+    def poll(cls, context):
+        return not (False)
+
+    def draw_header(self, context):
+        layout = self.layout
+        row_BA7F3 = layout.row(heading='', align=False)
+        row_BA7F3.alert = False
+        row_BA7F3.enabled = True
+        row_BA7F3.active = True
+        row_BA7F3.use_property_split = False
+        row_BA7F3.use_property_decorate = False
+        row_BA7F3.scale_x = 0.9700000286102295
+        row_BA7F3.scale_y = 1.0
+        row_BA7F3.alignment = 'Expand'.upper()
+        row_BA7F3.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_BA7F3.label(text='Hoop Flare', icon_value=0)
+        row_BA7F3.separator(factor=0.3100000023841858)
+        row_A6EA8 = row_BA7F3.row(heading='', align=False)
+        row_A6EA8.alert = False
+        row_A6EA8.enabled = True
+        row_A6EA8.active = True
+        row_A6EA8.use_property_split = False
+        row_A6EA8.use_property_decorate = False
+        row_A6EA8.scale_x = 0.9599999785423279
+        row_A6EA8.scale_y = 1.0
+        row_A6EA8.alignment = 'Expand'.upper()
+        row_A6EA8.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        row_A6EA8.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.033'].inputs[0], 'default_value', text='Opacity', icon_value=0, emboss=True)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.007'], 'quality', text='Quality', icon_value=0, emboss=True)
+        layout.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.025'].inputs[2], 'default_value', text='Color Overlay', icon_value=0, emboss=True)
+        box_ECB78 = layout.box()
+        box_ECB78.alert = False
+        box_ECB78.enabled = True
+        box_ECB78.active = True
+        box_ECB78.use_property_split = False
+        box_ECB78.use_property_decorate = False
+        box_ECB78.alignment = 'Expand'.upper()
+        box_ECB78.scale_x = 1.0
+        box_ECB78.scale_y = 1.0
+        if not True: box_ECB78.operator_context = "EXEC_DEFAULT"
+        col_CF305 = box_ECB78.column(heading='', align=True)
+        col_CF305.alert = False
+        col_CF305.enabled = True
+        col_CF305.active = True
+        col_CF305.use_property_split = False
+        col_CF305.use_property_decorate = False
+        col_CF305.scale_x = 1.0
+        col_CF305.scale_y = 1.0
+        col_CF305.alignment = 'Expand'.upper()
+        col_CF305.operator_context = "INVOKE_DEFAULT" if True else "EXEC_DEFAULT"
+        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.030'].inputs[0], 'default_value', text='Iris', icon_value=0, emboss=True)
+        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Mix.031'].inputs[0], 'default_value', text='Soften', icon_value=0, emboss=True)
+        col_CF305.prop(bpy.data.node_groups['Lens Flare'].nodes['Hue/Saturation/Value.002'].inputs[2], 'default_value', text='Dispersion Saturation', icon_value=0, emboss=True)
+        box_ECB78.prop(bpy.data.node_groups['Lens Flare'].nodes['Glare.007'], 'threshold', text='Threshold', icon_value=0, emboss=True)
 
 
 def register():
@@ -5573,24 +5555,24 @@ def register():
     _icons = bpy.utils.previews.new()
     bpy.utils.register_class(SNA_OT_Operator026_2Ac7B)
     bpy.utils.register_class(SNA_OT_Operator027_E268C)
-    bpy.utils.register_class(SNA_PT_SELECTIVE_COLOR_2BE89)
+    bpy.utils.register_class(SNA_PT_SELECTIVE_COLOR_6B020)
     bpy.utils.register_class(SNA_OT_Operator028_D6556)
     bpy.utils.register_class(SNA_OT_Operator030_D0C31)
     bpy.utils.register_class(SNA_OT_Operator031_Bb8C9)
     bpy.utils.register_class(SNA_OT_Operator032_Fba2A)
     bpy.utils.register_class(SNA_OT_Operator033_1E2A6)
-    bpy.utils.register_class(SNA_PT_SELECTIVE_COLOR_3BD5B)
-    bpy.utils.register_class(SNA_PT_LENS_FLARE_5420C)
+    bpy.utils.register_class(SNA_PT_SELECTIVE_COLOR_A0FCA)
+    bpy.utils.register_class(SNA_PT_LENS_FLARE_9C407)
     bpy.utils.register_class(SNA_OT_Enable_Glares_C9218)
     bpy.utils.register_class(SNA_OT_Disable_Glares_De435)
-    bpy.utils.register_class(SNA_PT_GLARE_4FB11)
+    bpy.utils.register_class(SNA_PT_GLARE_59C9A)
     bpy.utils.register_class(SNA_OT_Operator001_5409D)
     bpy.utils.register_class(SNA_OT_Operator_9650E)
-    bpy.utils.register_class(SNA_PT_LENS_DIRT_75EBB)
-    bpy.utils.register_class(SNA_PT_GLARE_585AA)
+    bpy.utils.register_class(SNA_PT_LENS_DIRT_5A957)
+    bpy.utils.register_class(SNA_PT_GLARE_74542)
     bpy.utils.register_class(SNA_OT_Operator005_39B40)
     bpy.utils.register_class(SNA_OT_Operator006_2227B)
-    bpy.utils.register_class(SNA_PT_LENS_DIRT_EE194)
+    bpy.utils.register_class(SNA_PT_LENS_DIRT_D38EB)
     bpy.utils.register_class(SNA_OT_Operator020_7A6A7)
     bpy.utils.register_class(SNA_OT_Operator014_71654)
     bpy.utils.register_class(SNA_OT_Operator021_564C0)
@@ -5607,68 +5589,68 @@ def register():
     bpy.utils.register_class(SNA_OT_Operator015_Aea69)
     bpy.utils.register_class(SNA_OT_Operator019_B1Ef3)
     bpy.utils.register_class(SNA_OT_Operator018_E9C55)
-    bpy.utils.register_class(SNA_PT_ASPECT_RATIO__RESOLUTION_75871)
-    bpy.utils.register_class(SNA_PT_ASPECT_RATIO__RESOLUTION_5636C)
+    bpy.utils.register_class(SNA_PT_ASPECT_RATIO__RESOLUTION_4245E)
+    bpy.utils.register_class(SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F)
     bpy.utils.register_class(SNA_OT_Enable_Colorist_264Dc)
-    bpy.utils.register_class(SNA_PT_COLORIST_PRO_V103_4322D)
-    bpy.utils.register_class(SNA_PT_COLORIST_PRO_V103_C2B7C)
     bpy.utils.register_class(SNA_OT_Reset_Wb_253Dd)
     bpy.utils.register_class(SNA_OT_Operator002_9Ba85)
-    bpy.utils.register_class(SNA_PT_COLOR_GRADING_029FA)
-    bpy.utils.register_class(SNA_PT_COLOR_GRADING_F9B97)
+    bpy.utils.register_class(SNA_PT_COLOR_GRADING_8B4C0)
+    bpy.utils.register_class(SNA_PT_COLOR_GRADING_FA4B5)
     bpy.utils.register_class(SNA_OT_Operator003_68E0D)
-    bpy.utils.register_class(SNA_PT_COLOR_MANAGEMENT_54B5A)
+    bpy.utils.register_class(SNA_PT_COLOR_MANAGEMENT_A2DC9)
     bpy.utils.register_class(SNA_OT_Operator024_25E20)
     bpy.utils.register_class(SNA_OT_Operator004_5F1E2)
     bpy.utils.register_class(SNA_OT_Operator023_034Fc)
-    bpy.utils.register_class(SNA_PT_COLOR_MANAGEMENT_01BE3)
+    bpy.utils.register_class(SNA_PT_COLOR_MANAGEMENT_BA963)
     bpy.utils.register_class(SNA_OT_Clear_Luts_47B32)
     bpy.utils.register_class(SNA_OT_Operator029_0476C)
     bpy.utils.register_class(SNA_OT_Enable_Film_Bdaed)
     bpy.utils.register_class(SNA_OT_Disable_Film_7061A)
-    bpy.utils.register_class(SNA_PT_FILM_EMULATION_F700D)
+    bpy.utils.register_class(SNA_PT_FILM_EMULATION_69921)
     bpy.utils.register_class(SNA_OT_K_Grain_8Bf7C)
     bpy.utils.register_class(SNA_OT_Bw_Noise_8B7F2)
     bpy.utils.register_class(SNA_OT_K_Grain001_52E35)
     bpy.utils.register_class(SNA_OT_Bw_Noise001_0530C)
-    bpy.utils.register_class(SNA_PT_FILM_EMULATION_417FF)
-    bpy.utils.register_class(SNA_PT_LENS_FLARE_69B3E)
+    bpy.utils.register_class(SNA_PT_FILM_EMULATION_5D6F8)
+    bpy.utils.register_class(SNA_PT_LENS_FLARE_77473)
     bpy.utils.register_class(SNA_OT_Enable_Lens_Flare_29410)
     bpy.utils.register_class(SNA_OT_Disable_Lens_Flare_4A654)
-    bpy.utils.register_class(SNA_PT_panel017_FD594)
-    bpy.utils.register_class(SNA_PT_ghost_2473D)
-    bpy.utils.register_class(SNA_PT_panel005_0019D)
-    bpy.utils.register_class(SNA_PT_ghost001_7E906)
-    bpy.utils.register_class(SNA_PT_panel029_5FF72)
-    bpy.utils.register_class(SNA_PT_panel030_0527C)
-    bpy.utils.register_class(SNA_PT_panel031_95F3C)
-    bpy.utils.register_class(SNA_PT_WET_LENS_E0695)
-    bpy.utils.register_class(SNA_PT_WET_LENS_215BB)
-    bpy.utils.register_class(SNA_PT_panel026_63902)
-    bpy.utils.register_class(SNA_PT_panel022_8DB73)
-    bpy.utils.register_class(SNA_PT_SOCIAL_MEDIA_80538)
-    bpy.utils.register_class(SNA_PT_panel024_C053C)
-    bpy.utils.register_class(SNA_PT_panel025_DBA7C)
-    bpy.utils.register_class(SNA_PT_panel038_AD960)
-    bpy.utils.register_class(SNA_PT_panel039_DFAA1)
-    bpy.utils.register_class(SNA_PT_SOCIAL_MEDIA_AD2DF)
-    bpy.utils.register_class(SNA_PT_panel041_8506D)
-    bpy.utils.register_class(SNA_PT_panel042_990B5)
-    bpy.utils.register_class(SNA_PT_panel003_88558)
-    bpy.utils.register_class(SNA_PT_panel004_97DAF)
-    bpy.utils.register_class(SNA_PT_panel013_08FF4)
-    bpy.utils.register_class(SNA_PT_panel012_804D6)
-    bpy.utils.register_class(SNA_PT_panel_88FEC)
-    bpy.utils.register_class(SNA_PT_panel015_235E6)
-    bpy.utils.register_class(SNA_PT_panel036_353E3)
-    bpy.utils.register_class(SNA_PT_panel037_C6813)
-    bpy.utils.register_class(SNA_PT_panel045_E2FA1)
-    bpy.utils.register_class(SNA_PT_panel046_84B76)
-    bpy.utils.register_class(SNA_PT_panel008_068C3)
-    bpy.utils.register_class(SNA_PT_panel011_457C4)
-    bpy.utils.register_class(SNA_PT_panel010_F93CF)
-    bpy.utils.register_class(SNA_PT_panel027_327B3)
-    bpy.utils.register_class(SNA_PT_panel018_ABE38)
+    bpy.utils.register_class(SNA_PT_COLORIST_PRO_V111_5161E)
+    bpy.utils.register_class(SNA_PT_COLORIST_PRO_V111_BCC9C)
+    bpy.utils.register_class(SNA_PT_panel017_B3899)
+    bpy.utils.register_class(SNA_PT_ghost_97C8D)
+    bpy.utils.register_class(SNA_PT_panel005_95AB8)
+    bpy.utils.register_class(SNA_PT_ghost001_5ED67)
+    bpy.utils.register_class(SNA_PT_panel029_16DD7)
+    bpy.utils.register_class(SNA_PT_panel030_AB64D)
+    bpy.utils.register_class(SNA_PT_panel031_34A85)
+    bpy.utils.register_class(SNA_PT_WET_LENS_0D64E)
+    bpy.utils.register_class(SNA_PT_WET_LENS_2A174)
+    bpy.utils.register_class(SNA_PT_panel026_B0DA7)
+    bpy.utils.register_class(SNA_PT_panel022_FB574)
+    bpy.utils.register_class(SNA_PT_SOCIAL_MEDIA_DFA8C)
+    bpy.utils.register_class(SNA_PT_panel024_27A4E)
+    bpy.utils.register_class(SNA_PT_panel025_32F65)
+    bpy.utils.register_class(SNA_PT_panel038_03BC6)
+    bpy.utils.register_class(SNA_PT_panel039_B1C6B)
+    bpy.utils.register_class(SNA_PT_SOCIAL_MEDIA_DC603)
+    bpy.utils.register_class(SNA_PT_panel041_1FC6C)
+    bpy.utils.register_class(SNA_PT_panel042_5FAD5)
+    bpy.utils.register_class(SNA_PT_panel003_2D3AF)
+    bpy.utils.register_class(SNA_PT_panel004_665CF)
+    bpy.utils.register_class(SNA_PT_panel012_CC8A4)
+    bpy.utils.register_class(SNA_PT_panel_E701A)
+    bpy.utils.register_class(SNA_PT_panel015_6D695)
+    bpy.utils.register_class(SNA_PT_panel036_8C8DD)
+    bpy.utils.register_class(SNA_PT_panel037_3EEE5)
+    bpy.utils.register_class(SNA_PT_panel045_C078A)
+    bpy.utils.register_class(SNA_PT_panel046_A473D)
+    bpy.utils.register_class(SNA_PT_panel008_50F63)
+    bpy.utils.register_class(SNA_PT_panel011_89433)
+    bpy.utils.register_class(SNA_PT_panel027_E8B95)
+    bpy.utils.register_class(SNA_PT_panel018_444C5)
+    bpy.utils.register_class(SNA_PT_panel013_A1AAA)
+    bpy.utils.register_class(SNA_PT_panel010_83136)
 
 
 def unregister():
@@ -5681,24 +5663,24 @@ def unregister():
     addon_keymaps.clear()
     bpy.utils.unregister_class(SNA_OT_Operator026_2Ac7B)
     bpy.utils.unregister_class(SNA_OT_Operator027_E268C)
-    bpy.utils.unregister_class(SNA_PT_SELECTIVE_COLOR_2BE89)
+    bpy.utils.unregister_class(SNA_PT_SELECTIVE_COLOR_6B020)
     bpy.utils.unregister_class(SNA_OT_Operator028_D6556)
     bpy.utils.unregister_class(SNA_OT_Operator030_D0C31)
     bpy.utils.unregister_class(SNA_OT_Operator031_Bb8C9)
     bpy.utils.unregister_class(SNA_OT_Operator032_Fba2A)
     bpy.utils.unregister_class(SNA_OT_Operator033_1E2A6)
-    bpy.utils.unregister_class(SNA_PT_SELECTIVE_COLOR_3BD5B)
-    bpy.utils.unregister_class(SNA_PT_LENS_FLARE_5420C)
+    bpy.utils.unregister_class(SNA_PT_SELECTIVE_COLOR_A0FCA)
+    bpy.utils.unregister_class(SNA_PT_LENS_FLARE_9C407)
     bpy.utils.unregister_class(SNA_OT_Enable_Glares_C9218)
     bpy.utils.unregister_class(SNA_OT_Disable_Glares_De435)
-    bpy.utils.unregister_class(SNA_PT_GLARE_4FB11)
+    bpy.utils.unregister_class(SNA_PT_GLARE_59C9A)
     bpy.utils.unregister_class(SNA_OT_Operator001_5409D)
     bpy.utils.unregister_class(SNA_OT_Operator_9650E)
-    bpy.utils.unregister_class(SNA_PT_LENS_DIRT_75EBB)
-    bpy.utils.unregister_class(SNA_PT_GLARE_585AA)
+    bpy.utils.unregister_class(SNA_PT_LENS_DIRT_5A957)
+    bpy.utils.unregister_class(SNA_PT_GLARE_74542)
     bpy.utils.unregister_class(SNA_OT_Operator005_39B40)
     bpy.utils.unregister_class(SNA_OT_Operator006_2227B)
-    bpy.utils.unregister_class(SNA_PT_LENS_DIRT_EE194)
+    bpy.utils.unregister_class(SNA_PT_LENS_DIRT_D38EB)
     bpy.utils.unregister_class(SNA_OT_Operator020_7A6A7)
     bpy.utils.unregister_class(SNA_OT_Operator014_71654)
     bpy.utils.unregister_class(SNA_OT_Operator021_564C0)
@@ -5715,65 +5697,65 @@ def unregister():
     bpy.utils.unregister_class(SNA_OT_Operator015_Aea69)
     bpy.utils.unregister_class(SNA_OT_Operator019_B1Ef3)
     bpy.utils.unregister_class(SNA_OT_Operator018_E9C55)
-    bpy.utils.unregister_class(SNA_PT_ASPECT_RATIO__RESOLUTION_75871)
-    bpy.utils.unregister_class(SNA_PT_ASPECT_RATIO__RESOLUTION_5636C)
+    bpy.utils.unregister_class(SNA_PT_ASPECT_RATIO__RESOLUTION_4245E)
+    bpy.utils.unregister_class(SNA_PT_ASPECT_RATIO__RESOLUTION_2BE9F)
     bpy.utils.unregister_class(SNA_OT_Enable_Colorist_264Dc)
-    bpy.utils.unregister_class(SNA_PT_COLORIST_PRO_V103_4322D)
-    bpy.utils.unregister_class(SNA_PT_COLORIST_PRO_V103_C2B7C)
     bpy.utils.unregister_class(SNA_OT_Reset_Wb_253Dd)
     bpy.utils.unregister_class(SNA_OT_Operator002_9Ba85)
-    bpy.utils.unregister_class(SNA_PT_COLOR_GRADING_029FA)
-    bpy.utils.unregister_class(SNA_PT_COLOR_GRADING_F9B97)
+    bpy.utils.unregister_class(SNA_PT_COLOR_GRADING_8B4C0)
+    bpy.utils.unregister_class(SNA_PT_COLOR_GRADING_FA4B5)
     bpy.utils.unregister_class(SNA_OT_Operator003_68E0D)
-    bpy.utils.unregister_class(SNA_PT_COLOR_MANAGEMENT_54B5A)
+    bpy.utils.unregister_class(SNA_PT_COLOR_MANAGEMENT_A2DC9)
     bpy.utils.unregister_class(SNA_OT_Operator024_25E20)
     bpy.utils.unregister_class(SNA_OT_Operator004_5F1E2)
     bpy.utils.unregister_class(SNA_OT_Operator023_034Fc)
-    bpy.utils.unregister_class(SNA_PT_COLOR_MANAGEMENT_01BE3)
+    bpy.utils.unregister_class(SNA_PT_COLOR_MANAGEMENT_BA963)
     bpy.utils.unregister_class(SNA_OT_Clear_Luts_47B32)
     bpy.utils.unregister_class(SNA_OT_Operator029_0476C)
     bpy.utils.unregister_class(SNA_OT_Enable_Film_Bdaed)
     bpy.utils.unregister_class(SNA_OT_Disable_Film_7061A)
-    bpy.utils.unregister_class(SNA_PT_FILM_EMULATION_F700D)
+    bpy.utils.unregister_class(SNA_PT_FILM_EMULATION_69921)
     bpy.utils.unregister_class(SNA_OT_K_Grain_8Bf7C)
     bpy.utils.unregister_class(SNA_OT_Bw_Noise_8B7F2)
     bpy.utils.unregister_class(SNA_OT_K_Grain001_52E35)
     bpy.utils.unregister_class(SNA_OT_Bw_Noise001_0530C)
-    bpy.utils.unregister_class(SNA_PT_FILM_EMULATION_417FF)
-    bpy.utils.unregister_class(SNA_PT_LENS_FLARE_69B3E)
+    bpy.utils.unregister_class(SNA_PT_FILM_EMULATION_5D6F8)
+    bpy.utils.unregister_class(SNA_PT_LENS_FLARE_77473)
     bpy.utils.unregister_class(SNA_OT_Enable_Lens_Flare_29410)
     bpy.utils.unregister_class(SNA_OT_Disable_Lens_Flare_4A654)
-    bpy.utils.unregister_class(SNA_PT_panel017_FD594)
-    bpy.utils.unregister_class(SNA_PT_ghost_2473D)
-    bpy.utils.unregister_class(SNA_PT_panel005_0019D)
-    bpy.utils.unregister_class(SNA_PT_ghost001_7E906)
-    bpy.utils.unregister_class(SNA_PT_panel029_5FF72)
-    bpy.utils.unregister_class(SNA_PT_panel030_0527C)
-    bpy.utils.unregister_class(SNA_PT_panel031_95F3C)
-    bpy.utils.unregister_class(SNA_PT_WET_LENS_E0695)
-    bpy.utils.unregister_class(SNA_PT_WET_LENS_215BB)
-    bpy.utils.unregister_class(SNA_PT_panel026_63902)
-    bpy.utils.unregister_class(SNA_PT_panel022_8DB73)
-    bpy.utils.unregister_class(SNA_PT_SOCIAL_MEDIA_80538)
-    bpy.utils.unregister_class(SNA_PT_panel024_C053C)
-    bpy.utils.unregister_class(SNA_PT_panel025_DBA7C)
-    bpy.utils.unregister_class(SNA_PT_panel038_AD960)
-    bpy.utils.unregister_class(SNA_PT_panel039_DFAA1)
-    bpy.utils.unregister_class(SNA_PT_SOCIAL_MEDIA_AD2DF)
-    bpy.utils.unregister_class(SNA_PT_panel041_8506D)
-    bpy.utils.unregister_class(SNA_PT_panel042_990B5)
-    bpy.utils.unregister_class(SNA_PT_panel003_88558)
-    bpy.utils.unregister_class(SNA_PT_panel004_97DAF)
-    bpy.utils.unregister_class(SNA_PT_panel013_08FF4)
-    bpy.utils.unregister_class(SNA_PT_panel012_804D6)
-    bpy.utils.unregister_class(SNA_PT_panel_88FEC)
-    bpy.utils.unregister_class(SNA_PT_panel015_235E6)
-    bpy.utils.unregister_class(SNA_PT_panel036_353E3)
-    bpy.utils.unregister_class(SNA_PT_panel037_C6813)
-    bpy.utils.unregister_class(SNA_PT_panel045_E2FA1)
-    bpy.utils.unregister_class(SNA_PT_panel046_84B76)
-    bpy.utils.unregister_class(SNA_PT_panel008_068C3)
-    bpy.utils.unregister_class(SNA_PT_panel011_457C4)
-    bpy.utils.unregister_class(SNA_PT_panel010_F93CF)
-    bpy.utils.unregister_class(SNA_PT_panel027_327B3)
-    bpy.utils.unregister_class(SNA_PT_panel018_ABE38)
+    bpy.utils.unregister_class(SNA_PT_COLORIST_PRO_V111_5161E)
+    bpy.utils.unregister_class(SNA_PT_COLORIST_PRO_V111_BCC9C)
+    bpy.utils.unregister_class(SNA_PT_panel017_B3899)
+    bpy.utils.unregister_class(SNA_PT_ghost_97C8D)
+    bpy.utils.unregister_class(SNA_PT_panel005_95AB8)
+    bpy.utils.unregister_class(SNA_PT_ghost001_5ED67)
+    bpy.utils.unregister_class(SNA_PT_panel029_16DD7)
+    bpy.utils.unregister_class(SNA_PT_panel030_AB64D)
+    bpy.utils.unregister_class(SNA_PT_panel031_34A85)
+    bpy.utils.unregister_class(SNA_PT_WET_LENS_0D64E)
+    bpy.utils.unregister_class(SNA_PT_WET_LENS_2A174)
+    bpy.utils.unregister_class(SNA_PT_panel026_B0DA7)
+    bpy.utils.unregister_class(SNA_PT_panel022_FB574)
+    bpy.utils.unregister_class(SNA_PT_SOCIAL_MEDIA_DFA8C)
+    bpy.utils.unregister_class(SNA_PT_panel024_27A4E)
+    bpy.utils.unregister_class(SNA_PT_panel025_32F65)
+    bpy.utils.unregister_class(SNA_PT_panel038_03BC6)
+    bpy.utils.unregister_class(SNA_PT_panel039_B1C6B)
+    bpy.utils.unregister_class(SNA_PT_SOCIAL_MEDIA_DC603)
+    bpy.utils.unregister_class(SNA_PT_panel041_1FC6C)
+    bpy.utils.unregister_class(SNA_PT_panel042_5FAD5)
+    bpy.utils.unregister_class(SNA_PT_panel003_2D3AF)
+    bpy.utils.unregister_class(SNA_PT_panel004_665CF)
+    bpy.utils.unregister_class(SNA_PT_panel012_CC8A4)
+    bpy.utils.unregister_class(SNA_PT_panel_E701A)
+    bpy.utils.unregister_class(SNA_PT_panel015_6D695)
+    bpy.utils.unregister_class(SNA_PT_panel036_8C8DD)
+    bpy.utils.unregister_class(SNA_PT_panel037_3EEE5)
+    bpy.utils.unregister_class(SNA_PT_panel045_C078A)
+    bpy.utils.unregister_class(SNA_PT_panel046_A473D)
+    bpy.utils.unregister_class(SNA_PT_panel008_50F63)
+    bpy.utils.unregister_class(SNA_PT_panel011_89433)
+    bpy.utils.unregister_class(SNA_PT_panel027_E8B95)
+    bpy.utils.unregister_class(SNA_PT_panel018_444C5)
+    bpy.utils.unregister_class(SNA_PT_panel013_A1AAA)
+    bpy.utils.unregister_class(SNA_PT_panel010_83136)

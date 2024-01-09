@@ -19,7 +19,6 @@
 # Copyright 2021, Alex Zhornyak
 
 import bpy
-import bgl
 import gpu
 import bmesh
 from gpu_extras.batch import batch_for_shader
@@ -283,7 +282,7 @@ class EdgesCacher(BasicSetsCacher):
 
             bm = bmesh.from_edit_mesh(p_obj.data)
 
-            dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+            dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
             if dataLayer is not None:
                 radiusToColor = {}
                 bpg = ZBBQ_CommonFunc.GetActiveBevelPresetGroup()
@@ -322,11 +321,12 @@ class EdgesCacher(BasicSetsCacher):
             self.batch = None
 
     def _internal_draw(self, p_matrix, p_alpha):
-        bgl.glEnable(bgl.GL_BLEND)
-        bgl.glEnable(bgl.GL_LINE_SMOOTH)
-        bgl.glEnable(bgl.GL_DEPTH_TEST)
+        gpu.state.blend_set('ALPHA')
+        gpu.state.depth_test_set('LESS_EQUAL')
+        gpu.state.depth_mask_set(True)
+
         edge_active_line_width = 2
-        bgl.glLineWidth(edge_active_line_width)
+        gpu.state.line_width_set(edge_active_line_width)
 
         try:
             self.shader.bind()
@@ -338,7 +338,6 @@ class EdgesCacher(BasicSetsCacher):
 
         finally:
             # restore opengl defaults
-            bgl.glLineWidth(1)
-            bgl.glDisable(bgl.GL_BLEND)
-            bgl.glDisable(bgl.GL_LINE_SMOOTH)
-            bgl.glDisable(bgl.GL_DEPTH_TEST)
+            gpu.state.blend_set('NONE')
+            gpu.state.depth_mask_set(False)
+            gpu.state.line_width_set(1)

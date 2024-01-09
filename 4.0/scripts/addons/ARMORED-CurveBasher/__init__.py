@@ -2,7 +2,7 @@ bl_info = {
     'name'        : 'Curve Basher',
     'description' : 'Curve Generators and Kitbashing Tools',
     'author'      : 'Armored Colony',
-    'version'     : (1, '3 (Rev 7) [BOREALOPELTA]',),
+    'version'     : (1, '3 (Rev 9) [BOREALOPELTA]',),
     'blender'     : (2, 90),
     # 'location'    : 'View3D > Add > Mesh',
     # 'warning'     : 'Whatever', # Used for warning icon and text in addons panel.

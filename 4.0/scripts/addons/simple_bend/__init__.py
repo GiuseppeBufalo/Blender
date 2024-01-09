@@ -35,7 +35,7 @@ bl_info = {
     "name": "Simple Bend",
     "description": "Simple Bend",
     "author": "Kushiro",
-    "version": (2, 1, 7),
+    "version": (2, 3, 1),
     "blender": (2, 83, 0),
     "location": "View3D > Edit > Context Menu (right click)",
     "category": "Mesh",

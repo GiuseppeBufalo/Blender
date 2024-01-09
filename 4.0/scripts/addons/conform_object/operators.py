@@ -218,11 +218,20 @@ class CONFORMOBJECT_OT_ToggleGridSnap(bpy.types.Operator):
     def execute(self, context):
         context.scene.tool_settings.use_snap = not context.scene.tool_settings.use_snap
         if context.scene.tool_settings.use_snap:
-            context.scene.tool_settings.snap_elements = {'FACE'}
+            if hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+                context.scene.tool_settings.snap_elements_individual = {'FACE_PROJECT'}
+            else:
+                context.scene.tool_settings.snap_elements = {'FACE'}
         else:
+            if hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+                context.scene.tool_settings.snap_elements_individual = set()
             context.scene.tool_settings.snap_elements = {'INCREMENT'}
+            
         context.scene.tool_settings.use_snap_align_rotation = context.scene.tool_settings.use_snap
-        context.scene.tool_settings.use_snap_project = context.scene.tool_settings.use_snap
+        if hasattr(context.scene.tool_settings, 'use_snap_project'):
+            context.scene.tool_settings.use_snap_project = context.scene.tool_settings.use_snap
+        elif hasattr(context.scene.tool_settings, 'use_snap_time_absolute'):
+            context.scene.tool_settings.use_snap_time_absolute = context.scene.tool_settings.use_snap
         return {'FINISHED'}
 
 class CONFORMOBJECT_OT_Dig(bpy.types.Operator):
@@ -1361,7 +1370,13 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
         
         face = bm.faces.new([vert3, vert2, vert1, vert0])
 
-        crease_layer = bm.edges.layers.crease.verify()
+        # Blender 3 polyfiller
+        if hasattr(bm.edges.layers, 'crease'):
+            crease_layer = bm.edges.layers.crease.verify()
+        else:
+            # Blender 4 manually creates the bevels
+            crease_layer = bm.edges.layers.float.new('crease_edge')
+
         for e in bm.edges:
             e[crease_layer] = 1.0
 
@@ -1586,30 +1601,16 @@ class CONFORMOBJECT_OT_Conform(bpy.types.Operator):
 
         return bm
 
-
-def apply_modifiers(obj):
-    ctx = bpy.context.copy()
-    ctx['object'] = obj
-    for _, m in enumerate(obj.modifiers):
-        try:
-            ctx['modifier'] = m
-            bpy.ops.object.modifier_apply(ctx, modifier=m.name)
-        except RuntimeError:
-            print(f"Error applying {m.name} to {obj.name}, removing it instead.")
-            obj.modifiers.remove(m)
-
-    for m in obj.modifiers:
-        obj.modifiers.remove(m)
-
-def apply_modifier(obj, m):
-    ctx = bpy.context.copy()
-    ctx['object'] = obj
+def apply_modifier(context, obj, m):
+    old_active = context.view_layer.objects.active
     try:
-        ctx['modifier'] = m
-        bpy.ops.object.modifier_apply(ctx, modifier=m.name)
+        context.view_layer.objects.active = obj
+        bpy.ops.object.modifier_apply(modifier=m.name)
     except RuntimeError:
         print(f"Error applying {m.name} to {obj.name}, removing it instead.")
         obj.modifiers.remove(m)
+    finally:
+        context.view_layer.objects.active = old_active
 
 
 
@@ -1708,20 +1709,20 @@ def conform_apply(source_obj, context):
 
     #apply subdivision modifier.
     if _subd_mod_name in source_obj.modifiers:
-        apply_modifier(source_obj, source_obj.modifiers[_subd_mod_name])
+        apply_modifier(context, source_obj, source_obj.modifiers[_subd_mod_name])
 
     #apply the deform modifier.
     if _deform_mod_name in source_obj.modifiers:
         mod = source_obj.modifiers[_deform_mod_name]
-        apply_modifier(source_obj, mod)
+        apply_modifier(context, source_obj, mod)
 
     #apply the transfer modifier.
     if _transfer_mod_name in source_obj.modifiers:
-        apply_modifier(source_obj, source_obj.modifiers[_transfer_mod_name])
+        apply_modifier(context, source_obj, source_obj.modifiers[_transfer_mod_name])
 
     # apply shrinkwrap modifier if preset. 
     if _deform_shrinkwrap_mod_name in source_obj.modifiers:
-        apply_modifier(source_obj, source_obj.modifiers[_deform_shrinkwrap_mod_name])
+        apply_modifier(context, source_obj, source_obj.modifiers[_deform_shrinkwrap_mod_name])
 
     # remove any related vertex groups.
     if _conform_obj_group_name in source_obj.vertex_groups:
@@ -1949,10 +1950,14 @@ def conform_func(self, context):
 def snap_func(self, context):
     col = self.layout.column()
     col.label(text="Conform Object")
-    depressed = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements == {'FACE'} and \
-                    context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_project
+    if hasattr(context.scene.tool_settings, 'use_snap_project'):
+        depressed = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements == {'FACE'} and \
+                        context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_project
+    elif hasattr(context.scene.tool_settings, 'use_snap_time_absolute') and hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+        depressed = context.scene.tool_settings.use_snap and context.scene.tool_settings.snap_elements_individual == {'FACE_PROJECT'} and \
+                        context.scene.tool_settings.use_snap_align_rotation and context.scene.tool_settings.use_snap_time_absolute
     col.operator(CONFORMOBJECT_OT_ToggleGridSnap.bl_idname, icon='SNAP_FACE', depress=depressed)
-
+    
 classes = [
     CONFORMOBJECT_OT_Conform,
     CONFORMOBJECT_OT_ConformUndo,

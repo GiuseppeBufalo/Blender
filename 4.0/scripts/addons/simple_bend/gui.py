@@ -1,30 +1,35 @@
 
 
 import bpy
-import bmesh
+#import bmesh
 import blf
-import bgl
+
+
 from mathutils import Matrix, Vector, Quaternion
 from mathutils import bvhtree
 from bpy_extras import view3d_utils
 import gpu
 from gpu_extras.batch import batch_for_shader
 import math
-from bpy.props import (
-    FloatProperty,
-    IntProperty,
-    BoolProperty,
-    EnumProperty,
-)
+
+if bpy.app.version < (3, 5, 0):
+    import bgl
+
+
+import pprint
+
+if bpy.app.version < (3, 5, 0):
+    shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
+else:
+    shader = gpu.shader.from_builtin('POLYLINE_UNIFORM_COLOR')
 
 
 
-shader = gpu.shader.from_builtin('3D_UNIFORM_COLOR')
-shader2d = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+# shader2d = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
 
 handle3d = None
 handle3dtext = None
-handle3drect = None
+# handle3drect = None
 
 lines = []
 lines2 = []
@@ -74,17 +79,15 @@ def draw_3d(self, context):
 
 
 def draw_text_callback(self, context):
-    sc = bpy.context.preferences.system.ui_scale 
     global txtall
     global textpos
-    left = 100 * sc
-    sp = 20 * 1.7 * sc
-    top = len(txtall) * sp + 50 * sc
+    left = 600
+    sp = 30 * 1.7
+    top = len(txtall) * sp + 90
     off = 0
-    wd = bpy.context.region.width
     for p in txtall:
         off += sp
-        draw_text( [wd/2 - left, top - off], p)    
+        draw_text( [left, top - off], p)    
 
     for p in textpos:        
         #draw_text( [left, top - off], p)    
@@ -93,14 +96,17 @@ def draw_text_callback(self, context):
 
 
 def draw_text_adv(pam):
-    # sc = bpy.context.preferences.view.ui_scale      
+    # sc = bpy.context.preferences.view.ui_scale  
     sc = bpy.context.preferences.system.ui_scale 
     text, x, y, size = pam
     font_id = 0
     # draw some text
     blf.color(font_id, 1,1,1,1)
     blf.position(font_id, x, y, 0)
-    blf.size(font_id, size, int(72 * sc))
+    if bpy.app.version < (3, 5, 0):
+        blf.size(font_id, math.floor(size * sc), 72)
+    else:
+        blf.size(font_id, math.floor(size * sc))
     blf.draw(font_id, text)
 
 
@@ -113,24 +119,61 @@ def draw_text(pos, text):
     # draw some text
     blf.color(font_id, 1, 1, 1, 1)
     blf.position(font_id, pos[0], pos[1], 0)
-    blf.size(font_id, 16, int(72 * sc))
+    if bpy.app.version < (3, 5, 0):
+        blf.size(font_id, math.floor(16 * sc), 72)
+    else:
+        blf.size(font_id, math.floor(16 * sc))    
+    # blf.size(font_id, math.floor(16 * sc), 72)
     blf.draw(font_id, text)
 
 
     
 def draw_line(points, color, blend=False, smooth=False, width=1):
+    if bpy.app.version < (3, 5, 0):
+        draw_line_gl(points, color, blend=blend, smooth=smooth, width=width)
+        return
+    # draw_line_gl(points, color, blend=blend, smooth=smooth, width=width)
+    # return
+
+    global shader
+    gpu.state.blend_set('ALPHA')
+    # gpu.state.line_width_set(width)    
+    #bgl.glEnable(bgl.GL_LINE_SMOOTH)
+    
+    #bgl.glLineWidth(width)
+    shader.bind()
+    shader.uniform_float("viewportSize", gpu.state.viewport_get()[2:])
+    shader.uniform_float("color", color)
+    shader.uniform_float("lineWidth", width)
+    batch = batch_for_shader(shader, 'LINES', {"pos": points})
+    batch.draw(shader)
+
+    gpu.state.blend_set("NONE")
+
+    #bgl.glDisable(bgl.GL_BLEND)
+    #bgl.glDisable(bgl.GL_LINE_SMOOTH)
+    #bgl.glLineWidth(1)    
+
+
+
+
+def draw_line_gl(points, color, blend=False, smooth=False, width=1):
     global shader
 
     if len(points) == 0:
-        return    
+        return
 
     if blend:
         bgl.glEnable(bgl.GL_BLEND)
+    else:
+        bgl.glDisable(bgl.GL_BLEND)
+
     if smooth:
         bgl.glEnable(bgl.GL_LINE_SMOOTH)
-
-    if width != 1:
-        bgl.glLineWidth(width)
+    else:
+        bgl.glDisable(bgl.GL_LINE_SMOOTH)
+    
+    bgl.glLineWidth(width)
 
     shader.bind()
     shader.uniform_float("color", color)
@@ -139,20 +182,22 @@ def draw_line(points, color, blend=False, smooth=False, width=1):
 
     bgl.glDisable(bgl.GL_BLEND)
     bgl.glDisable(bgl.GL_LINE_SMOOTH)
-    bgl.glLineWidth(1)   
-    
+    bgl.glLineWidth(1)    
 
 
-def draw_rect_callback(self, context):
-    global rects
-    #vertices = ((100, 100), (300, 100), (100, 200), (300, 200))
-    vertices = rects
-    indices = ((0, 1, 2), (2, 1, 3))
 
-    shader2d.bind()
-    shader2d.uniform_float("color", (0, 0, 0, 0.3))
-    batch = batch_for_shader(shader2d, 'TRIS', {"pos": vertices}, indices=indices)
-    batch.draw(shader)
+
+
+# def draw_rect_callback(self, context):
+#     global rects
+#     #vertices = ((100, 100), (300, 100), (100, 200), (300, 200))
+#     vertices = rects
+#     indices = ((0, 1, 2), (2, 1, 3))
+
+#     shader2d.bind()
+#     shader2d.uniform_float("color", (0, 0, 0, 0.3))
+#     batch = batch_for_shader(shader2d, 'TRIS', {"pos": vertices}, indices=indices)
+#     batch.draw(shader)
 
 
 def draw_handle_add(arg):
@@ -167,36 +212,27 @@ def text_handle_add(arg):
     handle3dtext = bpy.types.SpaceView3D.draw_handler_add(
         draw_text_callback, arg, 'WINDOW', 'POST_PIXEL')
 
-def rect_handle_add(arg):
-    global handle3drect
-    print('add rect')
-    handle3drect = bpy.types.SpaceView3D.draw_handler_add(
-        draw_rect_callback, arg, 'WINDOW', 'POST_PIXEL')
+# def rect_handle_add(arg):
+#     global handle3drect
+#     print('add rect')
+#     handle3drect = bpy.types.SpaceView3D.draw_handler_add(
+#         draw_rect_callback, arg, 'WINDOW', 'POST_PIXEL')
 
 
 def draw_handle_remove():    
     global handle3d
     if handle3d != None:
         print('remove draw')
-        try:
-            bpy.types.SpaceView3D.draw_handler_remove(
-                handle3d, 'WINDOW')   
-        except:
-            pass
+        bpy.types.SpaceView3D.draw_handler_remove(
+            handle3d, 'WINDOW')   
     global handle3dtext
     if handle3dtext != None:
         print('remove text')
-        try:
-            bpy.types.SpaceView3D.draw_handler_remove(
-                handle3dtext, 'WINDOW')   
-        except:
-            pass
-    global handle3drect
-    if handle3drect != None:
-        print('remove rect')
-        try:
-            bpy.types.SpaceView3D.draw_handler_remove(
-                handle3drect, 'WINDOW')   
-        except:
-            pass
+        bpy.types.SpaceView3D.draw_handler_remove(
+            handle3dtext, 'WINDOW')   
+    # global handle3drect
+    # if handle3drect != None:
+    #     print('remove rect')
+    #     bpy.types.SpaceView3D.draw_handler_remove(
+    #         handle3drect, 'WINDOW')   
           

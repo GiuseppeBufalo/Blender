@@ -21,11 +21,28 @@
 """ Logging """
 
 import sys
+import fnmatch
 
 
 class Log:
 
     ENABLE_DEBUG = False
+
+    CATEGORY = []
+
+    @classmethod
+    def temp(cls, category, *args, **kwargs):
+        if cls.ENABLE_DEBUG:
+            if '~*' in cls.CATEGORY:
+                return
+
+            ignore_category = '~' + category
+            if ignore_category in cls.CATEGORY:
+                return
+
+            b_match = any(fnmatch.fnmatch(category, cat) for cat in cls.CATEGORY)
+            if b_match:
+                print('TEMP:', f'{category}:', *args, **kwargs)
 
     @classmethod
     def debug(cls, *args, **kwargs):

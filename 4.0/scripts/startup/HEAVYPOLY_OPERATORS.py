@@ -3,7 +3,7 @@ bl_info = {
     "description": "Operators that make for smooth blending",
     "author": "Vaughan Ling",
     "version": (0, 1, 0),
-    "blender": (2, 80, 0),
+    "blender": (4, 0, 0),
     "location": "",
     "warning": "",
     "wiki_url": "",
@@ -224,26 +224,15 @@ class HP_OT_extrude(Operator):
             print('EXTRUDING EDGES')
             bpy.ops.mesh.extrude_region_move('INVOKE_DEFAULT')
             return {'FINISHED'}
-
+	
 
         # Save Selection
-        print('Initial Selection Saved')
-        bpy.ops.object.face_map_add()
-        # bpy.ops.object.face_map_add()
-        bpy.ops.object.face_map_assign()
-
-        bpy.ops.mesh.select_linked(delimit={'SEAM'})
-
+       
         print('Linked Selection Saved')
         mesh = context.object.data
         linkedface = mesh.total_face_sel
         print(linkedface)
 
-
-        bpy.ops.mesh.select_all(action='DESELECT')
-        bpy.ops.object.face_map_select()
-        bpy.ops.object.face_map_remove()
-        # bpy.ops.object.face_map_remove()
 
         print('EXTRUDING FACES')
         bpy.ops.mesh.extrude_region_move('EXEC_DEFAULT')
@@ -256,25 +245,11 @@ class HP_OT_extrude(Operator):
         context.window_manager.modal_handler_add(self)
         if selface > 0:
             print('Extruding Faces w vertex group')
-            #bpy.ops.object.vertex_group_add()
-            #bpy.ops.object.vertex_group_assign()
             bpy.ops.transform.shrink_fatten('INVOKE_DEFAULT', use_even_offset=True)
             print('FIXING NORMALS')
             return {'RUNNING_MODAL'}
         return {'RUNNING_MODAL'}
-    def modal(self, context, event):
-        if event.type == 'MOUSEMOVE':
-            bpy.ops.mesh.select_linked()
-            bpy.ops.mesh.normals_make_consistent(inside=False)
-            bpy.ops.mesh.select_all(action='DESELECT')
-            print('extrude modal')
-            #bpy.ops.object.vertex_group_select()
-            #bpy.ops.object.vertex_group_remove(all=False, all_unlocked=False)
-            #bpy.ops.object.face_map_remove()
-            return {'FINISHED'}
-        if event.type in {'RIGHTMOUSE', 'ESC'}:
-            return {'CANCELLED'}
-        return {'RUNNING_MODAL'}
+    
 
 class HP_OT_SmartScale(Operator):
     bl_idname = "view3d.smart_scale"        # unique identifier for buttons and menu items to reference.
@@ -295,22 +270,21 @@ class HP_OT_SmartScale(Operator):
             pass
         if modal:
             context.window_manager.modal_handler_add(self)
-        print('Scaling')
+            print('Scaling MODAL')
         bpy.ops.transform.resize('INVOKE_DEFAULT', mirror=True)
         return {'RUNNING_MODAL'}
     def modal(self, context, event):
- #       if event.type == 'MOUSEMOVE':
-        # if event.type == 'LEFTMOUSE':
-        if event.type == 'MOUSEMOVE' and event.value == 'RELEASE':
+        print("MODAL " + event.type)
+        if event.type == 'MOUSEMOVE':
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-
-            print('Applying Scale')
             return {'FINISHED'}
+        # if event.type == 'LEFTMOUSE' and event.value == 'PRESS':
+        #     print('Applying Scale')
+        #     return {'FINISHED'}
         elif event.type in {'RIGHTMOUSE', 'ESC'}:
             return {'CANCELLED'}
         else:
             return {'RUNNING_MODAL'}
-        #return {'FINISHED'}
 class HP_OT_SmartBevel(bpy.types.Operator):
     bl_idname = "view3d.smart_bevel"        # unique identifier for buttons and menu items to reference.
     bl_label = "Smart Bevel"         # display name in the interface.
@@ -374,7 +348,7 @@ class HP_OT_SeparateAndSelect(bpy.types.Operator):
             bpy.ops.gpencil.editmode_toggle()
         else:
             bpy.ops.object.editmode_toggle()
-
+            
         for b in bases:
             b.select_set(state=False)
         selected = bpy.context.selected_objects
@@ -490,9 +464,8 @@ class HP_OT_Subdivision_Toggle(bpy.types.Operator):
                 bpy.context.object.modifiers["Subsurf_Base"].render_levels = 3
                 bpy.context.object.modifiers["Subsurf_Base"].levels = 3
                 bpy.context.object.modifiers["Subsurf_Base"].show_in_editmode = True
-                bpy.context.object.modifiers["Subsurf_Base"].show_on_cage = True
+                bpy.context.object.modifiers["Subsurf_Base"].show_on_cage = False
                 bpy.context.object.modifiers["Subsurf_Base"].subdivision_type = 'CATMULL_CLARK'
-                bpy.context.object.modifiers["Subsurf_Base"].boundary_smooth = 'PRESERVE_CORNERS'
 
         return {'FINISHED'}
 

@@ -18,6 +18,7 @@
 
 # Copyright 2022, Dmitry Aleksandrovich Maslov (ABTOMAT)
 
+import math
 import random
 import bmesh
 import bpy
@@ -30,6 +31,8 @@ from .units import ZBBQ_Units
 from .colors import ZBBQ_Colors
 from .consts import ZBBQ_Consts
 from .vlog import Log
+from .blender_zen_utils import ZenPolls
+
 
 _CACHE_ADDON_VERSION = None
 
@@ -42,22 +45,57 @@ class ZBBQ_CommonFunc:
         # Checks if this object can be used with this addon
         return obj.type == "MESH"
 
-    def ObjectHasDataLayer(obj):
-        if ZBBQ_Consts.customDataLayerName in obj.data.attributes.keys():
+    def ObjectHasDataLayerRadius(obj):
+        if ZBBQ_Consts.customDataLayerRadiusName in obj.data.attributes.keys():
             return True
         return False
 
+    def ObjectHasDataLayerUserDefined(obj):
+        if ZBBQ_Consts.customDataLayerUserDefinedName in obj.data.attributes.keys():
+            return True
+        return False
+
+    def ObjectHasPropertyIntactBevelRadius(obj):
+        if ZBBQ_Consts.customPropertyIntactBevelRadiusName in obj.keys():
+            return True
+        return False
+
+    def ObjectHasPropertyIntactBevelUnits(obj):
+        if ZBBQ_Consts.customPropertyIntactBevelUnitsName in obj.keys():
+            return True
+        return False
+    
+
+
     # ==== Adding the stuff needed for further Zen BBQ operations
 
-    def ObjectAddDataLayer(obj):
+    def ObjectAddDataLayerRadius(obj):
         # print("Adding Data Layer for the given object!")
         obj.data.attributes.new(
-            name=ZBBQ_Consts.customDataLayerName,
+            name=ZBBQ_Consts.customDataLayerRadiusName,
             type="FLOAT", domain="POINT")
 
-    def ObjectRemoveDataLayer(obj):
-        # print("Removing Data Layer from the given object!")
-        obj.data.attributes.remove(obj.data.attributes[ZBBQ_Consts.customDataLayerName])
+    def ObjectAddDataLayerUserDefined(obj):
+        # print("Adding Data Layer for the given object!")
+        obj.data.attributes.new(
+            name=ZBBQ_Consts.customDataLayerUserDefinedName,
+            type="FLOAT", domain="POINT")
+
+    def ObjectSetIntactBevel(obj, val):
+        # print(f"Adding Property for the given object of type {type(obj)}!")
+        obj[ZBBQ_Consts.customPropertyIntactBevelRadiusName] = val
+
+    def ObjectRemoveDataLayerRadius(obj):
+        # print("Removing Data Radius Layer from the given object!")
+        obj.data.attributes.remove(obj.data.attributes[ZBBQ_Consts.customDataLayerRadiusName])
+
+    def ObjectRemoveDataLayerUserDefined(obj):
+        # print("Removing Data Intacntess Layer from the given object!")
+        obj.data.attributes.remove(obj.data.attributes[ZBBQ_Consts.customDataLayerUserDefinedName])
+
+    def ObjectRemovePropertyIntactBevel(obj):
+        if ZBBQ_Consts.customPropertyIntactBevelRadiusName in obj.keys():
+            del obj[ZBBQ_Consts.customPropertyIntactBevelRadiusName]
 
     # ==== Whole object operations
 
@@ -65,7 +103,9 @@ class ZBBQ_CommonFunc:
     def ObjectIsReadyForBevel(cls, obj):
         # Just checking if this object is ready for bevel, but not doing anything
         if (cls.ObjectIsConvenient(obj)
-                and cls.ObjectHasDataLayer(obj)
+                and cls.ObjectHasDataLayerRadius(obj)
+                and cls.ObjectHasDataLayerUserDefined(obj)
+                and cls.ObjectHasPropertyIntactBevelRadius(obj)
                 and ZBBQ_MaterialFunc.ObjectHasMaterialsFilled(obj)
                 and ZBBQ_MaterialFunc.ObjectHasShaderNodeNormal(obj)):
 
@@ -83,10 +123,16 @@ class ZBBQ_CommonFunc:
             # We can't get object ready if it's not convenient at all
             return result
 
-        if not cls.ObjectHasDataLayer(obj):
+        if not cls.ObjectHasDataLayerRadius(obj):
 
-            cls.ObjectAddDataLayer(obj)
+            cls.ObjectAddDataLayerRadius(obj)
             result['dataLayerWasAdded'] = True
+
+        if not cls.ObjectHasDataLayerUserDefined(obj):
+            cls.ObjectAddDataLayerUserDefined(obj)
+
+        if not cls.ObjectHasPropertyIntactBevelRadius(obj):
+            cls.ObjectSetIntactBevel(obj, 0)
 
         if not ZBBQ_MaterialFunc.ObjectHasMaterialsFilled(obj):
             ZBBQ_MaterialFunc.ObjectFillMissingMatsWithDefaultZenBBQMaterial(obj)
@@ -106,6 +152,8 @@ class ZBBQ_CommonFunc:
         if not cls.ObjectIsConvenient(obj):
             # We can't get object ready if it's not convenient at all
             return
+
+        cls.ObjectRemovePropertyIntactBevel(obj)
 
         # Material/Shader handling
 
@@ -134,8 +182,11 @@ class ZBBQ_CommonFunc:
 
         # Data Layer Handling
 
-        if cls.ObjectHasDataLayer(obj):
-            cls.ObjectRemoveDataLayer(obj)
+        if cls.ObjectHasDataLayerRadius(obj):
+            cls.ObjectRemoveDataLayerRadius(obj)
+
+        if cls.ObjectHasDataLayerUserDefined(obj):
+            cls.ObjectRemoveDataLayerUserDefined(obj)
 
         return
 
@@ -216,7 +267,8 @@ class ZBBQ_CommonFunc:
 
             bm = bmesh.from_edit_mesh(obj.data)
 
-            dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+            dataLayerRadius = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
+            dataLayerIntactness = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerUserDefinedName)
             # bm = bmesh.from_edit_mesh(obj.data)
 
             if boundaryLoopOnlyMode:
@@ -228,17 +280,20 @@ class ZBBQ_CommonFunc:
                     # OR this vertex has is_boundary True
 
                     if v.is_boundary:
-                        v[dataLayer] = radius
+                        v[dataLayerRadius] = radius
+                        v[dataLayerIntactness] = 1.0
                     else:
                         for edge in v.link_edges:
                             if not edge.verts[0].select or not edge.verts[1].select:
                                 # selection boundary
-                                v[dataLayer] = radius
+                                v[dataLayerRadius] = radius
+                                v[dataLayerIntactness] = 1.0
                                 break
 
             else:  # No need to check if this is selection boundary
                 for v in [v for v in bm.verts if v.select]:
-                    v[dataLayer] = radius
+                    v[dataLayerRadius] = radius
+                    v[dataLayerIntactness] = 1.0
 
             from .draw_sets import ZBBQ_EdgeLayerManager, mark_groups_modified
             mark_groups_modified(ZBBQ_EdgeLayerManager, obj)
@@ -270,6 +325,8 @@ class ZBBQ_CommonFunc:
                 for mat in obj.data.materials:
                     ZBBQ_MaterialFunc.MaterialAddOverrideNode(mat, toggleNodeName, toggleNodeTreeName)
 
+            cls.ObjectSetIntactBevel(obj, radius)
+
             needToFreeBM = False
 
             if obj.data.is_editmode:  # Happens on scene load
@@ -279,9 +336,12 @@ class ZBBQ_CommonFunc:
                 bm.from_mesh(obj.data)
                 needToFreeBM = True
 
-            dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+            dataLayerRadius = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
+            dataLayerUserDefined = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerUserDefinedName)
+
             for v in bm.verts:
-                v[dataLayer] = radius
+                v[dataLayerRadius] = radius
+                v[dataLayerUserDefined] = 1.0
 
             if needToFreeBM:
                 bm.to_mesh(obj.data)
@@ -303,7 +363,7 @@ class ZBBQ_CommonFunc:
 
             bm = bmesh.from_edit_mesh(obj.data)
 
-            if not cls.ObjectHasDataLayer(obj):
+            if not cls.ObjectHasDataLayerRadius(obj):
                 # We do not add Data Layer if there is none
                 # Instead, we consider all vertices to have zero radius
                 # And select them all if radii contains zero
@@ -312,7 +372,8 @@ class ZBBQ_CommonFunc:
                         vert.select = True
             else:
 
-                dataLayer = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerName)
+                dataLayerRadius = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
+                dataLayerUserDefined = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerUserDefinedName)
 
                 # vertsNotSelected = [vert for vert in bm.verts if not vert.select]
 
@@ -328,7 +389,15 @@ class ZBBQ_CommonFunc:
 
                     # To-Do: iterate from end removing already selected vertices for optimization
                     for vert in bm.verts:
-                        if abs(vert[dataLayer] - valueToCheck) <= threshold*valueToCheck:
+
+                        vertRadius = 0
+
+                        if (vert[dataLayerUserDefined] == 0):
+                            vertRadius = obj[ZBBQ_Consts.customPropertyIntactBevelRadiusName]
+                        else:
+                            vertRadius = vert[dataLayerRadius]
+
+                        if abs(vertRadius - valueToCheck) <= threshold*valueToCheck:
                             vert.select = True
 
                 # Also selecting other types of elements: edges and polygons
@@ -517,6 +586,38 @@ class ZBBQ_CommonFunc:
             if OpDrawHighlight.poll():
                 OpDrawHighlight('INVOKE_DEFAULT', mode='ON')
 
+    @classmethod
+    def CheckSceneObjectsAndUpdateIfNecessary(cls):
+        for obj in [obj for obj in bpy.context.visible_objects if cls.ObjectIsConvenient(obj) and cls.ObjectHasDataLayerRadius(obj) and not cls.ObjectHasDataLayerUserDefined(obj)]:
+
+            cls.ObjectAddDataLayerUserDefined(obj)
+
+            needToFreeBM = False
+
+            if obj.data.is_editmode:  # Happens on scene load
+                bm = bmesh.from_edit_mesh(obj.data)
+            else:
+                bm = bmesh.new()
+                bm.from_mesh(obj.data)
+                needToFreeBM = True
+
+            dataLayerRadius = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerRadiusName)
+            dataLayerUserDefined = bm.verts.layers.float.get(ZBBQ_Consts.customDataLayerUserDefinedName)
+
+            radiusAvg = 0
+
+            for v in bm.verts:
+                radiusAvg = radiusAvg + v[dataLayerRadius]
+                v[dataLayerUserDefined] = 1.0
+
+            radiusAvg = radiusAvg / len(bm.verts)
+
+            if needToFreeBM:
+                bm.to_mesh(obj.data)
+                bm.free()  # Need to free memory if bm was created via new()
+
+            cls.ObjectSetIntactBevel(obj, radiusAvg)
+
 
 class ZBBQ_MaterialFunc:
 
@@ -550,36 +651,108 @@ class ZBBQ_MaterialFunc:
         return bpy.data.node_groups[toggleNodeTreeName]
 
     @classmethod
+    def CheckNodeTreesVersionsAndUpdateIfNecessary(cls):
+        if cls.NodeTreeNormalPresent():
+            # We must check version of Normal Tree and update it if necessary before returning!
+            if cls.NodeTreeNormalGetVersion() != ZBBQ_Consts.shaderNodeTreeNormalNameCurrentVersion:
+                Log.debug(f"Need to update node tree from version: {cls.NodeTreeNormalGetVersion()} to: {ZBBQ_Consts.shaderNodeTreeNormalNameCurrentVersion}")
+
+                snNormal = cls.GetOrCreateNodeTree(ZBBQ_Consts.shaderNodeTreeNormalName)
+
+                cls.ClearNodeTreeStructure(snNormal)
+                cls.BuildNodeTreeStructureNormal(snNormal)
+            else:
+                Log.debug(f"Need to update node tree version is current: {cls.NodeTreeNormalGetVersion()}")
+
+    @classmethod
     def RemoveNodeTreeFromSceneIfPresent(cls, nodeTreeName):
         if nodeTreeName in bpy.data.node_groups.keys():
             bpy.data.node_groups.remove(bpy.data.node_groups[nodeTreeName])
             # print(f"Removed {nodeTreeName}!")
 
-    def CreateNodeTreeNormal():
+    @classmethod
+    def CreateNodeTreeNormal(cls):
 
         nodeGroup = bpy.data.node_groups.new(
             ZBBQ_Consts.shaderNodeTreeNormalName,
             'ShaderNodeTree')
 
+        cls.BuildNodeTreeStructureNormal(nodeGroup)
+
+    @classmethod
+    def ClearNodeTreeStructure(cls, nodeGroup):
+        for node in nodeGroup.nodes:
+            nodeGroup.nodes.remove(node)
+
+    @classmethod
+    def BuildNodeTreeStructureNormal(cls, nodeGroup):
         snInput = nodeGroup.nodes.new('NodeGroupInput')
         snInput.location = (0, -100)
-        nodeGroup.inputs.new('NodeSocketVectorXYZ', 'Normal')
+
+        if ZenPolls.version_lower_4_0_0:
+            nodeGroup.inputs.new('NodeSocketVectorXYZ', 'Normal')
+        else:
+            nodeGroup.interface.new_socket(
+                name='Normal',
+                socket_type='NodeSocketVector',
+                in_out='INPUT'
+            )
 
         snOutput = nodeGroup.nodes.new('NodeGroupOutput')
         snOutput.location = (400, 0)
-        nodeGroup.outputs.new('NodeSocketVectorXYZ', 'Normal')
+        snOutput.name = "ver: " + ZBBQ_Consts.shaderNodeTreeNormalNameCurrentVersion
 
-        snAttribute = nodeGroup.nodes.new('ShaderNodeAttribute')
-        snAttribute.attribute_name = ZBBQ_Consts.customDataLayerName
-        snAttribute.location = (0, 100)
+        if ZenPolls.version_lower_4_0_0:
+            nodeGroup.outputs.new('NodeSocketVectorXYZ', 'Normal')
+        else:
+            nodeGroup.interface.new_socket(
+                name='Normal',
+                socket_type='NodeSocketVector',
+                in_out='OUTPUT'
+            )
+
+        # print(len(nodeGroup.interface.items_tree))
+
+        snAttributeGeoUserDefined = nodeGroup.nodes.new('ShaderNodeAttribute')
+        snAttributeGeoUserDefined.attribute_name = ZBBQ_Consts.customDataLayerUserDefinedName
+        snAttributeGeoUserDefined.location = (-200, 300)
+
+        snAttributeObjIntactBevelRadius = nodeGroup.nodes.new('ShaderNodeAttribute')
+        snAttributeObjIntactBevelRadius.attribute_type = "OBJECT"
+        snAttributeObjIntactBevelRadius.attribute_name = ZBBQ_Consts.customPropertyIntactBevelRadiusName
+        snAttributeObjIntactBevelRadius.location = (-200, 100)
+
+        snAttributeGeoRadius = nodeGroup.nodes.new('ShaderNodeAttribute')
+        snAttributeGeoRadius.attribute_name = ZBBQ_Consts.customDataLayerRadiusName
+        snAttributeGeoRadius.location = (-200, -100)
+
+        snMix = nodeGroup.nodes.new('ShaderNodeMix')
+        snMix.location = (0, 100)
 
         snBevel = nodeGroup.nodes.new('ShaderNodeBevel')
         snBevel.samples = bpy.context.scene.ZBBQ_PreviewRenderUserConfig.bevelNodeSamples
         snBevel.location = (200, 5)
 
+        # Mix
+
+        nodeGroup.links.new(
+            snMix.inputs['Factor'],
+            snAttributeGeoUserDefined.outputs['Fac'])
+
+        nodeGroup.links.new(
+            snMix.inputs['A'],
+            snAttributeObjIntactBevelRadius.outputs['Fac'])
+
+        nodeGroup.links.new(
+            snMix.inputs['B'],
+            snAttributeGeoRadius.outputs['Fac'])
+
+        # Output
+
         nodeGroup.links.new(
             snBevel.inputs['Radius'],
-            snAttribute.outputs['Fac'])
+            snMix.outputs['Result'])
+
         nodeGroup.links.new(
             snBevel.inputs['Normal'],
             snInput.outputs['Normal'])
@@ -614,6 +787,23 @@ class ZBBQ_MaterialFunc:
                 # print(f"Samples value is: {node.samples}")
                 return node.samples
 
+    @classmethod
+    def NodeTreeNormalGetVersion(cls):
+
+        if not cls.NodeTreeNormalPresent():
+            return 0  # Zero = not found
+
+        version = 1.0
+
+        nodeTreeNormal = bpy.data.node_groups[ZBBQ_Consts.shaderNodeTreeNormalName]
+        for node in nodeTreeNormal.nodes:
+            if node.type == "GROUP_OUTPUT":
+                splitResult = node.name.split(":")
+                if len(splitResult) >= 2 and splitResult[0].strip() == "ver":
+                    version = splitResult[1].strip()
+
+        return version
+
     def CreateNodeTreePreviewMetallic():
 
         nodeGroup = bpy.data.node_groups.new(
@@ -624,7 +814,14 @@ class ZBBQ_MaterialFunc:
 
         snInput = nodeGroup.nodes.new('NodeGroupInput')
         snInput.location = (0, -5)
-        nodeGroup.inputs.new('NodeSocketShader', 'Surface')
+        if ZenPolls.version_lower_4_0_0:
+            nodeGroup.inputs.new('NodeSocketShader', 'Surface')
+        else:
+            nodeGroup.interface.new_socket(
+                name='Surface',
+                socket_type='NodeSocketShader',
+                in_out='INPUT'
+            )
 
         snShader = nodeGroup.nodes.new('ShaderNodeBsdfPrincipled')
         snShader.location = (200, 0)
@@ -634,7 +831,14 @@ class ZBBQ_MaterialFunc:
 
         snOutput = nodeGroup.nodes.new('NodeGroupOutput')
         snOutput.location = (500, -5)
-        nodeGroup.outputs.new('NodeSocketShader', 'Surface')
+        if ZenPolls.version_lower_4_0_0:
+            nodeGroup.outputs.new('NodeSocketShader', 'Surface')
+        else:
+            nodeGroup.interface.new_socket(
+                name='Surface',
+                socket_type='NodeSocketShader',
+                in_out='OUTPUT'
+            )
         nodeGroup.links.new(snShader.outputs['BSDF'], snOutput.inputs[0])
 
         # ZenBBQ Node
@@ -682,6 +886,21 @@ class ZBBQ_MaterialFunc:
                                         if link.to_node and link.to_node.type == 'OUTPUT_MATERIAL':
                                             result.append(node)
                                             break
+
+        return result
+
+    def MaterialGetShaderNodeImages(mat, nodeName):
+
+        result = []
+
+        if not mat.use_nodes:
+            return result
+
+        for node in mat.node_tree.nodes:
+            if node.type == 'TEX_IMAGE' and node.name == nodeName:
+                result.append(node)
+
+        # Log.debug(f"[MaterialGetShaderNodeImages] found: {len(result)}")
 
         return result
 
@@ -884,6 +1103,104 @@ class ZBBQ_MaterialFunc:
             if mat.name != ZBBQ_Consts.defaultMaterialName and len(cls.MaterialHasShaderNodesNormal(mat)) == 0:
                 return False
         return True
+
+    @classmethod
+    def MaterialHasShaderNodesBakingImage(cls, mat):
+        return cls.MaterialGetShaderNodeImages(mat, ZBBQ_Consts.shaderNodeBakingImageName + "_for_" + mat.name)
+
+    @classmethod
+    def MaterialGetShaderNodesBakingImage(cls, mat):
+        return cls.MaterialGetShaderNodeImages(mat, ZBBQ_Consts.shaderNodeBakingImageName + "_for_" + mat.name)
+
+    @classmethod
+    def MaterialAddShaderNodeBakingImage(cls, mat):
+
+        # To-Do: Check if exists
+
+        # if len(cls.MaterialHasShaderNodesNormal(mat)) > 0:
+        #     return  # Don't add bevel node if there already is one
+
+        if not mat.use_nodes:
+            mat.use_nodes = True
+
+        matNodes = mat.node_tree.nodes
+
+        snZenBBQBakingImage = matNodes.new('ShaderNodeTexImage')
+        snZenBBQBakingImage.name = ZBBQ_Consts.shaderNodeBakingImageName + "_for_" + mat.name
+
+        # Log.debug(f"Image Name: {snZenBBQBakingImage.name}")
+
+        snZenBBQBakingImage.width = bpy.context.scene.ZBBQ_BakeImageWidth
+        snZenBBQBakingImage.height = bpy.context.scene.ZBBQ_BakeImageHeight
+        snZenBBQBakingImage.image = bpy.data.images.new(ZBBQ_Consts.shaderNodeBakingImageName, width=bpy.context.scene.ZBBQ_BakeImageWidth, height=bpy.context.scene.ZBBQ_BakeImageHeight, alpha=False)
+        snZenBBQBakingImage.image.colorspace_settings.name = 'Non-Color'
+
+        snZenBBQBakingImage.width = 250
+
+        # Put the image node to the right of graph
+
+        nodesMaxX = -math.inf
+        nodesY = 0
+
+        for node in matNodes:
+            if node != snZenBBQBakingImage and node.location.x + node.width > nodesMaxX:
+                nodesMaxX = node.location.x + node.width
+                nodesY = node.location.y
+
+        snZenBBQBakingImage.location.x = nodesMaxX + 20
+        snZenBBQBakingImage.location.y = nodesY
+
+        # To-Do: Location
+        # snZenBBQNormal.location = (sockNormalInput.node.location[0]-200, sockNormalInput.node.location[1])
+
+    @classmethod
+    def MaterialRemoveShaderNodeBakingImage(cls, mat):
+        # to-do: implement!
+        Log.debug("[MaterialRemoveShaderNodeBakingImage] Not implemented yet!")
+        materialNeedsToBeManuallyUpdated = True
+
+        if not mat.use_nodes:
+            return
+
+        matLinks = mat.node_tree.links
+        matNodes = mat.node_tree.nodes
+
+        nodesToRemove = cls.MaterialHasShaderNodesNormal(mat)
+        for nodeToRemove in nodesToRemove:
+
+            socketsToNormalOriginal = []
+            socketFromNormalOriginal = None
+
+            inNormal = nodeToRemove.inputs['Normal']
+            outNormal = nodeToRemove.outputs['Normal']
+
+            if len(inNormal.links) > 0:
+                socketFromNormalOriginal = inNormal.links[0].from_socket
+
+                for link in outNormal.links:
+                    socketsToNormalOriginal.append(link.to_socket)
+
+                for socketToNormalOriginal in socketsToNormalOriginal:
+                    matLinks.new(socketToNormalOriginal, socketFromNormalOriginal)
+                    materialNeedsToBeManuallyUpdated = False
+
+            matNodes.remove(nodeToRemove)
+
+        # Clutchy way to update material after node removal
+        # is to re-create one of output links (for sure, currently all of them)
+        # To-Do: Move this to separate function
+
+        if materialNeedsToBeManuallyUpdated:
+
+            for node in matNodes:
+                if node.type == 'OUTPUT_MATERIAL':
+                    for sockInput in node.inputs:
+                        if len(sockInput.links) > 0:
+                            originalFrom = sockInput.links[0].from_socket
+                            originalTo = sockInput.links[0].to_socket
+
+                            matLinks.remove(sockInput.links[0])
+                            matLinks.new(originalFrom, originalTo)
 
     @classmethod
     def GetOrCreateDefaultZenBBQMaterialInScene(cls):

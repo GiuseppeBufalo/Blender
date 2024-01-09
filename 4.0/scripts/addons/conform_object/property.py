@@ -20,11 +20,19 @@ def set_lattice_edit_mode(self, context):
 
     context.scene.tool_settings.use_snap = self.toggle_lattice_edit_mode
     if context.scene.tool_settings.use_snap:
-        context.scene.tool_settings.snap_elements = {'FACE'}
+        if hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+            context.scene.tool_settings.snap_elements_individual = {'FACE_PROJECT'}
+        else:
+            context.scene.tool_settings.snap_elements = {'FACE'}
     else:
+        if hasattr(context.scene.tool_settings, 'snap_elements_individual'):
+            context.scene.tool_settings.snap_elements_individual = set()
         context.scene.tool_settings.snap_elements = {'INCREMENT'}
     context.scene.tool_settings.use_snap_align_rotation = context.scene.tool_settings.use_snap
-    context.scene.tool_settings.use_snap_project = context.scene.tool_settings.use_snap
+    if hasattr(context.scene.tool_settings, 'use_snap_project'):
+        context.scene.tool_settings.use_snap_project = context.scene.tool_settings.use_snap
+    elif hasattr(context.scene.tool_settings, 'use_snap_time_absolute'):
+        context.scene.tool_settings.use_snap_time_absolute = context.scene.tool_settings.use_snap
     
     # set outliner display.
     for window in context.window_manager.windows:

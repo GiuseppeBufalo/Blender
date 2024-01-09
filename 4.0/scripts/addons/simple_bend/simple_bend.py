@@ -451,8 +451,7 @@ class SimpleBendOperator(bpy.types.Operator):
             px = math.cos(d1) * arm2
             py = math.sin(d1) * arm2 + harm     
             g1 = Vector((px, py , z))             
-        return g1, d1
-
+        return g1, d1        
 
         # s1 = p.x
         # z = p.z             
@@ -503,12 +502,23 @@ class SimpleBendOperator(bpy.types.Operator):
         if mz.length < 0.5:
             mz = Vector((0, 0, 0.5))                        
 
-        mxlen = min(mx.length * 0.8, 2.0)
-        mylen = min(my.length * 0.8, 2.0)
-        mzlen = min(mz.length * 0.8, 2.0)
-        mx2 = mx.normalized() * mxlen/2
-        my2 = my.normalized() * mylen/2
-        mz2 = mz.normalized() * mzlen/2
+        minlen = min([mx.length, my.length, mz.length])
+        maxlen = max([mx.length, my.length, mz.length])
+        minlen = max(minlen * 0.8, maxlen * 0.2)
+        # mxlen = min(mx.length * 0.8, minlen)
+        # mylen = min(my.length * 0.8, minlen)
+        # mzlen = min(mz.length * 0.8, minlen)
+
+        # mxlen = min(mx.length * 0.8, 2.0)
+        # mylen = min(my.length * 0.8, 2.0)
+        # mzlen = min(mz.length * 0.8, 2.0)
+        # mxlen = mx.length * 0.8
+        # mylen = my.length * 0.8
+        # mzlen = mz.length * 0.8
+
+        mx2 = mx.normalized() * minlen/2
+        my2 = my.normalized() * minlen/2
+        mz2 = mz.normalized() * minlen/2
 
         ax1 = cen + mx/2 + my2
         ax2 = cen + mx/2 - my2
