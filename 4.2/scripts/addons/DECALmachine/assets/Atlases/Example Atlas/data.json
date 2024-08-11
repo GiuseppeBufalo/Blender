@@ -1,0 +1,1360 @@
+{
+    "name": "Example Atlas",
+    "uuid": "47e6f2a4-d024-4956-bfe3-ed4f35e2ee76",
+    "resolution": [
+        2048,
+        2048
+    ],
+    "isatlas": true,
+    "maps": {
+        "AO": {
+            "texture": "ao.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "CURVATURE": {
+            "texture": "curvature.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "HEIGHT": {
+            "texture": "height.png",
+            "resolution": [
+                2048,
+                2048
+            ],
+            "parallax_amount": 0.01796874962747097
+        },
+        "NORMAL": {
+            "texture": "normal.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "EMISSION": {
+            "texture": "emission.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "ALPHA": {
+            "texture": "alpha.png",
+            "resolution": [
+                2048,
+                2048
+            ],
+            "connect_alpha": false
+        },
+        "SUBSET": {
+            "texture": "subset.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "MATERIAL2": {
+            "texture": "material2.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        }
+    },
+    "trims": [
+        {
+            "name": "Example Panels_001",
+            "uuid": "75ef14a3-dd59-428a-9c7d-4cfaabd4a490",
+            "location": [
+                0.0,
+                1.0067657427901473
+            ],
+            "scale": [
+                1.0,
+                0.01496026199311018
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                2
+            ],
+            "dimensions": [
+                2048,
+                31
+            ],
+            "repetitions": 50
+        },
+        {
+            "name": "Example Panels_002",
+            "uuid": "8aca6609-e3ff-4293-9bd9-b8a88d8ccb3c",
+            "location": [
+                0.0,
+                0.9416587226799907
+            ],
+            "scale": [
+                1.0,
+                0.044880785048007965
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                36
+            ],
+            "dimensions": [
+                2048,
+                92
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Example Panels_003",
+            "uuid": "b5ae8fb8-edff-4823-8c5a-2e73df097b73",
+            "location": [
+                0.0,
+                0.8377746610565685
+            ],
+            "scale": [
+                1.0,
+                0.05282842367887497
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                132
+            ],
+            "dimensions": [
+                2048,
+                108
+            ],
+            "repetitions": 14
+        },
+        {
+            "name": "Example Panels_004",
+            "uuid": "6ae6fbb3-3307-4653-a8d4-6a86ffc09e0b",
+            "location": [
+                0.0,
+                0.7626143317737553
+            ],
+            "scale": [
+                1.0,
+                0.01683029532432556
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                244
+            ],
+            "dimensions": [
+                2048,
+                34
+            ],
+            "repetitions": 33
+        },
+        {
+            "name": "Example Panels_005",
+            "uuid": "223d1c62-8bf1-4536-96f3-5ef6186743b8",
+            "location": [
+                0.0,
+                0.7257522361865942
+            ],
+            "scale": [
+                1.0,
+                0.015427770093083382
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                282
+            ],
+            "dimensions": [
+                2048,
+                32
+            ],
+            "repetitions": 35
+        },
+        {
+            "name": "Example Panels_006",
+            "uuid": "10ff4557-928e-4bd4-9a2f-156e1614ae60",
+            "location": [
+                0.0,
+                0.6936774198113898
+            ],
+            "scale": [
+                1.0,
+                0.012155212461948395
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                318
+            ],
+            "dimensions": [
+                2048,
+                25
+            ],
+            "repetitions": 33
+        },
+        {
+            "name": "Example Panels_007",
+            "uuid": "40f70e72-1301-40fe-9701-68eae0575d78",
+            "location": [
+                0.0,
+                0.6673473841456289
+            ],
+            "scale": [
+                1.0,
+                0.009817671962082386
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                347
+            ],
+            "dimensions": [
+                2048,
+                20
+            ],
+            "repetitions": 33
+        },
+        {
+            "name": "Example Panels_008",
+            "uuid": "1143afc2-b171-42d1-9b0b-903e2536588c",
+            "location": [
+                0.0,
+                0.6266554537751285
+            ],
+            "scale": [
+                1.0,
+                0.026180457323789597
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                371
+            ],
+            "dimensions": [
+                2048,
+                54
+            ],
+            "repetitions": 4
+        },
+        {
+            "name": "Example Panels_009",
+            "uuid": "a3bdf259-a491-4867-85ee-b73c077c977c",
+            "location": [
+                0.0,
+                0.5041009689837541
+            ],
+            "scale": [
+                1.0,
+                0.08976157009601593
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                428
+            ],
+            "dimensions": [
+                2048,
+                184
+            ],
+            "repetitions": 8
+        },
+        {
+            "name": "Example Panels_010",
+            "uuid": "32369e7d-e5e9-4a2c-8b49-a9de9acf06c4",
+            "location": [
+                0.0,
+                0.3801103460838885
+            ],
+            "scale": [
+                1.0,
+                0.027582982555031776
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                616
+            ],
+            "dimensions": [
+                2048,
+                56
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Example Panels_011",
+            "uuid": "c7b4e430-dba8-4b3c-ac9b-348ae2a8f56a",
+            "location": [
+                0.0,
+                0.31548199111917075
+            ],
+            "scale": [
+                1.0,
+                0.03179055452346802
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                676
+            ],
+            "dimensions": [
+                2048,
+                65
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Example Panels_012",
+            "uuid": "8c0fec60-a118-4309-a487-ce925fd8fe5d",
+            "location": [
+                0.0,
+                0.24750258065429231
+            ],
+            "scale": [
+                1.0,
+                0.030855540186166763
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                745
+            ],
+            "dimensions": [
+                2048,
+                63
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Example Panels_013",
+            "uuid": "0ff3714a-a0ab-4124-bbb8-a309d422a72b",
+            "location": [
+                0.0,
+                0.16611874844772676
+            ],
+            "scale": [
+                1.0,
+                0.044880785048007965
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                812
+            ],
+            "dimensions": [
+                2048,
+                92
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Example Panels_014",
+            "uuid": "382a03e2-4f53-4add-be45-14cad9775473",
+            "location": [
+                0.0,
+                0.10196914423175257
+            ],
+            "scale": [
+                1.0,
+                0.014025245793163776
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                908
+            ],
+            "dimensions": [
+                2048,
+                29
+            ],
+            "repetitions": 16
+        },
+        {
+            "name": "Examples_001",
+            "uuid": "a5d33df4-ef1b-49fe-81a3-68141f42c943",
+            "location": [
+                0.5830911901187763,
+                -0.9378288878966515
+            ],
+            "scale": [
+                0.08087891340255737,
+                0.0804114043712616
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1524,
+                1879
+            ],
+            "dimensions": [
+                166,
+                165
+            ]
+        },
+        {
+            "name": "Examples_002",
+            "uuid": "2ecca475-e6ee-4129-a153-bad1c9aeabf9",
+            "location": [
+                0.42750444452357994,
+                -0.8612323634364774
+            ],
+            "scale": [
+                0.04675081744790077,
+                0.14212249219417572
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1404,
+                1740
+            ],
+            "dimensions": [
+                96,
+                291
+            ]
+        },
+        {
+            "name": "Examples_003",
+            "uuid": "2e6f75b0-202d-4197-aea9-dbc79abb0e90",
+            "location": [
+                -0.9105413507334035,
+                -0.9129349903393817
+            ],
+            "scale": [
+                0.10892940312623978,
+                0.10659186542034149
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                1828
+            ],
+            "dimensions": [
+                223,
+                218
+            ]
+        },
+        {
+            "name": "Examples_004",
+            "uuid": "7bf4d537-f8c8-4258-a1e6-436194cf24fc",
+            "location": [
+                0.5366545361077022,
+                -0.2944179568796751
+            ],
+            "scale": [
+                0.15334267914295197,
+                0.07386629283428192
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1404,
+                1243
+            ],
+            "dimensions": [
+                314,
+                151
+            ]
+        },
+        {
+            "name": "Examples_005",
+            "uuid": "ec2fee8f-7e5f-45da-a23f-f325421ffb14",
+            "location": [
+                0.0856923820706047,
+                -0.8229340726719554
+            ],
+            "scale": [
+                0.10285180062055588,
+                0.17391304671764374
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1004,
+                1669
+            ],
+            "dimensions": [
+                211,
+                356
+            ]
+        },
+        {
+            "name": "Examples_006",
+            "uuid": "2e3616ee-ab05-4a84-9791-5f22496a0f81",
+            "location": [
+                0.0923945786742308,
+                -0.4624516227190714
+            ],
+            "scale": [
+                0.10939691215753555,
+                0.17438055574893951
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1004,
+                1308
+            ],
+            "dimensions": [
+                224,
+                357
+            ]
+        },
+        {
+            "name": "Examples_007",
+            "uuid": "0c30bd11-b747-4a30-a0ff-c6c69403f86c",
+            "location": [
+                0.5768677157294589,
+                -0.031117343412152294
+            ],
+            "scale": [
+                0.11220196634531021,
+                0.11220196634531021
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1486,
+                940
+            ],
+            "dimensions": [
+                230,
+                230
+            ]
+        },
+        {
+            "name": "Examples_008",
+            "uuid": "aee5cea1-b05e-4f2f-a43e-634848ec61c6",
+            "location": [
+                0.6726133570374592,
+                -0.42846188895219733
+            ],
+            "scale": [
+                0.16830293834209442,
+                0.053295932710170746
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1524,
+                1398
+            ],
+            "dimensions": [
+                345,
+                109
+            ]
+        },
+        {
+            "name": "Examples_009",
+            "uuid": "ea597cec-a347-4fc6-b376-a24548154d10",
+            "location": [
+                0.8937858734915557,
+                -1.0115530220021038
+            ],
+            "scale": [
+                0.044880785048007965,
+                0.009350163862109184
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1872,
+                2026
+            ],
+            "dimensions": [
+                92,
+                19
+            ]
+        },
+        {
+            "name": "Examples_010",
+            "uuid": "25502c34-e6b8-44b6-b409-abb181768474",
+            "location": [
+                0.9407012782513734,
+                0.008138382863976121
+            ],
+            "scale": [
+                0.07386629283428192,
+                0.07386629283428192
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1889,
+                940
+            ],
+            "dimensions": [
+                151,
+                151
+            ]
+        },
+        {
+            "name": "Examples_011",
+            "uuid": "bce84ba7-375e-4c85-84cb-44637a51ee0e",
+            "location": [
+                0.33606733167879266,
+                -0.06558578512611764
+            ],
+            "scale": [
+                0.11921458691358566,
+                0.14586254954338074
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1238,
+                940
+            ],
+            "dimensions": [
+                244,
+                299
+            ]
+        },
+        {
+            "name": "Examples_012",
+            "uuid": "5364daa6-4373-4e99-a64d-afcaa03ccb9c",
+            "location": [
+                -0.8784665914270687,
+                -0.17425712596149634
+            ],
+            "scale": [
+                0.14025245606899261,
+                0.25198692083358765
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                940
+            ],
+            "dimensions": [
+                287,
+                516
+            ]
+        },
+        {
+            "name": "Examples_013",
+            "uuid": "e3de8283-fe68-4ae5-9d12-66aa6b1d4e40",
+            "location": [
+                -0.5653782113794413,
+                -0.4342066411272061
+            ],
+            "scale": [
+                0.16175782680511475,
+                0.1626928448677063
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                293,
+                1292
+            ],
+            "dimensions": [
+                331,
+                333
+            ]
+        },
+        {
+            "name": "Examples_014",
+            "uuid": "0244e2d4-302a-4f97-857e-8ef7bfaaf5af",
+            "location": [
+                -0.057926133393461095,
+                -0.5586760433102501
+            ],
+            "scale": [
+                0.03366059064865112,
+                0.07293127477169037
+            ],
+            "isactive": true,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                932,
+                1508
+            ],
+            "dimensions": [
+                69,
+                149
+            ]
+        },
+        {
+            "name": "Examples_015",
+            "uuid": "b254101b-6efb-496e-9943-5b73f2681a30",
+            "location": [
+                -0.09813931658202213,
+                -0.874158005894986
+            ],
+            "scale": [
+                0.05797101557254791,
+                0.07900888472795486
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                866,
+                1817
+            ],
+            "dimensions": [
+                119,
+                162
+            ]
+        },
+        {
+            "name": "Examples_016",
+            "uuid": "7b69f206-cdb7-49a1-a806-53fac7487ff2",
+            "location": [
+                0.29489667909398376,
+                -0.39686582332573633
+            ],
+            "scale": [
+                0.07900888472795486,
+                0.17391304671764374
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1238,
+                1243
+            ],
+            "dimensions": [
+                162,
+                356
+            ]
+        },
+        {
+            "name": "Examples_017",
+            "uuid": "fd61f7ae-cc8d-495a-93fa-1d45b728aad9",
+            "location": [
+                0.43803647591054523,
+                -0.5428779534281498
+            ],
+            "scale": [
+                0.05703599750995636,
+                0.16503039002418518
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1404,
+                1398
+            ],
+            "dimensions": [
+                117,
+                338
+            ]
+        },
+        {
+            "name": "Examples_018",
+            "uuid": "30026e14-6ad5-46b5-a07d-17a16c76ae77",
+            "location": [
+                0.9292117739013558,
+                -0.2934604839166228
+            ],
+            "scale": [
+                0.07293127477169037,
+                0.07293127477169037
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1879,
+                1243
+            ],
+            "dimensions": [
+                149,
+                149
+            ]
+        },
+        {
+            "name": "Examples_019",
+            "uuid": "215ccad8-b328-436a-b6e2-31c7b968150d",
+            "location": [
+                0.9474034463205646,
+                -0.5711229350200152
+            ],
+            "scale": [
+                0.06545114517211914,
+                0.0822814404964447
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1904,
+                1511
+            ],
+            "dimensions": [
+                134,
+                169
+            ]
+        },
+        {
+            "name": "Examples_020",
+            "uuid": "74b2e16a-c0ac-4111-86e6-5ae8765d7175",
+            "location": [
+                0.7784123645869858,
+                -0.059841047218326324
+            ],
+            "scale": [
+                0.08087891340255737,
+                0.14025245606899261
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1720,
+                940
+            ],
+            "dimensions": [
+                166,
+                287
+            ]
+        },
+        {
+            "name": "Examples_021",
+            "uuid": "62cf2fda-f378-48d7-ae6b-627e49e85b6e",
+            "location": [
+                0.5950593881486677,
+                -0.5802187997640544
+            ],
+            "scale": [
+                0.09256661683320999,
+                0.09116409718990326
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1524,
+                1511
+            ],
+            "dimensions": [
+                190,
+                187
+            ]
+        },
+        {
+            "name": "Examples_022",
+            "uuid": "3e87439c-d50e-41cf-ba22-4102ead63bdd",
+            "location": [
+                0.9268181342953775,
+                -0.7563908573844379
+            ],
+            "scale": [
+                0.07713884860277176,
+                0.07713884860277176
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1872,
+                1701
+            ],
+            "dimensions": [
+                158,
+                158
+            ]
+        },
+        {
+            "name": "Examples_023",
+            "uuid": "82dddd04-7b10-4b05-b080-cd916479f180",
+            "location": [
+                -0.2714389767140749,
+                -0.9033604319154688
+            ],
+            "scale": [
+                0.10752688348293304,
+                0.10752688348293304
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                642,
+                1817
+            ],
+            "dimensions": [
+                220,
+                220
+            ]
+        },
+        {
+            "name": "Examples_024",
+            "uuid": "601f41f9-98df-4511-b7ad-c8e8c05adb95",
+            "location": [
+                0.9258606898667602,
+                -0.9186797710488255
+            ],
+            "scale": [
+                0.0762038305401802,
+                0.07760635763406754
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1872,
+                1863
+            ],
+            "dimensions": [
+                156,
+                159
+            ]
+        },
+        {
+            "name": "Examples_025",
+            "uuid": "33a58f7e-f820-4bcd-a5fc-0dbfb6b94a8e",
+            "location": [
+                0.28723703806174034,
+                -0.7702739442715638
+            ],
+            "scale": [
+                0.07152875512838364,
+                0.1870032697916031
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1238,
+                1603
+            ],
+            "dimensions": [
+                146,
+                383
+            ]
+        },
+        {
+            "name": "Examples_026",
+            "uuid": "f85e0090-a0f8-4cbe-a6c6-a7097b581753",
+            "location": [
+                -0.8971369575261513,
+                -0.6180383397798329
+            ],
+            "scale": [
+                0.12201963365077972,
+                0.17765310406684875
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                1460
+            ],
+            "dimensions": [
+                250,
+                364
+            ]
+        },
+        {
+            "name": "Examples_027",
+            "uuid": "516c0c5b-d92b-4a2c-a10b-5eee03f8d9ec",
+            "location": [
+                -0.5581972925615065,
+                -0.09000093193464383
+            ],
+            "scale": [
+                0.1687704473733902,
+                0.16970546543598175
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                293,
+                940
+            ],
+            "dimensions": [
+                346,
+                348
+            ]
+        },
+        {
+            "name": "Examples_028",
+            "uuid": "682ce390-1620-4104-a9fb-1a7cc54c0be0",
+            "location": [
+                0.09526694762812647,
+                -0.09813931658202213
+            ],
+            "scale": [
+                0.11220196634531021,
+                0.17765310406684875
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1004,
+                940
+            ],
+            "dimensions": [
+                230,
+                364
+            ]
+        },
+        {
+            "name": "Examples_029",
+            "uuid": "09b4c40a-5d17-411c-9670-1789452062d2",
+            "location": [
+                -0.5739953253747371,
+                -0.7645292206309899
+            ],
+            "scale": [
+                0.15334267914295197,
+                0.15614773333072662
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                293,
+                1629
+            ],
+            "dimensions": [
+                314,
+                320
+            ]
+        },
+        {
+            "name": "Examples_030",
+            "uuid": "aa0d5130-7151-4d5c-8549-a5325d130235",
+            "location": [
+                -0.23888546665899663,
+                -0.6367087629477852
+            ],
+            "scale": [
+                0.13931743800640106,
+                0.14913511276245117
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                642,
+                1508
+            ],
+            "dimensions": [
+                285,
+                305
+            ]
+        },
+        {
+            "name": "Examples_031",
+            "uuid": "e346ac0e-49de-449a-99e7-458182d36c16",
+            "location": [
+                -0.2321832700553705,
+                -0.3308013017180926
+            ],
+            "scale": [
+                0.14586254954338074,
+                0.14586254954338074
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                642,
+                1205
+            ],
+            "dimensions": [
+                299,
+                299
+            ]
+        },
+        {
+            "name": "Examples_032",
+            "uuid": "6b19179a-e741-4f13-bb77-5fa53a33eac4",
+            "location": [
+                -0.20250210755336168,
+                -0.046915379792187135
+            ],
+            "scale": [
+                0.1748480647802353,
+                0.12762972712516785
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                642,
+                940
+            ],
+            "dimensions": [
+                358,
+                261
+            ]
+        },
+        {
+            "name": "Examples_033",
+            "uuid": "15951d8c-2927-45ae-b3de-531c83929759",
+            "location": [
+                0.785114532656177,
+                -0.5802187997640544
+            ],
+            "scale": [
+                0.08929406106472015,
+                0.09116409718990326
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1718,
+                1511
+            ],
+            "dimensions": [
+                183,
+                187
+            ]
+        },
+        {
+            "name": "Examples_034",
+            "uuid": "b9fe019d-a36d-4921-8e7a-73acc8d8e68c",
+            "location": [
+                0.5859635234046283,
+                -0.7645292206309899
+            ],
+            "scale": [
+                0.08368396759033203,
+                0.08508648723363876
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1524,
+                1701
+            ],
+            "dimensions": [
+                171,
+                174
+            ]
+        },
+        {
+            "name": "Examples_036",
+            "uuid": "314bfcaa-b8a0-4ab5-a8ee-420534ce7e06",
+            "location": [
+                0.7597419414190335,
+                -0.7611781365963943
+            ],
+            "scale": [
+                0.0822814404964447,
+                0.08181393146514893
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1699,
+                1701
+            ],
+            "dimensions": [
+                169,
+                168
+            ]
+        },
+        {
+            "name": "Examples_037",
+            "uuid": "f4908a97-7ad7-4f2d-863d-5f3052b80ce0",
+            "location": [
+                0.774103779054903,
+                -0.2925030394880055
+            ],
+            "scale": [
+                0.07480131089687347,
+                0.07199625670909882
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1722,
+                1243
+            ],
+            "dimensions": [
+                153,
+                147
+            ]
+        },
+        {
+            "name": "Examples_038",
+            "uuid": "1320071c-4526-4c95-88c8-168555c4ba82",
+            "location": [
+                0.7554333558869507,
+                -0.9296905246500994
+            ],
+            "scale": [
+                0.07807386666536331,
+                0.07900888472795486
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1699,
+                1873
+            ],
+            "dimensions": [
+                160,
+                162
+            ]
+        }
+    ]
+}

@@ -1,0 +1,1410 @@
+{
+    "name": "Aircraft Atlas",
+    "uuid": "7582469d-4408-444e-8ac8-b5a147e3926f",
+    "resolution": [
+        2048,
+        2048
+    ],
+    "isatlas": true,
+    "maps": {
+        "COLOR": {
+            "texture": "color.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "EMISSION": {
+            "texture": "emission.png",
+            "resolution": [
+                2048,
+                2048
+            ]
+        },
+        "ALPHA": {
+            "texture": "alpha.png",
+            "resolution": [
+                2048,
+                2048
+            ],
+            "connect_alpha": false
+        }
+    },
+    "trims": [
+        {
+            "name": "Aircraft_001",
+            "uuid": "f8625a51-9de3-420b-8b08-c3fc87619c9a",
+            "location": [
+                0.40902524400359563,
+                -0.13027503046619213
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.06735266745090485
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1085
+            ],
+            "dimensions": [
+                406,
+                138
+            ]
+        },
+        {
+            "name": "Aircraft_002",
+            "uuid": "04d8c8b7-e6f8-479f-beba-a6049a84f231",
+            "location": [
+                0.8190084373538353,
+                0.3505930744453052
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.028063610196113586
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                645
+            ],
+            "dimensions": [
+                406,
+                57
+            ]
+        },
+        {
+            "name": "Aircraft_003",
+            "uuid": "19902628-44e2-455c-8d7f-714b8ed89d98",
+            "location": [
+                -0.4109410570535401,
+                0.46458373680864123
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.1412535011768341
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                415
+            ],
+            "dimensions": [
+                406,
+                289
+            ]
+        },
+        {
+            "name": "Aircraft_004",
+            "uuid": "e3c5a39b-532a-4f0a-9cb2-88d535c9ca3b",
+            "location": [
+                0.40902524400359563,
+                -0.7117230778436331
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.043966323137283325
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1691
+            ],
+            "dimensions": [
+                406,
+                90
+            ]
+        },
+        {
+            "name": "Aircraft_005",
+            "uuid": "8c252d5e-04da-41d2-b19f-f2923d989f77",
+            "location": [
+                0.8151768112539465,
+                0.6394013279057531
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.020112253725528717
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1636,
+                364
+            ],
+            "dimensions": [
+                406,
+                41
+            ]
+        },
+        {
+            "name": "Aircraft_006",
+            "uuid": "a3b2a4ed-549b-4f2d-80c0-65b7e5b15911",
+            "location": [
+                0.8190084373538353,
+                -0.7385444605428555
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.027128156274557114
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1735
+            ],
+            "dimensions": [
+                406,
+                56
+            ]
+        },
+        {
+            "name": "Aircraft_007",
+            "uuid": "b38dd5d7-99db-42f8-8dfc-2fd1795b8e37",
+            "location": [
+                0.8175715704294317,
+                0.035442470054519414
+            ],
+            "scale": [
+                0.1969130039215088,
+                0.08419083058834076
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                902
+            ],
+            "dimensions": [
+                403,
+                172
+            ]
+        },
+        {
+            "name": "Aircraft_008",
+            "uuid": "f3d47c7d-394b-4cc8-8e24-8e2dea97b025",
+            "location": [
+                -0.000957904629221132,
+                -0.31275584521530053
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.07623947411775589
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1259
+            ],
+            "dimensions": [
+                406,
+                156
+            ]
+        },
+        {
+            "name": "Aircraft_009",
+            "uuid": "206e6eb8-3217-45fc-8023-7d5b21adfcc4",
+            "location": [
+                -0.000957904629221132,
+                0.03208980435406192
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.08746492117643356
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                902
+            ],
+            "dimensions": [
+                406,
+                179
+            ]
+        },
+        {
+            "name": "Aircraft_010",
+            "uuid": "0a44b2d8-c9a5-4554-a9a5-bf27c4cc85af",
+            "location": [
+                -0.4109410570535401,
+                -0.8434350037820101
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.09401309490203857
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                1771
+            ],
+            "dimensions": [
+                406,
+                193
+            ]
+        },
+        {
+            "name": "Aircraft_011",
+            "uuid": "031d19e7-645a-4f10-b2cc-c8ad4f777e77",
+            "location": [
+                0.40902524400359563,
+                0.22271281742848895
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.09120673686265945
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                708
+            ],
+            "dimensions": [
+                406,
+                187
+            ]
+        },
+        {
+            "name": "Aircraft_012",
+            "uuid": "26dd6094-45b2-4d2e-9469-4cbf7d64f1e2",
+            "location": [
+                -0.000957904629221132,
+                0.2207970043785445
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.0930776447057724
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                708
+            ],
+            "dimensions": [
+                406,
+                191
+            ]
+        },
+        {
+            "name": "Aircraft_013",
+            "uuid": "e468697d-bf67-4326-87e1-3f9d73a40c72",
+            "location": [
+                -0.8266716324580508,
+                -0.5325949430688728
+            ],
+            "scale": [
+                0.13189896941184998,
+                0.13189896941184998
+            ],
+            "isactive": true,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                62,
+                1422
+            ],
+            "dimensions": [
+                270,
+                270
+            ]
+        },
+        {
+            "name": "Aircraft_014",
+            "uuid": "ef7242f1-92bd-4fd9-9888-122181a7bcab",
+            "location": [
+                -0.833376992406747,
+                -0.8611562102614886
+            ],
+            "scale": [
+                0.13189896941184998,
+                0.13189896941184998
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                56,
+                1750
+            ],
+            "dimensions": [
+                270,
+                270
+            ]
+        },
+        {
+            "name": "Aircraft_015",
+            "uuid": "b7e9192c-b0a2-4a8c-b964-fe06b971e2c9",
+            "location": [
+                0.40902524400359563,
+                0.3481983152698199
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.025724977254867554
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                649
+            ],
+            "dimensions": [
+                406,
+                53
+            ]
+        },
+        {
+            "name": "Aircraft_016",
+            "uuid": "a2db9a81-8b01-4f0f-a264-3ac91b29fa3e",
+            "location": [
+                0.40902524400359563,
+                -0.6149747614775783
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.046772684901952744
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1591
+            ],
+            "dimensions": [
+                406,
+                96
+            ]
+        },
+        {
+            "name": "Aircraft_017",
+            "uuid": "a8e31b28-1b57-4e61-88e4-0dfaee97c42b",
+            "location": [
+                0.40902524400359563,
+                0.4937998215877865
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.11272217333316803
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                415
+            ],
+            "dimensions": [
+                406,
+                231
+            ]
+        },
+        {
+            "name": "Aircraft_018",
+            "uuid": "a462fcf4-30dc-4a78-bfeb-fc2c4de0ed9a",
+            "location": [
+                -0.004789522811561349,
+                0.819487354931595
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.19784845411777496
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                816,
+                2
+            ],
+            "dimensions": [
+                406,
+                405
+            ]
+        },
+        {
+            "name": "Aircraft_019",
+            "uuid": "37817d07-0ddd-4842-a7b1-e40141cdf763",
+            "location": [
+                0.8151768112539465,
+                0.842956029108688
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.17492984235286713
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1636,
+                2
+            ],
+            "dimensions": [
+                406,
+                358
+            ]
+        },
+        {
+            "name": "Aircraft_020",
+            "uuid": "f4213407-a830-4aaa-b27a-119a035d3bd2",
+            "location": [
+                -0.819966329604917,
+                0.4444677140581151
+            ],
+            "scale": [
+                0.19738073647022247,
+                0.16089802980422974
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                415
+            ],
+            "dimensions": [
+                404,
+                330
+            ]
+        },
+        {
+            "name": "Aircraft_021",
+            "uuid": "aac5d169-714f-419c-92cb-b5536cebec7b",
+            "location": [
+                -0.4109410570535401,
+                -0.643232954005642
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.09775491058826447
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                1567
+            ],
+            "dimensions": [
+                406,
+                200
+            ]
+        },
+        {
+            "name": "Aircraft_022",
+            "uuid": "21bddff4-7eec-4444-a1af-1be1a3df5587",
+            "location": [
+                0.40902524400359563,
+                -0.3889092498008507
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.05612722039222717
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1355
+            ],
+            "dimensions": [
+                406,
+                115
+            ]
+        },
+        {
+            "name": "Aircraft_023",
+            "uuid": "0764860e-780c-4b1a-a6e1-1cd6d92151d7",
+            "location": [
+                0.40902524400359563,
+                -0.9818521754779583
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.03928905352950096
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1966
+            ],
+            "dimensions": [
+                406,
+                80
+            ]
+        },
+        {
+            "name": "Aircraft_024",
+            "uuid": "22711020-be1c-46f1-8370-6180200ec9ff",
+            "location": [
+                0.8190084373538353,
+                -0.833376992406747
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.01122544426470995
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1846
+            ],
+            "dimensions": [
+                406,
+                23
+            ]
+        },
+        {
+            "name": "Aircraft_025",
+            "uuid": "759fbfda-34d7-472a-bb5b-91460e83f8dd",
+            "location": [
+                0.8190084373538353,
+                -0.49954723218983865
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.0481758639216423
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1474
+            ],
+            "dimensions": [
+                406,
+                99
+            ]
+        },
+        {
+            "name": "Aircraft_026",
+            "uuid": "c0892ba3-b723-447b-a4ce-d948fcf8cff2",
+            "location": [
+                -0.000957904629221132,
+                0.47128906820955624
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.1347053349018097
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                415
+            ],
+            "dimensions": [
+                406,
+                276
+            ]
+        },
+        {
+            "name": "Aircraft_027",
+            "uuid": "42bd3f22-9b35-4eba-9339-6ad7d184bc22",
+            "location": [
+                0.40902524400359563,
+                -0.8946828958138447
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.04209541529417038
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1876
+            ],
+            "dimensions": [
+                406,
+                86
+            ]
+        },
+        {
+            "name": "Aircraft_028",
+            "uuid": "32b0c4ea-fbb1-400f-88e5-17102f41433e",
+            "location": [
+                -0.000957904629221132,
+                -0.7648868114731934
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.0687558501958847
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1718
+            ],
+            "dimensions": [
+                406,
+                141
+            ]
+        },
+        {
+            "name": "Aircraft_029",
+            "uuid": "9a4544de-75bc-42c6-a986-3f213f39633e",
+            "location": [
+                -0.87025632938567,
+                0.07280074602203797
+            ],
+            "scale": [
+                0.1482694149017334,
+                0.19831618666648865
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                748
+            ],
+            "dimensions": [
+                304,
+                406
+            ]
+        },
+        {
+            "name": "Aircraft_030",
+            "uuid": "7c9851e5-b8ac-40ac-a22c-04b6b123e36f",
+            "location": [
+                0.40902524400359563,
+                -0.2653395792833548
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.06080449000000954
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1227
+            ],
+            "dimensions": [
+                406,
+                125
+            ]
+        },
+        {
+            "name": "Aircraft_031",
+            "uuid": "c74c4a40-40e7-4724-9f86-cb31e740e097",
+            "location": [
+                0.8190084373538353,
+                -0.6743648232869505
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.03180542588233948
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1666
+            ],
+            "dimensions": [
+                406,
+                65
+            ]
+        },
+        {
+            "name": "Aircraft_032",
+            "uuid": "15529c3e-7869-4938-af7b-34fe36e82b98",
+            "location": [
+                0.405193646451488,
+                0.819487354931595
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.19784845411777496
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1226,
+                2
+            ],
+            "dimensions": [
+                406,
+                405
+            ]
+        },
+        {
+            "name": "Aircraft_033",
+            "uuid": "9c962d9e-25cd-4299-9f67-2b0e61c20f94",
+            "location": [
+                -0.4109410570535401,
+                0.20786528770225532
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.10570626705884933
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                708
+            ],
+            "dimensions": [
+                406,
+                216
+            ]
+        },
+        {
+            "name": "Aircraft_034",
+            "uuid": "6ff117fe-c41b-464c-8f2c-b898095aa026",
+            "location": [
+                0.8190084373538353,
+                -0.26198689930900665
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.05753040313720703
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1227
+            ],
+            "dimensions": [
+                406,
+                118
+            ]
+        },
+        {
+            "name": "Aircraft_035",
+            "uuid": "9f6f85ae-24fc-4393-b732-5467b23eaf74",
+            "location": [
+                -0.000957904629221132,
+                -0.14608045244350737
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.0827876552939415
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1085
+            ],
+            "dimensions": [
+                406,
+                170
+            ]
+        },
+        {
+            "name": "Aircraft_036",
+            "uuid": "502a3616-ac27-45a4-ab27-ee560b02b306",
+            "location": [
+                0.8190084373538353,
+                -0.7941028962523387
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.023386342450976372
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1794
+            ],
+            "dimensions": [
+                406,
+                48
+            ]
+        },
+        {
+            "name": "Aircraft_037",
+            "uuid": "335754ca-3bda-456d-acf8-bf677975020b",
+            "location": [
+                0.40902524400359563,
+                -0.8041609076276017
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.042563144117593765
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1785
+            ],
+            "dimensions": [
+                406,
+                87
+            ]
+        },
+        {
+            "name": "Aircraft_038",
+            "uuid": "1e678278-2137-4359-b748-9cdce3876954",
+            "location": [
+                0.8190084373538353,
+                0.4961945807632718
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.1103835329413414
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                415
+            ],
+            "dimensions": [
+                406,
+                226
+            ]
+        },
+        {
+            "name": "Aircraft_039",
+            "uuid": "339844fc-722f-4bc8-bc96-d94855a42719",
+            "location": [
+                -0.000957904629221132,
+                -0.4688942804862898
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.07249765843153
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1419
+            ],
+            "dimensions": [
+                406,
+                148
+            ]
+        },
+        {
+            "name": "Aircraft_040",
+            "uuid": "f5540891-92aa-474a-81c6-81491a731ae3",
+            "location": [
+                -0.4109410570535401,
+                -0.43680449040611846
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.1000935435295105
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                1358
+            ],
+            "dimensions": [
+                406,
+                205
+            ]
+        },
+        {
+            "name": "Aircraft_041",
+            "uuid": "80a9d323-5db0-47b6-8b89-b3a6432e1099",
+            "location": [
+                -0.000957904629221132,
+                -0.6188063875774673
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.07015902549028397
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1571
+            ],
+            "dimensions": [
+                406,
+                144
+            ]
+        },
+        {
+            "name": "Aircraft_042",
+            "uuid": "432b164d-f80b-4411-86d8-dc293d6d4852",
+            "location": [
+                0.40902524400359563,
+                -0.5067315097162944
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.0551917664706707
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                1474
+            ],
+            "dimensions": [
+                406,
+                113
+            ]
+        },
+        {
+            "name": "Aircraft_043",
+            "uuid": "f8e804f1-4b76-479c-904e-f9852481fa0e",
+            "location": [
+                0.8190084373538353,
+                -0.12548549784133098
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.06267539411783218
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1085
+            ],
+            "dimensions": [
+                406,
+                128
+            ]
+        },
+        {
+            "name": "Aircraft_044",
+            "uuid": "dbb74086-fd5b-4320-acf6-0a4480cd7c7a",
+            "location": [
+                0.40902524400359563,
+                0.03400561383553372
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.08559401333332062
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1230,
+                902
+            ],
+            "dimensions": [
+                406,
+                175
+            ]
+        },
+        {
+            "name": "Aircraft_045",
+            "uuid": "9befd448-a6d9-4d2e-8a17-1e3213927de3",
+            "location": [
+                -0.4109410570535401,
+                -0.9828101248246024
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.03835360333323479
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                1968
+            ],
+            "dimensions": [
+                406,
+                79
+            ]
+        },
+        {
+            "name": "Aircraft_046",
+            "uuid": "5a829bb9-6c3d-4336-9b3c-146dbc6220d1",
+            "location": [
+                0.8190084373538353,
+                -0.60252199092683
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.034611787647008896
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1591
+            ],
+            "dimensions": [
+                406,
+                71
+            ]
+        },
+        {
+            "name": "Aircraft_047",
+            "uuid": "929bb7f0-1a43-47da-8881-9e1288435027",
+            "location": [
+                -0.000957904629221132,
+                -0.9966997622997544
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.01449953205883503
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                2006
+            ],
+            "dimensions": [
+                406,
+                30
+            ]
+        },
+        {
+            "name": "Aircraft_048",
+            "uuid": "7d6b2165-e905-4ec6-adfa-64a073123827",
+            "location": [
+                -0.000957904629221132,
+                -0.9085724761934343
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.06782039254903793
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                820,
+                1863
+            ],
+            "dimensions": [
+                406,
+                139
+            ]
+        },
+        {
+            "name": "Aircraft_049",
+            "uuid": "5bb8729d-bd1d-4b40-8df7-5c7a19f6d562",
+            "location": [
+                -0.8994724141648153,
+                -0.23756033288083198
+            ],
+            "scale": [
+                0.11973807215690613,
+                0.10102900117635727
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                1158
+            ],
+            "dimensions": [
+                245,
+                207
+            ]
+        },
+        {
+            "name": "Aircraft_050",
+            "uuid": "35492486-89f4-4e02-b228-601564c982e9",
+            "location": [
+                -0.6973545227907215,
+                -0.23756033288083198
+            ],
+            "scale": [
+                0.07202993333339691,
+                0.09915809333324432
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                253,
+                1160
+            ],
+            "dimensions": [
+                148,
+                203
+            ]
+        },
+        {
+            "name": "Aircraft_051",
+            "uuid": "11a6abe1-e7e8-450a-a486-589b703f4b44",
+            "location": [
+                0.8190084373538353,
+                -0.3889092498008507
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.05612722039222717
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                1355
+            ],
+            "dimensions": [
+                406,
+                115
+            ]
+        },
+        {
+            "name": "Aircraft_052",
+            "uuid": "7e0c7225-cd23-4271-be63-31a87f15a635",
+            "location": [
+                -0.4109410570535401,
+                -0.2251075766039742
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.10289990901947021
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                1144
+            ],
+            "dimensions": [
+                406,
+                211
+            ]
+        },
+        {
+            "name": "Aircraft_053",
+            "uuid": "48644e68-333c-4a45-ae3a-6583626de8fb",
+            "location": [
+                0.8190084373538353,
+                0.2246286304784334
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.08933582901954651
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1640,
+                708
+            ],
+            "dimensions": [
+                406,
+                183
+            ]
+        },
+        {
+            "name": "Aircraft_054",
+            "uuid": "74087e32-fb96-4664-bb05-db7ebe50fec9",
+            "location": [
+                -0.4109410570535401,
+                -0.01005799799349065
+            ],
+            "scale": [
+                0.19831618666648865,
+                0.1033676341176033
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                410,
+                928
+            ],
+            "dimensions": [
+                406,
+                212
+            ]
+        },
+        {
+            "name": "Aircraft_055",
+            "uuid": "9d28eb52-8b8a-4be4-b6e3-32b8f4fbe84f",
+            "location": [
+                -0.6168905459797416,
+                0.8175715704294317
+            ],
+            "scale": [
+                0.3956969082355499,
+                0.1997193694114685
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                2
+            ],
+            "dimensions": [
+                810,
+                409
+            ]
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+schema_version = "1.0.0"
+
+id = "Shadow"
+version = "1.1.5"
+name = "Shadow"
+tagline = "Dark theme"
+maintainer = "Shadow"
+type = "theme"
+
+
+tags = ["Dark", "High Contrast"]
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:GPL-2.0-or-later",
+]

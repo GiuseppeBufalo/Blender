@@ -1,0 +1,170 @@
+# 
+
+## Requirements
+
+* Windows, MacOS or Linux
+ * Blender 3.6 LTS, 4.1 Stable
+
+!!! danger "Experimental Builds"
+    [Experimental](https://builder.blender.org/download/daily/) Blender builds such as 4.2-alpha are **not supported**, and fixing any issues related to them, will not be a priority, but [reporting them](faq.md#get-support) is still encouraged.  
+
+!!! danger "Custom Builds"
+    Custom Blender builds such as *OctaneRender for Blender* may not support all of Blender's native shader nodes.  
+    DECALmachine only relies on native Blender nodes and is not at fault for any issues resulting from using custom builds.
+
+
+### Blender on MacOS
+
+MacOS users should install Blender properly, by following the [official instructions](https://docs.blender.org/manual/en/dev/getting_started/installing/macos.html).  
+Avoid running it just from the Downloads folder!  
+Note that, for **dragging** of files and folders, you need to hold down the `COMMAND` key.  
+This will ensure [AppTranslocation](img/installation/apptranslocation.jpg)[^1] is avoided. 
+
+[^1]: Learn more about [AppTranslocation](https://lapcatsoftware.com/articles/app-translocation.html) on MacOS.
+
+
+### Blender on Arch Linux
+
+Arch Linux users and users of other Arch based or similar rolling release distros are advised to use the [official Blender builds](https://blender.org/download).  
+The Blender package in the [Community repository](https://www.archlinux.org/packages/community/x86_64/blender/) does not supply its own Python, and does not follow [official recommendations](https://docs.blender.org/api/current/info_tips_and_tricks.html#bundled-python-extensions).  
+As a consequence, the system's python version may not work with DECALmachine.
+
+
+### Latest DECALmachine
+
+The latest version of DECALmachine is 2.11.1 - available on [Gumroad](https://gumroad.com/a/164689011/fjXBHu) and [Blender Market](https://www.blendermarket.com/products/DECALmachine?ref=1051).  
+See [this page](whatsnew.md) to learn what's new in the latest versions, or see the [changelog](changelog.md) for the full, detailed release history.
+
+
+### PIL/Pillow
+
+For more advanced usage of DECALmachine, a python module called [PIL/Pillow](https://pillow.readthedocs.io/en/latest/) is required.  
+PIL enables DECALmachine to manipulate images, and so is required for [Decal](decal_creation_instant.md) and [Trim Sheet](trim_sheet_creation.md) Creation, as well as for [Atlasing](export_atlas.md) and [Baking](export_bake.md).  
+Installation has been automated and is covered below. Some additional information can be found the [FAQs](faq.md#what-exactly-is-pilpillow-and-why-is-it-needed). 
+
+!!! warning "Keep in mind"
+    If you use DECALmachine 2.11.1 in Blender 4.0+, you will need PIL to [update the supplied example assets](whatsnew.md#blender-40-asset-update).
+
+
+## Update
+
+### Decal Backup
+
+If you have not chosen a decal assets location outside the DECALmachine folder in [Blender's addons folder](#blenders-addons-folder), you should backup your decals as described in the video, and outlined below.
+
+!!! danger "Attention"
+    Otherwise, you **risk of loosing** any [Decals](decal_creation_instant.md), [Atlases](export_atlas.md#atlas_creation), [Trim Sheets](trim_sheet_creation.md#trim-sheet-creation) you may have created or any [Bakes](export_bake.md) you may have done, IF the previous DECALmachine folder is removed.
+
+
+## Blender's Addons Folder?
+
+!!! note "Addons Folder (in user scripts location)"
+    **Linux**: `/home/name/.config/blender/3.6/scripts/addons`  
+    **MacOS**: `/Users/name/Library/Application Support/Blender/3.6/scripts/addons`  
+    **Windows**: `C:\Users\name\AppData\Roaming\Blender Foundation\Blender\3.6\scripts\addons`  
+
+    <!--Depending on your Blender version, replace `3.6` accordingly.-->
+
+
+## Installation
+
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/wb9bt62fuZM" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+*this video covers **installation**, decal backup, PIL, external assets path, **support** and more*
+
+---
+
+The same instructions as in the video, but in text form:
+
+
+### 1. Fresh Installation
+> NO previous version of DECALmachine installed
+
+* start Blender, bring up preferences
+* switch to the *Add-ons* tab and click the **Install...** button at the top right 
+* locate the downloaded DECALmachine_2.11.1.zip file and double-click it
+* activate the addon by ticking the checkbox
+* ensure your preferences are saved (by default done automatically)
+* optionally, switch to the Decal Creation + Export tab, and install PIL
+* close preferences and in the 3D View press the `D` key to bring up the DECALmachine pie menu
+
+
+### 2. Update Installation
+> previous version of DECALmachine installed already
+
+#### 2a. Update Installation in Blender
+
+* start Blender, bring up preferences
+* switch to the *Add-ons* tab and use the search input at the top right to find your currently installed DECALmachine version
+* unfold DECALmachine and shift click on the folder icon of the assets path
+* in your filebrowser copy your old decals to a safe location
+* in the Blender/DECALmachien addon preferences, click the Remove button
+* with the old DM now uninstalled, click the **Install...** button at the top right 
+* locate the downloaded DECALmachine_2.11.1.zip file and double-click it
+* activate the addon by ticking the checkbox
+* ensure your preferences are saved (by default done automatically)
+* optionally, switch to the Decal Creation + Export tab, and install PIL
+* close preferences and in the 3D View press the `D` key to bring up the DECALmachine pie menu
+
+
+#### 2b. Update Installation in the File Browser
+
+!!! danger "Attention"
+    **Never** install DECALmachine in Blender's program folder.  
+    On Windows, that would be `C:\Program Files\...`
+    DECALmachine needs write access to its installation folder, so you need to install it into [Blender's addons folder](#blenders-addons-folder).
+
+* with Blender closed, navigate to [Blender's addons folder](#blenders-addons-folder)
+* find DECALmachine, and copy the DECALmachine/assets/Decals folder to a safe location to backup your existing decals
+* remove the DECALmachine folder
+* in your Downloads location, extract the DECALmachine_2.11.1.zip file
+* copy the DECALmachine folder from the zip file to [Blender's addons folder](#blenders-addons-folder)
+    - note, if you have a DECALmachine_2.11.1 folder after extraction, don't copy this one, instead copy the DECALmachine folder contained in it
+* start Blender and check if the pie menu (`D` key) comes up
+* optionally, switch to the Decal Creation tab, and install PIL if it isn't already
+
+
+## Post-Installation
+
+### Move Assets Location
+
+After a fresh Installation, when unfolding the [addon preferences](preferences.md), you will always be greeted with this message, asking you to move your assets location elsewhere, and out of the DECALmachine addon folder.
+
+![MoveAssetsInfo](img/installation/move_assets_info.jpg) 
+
+I highly recommend you follow this advice, and when you do so, pay attention to the *Move* toggle.  
+
+If this is the first time you are going to use an outside assets location for DECALmachine, you should set the *Move* toggle to *True*. With it enabled, all assets from the current location will be moved to the new location, as you change the assets path.
+
+If on the other hand you have used DECALmachine before and have a previous asset location for it setup already somewhere, or if you use a shared assets location as part of a team, you should disable this toggle before you change the assets location.
+
+
+### Update Legacy Assets
+
+Depending on the Blender version you are using with DECALmachine, an update even of the [supplied example assets](assets.md) may be required. 
+This is currently the case when using DECALmachine 2.9+ in Blender 4, but not when using the same version of DECALmachine in Blender 3.6.
+
+![UpdateableAssets](img/installation/updateable_assets.jpg) 
+*A Batch Updater message like this - or similar - may show in the DECALmachine addon preferences*
+
+This will also be the case for any assets you have created previously, and it may also be the case for any 3rd party decal libraries, that you may want to import and use.
+
+The reason for this is, that every time Blender introduces changes to materials with an update, in particular to the Principled BSDF shader node, DECALmachine will try to make use of any new shader inputs, so they are properly supported for [Material Matching](match_material.md).
+In addition to new shader inputs, Blender 4 also introduced foldable panels on shaders and node groups, and DECALmachine 2.9+ makes full use of these in its decal- or trimsheet node groups.  
+
+![DecalNodeGroupPanels](img/installation/decal_group_panels.jpg) 
+*Decal Node Groups with panels in Blender 4*
+
+Changes like these will require an update of all previously saved decal assets and libraries, and also an update of all .blend files, that still use these legacy assets.  
+At least if you want to continue to work on them - they should still render and display fine even without being updated.
+
+The two tools used for this are: [UpdateDecalLibrary](update_decals.md) and [UpdateBlendFiles](update_blend_files.md).  
+
+In addition and for convenience there is a BatchUpdater, that iteratively calls the UpdateDecalLibrary tool for each legacy decal or trimsheet libraries in your chosen assets location.  
+This is what's shown above in the screenshot, exposing the *Update and Fix Them All* button.
+
+
+### Issues with Assets
+
+Go to the next page covering the [addon preferences](preferences.md), to learn more about dealing with failed asset registrations.

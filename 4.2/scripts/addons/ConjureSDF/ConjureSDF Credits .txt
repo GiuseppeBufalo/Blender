@@ -1,0 +1,67 @@
+ConjureSDF Development Credits
+
+Main developer: João Desager
+
+Programming/Design Consultants:
+
+Aaron Powell(aka Osiriswrecks), Anthony Aragues, JF Matheu, Jakub Mularski
+MACHIN3, Proxe, Spencer Magnusson, and everyone in the bpy discord server!
+
+
+Pre-Alpha Testers:
+
+Aaron Smith
+Andres Stephens (Draise/Trinumedia)
+Ben Henry
+Danielle Villacorte
+Emiliano Colantoni
+Hubert Krzykalski
+Jakub Mularski
+Joe Seabuhr
+Jordan Cain
+Jordan "Mossy" Moss
+Josh J Beck
+Katja Linssen (rHebKa)
+Kevin Anderson
+Luís Cherubini
+MACHIN3
+Mean Goreng
+Michalina "Miszla" Gąsienica-Laskowy
+NightHawk (https://x.com/NightHawk664)
+Oskar Edlund (https://www.artstation.com/osed)
+Parawerke (https://www.artstation.com/para_werke)
+Robin Chyo
+Sabrina Garcia
+Thomas Roy William Butters (https://x.com/ArtOfPilgrim)
+Till Freitag
+
+
+
+Acknowledgements and Thanks:
+
+Hypnotau, who’s software Clavicula inspired me to start work on Conjure
+https://twitter.com/hypnotau
+https://clavicula.link/
+
+Ephtracy, who’s software MagicaCSG similarly served as inspiration for Conjure
+https://twitter.com/ephtracy
+https://ephtracy.github.io/index.html?page=magicacsg
+
+Inigo Quilez, for their knowledge, videos and articles on SDFs
+https://iquilezles.org/articles/
+
+Mercury, for their extensive and well documented collection of signed distance functions and operations
+https://mercury.sexy/hg_sdf/
+
+Emiliano Colantoni, for showing the power of metaballs/SDFs.
+https://www.youtube.com/@milkmano/videos
+
+ꕯჄ⚉Ⴤꕯ, for being an inspiration, and for their assistance with the rendering engine.
+https://twitter.com/IY0YI
+
+The Shadertoy community, for their freely accessible SDF primitives and rendering techniques.
+https://www.shadertoy.com/
+
+My family, friends, coworkers and classmates. For their constant support during development.
+You, for buying and enjoying my work.
+

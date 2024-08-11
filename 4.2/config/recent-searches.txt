@@ -1,0 +1,102 @@
+mesh.hp_extrude
+view3d.edit_mesh_extrude_move_shrink_fatten
+Texture ▸ Image Texture
+   ug4oce2lw_4K_Displacement.exr
+ 0 Dry_Mud_ug4oce2lw
+ 0 Dry_Trampled_vdzgdfb
+Input ▸ Fresnel
+Output ▸ Viewer
+   Scene
+Edit ▸ Weighted Normal
+   Light
+Filter ▸ Glare
+Color ▸ Adjust ▸ RGB Curves
+Generate ▸ Array
+Vector ▸ Bump
+Input ▸ Constant ▸ RGB
+Color ▸ Invert Color
+   Cutting Mat, 24 X 36 Inch.png
+   courtyard.exr
+Input ▸ Ambient Occlusion
+Color ▸ Mix Color
+Shader ▸ Principled BSDF
+Texture ▸ Noise Texture
+Color ▸ RGB Curves
+   ERGON SR PRO LADIES SADDLE - Bike Force Clarkson.jpg
+   Ergon SM Comp Saddle  Deporvillage.jpg
+   Ergon SR Sport Gel Womens Roadbike Saddle ML  CANYON AU.png
+   SR Carbon Stealth Saddle Women  bikeNOW  Melbourne - bikeNOW.jp
+   Ergon SM Comp Bike Seat - SmallMedium – Bicycle Warehouse.jpg
+   Ergon SR Pro Womens - Mountain Mania Cycles.jpg
+   Amazon.com  Ergon - SR Pro Ergonomic Comfort Bicycle Saddle.002
+   Amazon.com  Ergon - SR Pro Ergonomic Comfort Bicycle Saddle  fo
+   Amazon.com  Ergon - SR Pro Ergonomic Comfort Bicycle Saddle
+Generate ▸ Mirror
+   430145274_356789137338970_7727948182873993012_n.jpg
+   CloudScape_Cirrostratus
+ 0 Travertine_Marble_wkkgahxl
+   Base Material
+Vector ▸ Normal
+Vector ▸ Normal Map
+Input ▸ Object Info
+Converter ▸ Color Ramp
+Color ▸ Hue/Saturation/Value
+   Gama Professional Dryer In Silver - Hairhouse Online  Hairhouse
+ 0 Gama Professional Dryer In Silver - Hairhouse Online  Hairhouse
+   Image preview.jpg
+   9 Pinterest.jpg
+   Collection of Forms 2011  Industrial design sketch, Concept des
+   Collection of Forms 2011  Design sketch, Industrial design sket
+ 0 Material
+Input ▸ Bevel
+ 0 Screenshot 2024-04-08 at 09.41.13.jpg
+   Material.001
+   Screenshot 2024-04-22 at 19.58.36.jpg
+ 0 Screenshot - 2024-04-24 09.50.50.jpg
+   Screenshot - 2024-04-24 09.50.40.jpg
+   Screenshot 2024-04-08 at 09.41.13.jpg
+   Screenshot - 2124-04-22 21.23.51.jpg
+   Screenshot - 2024-04-29 20.36.14.jpg
+   RenderB_pose_502.jpg
+   RenderB_topdown_20.jpg
+   Screenshot 2024-04-22 at 1.39.08 PM.png
+   Screenshot - 2024-04-30 11.30.56.jpg
+   sy_anodized_orange_shiny
+ 0 sy_gold_matte.002
+Deform ▸ Smooth
+Mesh ▸ Write ▸ Set Shade Smooth
+   sy_gold_matte.001
+   old_gold_03
+Generate ▸ Subdivision Surface
+
+Unassigned ▸ Auto Smooth
+   sy_anodized_orange_shiny.001
+   Transparent
+   change
+Generate ▸ Decimate
+   Done!
+   aerodynamics_workshop_4k.hdr
+   machine_shop_01_4k.hdr
+   Material.002
+   urban_street_03_4k.hdr
+   studio_small_03_4k.hdr
+   machine_shop_02_4k.hdr
+Color ▸ Brightness/Contrast
+Color ▸ Mix ▸ Mix Color
+   hdri_studio_softbox_varC_v001.exr
+Generate ▸ Boolean
+Generate ▸ Triangulate
+F batch_export.py
+   Cotton_Heavy_Canvas_FRONT_7794573
+Normals ▸ Smooth by Angle
+   Material
+Generate ▸ Solidify
+   Body
+   Black
+   Grey
+   Cloth
+   Sclera Albedo.png
+   Sclera Displacement.png
+   Iris Displacement A.png
+   Iris Fibres.png
+   Iris Melanin.png

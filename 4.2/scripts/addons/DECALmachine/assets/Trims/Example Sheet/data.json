@@ -1,0 +1,1700 @@
+{
+    "name": "Example Sheet",
+    "uuid": "62fb9a9d-4c03-4d54-923e-782e1b5e6227",
+    "resolution": [
+        4096,
+        4096
+    ],
+    "isatlas": false,
+    "maps": {
+        "NORMAL": {
+            "texture": "normal.png",
+            "resolution": [
+                4096,
+                4096
+            ]
+        },
+        "AO": {
+            "texture": "ao.png",
+            "resolution": [
+                4096,
+                4096
+            ]
+        },
+        "CURVATURE": {
+            "texture": "curvature.png",
+            "resolution": [
+                4096,
+                4096
+            ]
+        },
+        "HEIGHT": {
+            "texture": "height.png",
+            "resolution": [
+                4096,
+                4096
+            ],
+            "parallax_amount": 0.012499998323619366
+        },
+        "EMISSION": {
+            "texture": "emission.png",
+            "resolution": [
+                4096,
+                4096
+            ]
+        },
+        "ALPHA": {
+            "texture": "alpha.png",
+            "resolution": [
+                4096,
+                4096
+            ],
+            "connect_alpha": false
+        },
+        "SUBSET": {
+            "texture": "subset.png",
+            "resolution": [
+                4096,
+                4096
+            ]
+        }
+    },
+    "trims": [
+        {
+            "name": "Trim 1",
+            "uuid": "25e93cd2-0a17-4f56-b3d1-c1e2f106646c",
+            "location": [
+                0.0,
+                1.9915233850479126
+            ],
+            "scale": [
+                1.0,
+                0.023522496223449707
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                8
+            ],
+            "dimensions": [
+                4096,
+                96
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 2",
+            "uuid": "06b1d9e0-a5cf-4dc0-b443-2679f063d2b0",
+            "location": [
+                0.0,
+                1.879752278327942
+            ],
+            "scale": [
+                1.0,
+                0.02355039492249489
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                120
+            ],
+            "dimensions": [
+                4096,
+                96
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 3",
+            "uuid": "90fdbfa1-0f29-4f45-86fa-f54bd6126695",
+            "location": [
+                0.0,
+                1.6983915567398071
+            ],
+            "scale": [
+                1.0,
+                0.06132805347442627
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                224
+            ],
+            "dimensions": [
+                4096,
+                251
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 4",
+            "uuid": "6016b1dc-5da1-4b70-bf1d-6ea231b30ca3",
+            "location": [
+                0.0,
+                1.1792830228805542
+            ],
+            "scale": [
+                1.0,
+                0.19204653799533844
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                475
+            ],
+            "dimensions": [
+                4096,
+                787
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 5",
+            "uuid": "4438f7ed-7922-4006-977f-8fcbf8212f27",
+            "location": [
+                0.0,
+                1.3712047338485718
+            ],
+            "scale": [
+                1.0,
+                0.09833483397960663
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                475
+            ],
+            "dimensions": [
+                4096,
+                403
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 6",
+            "uuid": "86e245b7-a03d-4e11-8a74-3b52560b4fb4",
+            "location": [
+                0.0,
+                0.9746400713920593
+            ],
+            "scale": [
+                1.0,
+                0.09212322533130646
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                885
+            ],
+            "dimensions": [
+                4096,
+                377
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 7",
+            "uuid": "b4c32cfd-7671-48c0-8aa7-473332fc398c",
+            "location": [
+                0.0,
+                0.7789987921714783
+            ],
+            "scale": [
+                1.0,
+                0.18662889301776886
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                887
+            ],
+            "dimensions": [
+                4096,
+                764
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 8",
+            "uuid": "25abd0a8-3214-4000-9dc2-d602e2ea26be",
+            "location": [
+                0.0,
+                0.06945870071649551
+            ],
+            "scale": [
+                1.0,
+                0.15923410654067993
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                1652
+            ],
+            "dimensions": [
+                4096,
+                652
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 9",
+            "uuid": "da7e3e3e-cf78-430e-97f4-a6cf9e523e0b",
+            "location": [
+                0.0,
+                -0.35515096783638
+            ],
+            "scale": [
+                1.0,
+                0.043775998055934906
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                2313
+            ],
+            "dimensions": [
+                4096,
+                179
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 10",
+            "uuid": "aa6c4d1d-895a-472b-bb8b-ff92f485f2ea",
+            "location": [
+                0.0,
+                -0.5963312387466431
+            ],
+            "scale": [
+                1.0,
+                0.07377362996339798
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                2493
+            ],
+            "dimensions": [
+                4096,
+                302
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 11",
+            "uuid": "81256e6e-1370-4f08-89c9-55e333256324",
+            "location": [
+                0.0,
+                -0.7300496101379395
+            ],
+            "scale": [
+                1.0,
+                0.007771441712975502
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": true,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                2762
+            ],
+            "dimensions": [
+                4096,
+                32
+            ],
+            "repetitions": 1
+        },
+        {
+            "name": "Trim 12",
+            "uuid": "6f9306e5-3ec0-4155-8328-ac1f88fcaa20",
+            "location": [
+                -1.8661651611328125,
+                -1.0413612127304077
+            ],
+            "scale": [
+                0.08859901875257492,
+                0.09105156362056732
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                0,
+                2903
+            ],
+            "dimensions": [
+                363,
+                373
+            ]
+        },
+        {
+            "name": "Trim 13",
+            "uuid": "8a0e2b41-2584-4f4f-ab20-ac9079dadaf4",
+            "location": [
+                -1.5030326843261719,
+                -1.0398775339126587
+            ],
+            "scale": [
+                0.0880412831902504,
+                0.09205571562051773
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                365,
+                2899
+            ],
+            "dimensions": [
+                361,
+                377
+            ]
+        },
+        {
+            "name": "Trim 14",
+            "uuid": "5a795395-c267-496c-9e6e-d8d575193e9c",
+            "location": [
+                -1.2338531017303467,
+                -1.0344436168670654
+            ],
+            "scale": [
+                0.04223395884037018,
+                0.10659046471118927
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                728,
+                2864
+            ],
+            "dimensions": [
+                173,
+                437
+            ]
+        },
+        {
+            "name": "Trim 15",
+            "uuid": "6e65e4f8-6985-4842-91c4-40b1923bf616",
+            "location": [
+                -1.0729018449783325,
+                -1.0769052505493164
+            ],
+            "scale": [
+                0.031513240188360214,
+                0.08372927457094193
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                911,
+                2953
+            ],
+            "dimensions": [
+                129,
+                343
+            ]
+        },
+        {
+            "name": "Trim 16",
+            "uuid": "2bed7688-0b07-4ad5-b586-207ba38b2927",
+            "location": [
+                -0.8763936758041382,
+                -1.0449333190917969
+            ],
+            "scale": [
+                0.058997124433517456,
+                0.09698816388845444
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1051,
+                2894
+            ],
+            "dimensions": [
+                242,
+                397
+            ]
+        },
+        {
+            "name": "Trim 17",
+            "uuid": "c532e8d7-48e1-42ba-a081-dbc2ccf45e10",
+            "location": [
+                -0.5958540439605713,
+                -1.052215814590454
+            ],
+            "scale": [
+                0.07604391127824783,
+                0.1002403274178505
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1296,
+                2895
+            ],
+            "dimensions": [
+                311,
+                411
+            ]
+        },
+        {
+            "name": "Trim 18",
+            "uuid": "97197741-7387-4278-969a-a6594b5be02b",
+            "location": [
+                -0.29255563020706177,
+                -1.0476652383804321
+            ],
+            "scale": [
+                0.07177349925041199,
+                0.10312012583017349
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1608,
+                2884
+            ],
+            "dimensions": [
+                294,
+                422
+            ]
+        },
+        {
+            "name": "Trim 19",
+            "uuid": "d2f7e75b-0fe8-435d-9831-5a2859f8653b",
+            "location": [
+                0.07760777324438095,
+                -0.9666936993598938
+            ],
+            "scale": [
+                0.10797761380672455,
+                0.0931038036942482
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1904,
+                2824
+            ],
+            "dimensions": [
+                442,
+                381
+            ]
+        },
+        {
+            "name": "Trim 20",
+            "uuid": "fffbb8f5-2942-41b3-8aab-ebb5902d3888",
+            "location": [
+                0.5012772083282471,
+                -0.9514681696891785
+            ],
+            "scale": [
+                0.09507888555526733,
+                0.095782071352005
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2355,
+                2803
+            ],
+            "dimensions": [
+                389,
+                392
+            ]
+        },
+        {
+            "name": "Trim 21",
+            "uuid": "64d5a0ff-6974-4dd2-8f32-ebcaafbd604d",
+            "location": [
+                0.7619941234588623,
+                -0.8659421801567078
+            ],
+            "scale": [
+                0.027493791654706,
+                0.05462874099612236
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2754,
+                2802
+            ],
+            "dimensions": [
+                113,
+                224
+            ]
+        },
+        {
+            "name": "Trim 22",
+            "uuid": "dcc7adf9-3c03-402d-91b2-8481f6cfb5c5",
+            "location": [
+                -1.9470267295837402,
+                -1.4156609773635864
+            ],
+            "scale": [
+                0.04898875579237938,
+                0.04597479850053787
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1,
+                3370
+            ],
+            "dimensions": [
+                201,
+                188
+            ]
+        },
+        {
+            "name": "Trim 23",
+            "uuid": "cb2d5e2e-e58d-4261-99fd-6733d9f7b031",
+            "location": [
+                -1.9513578414916992,
+                -1.6045838594436646
+            ],
+            "scale": [
+                0.046386443078517914,
+                0.046040140092372894
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                3558
+            ],
+            "dimensions": [
+                190,
+                189
+            ]
+        },
+        {
+            "name": "Trim 24",
+            "uuid": "228a8be9-9189-42e5-9f3f-cb23fdd628ff",
+            "location": [
+                -1.7084978818893433,
+                -1.3673161268234253
+            ],
+            "scale": [
+                0.06477408111095428,
+                0.06425121426582336
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                207,
+                3284
+            ],
+            "dimensions": [
+                265,
+                263
+            ]
+        },
+        {
+            "name": "Trim 25",
+            "uuid": "9c5a2c7a-429c-4b7f-b151-8dc599e658de",
+            "location": [
+                -1.4411661624908447,
+                -1.5214687585830688
+            ],
+            "scale": [
+                0.06176777556538582,
+                0.06029083579778671
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                480,
+                3446
+            ],
+            "dimensions": [
+                253,
+                247
+            ]
+        },
+        {
+            "name": "Trim 26",
+            "uuid": "39413731-303c-4542-a834-d94f48896f74",
+            "location": [
+                -1.7116475105285645,
+                -1.5781843662261963
+            ],
+            "scale": [
+                0.06851331889629364,
+                0.03185998648405075
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                196,
+                3561
+            ],
+            "dimensions": [
+                281,
+                130
+            ]
+        },
+        {
+            "name": "Trim 27",
+            "uuid": "08610328-e02b-4744-9b80-fd9cfe200be8",
+            "location": [
+                -0.9284559488296509,
+                -1.6009420156478882
+            ],
+            "scale": [
+                0.022380614653229713,
+                0.053261883556842804
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1074,
+                3540
+            ],
+            "dimensions": [
+                92,
+                218
+            ]
+        },
+        {
+            "name": "Trim 28",
+            "uuid": "22991bfd-6f46-49d9-bf0d-3a81e9392d11",
+            "location": [
+                -1.4423696994781494,
+                -1.7149156332015991
+            ],
+            "scale": [
+                0.03202223777770996,
+                0.03434703126549721
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                540,
+                3693
+            ],
+            "dimensions": [
+                131,
+                141
+            ]
+        },
+        {
+            "name": "Trim 29",
+            "uuid": "e145fe85-4e91-4453-8bb4-7fff37ef75dd",
+            "location": [
+                0.9302467107772827,
+                -0.9609969258308411
+            ],
+            "scale": [
+                0.11443798243999481,
+                0.09492268413305283
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2744,
+                2815
+            ],
+            "dimensions": [
+                469,
+                389
+            ]
+        },
+        {
+            "name": "Trim 30",
+            "uuid": "23c324c1-1715-42f4-9807-f4dccbcdb948",
+            "location": [
+                1.4006311893463135,
+                -0.9615442156791687
+            ],
+            "scale": [
+                0.11469535529613495,
+                0.0951448604464531
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                3214,
+                2815
+            ],
+            "dimensions": [
+                470,
+                390
+            ]
+        },
+        {
+            "name": "Trim 31",
+            "uuid": "585f8471-f418-42be-944b-49dbadf02c4e",
+            "location": [
+                1.3039244413375854,
+                -1.37997305393219
+            ],
+            "scale": [
+                0.36331820487976074,
+                0.1088210791349411
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2608,
+                3205
+            ],
+            "dimensions": [
+                1488,
+                446
+            ]
+        },
+        {
+            "name": "Trim 32",
+            "uuid": "7cdbb344-083b-414c-a742-d15f557b4c65",
+            "location": [
+                1.3040274381637573,
+                -1.8260258436203003
+            ],
+            "scale": [
+                0.3632678985595703,
+                0.1083858385682106
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2608,
+                3652
+            ],
+            "dimensions": [
+                1488,
+                444
+            ]
+        },
+        {
+            "name": "Trim 33",
+            "uuid": "9a659897-0ea9-40d7-a4d8-bca90698734f",
+            "location": [
+                -1.3743383884429932,
+                -1.3238378763198853
+            ],
+            "scale": [
+                0.0939570963382721,
+                0.031007133424282074
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                481,
+                3308
+            ],
+            "dimensions": [
+                385,
+                127
+            ]
+        },
+        {
+            "name": "Trim 34",
+            "uuid": "27617821-86c2-452e-9ab1-01a046295ffc",
+            "location": [
+                -1.0551843643188477,
+                -1.3594294786453247
+            ],
+            "scale": [
+                0.055134210735559464,
+                0.054281555116176605
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                880,
+                3296
+            ],
+            "dimensions": [
+                226,
+                222
+            ]
+        },
+        {
+            "name": "Trim 35",
+            "uuid": "6f7a27ac-c859-4c8d-a219-7e670bff269e",
+            "location": [
+                -0.7380403280258179,
+                -1.4955098628997803
+            ],
+            "scale": [
+                0.0658244639635086,
+                0.11346400529146194
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1175,
+                3311
+            ],
+            "dimensions": [
+                270,
+                465
+            ]
+        },
+        {
+            "name": "Trim 36",
+            "uuid": "90e7df43-e214-4c49-9788-10660ccc6eb0",
+            "location": [
+                -0.006629138253629208,
+                -1.3731180429458618
+            ],
+            "scale": [
+                0.06710650771856308,
+                0.10559877753257751
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1904,
+                3205
+            ],
+            "dimensions": [
+                275,
+                433
+            ]
+        },
+        {
+            "name": "Trim 37",
+            "uuid": "06661d76-42e4-4433-a1ec-3f36ddd180a9",
+            "location": [
+                0.2746809720993042,
+                -1.373555302619934
+            ],
+            "scale": [
+                0.06808681786060333,
+                0.10620465129613876
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2183,
+                3204
+            ],
+            "dimensions": [
+                279,
+                435
+            ]
+        },
+        {
+            "name": "Trim 38",
+            "uuid": "fcd3cacf-ffa6-43c5-b271-2580840137a8",
+            "location": [
+                0.49008646607398987,
+                -1.3450692892074585
+            ],
+            "scale": [
+                0.03316113352775574,
+                0.09289870411157608
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2470,
+                3203
+            ],
+            "dimensions": [
+                136,
+                381
+            ]
+        },
+        {
+            "name": "Trim 39",
+            "uuid": "e9972b1f-47b4-44fa-996b-d870629d7db6",
+            "location": [
+                -0.377998411655426,
+                -1.6716587543487549
+            ],
+            "scale": [
+                0.1070045530796051,
+                0.1801394671201706
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1451,
+                3351
+            ],
+            "dimensions": [
+                438,
+                738
+            ]
+        },
+        {
+            "name": "Trim 40",
+            "uuid": "64a60214-74a8-4700-a199-5d478cc7904b",
+            "location": [
+                0.14460277557373047,
+                -1.8182094097137451
+            ],
+            "scale": [
+                0.13918596506118774,
+                0.1106773391366005
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1908,
+                3640
+            ],
+            "dimensions": [
+                570,
+                453
+            ]
+        },
+        {
+            "name": "Trim 41",
+            "uuid": "e27a7518-3573-4243-a864-c884b4128d30",
+            "location": [
+                0.49880650639533997,
+                -1.7932697534561157
+            ],
+            "scale": [
+                0.029645945876836777,
+                0.12387585639953613
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2486,
+                3588
+            ],
+            "dimensions": [
+                121,
+                507
+            ]
+        },
+        {
+            "name": "Trim 42",
+            "uuid": "f585f128-4b2d-4443-908c-14afceef4910",
+            "location": [
+                -1.2493641376495361,
+                -1.5648525953292847
+            ],
+            "scale": [
+                0.02862406149506569,
+                0.07264899462461472
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                740,
+                3464
+            ],
+            "dimensions": [
+                117,
+                298
+            ]
+        },
+        {
+            "name": "Trim 43",
+            "uuid": "4247859c-c54c-4292-999b-902e6c3f60f4",
+            "location": [
+                -1.0828254222869873,
+                -1.6029131412506104
+            ],
+            "scale": [
+                0.04782484844326973,
+                0.05534736067056656
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                867,
+                3538
+            ],
+            "dimensions": [
+                196,
+                227
+            ]
+        },
+        {
+            "name": "Trim 44",
+            "uuid": "db58af64-a41d-4ffc-9ac9-0905ad091509",
+            "location": [
+                -1.0474867820739746,
+                -1.8802993297576904
+            ],
+            "scale": [
+                0.08042997121810913,
+                0.0804814025759697
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                836,
+                3763
+            ],
+            "dimensions": [
+                329,
+                330
+            ]
+        },
+        {
+            "name": "Trim 45",
+            "uuid": "791758c2-1950-4e64-aaef-37eee134fc75",
+            "location": [
+                -0.7389742136001587,
+                -1.889622449874878
+            ],
+            "scale": [
+                0.06860259175300598,
+                0.07643905282020569
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1169,
+                3781
+            ],
+            "dimensions": [
+                281,
+                313
+            ]
+        },
+        {
+            "name": "Trim 46",
+            "uuid": "26c08a70-2558-4979-9289-9869a934f6be",
+            "location": [
+                -1.9572035074234009,
+                -1.7897909879684448
+            ],
+            "scale": [
+                0.04351350665092468,
+                0.04329198971390724
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                2,
+                3749
+            ],
+            "dimensions": [
+                178,
+                177
+            ]
+        },
+        {
+            "name": "Trim 47",
+            "uuid": "87474bac-f72c-4edf-bf7f-828f116ea305",
+            "location": [
+                -1.8168598413467407,
+                -1.9575824737548828
+            ],
+            "scale": [
+                0.0446871854364872,
+                0.044149257242679596
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                140,
+                3915
+            ],
+            "dimensions": [
+                183,
+                181
+            ]
+        },
+        {
+            "name": "Trim 48",
+            "uuid": "17437ee9-d22d-4810-83cd-eae869d45874",
+            "location": [
+                -1.9786936044692993,
+                -1.9634957313537598
+            ],
+            "scale": [
+                0.03328724578022957,
+                0.041261885315179825
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1,
+                3927
+            ],
+            "dimensions": [
+                136,
+                169
+            ]
+        },
+        {
+            "name": "Trim 49",
+            "uuid": "260a753e-58db-4004-b189-83a9a1167546",
+            "location": [
+                -1.6249603033065796,
+                -1.947502851486206
+            ],
+            "scale": [
+                0.04866975173354149,
+                0.04907092824578285
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                323,
+                3895
+            ],
+            "dimensions": [
+                199,
+                201
+            ]
+        },
+        {
+            "name": "Trim 50",
+            "uuid": "078ac5a1-d80b-4cd9-bd51-a01a02ed002d",
+            "location": [
+                -1.7409857511520386,
+                -1.7644696235656738
+            ],
+            "scale": [
+                0.055669285356998444,
+                0.055611688643693924
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                193,
+                3699
+            ],
+            "dimensions": [
+                228,
+                228
+            ]
+        },
+        {
+            "name": "Trim 51",
+            "uuid": "0a1d8c43-c9ee-4cbe-9381-67f367810d4c",
+            "location": [
+                -1.5736629962921143,
+                -1.7454465627670288
+            ],
+            "scale": [
+                0.024056481197476387,
+                0.048385534435510635
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                425,
+                3694
+            ],
+            "dimensions": [
+                99,
+                198
+            ]
+        },
+        {
+            "name": "Trim 52",
+            "uuid": "6cf85b04-b8a6-4553-a4e8-c868e01a5820",
+            "location": [
+                -1.2836966514587402,
+                -1.8971558809280396
+            ],
+            "scale": [
+                0.035543061792850494,
+                0.07365438342094421
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                692,
+                3794
+            ],
+            "dimensions": [
+                146,
+                302
+            ]
+        },
+        {
+            "name": "Trim 53",
+            "uuid": "1b7eb6ef-c030-439b-94f6-fd614473a8bf",
+            "location": [
+                -1.4430862665176392,
+                -1.915348768234253
+            ],
+            "scale": [
+                0.03900367021560669,
+                0.06416741758584976
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                525,
+                3832
+            ],
+            "dimensions": [
+                160,
+                263
+            ]
+        },
+        {
+            "name": "Trim 54",
+            "uuid": "5bec9a9a-1bb8-45ed-8a7c-b5fc81d9ef09",
+            "location": [
+                1.7377947568893433,
+                -0.9126303195953369
+            ],
+            "scale": [
+                0.14775261282920837,
+                0.07670696079730988
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                3483,
+                2804
+            ],
+            "dimensions": [
+                605,
+                314
+            ]
+        },
+        {
+            "name": "Trim 55",
+            "uuid": "d8a8778e-cea2-4f65-a4cc-8033ec33da64",
+            "location": [
+                -1.1381053924560547,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.011340659111738205,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                887,
+                2801
+            ],
+            "dimensions": [
+                46,
+                91
+            ]
+        },
+        {
+            "name": "Trim 56",
+            "uuid": "0dad0a38-f120-4037-be47-e9a18abf5a8a",
+            "location": [
+                -1.0690343379974365,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015778345987200737,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                947,
+                2801
+            ],
+            "dimensions": [
+                65,
+                91
+            ]
+        },
+        {
+            "name": "Trim 57",
+            "uuid": "e2327ae7-33ae-401a-bb98-2cfdd2d4fc59",
+            "location": [
+                -1.000670075416565,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015334530733525753,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1016,
+                2801
+            ],
+            "dimensions": [
+                63,
+                91
+            ]
+        },
+        {
+            "name": "Trim 58",
+            "uuid": "a4c0f2d2-7ea7-4a4c-b135-f4dbb2623840",
+            "location": [
+                -0.9314979910850525,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.01666576787829399,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1082,
+                2801
+            ],
+            "dimensions": [
+                68,
+                91
+            ]
+        },
+        {
+            "name": "Trim 59",
+            "uuid": "01fc8983-c9ad-43cd-85fa-dae34e315ac6",
+            "location": [
+                -0.8617201447486877,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015137236565351486,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1155,
+                2801
+            ],
+            "dimensions": [
+                62,
+                91
+            ]
+        },
+        {
+            "name": "Trim 60",
+            "uuid": "6cf043c6-424b-45c5-b136-644c295f6670",
+            "location": [
+                -0.7963854074478149,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015285172499716282,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1220,
+                2801
+            ],
+            "dimensions": [
+                63,
+                91
+            ]
+        },
+        {
+            "name": "Trim 61",
+            "uuid": "03f55c3f-a2e6-4e9d-9f10-25bf0039bf14",
+            "location": [
+                -0.7292329668998718,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.016123391687870026,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1286,
+                2801
+            ],
+            "dimensions": [
+                66,
+                91
+            ]
+        },
+        {
+            "name": "Trim 62",
+            "uuid": "540e0cc5-aff0-407d-a801-3d79c9d145f7",
+            "location": [
+                -0.660868763923645,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015482433140277863,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1355,
+                2801
+            ],
+            "dimensions": [
+                63,
+                91
+            ]
+        },
+        {
+            "name": "Trim 63",
+            "uuid": "528d1ad1-0a64-498d-937d-10b83d8699e7",
+            "location": [
+                -0.5934134125709534,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.014989383518695831,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1424,
+                2801
+            ],
+            "dimensions": [
+                61,
+                91
+            ]
+        },
+        {
+            "name": "Trim 64",
+            "uuid": "d2d93452-11fb-4dda-8d54-ab9351bc51d3",
+            "location": [
+                -0.5252512693405151,
+                -0.798887312412262
+            ],
+            "scale": [
+                0.015038701705634594,
+                0.022188207134604454
+            ],
+            "isactive": false,
+            "isempty": false,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1492,
+                2801
+            ],
+            "dimensions": [
+                62,
+                91
+            ]
+        },
+        {
+            "name": "Trim 65",
+            "uuid": "297afe45-d3ec-4902-a740-5c5caa33359b",
+            "location": [
+                -0.2771852910518646,
+                -0.7938138246536255
+            ],
+            "scale": [
+                0.02101994678378105,
+                0.018167277798056602
+            ],
+            "isactive": true,
+            "isempty": true,
+            "ispanel": false,
+            "hide": false,
+            "hide_select": false,
+            "coords": [
+                1728,
+                2805
+            ],
+            "dimensions": [
+                86,
+                74
+            ]
+        }
+    ]
+}

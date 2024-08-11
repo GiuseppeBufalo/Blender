@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><link rel="canonical" href="https://machin3.io/DECALmachine/docs/faq.html" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>FAQ - DECALmachine</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+        <link href="css/extra.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "FAQ";
+        var mkdocs_page_input_path = "faq.md";
+        var mkdocs_page_url = "/DECALmachine/docs/faq.html";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-78703389-1', 'DMdocs');
+        ga('send', 'pageview');
+      </script>
+    
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> DECALmachine
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Get Started</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="index.html">DECALmachine</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="preferences.html">Preferences</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What's new?</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="faq.html">FAQ</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#how-is-it-done">How is it done?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#what-exactly-is-pilpillow-and-why-is-it-needed">What exactly is PIL/pillow and why is it needed?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#can-i-install-pilpillow-without-an-internet-connection">Can I install PIL/pillow without an internet connection?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#will-decalmachine-work-in-blender-300-alpha-some-current-experimental-build">Will DECALmachine work in Blender 3.0.0-alpha (some current experimental build)?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#get-support">Get support</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#general-information">General information</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#errors">Errors</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#tool-misbehaviors">Tool misbehaviors</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#contact">Contact</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#other-addons">Other Addons</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#is-machin3tools-required">Is MACHIN3tools required?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#are-hardops-and-boxcutter-required">Are HardOps and BoxCutter required?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-cant-i-access-decalmachines-pie-menu-when-i-activate-boxcutters-tool">Why can't I access DECALmachine's pie menu when I activate BoxCutter's tool?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#basic-usage">Basic Usage</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#how-do-i-snap-decals-to-a-surface">How do I snap decals to a surface?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#how-do-i-mirror-decals">How do I mirror decals?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-are-my-panel-decal-materialstextures-taken-from-the-aircraftor-any-other-library">Why are my panel decal materials/textures taken from the Aircraft(or any other) library?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-arent-there-any-decal-libraries-in-the-pie-menu">Why aren't there any Decal Libraries in the Pie Menu?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#my-decal-libraries-are-locked-what-can-i-do">My Decal Libraries are LOCKED! What can I do?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#is-there-a-way-to-make-decals-affect-displacement-instead-of-normals">Is there a way to make decals affect displacement instead of normals?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#why-doesnt-the-alt-lmb-key-combination-for-alternative-modes-in-project-slice-etc-work">Why doesn't the ALT + LMB key combination for alternative modes in Project, Slice, etc. work?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#material-matching-doesnt-work-properly-why-are-the-node-inputs-on-the-principled-bsdf-shader-node-ignored">Material Matching doesn't work properly! Why are the node inputs on the Principled BSDF shader node ignored?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#decal-creation">Decal Creation</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#how-do-i-create-my-own-decals">How do I create my own Decals?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#how-do-i-create-decals-from-a-whole-folder-of-images">How do I create Decals from a whole folder of images?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#can-i-create-decals-from-alphas">Can I create Decals from Alphas?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#can-i-create-decals-for-damage-and-weathering-effects-such-as-those-from-quixel">Can I create Decals for damage and weathering effects, such as those from Quixel?</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#decal-export">Decal Export</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#can-i-bake-the-decal-textures-to-be-used-in-a-single-texture-set">Can I bake the Decal textures, to be used in a single texture set?</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#how-do-you-export-decals-for-use-in-unity-unreal-engine-etc">How do you export Decals for use in Unity, Unreal Engine, etc.?</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Menus</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="pie_menu.html">Pie Menu</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panels.html">Panels</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Basics</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="assets.html">Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="asset_loaders.html">Asset Loaders + Insert</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="select.html">Select</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="re-apply.html">Re-Apply</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_defaults.html">Adjust Decals/Defaults</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="project.html">Project</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="slice.html">Slice + Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="gpanel.html">GPanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="epanel.html">Epanel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="join_split.html">Join and Split</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="get_backup.html">Get Backup</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="sweep_decal_backups.html">Sweep Decal Backups</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="match_material.html">Match Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="override_materials.html">Override Materials</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="panel_cut.html">Panel Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="init_generated_coords.html">Initialize Generated Coords</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="transfer_uvs.html">Transfer UVs</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="init_trim_sheet_material.html">Init Trim Sheet Material</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="setup_subsets.html">Setup Subsets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_trim.html">Unwrap Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="unwrap_to_empty_trim.html">Unwrap to Empty Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="adjust_trim.html">Adjust Trim</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_cut.html">Trim Cut</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="mirror_trim.html">Mirror Trim</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">UV Tools</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="quad_unwrap.html">Quad Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="box_unwrap.html">Box Unwrap</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="stitch.html">Stitch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Utils</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="remove_decal_orphans.html">Remove Decal Orphans</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="fix_texture_paths.html">Fix Texture Paths</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="validate_decal.html">Validate Decal</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="clear_decal_props.html">Clear Decal Props</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Decal Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_instant.html">Instant</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_creation_batch.html">Batch</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Trim Sheet Creation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_creation.html">Trim Sheets</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Export</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="export_introduction.html">Introduction</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_atlas.html">Atlasing</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_trim_sheet.html">Trim Sheets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="export_bake.html">Baking</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Assets</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="update_decals.html">Update Decal and Trim Libraries</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="update_blend_files.html">Update Blend Files</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="supplied_assets.html">Supplied Assets</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Ecosystem</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="addons.html">Addons</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="decal_resources.html">Decal Resources</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="trim_sheet_resources.html">Trim Sheet Resources</a>
+                  </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a>
+                </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">DECALmachine</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>Get Started &raquo;</li>
+      <li>FAQ</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="contents">Contents</h1>
+<ol>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#get-support">Get Support</a></li>
+<li><a href="#other-addons">Other Addons</a></li>
+<li><a href="#basic-usage">Basic Usage</a></li>
+<li><a href="#decal-creation">Decal Creation</a></li>
+<li><a href="#decal-export">Decal Export</a></li>
+</ol>
+<h2 id="installation">Installation</h2>
+<h3 id="how-is-it-done">How is it done?</h3>
+<p>See the <a href="installation.html">Installation</a> guide and follow it precisely. Note the version requirement.</p>
+<h3 id="what-exactly-is-pilpillow-and-why-is-it-needed">What exactly is PIL/pillow and why is it needed?</h3>
+<p>PIL is not required for basic DECALmachine usage, so for using and working with decals that are supplied with DECALmachine or for 3rd party decal packs, that support DECALmachine.</p>
+<p>It is an image manipulation python module, used for decal creation and export, as well as for updating legacy decal assets (from previous versions of DECALmachine).<br />
+Think of it as Photoshop for python or Photoshop by code.  </p>
+<p>Installation is covered in the <a href="installation.html">Installation + Support video</a>.
+For more details on it, check out its own <a href="https://pillow.readthedocs.io/en/stable/">documentation</a>.</p>
+<h3 id="can-i-install-pilpillow-without-an-internet-connection">Can I install PIL/pillow without an internet connection?</h3>
+<p>PIL installation is done only once.<br />
+An internet connection is needed, because Windows, MacOS and Linux all require a different set of installation files. To support all of these operating systems and guarantee PIL works properly, this online-installation process is the best choice and has proven to have a 100% success rate.<br />
+In the past I've supplied pre-compiled versions of PIL for all three operating systems, but they often failed to work properly due to various differences in OS installations. So now the necessary files are downloaded based on a users operating system, and PIL is then compiled on the users computer, thereby ensuring it will work properly.</p>
+<p>If you have a second computer with web access and <strong>with the same OS as your workstation</strong>, you can install DECALmachine and PIL on the second computer, then copy the PIL installation over to the one without web access, and with some luck, it will work fine.</p>
+<p><img alt="PILPath" src="img/faq/pil_path.jpg" />
+<em>You can see the path of the PIL installation in <a href="https://www.youtube.com/results?search_query=blender+open+console+terminal">Blender's console</a>)</em></p>
+<p>Without a second computer with internet access and using the same OS, you are out of luck and won't be able to create decals and trim sheets, or take advantage of atlasing and baking.<br />
+<em>Unless</em> you want to <a href="https://pillow.readthedocs.io/en/stable/installation.html#building-from-source">build from source</a>, at which point my support ends and you are on your own.</p>
+<h3 id="will-decalmachine-work-in-blender-300-alpha-some-current-experimental-build">Will DECALmachine work in Blender 3.0.0-alpha (some current experimental build)?</h3>
+<p>Using experimental builds of Blender, you are at risk of encountering sudden failures of addons that used to work just fine the day before.</p>
+<p>I can't make any guarantees if things will keep working. I can just try to fix things once they break. However, fixing things that break in experimental Blender builds will never be a priority, until the experimental build becomes stable.</p>
+<h2 id="get-support">Get support</h2>
+<div class="admonition danger">
+<p class="admonition-title">Attention</p>
+<p>Note the <a href="installation.html#requirements">Requirements</a> in the installation guide.<br />
+Make sure you are using the <a href="installation.html#latest-decalmachine">latest version</a>.<br />
+Confirm you've followed the <a href="installation.html#installation">installation instructions</a>, including potential <a href="installation.html#post-installation">post-installation</a> steps.</p>
+</div>
+<h3 id="general-information">General information</h3>
+<p>To provide help, I need the following:</p>
+<ol>
+<li><strong>Proof of Purchase</strong></li>
+<li><strong>system-info.txt</strong> generated by DECALmachine's <em>GetSupport</em> tool<sup>and not from Blender's Help menu</sup></li>
+<li><strong>pil.log</strong> file, and <strong>batch_updated.log</strong> or <strong>quarantined.log</strong> files if present</li>
+</ol>
+<p>Please use the <strong>Get Support</strong> tool in the <a href="panels.html">help panel</a> or the about page of the <a href="preferences.html">addon preferences</a> to create the <strong>system-info.txt</strong> and <strong>.log</strong> files, and for further instructions in the README.html file.</p>
+<div style="position: relative; width: 100%; height: 0; padding-bottom: 56.25%;">
+<iframe src="https://www.youtube.com/embed/mFN_jsQHNpE" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" allowfullscreen seamless frameBorder="0"></iframe>
+</div>
+
+<hr />
+<p>If there are any issues with the assets detected, the GetSupport tool will also be directly accessible from the General tab of the addon preferences.
+<img alt="GetSupport" src="img/preferences/get_support.jpg" />
+<em>please make use of the GetSupport tool</em></p>
+<h3 id="errors">Errors</h3>
+<p>If you are seeing an error, please send me a <strong>screenshot of the system console</strong>.<br />
+Just an screenshot of the error message popup usually lacks context and is not ideal.<br />
+Instead of sending a screenshot, you can also <strong>copy and paste</strong> the console text into the email.</p>
+<div class="admonition warning">
+<p class="admonition-title">Keep in mind</p>
+<p><img alt="SystemConsole" src="img/faq/system_console.jpg" /></p>
+<p>On Windows you can turn on the console from Windows &gt; 'Toggle System Console'.<br />
+On Linux and MacOS, you need start Blender from a terminal.<br />
+I <strong>do not</strong> need an image of Blender's <em>Info View</em> and I don't need to see Blender's <em>Python Console</em> either.</p>
+</div>
+<p>If the error only occurs on a certain model, please attach the blend file as well.<br />
+Please remove any part of the model that doesn't contribute to the problem to keep the file size down.</p>
+<h3 id="tool-misbehaviors">Tool misbehaviors</h3>
+<p>If you think a tool of DECALmachine doesn't do what it should do, please <strong>send me the blend file</strong> and provide steps for me to reproduce the behavior.<br />
+Please remove any part of the model that doesn't contribute to the problem to keep the file size small.</p>
+<h3 id="contact">Contact</h3>
+<p>Use <a href="mailto:decal@machin3.io">eMail</a>, not twitter, not youtube, not artstation, not blender market, and not the <a href="https://blenderartists.org/t/decalmachine/688181">Blender Artists</a> or <a href="https://polycount.com/discussion/210294/blender-decalmachine-surface-detailing-using-mesh-decals/">polycount</a> threads <strong>for reporting of errors</strong>.</p>
+<h2 id="other-addons">Other Addons</h2>
+<h3 id="is-machin3tools-required">Is MACHIN3tools required?</h3>
+<p><a href="https://gumroad.com/l/MACHIN3tools">MASCHIN3tools</a> is not needed, but I'd recommended to use at least some of its tools, as they are very convenient in the DECALmachine workflow.
+Check out the <a href="addons.html">addons</a> section.</p>
+<h3 id="are-hardops-and-boxcutter-required">Are HardOps and BoxCutter required?</h3>
+<p><a href="https://gumroad.com/l/hardops">HardOps</a> and <a href="https://gumroad.com/l/BoxCutter">BoxCutter</a> are not needed to use DECALmachine. HOps/BC and DM fill different niches in a hard surface workflow.<br />
+DM is a finishing and detailing tool. While HOps/BC are tools for working with form and generally improve the Blender experience greatly.<br />
+As such the addons complement each either very well and I'd recommend them to any DECALmachine user.</p>
+<p>Furthermore it should be noted, that the HardOps and BoxCuter developers have been and continue to be extremely supportive and helpful and DECALmachine would not be what it is, without their initial contributions and guidance.</p>
+<h3 id="why-cant-i-access-decalmachines-pie-menu-when-i-activate-boxcutters-tool">Why can't I access DECALmachine's pie menu when I activate BoxCutter's tool?</h3>
+<p>If you make BoxCutter active, by pressing its button in the tool bar, or via the <code>Alt + W</code> shortcut, BoxCutter takes over and brings up its own pie menu when pressing the <code>D</code> key.</p>
+<p>To avoid keymap conflicts and use DECCALmachine while the BoxCutter tool is active, you need to either remap the BoxCutter pie menu or the DECALmachine pie to a different key or key combination.<br />
+For instance, you could remap the BC pie to <code>SHIFT + D</code>. Once done, you can keep the BoxCutter tool active, access its own pie menu using <code>SHIFT + D</code>, as well as DECALmachine's with <code>D</code>.</p>
+<p>Otherwise, you will have to disable the BoxCutter tool(enable any other tool) every time to access DECALmachine's pie menu.</p>
+<p><img alt="BoxCutterPieMenuKeymap" src="img/faq/boxcutter_pie.jpg" />
+<em>the BoxCutter pie menu, remapped to <code>SHIFT + D</code> in the Keymap preferences</em></p>
+<h2 id="basic-usage">Basic Usage</h2>
+<h3 id="how-do-i-snap-decals-to-a-surface">How do I snap decals to a surface?</h3>
+<p>When Decals are imported using the asset loaders, by default all snap settings are prepared automatically - face snapping, align to surface, etc. Snapping itself is not turned on however.<br />
+The suggested method to move decals and align them is by holding down <code>CTRL</code> while  moving decals via <code>g</code>. This will turn on snapping temporarily for as long as <code>CTRL</code> is pressed.</p>
+<p>As of <a href="changelog.html#v187">version 1.8.7</a> the behavior to set up snapping - and thereby changing any existing snap setttings, is optional and can be disabled in the DECALmachine <a href="panels.html"><em>panel</em></a>.</p>
+<h3 id="how-do-i-mirror-decals">How do I mirror decals?</h3>
+<p>Decals in DECALmachine - being objects - can be mirrored using Blender's mirror modifier, <a href="assets.html#mirror">as described here</a>.</p>
+<h3 id="why-are-my-panel-decal-materialstextures-taken-from-the-aircraftor-any-other-library">Why are my panel decal materials/textures taken from the Aircraft(or any other) library?</h3>
+<p>You have enabled the <em>Panel</em> option for this other, non-panel decal library in the addon <a href="preferences.html"><em>preferences</em></a>.</p>
+<p><img alt="PanelLibraries" src="img/faq/panel_libraries.jpg" /></p>
+<p>Changing the <em>Panel</em> property of a decal library, requires a library reload, or alternatively a Blender restart. Don't forget to save your preferences after the reload, or before the restart.</p>
+<p>To change panel decal materials, check out the <a href="adjust_defaults.html"><em>Adjust</em></a> tool. Adjust will access all decal libraries marked as <em>Panel</em>.
+The <a href="slice.html">Slice</a>/<a href="gpanel.html">Gpanel</a>/<a href="epanel.html">Epanel</a> tools will access that same pool of materials.</p>
+<h3 id="why-arent-there-any-decal-libraries-in-the-pie-menu">Why aren't there any Decal Libraries in the Pie Menu?</h3>
+<p><img alt="NoLibaries" src="img/faq/no_libraries.jpg" />
+<em>no libraries, not even the supplied ones appear in the pie menu</em></p>
+<p>This is default behavior when running DECALmachine 2.5 the first time in Blender 3.0.<br />
+The supplied example assets need to be (batch) updated for them to work in 3.0.<br />
+See <a href="whatsnew.html#asset-update-blender-30-only">this what's new section</a> for details on why and how.</p>
+<p>If that's not it, verify you aren't using a <a href="pie_menu.html">library visibility preset</a>, that has all libraries hidden.</p>
+<h3 id="my-decal-libraries-are-locked-what-can-i-do">My Decal Libraries are LOCKED! What can I do?</h3>
+<p><img alt="LockedLibraries" src="img/faq/locked_libraries.jpg" />
+<em>supplied decal libraries are locked and can't be removed or written to</em></p>
+<p>You are in <em>decal-remove-mode</em>, and it's visibly enabled via the "Removal" button at the <strong>very bottom</strong> of the pie menu.<br />
+You can not add decals to locked decal libraries, and you can't remove decals from them either.<br />
+If you find DECALmachine like this, right after starting Blender, you need to disable <em>decal-remove-mode</em> and save your preferences.</p>
+<p>For details on removing decals, check out <a href="decal_creation_instant.html">decal creation</a>, specifically the very end.  </p>
+<h3 id="is-there-a-way-to-make-decals-affect-displacement-instead-of-normals">Is there a way to make decals affect displacement instead of normals?</h3>
+<p>Technically it's trivial to change the decal node tree to do displacement as the height maps are already supplied. But think about it, a floating decal with actual displacement?<br />
+First off, the decal would need to be subdivided a lot, which can be done, but secondly what would happen to the displaced geometry? It would intersect with the base mesh the decals are floating above - you wouldn't see much of the displaced geometry, as it is sunk into the base mesh.</p>
+<h3 id="why-doesnt-the-alt-lmb-key-combination-for-alternative-modes-in-project-slice-etc-work">Why doesn't the <code>ALT + LMB</code> key combination for alternative modes in Project, Slice, etc. work?</h3>
+<p>Make sure you haven't enabled <em>Emulate 3 Button Mouse</em> in Blender's Input preferences.<br />
+This option uses the <code>ALT</code> key in combination with <code>LMB</code> to simulate a middle mouse button, which takes precedence.</p>
+<p>If you want to keep this enabled, you can alternatively use <code>ALT + S</code> to call the alternative mode in the <a href="slice.html">Slice</a> tool, or <code>ALT + D</code> for <a href="project.html">Project</a>, etc.</p>
+<h3 id="material-matching-doesnt-work-properly-why-are-the-node-inputs-on-the-principled-bsdf-shader-node-ignored">Material Matching doesn't work properly! Why are the node inputs on the Principled BSDF shader node ignored?</h3>
+<p>It's working exactly <a href="match_material.html">as intended</a>. Only plain pbr materials are supported.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Also check out this <a href="#can-i-create-decals-for-damage-and-weathering-effects-such-as-those-from-quixel">related information</a> as to why.</p>
+</div>
+<p>There is also <a href="init_generated_coords.html">this</a> and <a href="transfer_uvs.html">this</a> for matching <em>some</em> textures.</p>
+<p>Understand that matching materials, with arbitrary node trees (any user could have a completely different node setup for his materials) is a significant challenge in regards to development effort, performance, and maintenance.</p>
+<p>Also, from a purely practical perspective DECALmachine's main intended use cases are hard surface focused concept design and game art.<br />
+For neither of these do you need to match complex, textured materials - not in Blender anyway.<sup>due to the magic of <a href="https://www.google.com/search?q=deferred+decal">deffered decal</a> shaders</sup></p>
+<p>That said, matching decal to materials with more complex node trees in Blender, would be much easier to support from the developers creating material based addons, especially when those materials are procedural.
+For instance, <a href="https://blendermarket.com/creators/oliver-j-post">Oliver J Post's instamat and smudgr addons</a> do support matching decals.
+That's because he knows exactly how his materials are structured, so he was able to build a tool to connect his node outputs to the decal node groups' inputs.</p>
+<h2 id="decal-creation">Decal Creation</h2>
+<h3 id="how-do-i-create-my-own-decals">How do I create my own Decals?</h3>
+<p>You can ceate decals of all 4 types directly in Blender, see <a href="decal_creation_instant.html">Decal Creation</a> for details.</p>
+<h3 id="how-do-i-create-decals-from-a-whole-folder-of-images">How do I create Decals from a whole folder of images?</h3>
+<p>You need to first load multiple source images. Once done, the <em>Batch Creation: All source images at once</em> option can be enabled.</p>
+<p><img alt="BatchInfoDecalCreation" src="img/create/batch_info_decal_creation.jpg" /></p>
+<p>The resulting instant decals will be layed out next to each other and can then be immediately added to a library using the <a href="decal_creation_instant.html#add-decal-to-library"><em>Add to Library</em></a> tool - also all at once.</p>
+<h3 id="can-i-create-decals-from-alphas">Can I create Decals from <em>Alphas</em>?</h3>
+<p><em>Alphas</em> don’t contain enough information to create decals from. They are just height information.<br />
+Decals are normal, height, AO, curvature, mask and often subset mask. You could do without AO, curvature and height, but getting normals from height is flawed and creating the subset mask automatically is impossible.</p>
+<p>I’d recommend adapting and modeling your favorite designs and create decals from that.<br />
+Alternatively you could subdivide a plane <strong>A LOT</strong> and displace it using the <em>Alpha</em>, then create a decal from that subdivided, displaced plane. The results seem acceptable to <a href="https://blenderartists.org/t/decalmachine/688181/774">some people</a>.
+This process is prone to artefacting and does not produce subset masks however, so you are limited to <a href="assets.html"><em>Simple</em> decals</a>.</p>
+<h3 id="can-i-create-decals-for-damage-and-weathering-effects-such-as-those-from-quixel">Can I create Decals for damage and weathering effects, such as those from Quixel?</h3>
+<p>The focus of DECALmachine has always been hard surface detailing, either for concept, or game art with the aim of bringing decals into deferred rendering pipeline such as Unity HDRP or UE4.</p>
+<p>As such (<a href="assets.html">normal mapped</a>) decals in DECALmachine don't have color, roughness or metalness textures.</p>
+<p>In Blender decal materials fetch these color, roughness and metallic properties from their parent objects through a process called <a href="match_material.html">material matching</a>.<br />
+The focus here is simple parameter based materials, not textured ones, and certainly not heavily weathered materials. Decals in Blender are opaque objects after all, and a generalized, automatic approach, that can match opaque decals to arbitrary user created node setups creating complex weathered materials is just not feasible and beyond the scope of what DECALmachine intends to do.
+If decals had color, roughness, or metalness maps, then they couldn't be material matched, and they would stand out instead of visually integrate.</p>
+<p>Furthermore, in deferred rendering such as <a href="export_atlas.html#hdrp">Unity HDRP or UE4</a>, decal material properties for color, roughness and metalness are simply taken from the parent object's material - textured or not - simply through the nature of how decal shaders in deferred rendering work.
+And so again, textures for color, roughness and metalness are not needed.</p>
+<p>This lack of support for color, roughness and metalness textures in normal mapped decals, makes using DECALmachine decals for damage and weathering effects impractical, until a new decal type is introduced specifically for this purpose.</p>
+<h2 id="decal-export">Decal Export</h2>
+<h3 id="can-i-bake-the-decal-textures-to-be-used-in-a-single-texture-set">Can I bake the Decal textures, to be used in a single texture set?</h3>
+<p>Yes, as of <a href="whatsnew.html#19">version 1.9</a> decal textures can be baked to their parent objects UV space. Checkout the <a href="export_bake.html">Bake tool</a> for details.</p>
+<h3 id="how-do-you-export-decals-for-use-in-unity-unreal-engine-etc">How do you export Decals for use in Unity, Unreal Engine, etc.?</h3>
+<p>In addition to baking, there are 2 more approaches to exporting in DECALmachine.<br />
+Learn more them in the <a href="export_introduction.html">Export Introduction</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="whatsnew.html" class="btn btn-neutral float-left" title="What's new?"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="pie_menu.html" class="btn btn-neutral float-right" title="Pie Menu">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="whatsnew.html" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="pie_menu.html" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
